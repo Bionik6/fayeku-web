@@ -2,55 +2,55 @@
     <div class="flex flex-col gap-6">
         <x-auth-header :title="__('Se connecter')" :description="__('Entrez votre numéro de téléphone et votre mot de passe')" />
 
-        <x-auth-session-status class="text-center" :status="session('status')" />
+        <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('auth.login.submit') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('auth.login.submit') }}" class="flex flex-col gap-5">
             @csrf
 
-            <flux:select name="country_code" :label="__('Pays')" required>
-                <flux:select.option value="SN" :selected="old('country_code') === 'SN'">Sénégal (+221)</flux:select.option>
-                <flux:select.option value="CI" :selected="old('country_code') === 'CI'">Côte d'Ivoire (+225)</flux:select.option>
-            </flux:select>
-
-            <flux:input
-                name="phone"
+            <x-phone-input
                 :label="__('Téléphone')"
-                :value="old('phone')"
-                type="tel"
-                required
-                autofocus
-                autocomplete="tel"
-                placeholder="77 123 45 67"
+                country-name="country_code"
+                :country-value="old('country_code', 'SN')"
+                phone-name="phone"
+                :phone-value="old('phone')"
+                :required="true"
+                :autofocus="true"
+                phone-placeholder="XX XXX XX XX"
             />
+            <div class="-mt-0.5 space-y-1">
+                <x-auth-field-error name="country_code" />
+                <x-auth-field-error name="phone" />
+            </div>
 
-            <div class="relative">
-                <flux:input
+            <div class="auth-field-stack">
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-sm font-medium text-ink">{{ __('Mot de passe') }} *</span>
+                    <a href="{{ route('auth.forgot-password') }}" wire:navigate class="text-sm auth-link">{{ __('Mot de passe oublié ?') }}</a>
+                </div>
+                <input
                     name="password"
-                    :label="__('Mot de passe')"
                     type="password"
                     required
                     autocomplete="current-password"
-                    :placeholder="__('Mot de passe')"
-                    viewable
+                    placeholder="{{ __('Entrez votre mot de passe...') }}"
+                    class="auth-input"
                 />
-
-                <flux:link class="absolute top-0 text-sm end-0" :href="route('auth.forgot-password')" wire:navigate>
-                    {{ __('Mot de passe oublié ?') }}
-                </flux:link>
+                <x-auth-field-error name="password" />
             </div>
 
-            <flux:checkbox name="remember" :label="__('Se souvenir de moi')" :checked="old('remember')" />
+            <label class="auth-checkbox-row">
+                <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="auth-checkbox" />
+                <span>{{ __('Se souvenir de moi') }}</span>
+            </label>
 
-            <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full">
-                    {{ __('Se connecter') }}
-                </flux:button>
-            </div>
+            <button type="submit" class="auth-button">
+                {{ __('Se connecter') }}
+            </button>
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
+        <p class="text-center text-sm leading-6 text-slate-600">
             <span>{{ __('Pas encore de compte ?') }}</span>
-            <flux:link :href="route('auth.register')" wire:navigate>{{ __('Créer un compte') }}</flux:link>
-        </div>
+            <a href="{{ route('auth.register') }}" wire:navigate class="auth-link">{{ __('Créer un compte') }}</a>
+        </p>
     </div>
 </x-layouts::auth>

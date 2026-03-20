@@ -178,8 +178,64 @@ function bindForms() {
     });
 }
 
+function digitsOnly(value) {
+    return value.replace(/\D+/g, "");
+}
+
+function formatPhoneValue(country, value) {
+    const digits = digitsOnly(value);
+
+    if (country === "SN") {
+        const normalized = digits.slice(0, 9);
+
+        if (normalized.length <= 2) return normalized;
+        if (normalized.length <= 5) return `${normalized.slice(0, 2)} ${normalized.slice(2)}`;
+        if (normalized.length <= 7) return `${normalized.slice(0, 2)} ${normalized.slice(2, 5)} ${normalized.slice(5)}`;
+
+        return `${normalized.slice(0, 2)} ${normalized.slice(2, 5)} ${normalized.slice(5, 7)} ${normalized.slice(7)}`;
+    }
+
+    if (country === "CI") {
+        const normalized = digits.slice(0, 10);
+        const groups = normalized.match(/.{1,2}/g) || [];
+        return groups.join(" ");
+    }
+
+    return digits;
+}
+
+function bindPhoneFields() {
+    const placeholders = {
+        SN: "XX XXX XX XX",
+        CI: "XX XX XX XX XX",
+    };
+
+    document.querySelectorAll("[data-phone-field]").forEach((field) => {
+        const country = field.querySelector("[data-phone-country]");
+        const input = field.querySelector("[data-phone-input]");
+
+        if (!country || !input) {
+            return;
+        }
+
+        function render() {
+            input.placeholder = placeholders[country.value] || "Numéro de téléphone";
+            input.value = formatPhoneValue(country.value, input.value);
+        }
+
+        input.addEventListener("input", () => {
+            input.value = formatPhoneValue(country.value, input.value);
+        });
+
+        country.addEventListener("change", render);
+
+        render();
+    });
+}
+
 bindNavigation();
 bindHomeHero();
 bindPricingPersona();
 bindAccordion();
 bindForms();
+bindPhoneFields();

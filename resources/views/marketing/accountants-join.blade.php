@@ -52,10 +52,14 @@
           <input required type="email" name="email" placeholder="Entrez votre adresse email..." class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
         </label>
 
-        <label class="block space-y-2 text-sm font-medium text-ink">
-          <span>Numéro de téléphone *</span>
-          <input required type="tel" name="phone" placeholder="+221 77 123 45 67" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
-        </label>
+        <x-phone-input
+          label="Numéro de téléphone"
+          country-name="country_code"
+          country-value="SN"
+          phone-name="phone"
+          :required="true"
+          phone-placeholder="XX XXX XX XX"
+        />
 
         <label class="block space-y-2 text-sm font-medium text-ink">
           <span>Nom du cabinet *</span>

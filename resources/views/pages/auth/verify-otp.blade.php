@@ -5,30 +5,31 @@
             :description="__('Entrez le code à 6 chiffres envoyé au') . ' ' . $maskedPhone"
         />
 
-        <x-auth-session-status class="text-center" :status="session('status')" />
+        <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('auth.otp.verify') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('auth.otp.verify') }}" class="flex flex-col gap-5">
             @csrf
 
-            <flux:input
-                name="code"
-                :label="__('Code de vérification')"
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]{6}"
-                maxlength="6"
-                required
-                autofocus
-                autocomplete="one-time-code"
-                placeholder="000000"
-                class="text-center tracking-widest text-lg"
-            />
+            <label class="auth-label">
+                <span>{{ __('Code de vérification') }} *</span>
+                <input
+                    name="code"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    required
+                    autofocus
+                    autocomplete="one-time-code"
+                    placeholder="000000"
+                    class="auth-input text-center text-lg tracking-[0.35em]"
+                />
+                <x-auth-field-error name="code" />
+            </label>
 
-            <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full">
-                    {{ __('Vérifier') }}
-                </flux:button>
-            </div>
+            <button type="submit" class="auth-button">
+                {{ __('Vérifier') }}
+            </button>
         </form>
 
         <div class="text-center" x-data="{ countdown: 0, canResend: true }" x-init="
@@ -46,12 +47,10 @@
                 localStorage.setItem('otp_resend_at', Date.now().toString());
             ">
                 @csrf
-                <flux:button variant="ghost" type="submit" size="sm">
-                    {{ __('Renvoyer le code') }}
-                </flux:button>
+                <button type="submit" class="text-sm auth-link">{{ __('Renvoyer le code') }}</button>
             </form>
 
-            <p x-show="!canResend" class="text-sm text-zinc-500">
+            <p x-show="!canResend" class="text-sm text-slate-500">
                 {{ __('Renvoyer dans') }} <span x-text="countdown"></span>s
             </p>
         </div>

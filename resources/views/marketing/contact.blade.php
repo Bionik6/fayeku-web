@@ -44,10 +44,14 @@
           <span>Email</span>
           <input required type="email" name="email" class="w-full rounded-2xl border border-primary/10 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
         </label>
-        <label class="space-y-2 text-sm font-medium text-ink">
-          <span>Téléphone</span>
-          <input type="tel" name="phone" class="w-full rounded-2xl border border-primary/10 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
-        </label>
+        <x-phone-input
+          label="Téléphone"
+          country-name="country_code"
+          country-value="SN"
+          phone-name="phone"
+          phone-placeholder="XX XXX XX XX"
+          container-class="flex items-stretch rounded-2xl border border-primary/10 bg-white transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+        />
         <label class="space-y-2 text-sm font-medium text-ink">
           <span>Pays</span>
           <select name="country" class="w-full rounded-2xl border border-primary/10 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15">

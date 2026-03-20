@@ -16,8 +16,9 @@ class AuthService
     public static function normalizePhone(string $phone, string $countryCode): string
     {
         $prefix = config("fayeku.countries.{$countryCode}.prefix", '');
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
 
-        return $prefix.ltrim($phone, '0');
+        return $prefix.ltrim($digits, '0');
     }
 
     public function register(array $data): User

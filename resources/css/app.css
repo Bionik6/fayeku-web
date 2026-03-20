@@ -119,4 +119,53 @@ select:focus[data-flux-control] {
     .marketing-textarea {
         @apply w-full rounded-[1.5rem] border border-primary/10 bg-white px-4 py-3 text-base text-ink outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/15;
     }
+
+    .auth-label {
+        @apply block space-y-3 text-sm font-medium text-ink;
+    }
+
+    .auth-field-stack {
+        @apply space-y-3;
+    }
+
+    .auth-input,
+    .auth-select,
+    .auth-textarea {
+        @apply w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base text-ink outline-hidden transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/15;
+    }
+
+    .auth-textarea {
+        @apply rounded-3xl;
+    }
+
+    .auth-button {
+        @apply inline-flex w-full items-center justify-center px-5 py-4 text-base font-semibold transition;
+        border-radius: 0.75rem;
+        background: #024d4d;
+        color: #10b75c;
+    }
+
+    .auth-button:hover {
+        background: #013c3c;
+    }
+
+    .auth-link {
+        @apply font-semibold text-primary underline-offset-4 hover:underline;
+    }
+
+    .auth-error {
+        @apply text-sm font-medium text-rose-600;
+    }
+
+    .auth-checkbox {
+        @apply mt-0.5 h-5 w-5 rounded-md border-slate-300 text-accent shadow-xs;
+    }
+
+    .auth-checkbox:focus {
+        @apply ring-2 ring-accent/25 ring-offset-0;
+    }
+
+    .auth-checkbox-row {
+        @apply flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base leading-7 text-slate-700;
+    }
 }

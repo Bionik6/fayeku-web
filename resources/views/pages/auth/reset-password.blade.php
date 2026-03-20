@@ -5,54 +5,60 @@
             :description="__('Entrez le code reçu par SMS et votre nouveau mot de passe')"
         />
 
-        <x-auth-session-status class="text-center" :status="session('status')" />
+        <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('auth.reset-password.submit') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('auth.reset-password.submit') }}" class="flex flex-col gap-5">
             @csrf
 
-            <flux:input
-                name="code"
-                :label="__('Code de vérification')"
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]{6}"
-                maxlength="6"
-                required
-                autofocus
-                autocomplete="one-time-code"
-                placeholder="000000"
-                class="text-center tracking-widest text-lg"
-            />
+            <label class="auth-label">
+                <span>{{ __('Code de vérification') }} *</span>
+                <input
+                    name="code"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    required
+                    autofocus
+                    autocomplete="one-time-code"
+                    placeholder="000000"
+                    class="auth-input text-center text-lg tracking-[0.35em]"
+                />
+                <x-auth-field-error name="code" />
+            </label>
 
-            <flux:input
-                name="password"
-                :label="__('Nouveau mot de passe')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Nouveau mot de passe')"
-                viewable
-            />
+            <label class="auth-label">
+                <span>{{ __('Nouveau mot de passe') }} *</span>
+                <input
+                    name="password"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    placeholder="{{ __('Entrez votre nouveau mot de passe...') }}"
+                    class="auth-input"
+                />
+                <x-auth-field-error name="password" />
+            </label>
 
-            <flux:input
-                name="password_confirmation"
-                :label="__('Confirmer le mot de passe')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Confirmer le mot de passe')"
-                viewable
-            />
+            <label class="auth-label">
+                <span>{{ __('Confirmer le mot de passe') }} *</span>
+                <input
+                    name="password_confirmation"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    placeholder="{{ __('Confirmez votre mot de passe...') }}"
+                    class="auth-input"
+                />
+            </label>
 
-            <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full">
-                    {{ __('Réinitialiser le mot de passe') }}
-                </flux:button>
-            </div>
+            <button type="submit" class="auth-button">
+                {{ __('Réinitialiser le mot de passe') }}
+            </button>
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-            <flux:link :href="route('login')" wire:navigate>{{ __('Retour à la connexion') }}</flux:link>
-        </div>
+        <p class="text-center text-sm leading-6 text-slate-600">
+            <a href="{{ route('login') }}" wire:navigate class="auth-link">{{ __('Retour à la connexion') }}</a>
+        </p>
     </div>
 </x-layouts::auth>
