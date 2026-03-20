@@ -15,9 +15,11 @@ function bindNavigation() {
     const toggle = document.querySelector("[data-nav-toggle]");
     const menu = document.querySelector("[data-nav-menu]");
 
-    if (!toggle || !menu) {
+    if (!toggle || !menu || toggle.dataset.bound === "true") {
         return;
     }
+
+    toggle.dataset.bound = "true";
 
     toggle.addEventListener("click", () => {
         const expanded = toggle.getAttribute("aria-expanded") === "true";
@@ -40,9 +42,11 @@ function bindNavigation() {
 function bindHomeHero() {
     const root = document.querySelector("[data-home-persona]");
 
-    if (!root) {
+    if (!root || root.dataset.bound === "true") {
         return;
     }
+
+    root.dataset.bound = "true";
 
     const data = JSON.parse(root.getAttribute("data-home-persona") || "{}");
     const buttons = root.querySelectorAll("[data-persona-value]");
@@ -96,9 +100,11 @@ function bindHomeHero() {
 function bindPricingPersona() {
     const root = document.querySelector("[data-pricing-persona]");
 
-    if (!root) {
+    if (!root || root.dataset.bound === "true") {
         return;
     }
+
+    root.dataset.bound = "true";
 
     const buttons = root.querySelectorAll("[data-persona-value]");
     const description = root.querySelector("[data-pricing-description]");
@@ -126,6 +132,11 @@ function bindPricingPersona() {
 
 function bindAccordion() {
     document.querySelectorAll("[data-accordion]").forEach((accordion) => {
+        if (accordion.dataset.bound === "true") {
+            return;
+        }
+
+        accordion.dataset.bound = "true";
         const items = accordion.querySelectorAll("[data-accordion-item]");
 
         items.forEach((item) => {
@@ -166,6 +177,11 @@ function bindAccordion() {
 
 function bindForms() {
     document.querySelectorAll("[data-demo-form]").forEach((form) => {
+        if (form.dataset.bound === "true") {
+            return;
+        }
+
+        form.dataset.bound = "true";
         const success = form.querySelector("[data-form-success]");
 
         form.addEventListener("submit", (event) => {
@@ -211,6 +227,11 @@ function bindPhoneFields() {
     };
 
     document.querySelectorAll("[data-phone-field]").forEach((field) => {
+        if (field.dataset.bound === "true") {
+            return;
+        }
+
+        field.dataset.bound = "true";
         const country = field.querySelector("[data-phone-country]");
         const input = field.querySelector("[data-phone-input]");
 
@@ -233,9 +254,15 @@ function bindPhoneFields() {
     });
 }
 
-bindNavigation();
-bindHomeHero();
-bindPricingPersona();
-bindAccordion();
-bindForms();
-bindPhoneFields();
+function initializePage() {
+    bindNavigation();
+    bindHomeHero();
+    bindPricingPersona();
+    bindAccordion();
+    bindForms();
+    bindPhoneFields();
+}
+
+initializePage();
+
+document.addEventListener("livewire:navigated", initializePage);
