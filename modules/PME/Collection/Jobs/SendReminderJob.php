@@ -17,8 +17,8 @@ class SendReminderJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
-        public readonly Invoice         $invoice,
-        public readonly Company         $company,
+        public readonly Invoice $invoice,
+        public readonly Company $company,
         public readonly ReminderChannel $channel,
     ) {}
 

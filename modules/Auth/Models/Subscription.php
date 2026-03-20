@@ -17,11 +17,11 @@ class Subscription extends Model
     ];
 
     protected $casts = [
-        'price_paid'           => 'integer',
-        'trial_ends_at'        => 'datetime',
+        'price_paid' => 'integer',
+        'trial_ends_at' => 'datetime',
         'current_period_start' => 'datetime',
-        'current_period_end'   => 'datetime',
-        'cancelled_at'         => 'datetime',
+        'current_period_end' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function company(): BelongsTo

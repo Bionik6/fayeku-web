@@ -10,5 +10,6 @@ class Country extends Model
     use HasUlid;
 
     protected $fillable = ['code', 'name', 'phone_prefix', 'is_active'];
-    protected $casts    = ['is_active' => 'boolean'];
+
+    protected $casts = ['is_active' => 'boolean'];
 }

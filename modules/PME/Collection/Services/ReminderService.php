@@ -26,6 +26,7 @@ class ReminderService
         return DB::transaction(function () use ($invoice, $company, $channel) {
             $reminder = $this->resolveChannel($channel)->send($invoice);
             $this->quotaService->consume($company, 'reminders');
+
             return $reminder;
         });
     }
@@ -34,8 +35,8 @@ class ReminderService
     {
         return match ($channel) {
             ReminderChannel::WhatsApp => $this->whatsApp,
-            ReminderChannel::Sms      => $this->sms,
-            ReminderChannel::Email    => $this->email,
+            ReminderChannel::Sms => $this->sms,
+            ReminderChannel::Email => $this->email,
         };
     }
 }

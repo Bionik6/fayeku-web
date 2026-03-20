@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Auth\Models\Company;
+use Modules\PME\Invoicing\Models\Invoice;
 use Modules\Shared\Traits\HasUlid;
 
 class Client extends Model
@@ -18,11 +20,11 @@ class Client extends Model
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Auth\Models\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(\Modules\PME\Invoicing\Models\Invoice::class);
+        return $this->hasMany(Invoice::class);
     }
 }

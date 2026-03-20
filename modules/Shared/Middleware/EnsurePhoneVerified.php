@@ -14,8 +14,10 @@ class EnsurePhoneVerified
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Phone not verified.'], 403);
             }
+
             return redirect()->route('auth.otp');
         }
+
         return $next($request);
     }
 }

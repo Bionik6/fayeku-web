@@ -2,6 +2,7 @@
 
 namespace Modules\Compta\Portfolio\Services;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
@@ -16,7 +17,7 @@ class PortfolioService
             ->pluck('sme_company_id');
     }
 
-    public function invoicesForFirm(Company $firm): \Illuminate\Database\Eloquent\Builder
+    public function invoicesForFirm(Company $firm): Builder
     {
         return Invoice::whereIn('company_id', $this->activeSmeIds($firm));
     }

@@ -8,5 +8,6 @@ use Modules\PME\Invoicing\Models\Invoice;
 interface FiscalConnectorInterface
 {
     public function certify(Invoice $invoice): FiscalCertification;
+
     public function supportsCountry(string $countryCode): bool;
 }

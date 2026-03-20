@@ -4,6 +4,7 @@ namespace Modules\Compta\Partnership\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Auth\Models\Company;
 use Modules\Shared\Traits\HasUlid;
 
 class PartnerInvitation extends Model
@@ -16,12 +17,12 @@ class PartnerInvitation extends Model
     ];
 
     protected $casts = [
-        'expires_at'  => 'datetime',
+        'expires_at' => 'datetime',
         'accepted_at' => 'datetime',
     ];
 
     public function accountantFirm(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Auth\Models\Company::class, 'accountant_firm_id');
+        return $this->belongsTo(Company::class, 'accountant_firm_id');
     }
 }

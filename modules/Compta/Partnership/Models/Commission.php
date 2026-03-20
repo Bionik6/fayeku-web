@@ -15,7 +15,7 @@ class Commission extends Model
     ];
 
     protected $casts = [
-        'amount'  => 'integer',
+        'amount' => 'integer',
         'paid_at' => 'datetime',
     ];
 }

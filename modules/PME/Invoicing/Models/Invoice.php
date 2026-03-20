@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Auth\Models\Company;
+use Modules\PME\Clients\Models\Client;
+use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\Shared\Traits\HasUlid;
 
@@ -25,27 +28,27 @@ class Invoice extends Model
     ];
 
     protected $casts = [
-        'issued_at'           => 'date',
-        'due_at'              => 'date',
-        'paid_at'             => 'datetime',
-        'fne_certified_at'    => 'datetime',
-        'dgid_certified_at'   => 'datetime',
-        'subtotal'            => 'integer',
-        'tax_amount'          => 'integer',
-        'total'               => 'integer',
+        'issued_at' => 'date',
+        'due_at' => 'date',
+        'paid_at' => 'datetime',
+        'fne_certified_at' => 'datetime',
+        'dgid_certified_at' => 'datetime',
+        'subtotal' => 'integer',
+        'tax_amount' => 'integer',
+        'total' => 'integer',
         'fne_balance_sticker' => 'integer',
-        'fne_raw_response'    => 'array',
-        'status'              => InvoiceStatus::class,
+        'fne_raw_response' => 'array',
+        'status' => InvoiceStatus::class,
     ];
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Auth\Models\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(\Modules\PME\Clients\Models\Client::class);
+        return $this->belongsTo(Client::class);
     }
 
     public function lines(): HasMany
@@ -55,6 +58,6 @@ class Invoice extends Model
 
     public function reminders(): HasMany
     {
-        return $this->hasMany(\Modules\PME\Collection\Models\Reminder::class);
+        return $this->hasMany(Reminder::class);
     }
 }

@@ -2,9 +2,11 @@
 
 namespace Modules\Shared\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Auth\Models\Company;
 use Modules\Shared\Traits\HasUlid;
 
 class User extends Authenticatable
@@ -20,14 +22,14 @@ class User extends Authenticatable
 
     protected $casts = [
         'phone_verified_at' => 'datetime',
-        'is_active'         => 'boolean',
-        'password'          => 'hashed',
+        'is_active' => 'boolean',
+        'password' => 'hashed',
     ];
 
-    public function companies(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function companies(): BelongsToMany
     {
         return $this->belongsToMany(
-            \Modules\Auth\Models\Company::class,
+            Company::class,
             'company_user', 'user_id', 'company_id'
         )->withPivot('role')->withTimestamps();
     }

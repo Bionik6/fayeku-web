@@ -12,9 +12,9 @@ class ComplianceService
 
     public function certify(Invoice $invoice): void
     {
-        $country   = $invoice->company->country_code;
+        $country = $invoice->company->country_code;
         $connector = collect($this->connectors)->first(
-            fn($c) => $c->supportsCountry($country)
+            fn ($c) => $c->supportsCountry($country)
         );
 
         if (! $connector) {
@@ -24,12 +24,12 @@ class ComplianceService
         try {
             $cert = $connector->certify($invoice);
             $invoice->update([
-                'fne_reference'       => $cert->reference,
-                'fne_token'           => $cert->token,
-                'fne_certified_at'    => now(),
+                'fne_reference' => $cert->reference,
+                'fne_token' => $cert->token,
+                'fne_certified_at' => now(),
                 'fne_balance_sticker' => $cert->balanceSticker,
-                'fne_raw_response'    => $cert->rawResponse,
-                'status'              => 'certified',
+                'fne_raw_response' => $cert->rawResponse,
+                'status' => 'certified',
             ]);
         } catch (\RuntimeException $e) {
             $invoice->update(['status' => 'certification_failed']);

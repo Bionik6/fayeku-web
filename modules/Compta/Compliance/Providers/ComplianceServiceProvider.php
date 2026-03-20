@@ -11,14 +11,14 @@ class ComplianceServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(ComplianceService::class, fn() => new ComplianceService([
-            new FneConnector(),
-            new DgidConnector(),
+        $this->app->singleton(ComplianceService::class, fn () => new ComplianceService([
+            new FneConnector,
+            new DgidConnector,
         ]));
     }
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 }

@@ -15,11 +15,11 @@ class OtpService
         $code = (string) random_int(100000, 999999);
 
         DB::table('otp_codes')->insert([
-            'id'         => (string) Str::ulid(),
-            'phone'      => $phone,
-            'code'       => hash('sha256', $code),
+            'id' => (string) Str::ulid(),
+            'phone' => $phone,
+            'code' => hash('sha256', $code),
             'expires_at' => now()->addMinutes((int) config('fayeku.otp_expiry_minutes', 10)),
-            'attempts'   => 0,
+            'attempts' => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -45,6 +45,7 @@ class OtpService
 
         if (! hash_equals($record->code, hash('sha256', $code))) {
             DB::table('otp_codes')->where('id', $record->id)->increment('attempts');
+
             return false;
         }
 

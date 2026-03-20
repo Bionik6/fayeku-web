@@ -16,11 +16,11 @@ class InvoiceLine extends Model
     ];
 
     protected $casts = [
-        'quantity'   => 'integer',
+        'quantity' => 'integer',
         'unit_price' => 'integer',
-        'tax_rate'   => 'integer',
-        'discount'   => 'integer',
-        'total'      => 'integer',
+        'tax_rate' => 'integer',
+        'discount' => 'integer',
+        'total' => 'integer',
     ];
 
     public function invoice(): BelongsTo

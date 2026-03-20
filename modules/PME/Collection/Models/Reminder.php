@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\PME\Collection\Enums\ReminderChannel;
 use Modules\PME\Collection\Enums\ReminderStatus;
+use Modules\PME\Invoicing\Models\Invoice;
 use Modules\Shared\Traits\HasUlid;
 
 class Reminder extends Model
@@ -21,11 +22,11 @@ class Reminder extends Model
     protected $casts = [
         'sent_at' => 'datetime',
         'channel' => ReminderChannel::class,
-        'status'  => ReminderStatus::class,
+        'status' => ReminderStatus::class,
     ];
 
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo(\Modules\PME\Invoicing\Models\Invoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 }

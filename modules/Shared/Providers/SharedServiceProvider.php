@@ -16,7 +16,7 @@ class SharedServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        $this->mergeConfigFrom(__DIR__ . '/../config/fayeku.php', 'fayeku');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->mergeConfigFrom(__DIR__.'/../config/fayeku.php', 'fayeku');
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\Shared\Models\User;
 use Modules\Shared\Traits\HasUlid;
 
 class Company extends Model
@@ -17,7 +18,7 @@ class Company extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(
-            \Modules\Shared\Models\User::class,
+            User::class,
             'company_user', 'company_id', 'user_id'
         )->withPivot('role')->withTimestamps();
     }

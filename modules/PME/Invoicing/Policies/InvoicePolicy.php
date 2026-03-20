@@ -14,6 +14,7 @@ class InvoicePolicy
             return true;
         }
         $firmIds = $user->companies()->where('type', 'accountant_firm')->pluck('companies.id');
+
         return AccountantCompany::whereIn('accountant_firm_id', $firmIds)
             ->where('sme_company_id', $invoice->company_id)
             ->whereNull('ended_at')

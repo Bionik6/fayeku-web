@@ -13,6 +13,7 @@ class EnsureProfileType
         if (auth()->check() && auth()->user()->profile_type !== $type) {
             abort(403, 'Access denied for this profile type.');
         }
+
         return $next($request);
     }
 }
