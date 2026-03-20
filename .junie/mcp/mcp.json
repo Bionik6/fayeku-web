@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/opt/homebrew/Cellar/php/8.5.4/bin/php",
+            "args": [
+                "/Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
