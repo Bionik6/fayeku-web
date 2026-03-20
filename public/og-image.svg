@@ -1,0 +1,20 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#024D4D"/>
+  <circle cx="997" cy="112" r="184" fill="#10B75C" fill-opacity="0.18"/>
+  <circle cx="173" cy="546" r="194" fill="#10B75C" fill-opacity="0.14"/>
+  <rect x="82" y="76" width="114" height="114" rx="30" fill="#EAF7F2"/>
+  <path d="M112 107H163V118H124V129H154V140H124V161H112V107Z" fill="#024D4D"/>
+  <circle cx="160" cy="150" r="10" fill="#10B75C"/>
+  <text x="82" y="276" fill="#EAF7F2" font-family="Arial, sans-serif" font-size="72" font-weight="700">
+    Fayeku
+  </text>
+  <text x="82" y="352" fill="white" font-family="Arial, sans-serif" font-size="46" font-weight="700">
+    Facturez proprement.
+  </text>
+  <text x="82" y="410" fill="white" font-family="Arial, sans-serif" font-size="46" font-weight="700">
+    Contrôlez votre trésorerie.
+  </text>
+  <text x="82" y="490" fill="#D5F1E1" font-family="Arial, sans-serif" font-size="28">
+    Facturation moderne, relances WhatsApp et collaboration cabinet
+  </text>
+</svg>

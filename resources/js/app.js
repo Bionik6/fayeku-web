@@ -1,0 +1,185 @@
+document.documentElement.classList.add("js");
+
+function setToggleState(buttons, activeValue) {
+    buttons.forEach((button) => {
+        const isActive = button.dataset.personaValue === activeValue;
+        button.setAttribute("aria-selected", String(isActive));
+        button.classList.toggle("bg-primary", isActive);
+        button.classList.toggle("text-accent", isActive);
+        button.classList.toggle("text-slate-600", !isActive);
+        button.classList.toggle("hover:text-primary", !isActive);
+    });
+}
+
+function bindNavigation() {
+    const toggle = document.querySelector("[data-nav-toggle]");
+    const menu = document.querySelector("[data-nav-menu]");
+
+    if (!toggle || !menu) {
+        return;
+    }
+
+    toggle.addEventListener("click", () => {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!expanded));
+        toggle.textContent = expanded ? "☰" : "×";
+        menu.classList.toggle("max-h-0", expanded);
+        menu.classList.toggle("max-h-96", !expanded);
+    });
+
+    menu.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+            toggle.setAttribute("aria-expanded", "false");
+            toggle.textContent = "☰";
+            menu.classList.add("max-h-0");
+            menu.classList.remove("max-h-96");
+        });
+    });
+}
+
+function bindHomeHero() {
+    const root = document.querySelector("[data-home-persona]");
+
+    if (!root) {
+        return;
+    }
+
+    const data = JSON.parse(root.getAttribute("data-home-persona") || "{}");
+    const buttons = root.querySelectorAll("[data-persona-value]");
+    const badgeWrapper = root.querySelector("[data-persona-badge-wrapper]");
+    const badge = root.querySelector("[data-persona-field='badge']");
+    const eyebrow = root.querySelector("[data-persona-field='eyebrow']");
+    const subtitle = root.querySelector("[data-persona-field='subtitle']");
+    const proof = root.querySelector("[data-persona-field='proof']");
+    const statTitle = root.querySelector("[data-persona-field='stat-title']");
+    const statText = root.querySelector("[data-persona-field='stat-text']");
+    const image = root.querySelector("[data-persona-field='image']");
+    const primaryLink = root.querySelector("[data-persona-link='primary']");
+    const secondaryLink = root.querySelector("[data-persona-link='secondary']");
+
+    function renderPersona(persona) {
+        const content = data[persona];
+
+        if (!content) {
+            return;
+        }
+
+        if (badgeWrapper) {
+            badgeWrapper.classList.toggle("hidden", !content.badge);
+        }
+        if (badge) badge.textContent = content.badge;
+        if (eyebrow) eyebrow.textContent = content.eyebrow;
+        if (subtitle) subtitle.textContent = content.subtitle;
+        if (proof) proof.textContent = `✅ ${content.proof}`;
+        if (statTitle) statTitle.textContent = content.statTitle;
+        if (statText) statText.textContent = content.statText;
+        if (image) image.setAttribute("src", content.image);
+        if (primaryLink) {
+            primaryLink.setAttribute("href", content.primaryCta.href);
+            primaryLink.textContent = content.primaryCta.label;
+        }
+        if (secondaryLink) {
+            secondaryLink.setAttribute("href", content.secondaryCta.href);
+            secondaryLink.textContent = content.secondaryCta.label;
+        }
+
+        setToggleState(buttons, persona);
+    }
+
+    buttons.forEach((button) => {
+        button.addEventListener("click", () => renderPersona(button.dataset.personaValue));
+    });
+
+    renderPersona("entreprise");
+}
+
+function bindPricingPersona() {
+    const root = document.querySelector("[data-pricing-persona]");
+
+    if (!root) {
+        return;
+    }
+
+    const buttons = root.querySelectorAll("[data-persona-value]");
+    const description = root.querySelector("[data-pricing-description]");
+
+    function renderPersona(persona) {
+        if (persona === "expert") {
+            window.location.href = "/experts-comptables/rejoindre";
+            return;
+        }
+
+        if (description) {
+            description.textContent =
+                "Choisissez un plan Fayeku adapté à votre rythme de facturation, à vos relances et à votre besoin de pilotage cash.";
+        }
+
+        setToggleState(buttons, persona);
+    }
+
+    buttons.forEach((button) => {
+        button.addEventListener("click", () => renderPersona(button.dataset.personaValue));
+    });
+
+    renderPersona("entreprise");
+}
+
+function bindAccordion() {
+    document.querySelectorAll("[data-accordion]").forEach((accordion) => {
+        const items = accordion.querySelectorAll("[data-accordion-item]");
+
+        items.forEach((item) => {
+            const button = item.querySelector("[data-accordion-button]");
+            const panel = item.querySelector("[data-accordion-panel]");
+            const icon = item.querySelector("[data-accordion-icon]");
+
+            if (!button || !panel || !icon) {
+                return;
+            }
+
+            button.addEventListener("click", () => {
+                const isOpen = button.getAttribute("aria-expanded") === "true";
+
+                items.forEach((entry) => {
+                    const entryButton = entry.querySelector("[data-accordion-button]");
+                    const entryPanel = entry.querySelector("[data-accordion-panel]");
+                    const entryIcon = entry.querySelector("[data-accordion-icon]");
+
+                    if (!entryButton || !entryPanel || !entryIcon) {
+                        return;
+                    }
+
+                    entryButton.setAttribute("aria-expanded", "false");
+                    entryPanel.hidden = true;
+                    entryIcon.textContent = "+";
+                });
+
+                if (!isOpen) {
+                    button.setAttribute("aria-expanded", "true");
+                    panel.hidden = false;
+                    icon.textContent = "−";
+                }
+            });
+        });
+    });
+}
+
+function bindForms() {
+    document.querySelectorAll("[data-demo-form]").forEach((form) => {
+        const success = form.querySelector("[data-form-success]");
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            if (success) {
+                success.hidden = false;
+            }
+        });
+    });
+}
+
+bindNavigation();
+bindHomeHero();
+bindPricingPersona();
+bindAccordion();
+bindForms();
