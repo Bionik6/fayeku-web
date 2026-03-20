@@ -5,7 +5,7 @@ namespace Modules\Auth\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class LoginRequest extends FormRequest
+class ForgotPasswordRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -19,7 +19,6 @@ class LoginRequest extends FormRequest
     {
         return [
             'phone' => ['required', 'string'],
-            'password' => ['required', 'string'],
             'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
         ];
     }
@@ -31,7 +30,6 @@ class LoginRequest extends FormRequest
     {
         return [
             'phone.required' => 'Le numéro de téléphone est obligatoire.',
-            'password.required' => 'Le mot de passe est obligatoire.',
             'country_code.required' => 'Le pays est obligatoire.',
         ];
     }

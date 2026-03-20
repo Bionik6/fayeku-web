@@ -3,6 +3,8 @@
 namespace Modules\Shared\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Shared\Interfaces\SmsProviderInterface;
+use Modules\Shared\Services\FakeSmsProvider;
 use Modules\Shared\Services\OtpService;
 use Modules\Shared\Services\QuotaService;
 
@@ -10,6 +12,7 @@ class SharedServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(SmsProviderInterface::class, FakeSmsProvider::class);
         $this->app->singleton(OtpService::class);
         $this->app->singleton(QuotaService::class);
     }

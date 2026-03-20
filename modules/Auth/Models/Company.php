@@ -2,6 +2,8 @@
 
 namespace Modules\Auth\Models;
 
+use Database\Factories\CompanyFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,9 +13,14 @@ use Modules\Shared\Traits\HasUlid;
 
 class Company extends Model
 {
-    use HasUlid;
+    use HasFactory, HasUlid;
 
     protected $fillable = ['name', 'type', 'plan', 'country_code', 'phone'];
+
+    protected static function newFactory(): CompanyFactory
+    {
+        return CompanyFactory::new();
+    }
 
     public function users(): BelongsToMany
     {

@@ -3,6 +3,7 @@
 namespace Modules\Auth\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Models\Company;
 use Modules\Auth\Models\Subscription;
 use Modules\Shared\Models\User;
@@ -12,11 +13,17 @@ class AuthService
 {
     public function __construct(private OtpService $otpService) {}
 
+    public static function normalizePhone(string $phone, string $countryCode): string
+    {
+        $prefix = config("fayeku.countries.{$countryCode}.prefix", '');
+
+        return $prefix.ltrim($phone, '0');
+    }
+
     public function register(array $data): User
     {
         return DB::transaction(function () use ($data) {
-            $prefix = config("fayeku.countries.{$data['country_code']}.prefix", '');
-            $phone = $prefix.ltrim($data['phone'], '0');
+            $phone = self::normalizePhone($data['phone'], $data['country_code']);
 
             $user = User::create([
                 'first_name' => $data['first_name'],
@@ -52,5 +59,36 @@ class AuthService
 
             return $user;
         });
+    }
+
+    public function requestPasswordReset(string $phone): void
+    {
+        $user = User::where('phone', $phone)->first();
+
+        if (! $user) {
+            return;
+        }
+
+        $this->otpService->generate($phone, 'password_reset');
+    }
+
+    public function resetPassword(string $phone, string $code, string $newPassword): bool
+    {
+        if (! $this->otpService->verify($phone, $code, 'password_reset')) {
+            return false;
+        }
+
+        $user = User::where('phone', $phone)->first();
+
+        if (! $user) {
+            return false;
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($newPassword),
+            'phone_verified_at' => $user->phone_verified_at ?? now(),
+        ])->save();
+
+        return true;
     }
 }

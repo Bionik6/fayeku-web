@@ -2,13 +2,20 @@
 
 namespace Modules\Auth\Models;
 
+use Database\Factories\SubscriptionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Shared\Traits\HasUlid;
 
 class Subscription extends Model
 {
-    use HasUlid;
+    use HasFactory, HasUlid;
+
+    protected static function newFactory(): SubscriptionFactory
+    {
+        return SubscriptionFactory::new();
+    }
 
     protected $fillable = [
         'company_id', 'plan_slug', 'price_paid', 'billing_cycle', 'status',

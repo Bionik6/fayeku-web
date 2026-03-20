@@ -30,7 +30,7 @@
                 </flux:sidebar.item>
             </flux:sidebar.nav>
 
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+            <x-desktop-user-menu class="hidden lg:block" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
@@ -50,13 +50,13 @@
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <flux:avatar
-                                    :name="auth()->user()->name"
+                                    :name="auth()->user()->full_name"
                                     :initials="auth()->user()->initials()"
                                 />
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                                    <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
+                                    <flux:heading class="truncate">{{ auth()->user()->full_name }}</flux:heading>
+                                    <flux:text class="truncate">{{ auth()->user()->phone }}</flux:text>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +72,7 @@
 
                     <flux:menu.separator />
 
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
+                    <form method="POST" action="{{ route('auth.logout') }}" class="w-full">
                         @csrf
                         <flux:menu.item
                             as="button"

@@ -3,9 +3,9 @@
 namespace Modules\Auth\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
-class LoginRequest extends FormRequest
+class ResetPasswordRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -18,9 +18,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone' => ['required', 'string'],
-            'password' => ['required', 'string'],
-            'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
+            'code' => ['required', 'string', 'size:6'],
+            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
         ];
     }
 
@@ -30,9 +29,10 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.required' => 'Le numéro de téléphone est obligatoire.',
+            'code.required' => 'Le code de vérification est obligatoire.',
+            'code.size' => 'Le code doit contenir 6 chiffres.',
             'password.required' => 'Le mot de passe est obligatoire.',
-            'country_code.required' => 'Le pays est obligatoire.',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ];
     }
 }

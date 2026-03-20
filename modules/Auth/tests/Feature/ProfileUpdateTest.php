@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
 
@@ -18,32 +18,32 @@ test('profile information can be updated', function () {
     $this->actingAs($user);
 
     $response = Livewire::test('pages::settings.profile')
-        ->set('name', 'Test User')
-        ->set('email', 'test@example.com')
+        ->set('first_name', 'Test')
+        ->set('last_name', 'User')
         ->call('updateProfileInformation');
 
     $response->assertHasNoErrors();
 
     $user->refresh();
 
-    expect($user->name)->toEqual('Test User');
-    expect($user->email)->toEqual('test@example.com');
-    expect($user->email_verified_at)->toBeNull();
+    expect($user->first_name)->toEqual('Test');
+    expect($user->last_name)->toEqual('User');
+    expect($user->full_name)->toEqual('Test User');
 });
 
-test('email verification status is unchanged when email address is unchanged', function () {
+test('phone number remains unchanged when profile information is updated', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user);
 
     $response = Livewire::test('pages::settings.profile')
-        ->set('name', 'Test User')
-        ->set('email', $user->email)
+        ->set('first_name', 'Updated')
+        ->set('last_name', 'Name')
         ->call('updateProfileInformation');
 
     $response->assertHasNoErrors();
 
-    expect($user->refresh()->email_verified_at)->not->toBeNull();
+    expect($user->refresh()->phone)->toEqual($user->phone);
 });
 
 test('user can delete their account', function () {

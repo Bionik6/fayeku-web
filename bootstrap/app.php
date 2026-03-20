@@ -9,19 +9,19 @@ use Modules\Shared\Middleware\EnsureProfileType;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
-    })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
-    })
-    ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'profile' => EnsureProfileType::class,
             'verified.phone' => EnsurePhoneVerified::class,
         ]);
+
+        $middleware->redirectGuestsTo('/login');
+    })
+    ->withExceptions(function (Exceptions $exceptions): void {
+        //
     })
     ->create();

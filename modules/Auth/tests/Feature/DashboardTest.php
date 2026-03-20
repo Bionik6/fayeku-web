@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
 
