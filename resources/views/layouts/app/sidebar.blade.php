@@ -163,8 +163,8 @@
                                 <x-app.icon name="bell" class="size-5" />
                             </button>
 
-                            <div class="app-shell-panel flex items-center gap-3 px-3 py-2.5">
-                                <div class="flex size-11 items-center justify-center rounded-2xl bg-mist text-sm font-bold text-primary">
+                            <div class="flex items-center gap-3">
+                                <div class="flex size-9 items-center justify-center rounded-xl bg-mist text-xs font-bold text-primary">
                                     {{ $user->initials() }}
                                 </div>
                                 <div class="hidden min-w-0 sm:block">
