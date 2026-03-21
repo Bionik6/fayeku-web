@@ -17,7 +17,9 @@
                 [
                     'label' => __('Clients'),
                     'icon' => 'clients',
-                    'href' => '#',
+                    'href' => route('clients.index'),
+                    'current' => request()->routeIs('clients.*'),
+                    'navigate' => true,
                 ],
                 [
                     'label' => __('Export Groupé'),

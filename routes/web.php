@@ -15,6 +15,7 @@ Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defau
 
 Route::middleware(['auth', 'verified.phone'])->group(function () {
     Route::livewire('dashboard', 'pages::dashboard.index')->name('dashboard');
+    Route::livewire('clients', 'pages::clients.index')->name('clients.index');
     Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
 });
 
