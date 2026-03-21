@@ -119,15 +119,16 @@
                                 </a>
                             @endforeach
 
-                            <button
-                                type="button"
-                                class="app-shell-nav-link w-full"
-                                data-test="logout-button"
-                                x-on:click="$flux.modal('confirm-logout').show()"
-                            >
-                                <x-app.icon name="logout" class="app-shell-nav-icon" />
-                                <span class="app-shell-nav-label">{{ __('Déconnexion') }}</span>
-                            </button>
+                            <flux:modal.trigger name="confirm-logout" class="w-full">
+                                <button
+                                    type="button"
+                                    class="app-shell-nav-link w-full"
+                                    data-test="logout-button"
+                                >
+                                    <x-app.icon name="logout" class="app-shell-nav-icon" />
+                                    <span class="app-shell-nav-label">{{ __('Déconnexion') }}</span>
+                                </button>
+                            </flux:modal.trigger>
                         </nav>
                     </div>
                 </div>
@@ -180,8 +181,8 @@
             </div>
         </div>
 
-        <flux:modal name="confirm-logout" class="!w-[450px] !max-w-[450px] !border-0 !bg-white !shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
-            <div class="flex h-[315px] flex-col items-center justify-center text-center">
+        <flux:modal name="confirm-logout" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
+            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col items-center justify-center rounded-[2rem] bg-white text-center shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
                 <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
                     <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
                         <x-app.icon name="logout-modal" class="size-8 text-ink" />
@@ -190,7 +191,7 @@
 
                 <div class="mt-6 space-y-2">
                     <flux:heading size="xl" class="!font-bold !text-black">{{ __('Déconnexion') }}</flux:heading>
-                    <flux:subheading class="!text-base !leading-7 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta ?') }}</flux:subheading>
+                    <flux:subheading class="!text-base !leading-7 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta?') }}</flux:subheading>
                 </div>
 
                 <div class="mt-8 flex w-full gap-3">
