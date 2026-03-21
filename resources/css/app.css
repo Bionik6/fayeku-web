@@ -115,9 +115,14 @@ select:focus[data-flux-control] {
     [data-flux-modal] > dialog[data-modal='confirm-logout'] {
         --tw-ring-color: transparent !important;
         --tw-ring-shadow: 0 0 #0000 !important;
+        width: 450px !important;
+        max-width: 450px !important;
+        padding: 0 !important;
         border: 0 !important;
         outline: none !important;
         box-shadow: none !important;
+        background: transparent !important;
+        overflow: visible !important;
     }
 
     .app-shell-panel {
@@ -137,7 +142,7 @@ select:focus[data-flux-control] {
     }
 
     .app-shell-nav-link {
-        @apply flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-ink transition hover:bg-slate-100 hover:text-primary;
+        @apply flex items-center gap-4 rounded-2xl px-3 py-3 text-[1.05rem] leading-7 font-semibold text-ink transition hover:bg-slate-100 hover:text-primary;
     }
 
     .app-shell-nav-link:hover .app-shell-nav-icon {
@@ -153,11 +158,11 @@ select:focus[data-flux-control] {
     }
 
     .app-shell-nav-link[aria-disabled='true'] {
-        @apply cursor-default opacity-70;
+        @apply cursor-default;
     }
 
     .app-shell-nav-icon {
-        @apply size-5 shrink-0 text-ink transition;
+        @apply size-6 shrink-0 text-ink transition;
     }
 
     .app-shell-nav-label {

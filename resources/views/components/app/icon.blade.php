@@ -4,13 +4,13 @@
 
 @php
     $icons = [
-        'dashboard' => 'templates/duotone-icons-library/User Interface/SVG/home-12.svg',
+        'dashboard' => 'templates/duotone-icons-library/User Interface/SVG/dashboard.svg',
         'clients' => 'templates/duotone-icons-library/User & People/SVG/users-01.svg',
         'export' => 'templates/duotone-icons-library/File & Folder/SVG/file-export-01.svg',
         'commissions' => 'templates/duotone-icons-library/Finance & Payment/SVG/wallet-01.svg',
         'invitations' => 'templates/duotone-icons-library/Communication /SVG/mail-plus.svg',
         'settings' => 'templates/duotone-icons-library/User Interface/SVG/gear-01.svg',
-        'support' => 'templates/duotone-icons-library/Communication /SVG/message-dots-square.svg',
+        'support' => 'templates/duotone-icons-library/Communication /SVG/message-chat-square.svg',
         'logout' => 'templates/duotone-icons-library/User Interface/SVG/log-out-05.svg',
         'logout-modal' => 'templates/duotone-icons-library/User Interface/SVG/log-out-04.svg',
         'search' => 'templates/duotone-icons-library/User Interface/SVG/search-01.svg',

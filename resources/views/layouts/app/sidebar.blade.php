@@ -182,19 +182,21 @@
         </div>
 
         <flux:modal name="confirm-logout" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
-            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col items-center justify-center rounded-[2rem] bg-white text-center shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
-                <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
-                    <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
-                        <x-app.icon name="logout-modal" class="size-8 text-ink" />
+            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col rounded-[2rem] bg-white px-8 py-7 text-center shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+                <div class="flex justify-center">
+                    <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
+                        <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
+                            <x-app.icon name="logout-modal" class="size-8 text-ink" />
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-6 space-y-2">
+                <div class="mt-6 space-y-2 px-2">
                     <flux:heading size="xl" class="!font-bold !text-black">{{ __('Déconnexion') }}</flux:heading>
                     <flux:subheading class="!text-base !leading-7 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta?') }}</flux:subheading>
                 </div>
 
-                <div class="mt-8 flex w-full gap-3">
+                <div class="mt-auto flex w-full gap-3">
                     <flux:modal.close class="flex-1">
                         <flux:button class="w-full !rounded-[1.75rem] !border-0 !bg-zinc-700 !py-3.5 !text-base !font-semibold !text-white hover:!bg-zinc-800">
                             {{ __('Annuler') }}
