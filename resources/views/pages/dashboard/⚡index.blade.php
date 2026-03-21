@@ -50,7 +50,7 @@ new #[Title('Dashboard')] class extends Component {
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->translatedFormat('F Y'));
+        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
         $this->firm = auth()->user()->companies()
             ->where('type', 'accountant_firm')
             ->first();
@@ -97,7 +97,7 @@ new #[Title('Dashboard')] class extends Component {
             ->whereMonth('period_month', now()->month)
             ->sum('amount');
 
-        $this->nextPaymentDate = now()->addMonth()->startOfMonth()->addDays(4)->translatedFormat('j F');
+        $this->nextPaymentDate = now()->locale('fr_FR')->addMonth()->startOfMonth()->addDays(4)->translatedFormat('j F');
 
         $tier = PartnerTier::fromActiveClients($this->activeClientsCount);
         $this->tierValue = $tier->value;
@@ -343,7 +343,7 @@ new #[Title('Dashboard')] class extends Component {
 
             <article class="app-shell-stat-card border-l-2 border-l-primary">
                 <p class="text-sm font-medium text-slate-500">
-                    {{ __('Commission') }} {{ now()->translatedFormat('M') }}
+                    {{ __('Commission') }} {{ ucfirst(now()->locale('fr_FR')->translatedFormat('M')) }}
                 </p>
                 <p class="mt-2 text-3xl font-semibold tracking-tight text-primary">
                     {{ number_format($commissionAmount, 0, ',', ' ') }} F
@@ -504,7 +504,13 @@ new #[Title('Dashboard')] class extends Component {
                                         </div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                                        <span @class([
+                                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                            'bg-teal-100 text-teal-700' => strtolower($row['plan']) === 'essentiel',
+                                            'bg-violet-100 text-violet-700' => strtolower($row['plan']) === 'basique',
+                                            'bg-amber-100 text-amber-700' => strtolower($row['plan']) === 'premium',
+                                            'bg-slate-100 text-slate-600' => ! in_array(strtolower($row['plan']), ['essentiel', 'basique', 'premium']),
+                                        ])>
                                             {{ $row['plan'] }}
                                         </span>
                                     </td>
