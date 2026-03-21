@@ -119,17 +119,15 @@
                                 </a>
                             @endforeach
 
-                            <form method="POST" action="{{ route('auth.logout') }}">
-                                @csrf
-                                <button
-                                    type="submit"
-                                    class="app-shell-nav-link w-full"
-                                    data-test="logout-button"
-                                >
-                                    <x-app.icon name="logout" class="app-shell-nav-icon" />
-                                    <span class="app-shell-nav-label">{{ __('Déconnexion') }}</span>
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                class="app-shell-nav-link w-full"
+                                data-test="logout-button"
+                                x-on:click="$flux.modal('confirm-logout').show()"
+                            >
+                                <x-app.icon name="logout" class="app-shell-nav-icon" />
+                                <span class="app-shell-nav-label">{{ __('Déconnexion') }}</span>
+                            </button>
                         </nav>
                     </div>
                 </div>
@@ -181,6 +179,34 @@
                 </main>
             </div>
         </div>
+
+        <flux:modal name="confirm-logout" class="!w-[450px] !max-w-[450px] !bg-white">
+            <div class="flex h-[315px] flex-col items-center justify-center text-center">
+                <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
+                    <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
+                        <x-app.icon name="logout-modal" class="size-8 text-ink" />
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-2">
+                    <flux:heading size="xl" class="!font-bold">{{ __('Déconnexion') }}</flux:heading>
+                    <flux:subheading>{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta ?') }}</flux:subheading>
+                </div>
+
+                <div class="mt-8 flex w-full gap-3">
+                    <flux:modal.close class="flex-1">
+                        <flux:button class="w-full !rounded-2xl !py-3.5 !text-base !font-semibold">{{ __('Annuler') }}</flux:button>
+                    </flux:modal.close>
+
+                    <form method="POST" action="{{ route('auth.logout') }}" class="flex-1">
+                        @csrf
+                        <flux:button type="submit" variant="danger" class="w-full !rounded-2xl !py-3.5 !text-base !font-semibold">
+                            {{ __('Se déconnecter') }}
+                        </flux:button>
+                    </form>
+                </div>
+            </div>
+        </flux:modal>
 
         @fluxScripts
     </body>

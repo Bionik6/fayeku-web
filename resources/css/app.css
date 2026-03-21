@@ -129,7 +129,7 @@ select:focus[data-flux-control] {
     }
 
     .app-shell-nav-link {
-        @apply flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-ink transition hover:bg-slate-100 hover:text-primary;
+        @apply flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-primary;
     }
 
     .app-shell-nav-link:hover .app-shell-nav-icon {
@@ -149,7 +149,7 @@ select:focus[data-flux-control] {
     }
 
     .app-shell-nav-icon {
-        @apply size-5 shrink-0 text-ink transition;
+        @apply size-5 shrink-0 text-slate-700 transition;
     }
 
     .app-shell-nav-label {

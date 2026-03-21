@@ -12,6 +12,7 @@
         'settings' => 'templates/duotone-icons-library/User Interface/SVG/gear-01.svg',
         'support' => 'templates/duotone-icons-library/Communication /SVG/message-dots-square.svg',
         'logout' => 'templates/duotone-icons-library/User Interface/SVG/log-out-05.svg',
+        'logout-modal' => 'templates/duotone-icons-library/User Interface/SVG/log-out-04.svg',
         'search' => 'templates/duotone-icons-library/User Interface/SVG/search-01.svg',
         'bell' => 'templates/duotone-icons-library/Alerts, Spinner & Toggle/SVG/bell-notification-01.svg',
         'menu' => 'templates/duotone-icons-library/User Interface/SVG/menu-bar-01.svg',
