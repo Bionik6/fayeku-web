@@ -8,7 +8,7 @@
     'autocomplete' => 'tel',
     'autofocus' => false,
     'phonePlaceholder' => 'XX XXX XX XX',
-    'labelClass' => 'text-sm font-medium text-ink',
+    'labelClass' => 'auth-field-label',
     'containerClass' => '',
     'inputClass' => '',
 ])

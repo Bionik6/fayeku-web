@@ -102,7 +102,7 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight;
 }
 
 input:focus[data-flux-control],
@@ -121,11 +121,25 @@ select:focus[data-flux-control] {
     }
 
     .auth-label {
-        @apply block space-y-3 text-sm font-medium text-ink;
+        @apply grid gap-1 text-ink;
     }
 
     .auth-field-stack {
         @apply space-y-3;
+    }
+
+    .auth-field-label {
+        font-size: 1rem;
+        line-height: 1.5;
+        font-weight: 500;
+        color: var(--color-ink);
+    }
+
+    .auth-label > span:first-child {
+        font-size: 1rem;
+        line-height: 1.5;
+        font-weight: 500;
+        color: var(--color-ink);
     }
 
     .auth-input,
@@ -157,15 +171,28 @@ select:focus[data-flux-control] {
         @apply text-sm font-medium text-rose-600;
     }
 
-    .auth-checkbox {
-        @apply mt-0.5 h-5 w-5 rounded-md border-slate-300 text-accent shadow-xs;
-    }
-
-    .auth-checkbox:focus {
-        @apply ring-2 ring-accent/25 ring-offset-0;
-    }
-
     .auth-checkbox-row {
-        @apply flex items-start gap-3 px-1 py-1 text-base leading-7 text-slate-700;
+        @apply flex items-center gap-3 px-1 py-1 text-base leading-7 text-slate-700;
+    }
+
+    .auth-checkbox-wrap {
+        @apply grid size-4 shrink-0 grid-cols-1;
+    }
+
+    .auth-checkbox {
+        @apply col-start-1 row-start-1 appearance-none rounded-sm border border-slate-300 bg-white;
+        @apply checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+    }
+
+    .auth-checkbox-icon {
+        @apply pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white;
+    }
+
+    .auth-checkbox-icon path {
+        @apply opacity-0;
+    }
+
+    .auth-checkbox-wrap:has(.auth-checkbox:checked) .auth-checkbox-icon path {
+        @apply opacity-100;
     }
 }

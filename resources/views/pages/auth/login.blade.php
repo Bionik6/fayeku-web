@@ -24,7 +24,7 @@
 
             <div class="auth-field-stack">
                 <div class="flex items-center justify-between gap-4">
-                    <span class="text-sm font-medium text-ink">{{ __('Mot de passe') }} *</span>
+                    <span class="auth-field-label">{{ __('Mot de passe') }} *</span>
                     <a href="{{ route('auth.forgot-password') }}" wire:navigate class="text-sm auth-link">{{ __('Mot de passe oublié ?') }}</a>
                 </div>
                 <input
@@ -39,7 +39,12 @@
             </div>
 
             <label class="auth-checkbox-row">
-                <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="auth-checkbox" />
+                <span class="auth-checkbox-wrap">
+                    <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="auth-checkbox" />
+                    <svg viewBox="0 0 14 14" fill="none" class="auth-checkbox-icon" aria-hidden="true">
+                        <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
                 <span>{{ __('Se souvenir de moi') }}</span>
             </label>
 

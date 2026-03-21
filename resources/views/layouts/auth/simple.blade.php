@@ -4,7 +4,7 @@
         @include('partials.head', ['title' => $title ?? null])
     </head>
     <body class="marketing-site">
-        <div class="min-h-screen bg-[#024D4D]">
+        <div class="min-h-screen overflow-x-hidden bg-[#024D4D]">
             <div class="grid min-h-screen lg:grid-cols-[0.94fr_1.06fr]">
                 <div class="bg-[#D9EEE6] px-6 py-12 sm:px-10 lg:px-14 lg:py-16">
                     <div class="max-w-xl space-y-8 lg:ml-auto lg:mr-10 lg:mt-10">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
 
-                <div class="relative px-5 py-12 sm:px-8 lg:px-14 lg:py-16">
+                <div class="relative overflow-hidden px-5 py-12 sm:px-8 lg:px-14 lg:py-16">
                     <div class="absolute left-1/2 top-0 hidden h-full w-px bg-white/18 lg:block"></div>
                     <div class="absolute -right-24 top-24 hidden h-56 w-56 rounded-full border-[12px] border-white/40 lg:block"></div>
                     <div class="absolute -bottom-16 right-24 hidden h-64 w-64 rounded-full border-[12px] border-white/40 lg:block"></div>
