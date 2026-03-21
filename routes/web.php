@@ -14,7 +14,8 @@ Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defa
 Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defaults('page', 'confidentialite')->name('marketing.privacy');
 
 Route::middleware(['auth', 'verified.phone'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::livewire('dashboard', 'pages::dashboard.index')->name('dashboard');
+    Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
 });
 
 require __DIR__.'/settings.php';

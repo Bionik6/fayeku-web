@@ -1,0 +1,41 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        if (Schema::hasTable('commissions')) {
+            return;
+        }
+
+        Schema::create('commissions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('accountant_firm_id');
+            $table->string('sme_company_id');
+            $table->string('subscription_id')->nullable();
+            $table->integer('amount')->default(0);
+            $table->date('period_month');
+            $table->string('status')->default('pending');
+            $table->datetime('paid_at')->nullable();
+            $table->timestamps();
+
+            $table->foreign('accountant_firm_id')->references('id')->on('companies');
+            $table->foreign('sme_company_id')->references('id')->on('companies');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('commissions');
+    }
+};

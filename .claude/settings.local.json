@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/modules -type f -path \"*/database/migrations/*.php\" -exec basename {})",
+      "Bash(vendor/bin/pint --dirty --format agent)",
+      "Bash(php artisan:*)",
+      "Bash(grep -r Layout /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/settings/*.blade.php)",
+      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/resources/views/layouts -name *.blade.php)",
+      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/resources/views/components/layouts -name *.blade.php)",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__browser-logs",
+      "mcp__laravel-boost__database-schema",
+      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/modules/PME/Invoicing -name *.php)"
+    ]
+  }
+}
