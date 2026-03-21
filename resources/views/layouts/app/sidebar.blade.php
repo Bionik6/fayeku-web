@@ -190,7 +190,7 @@
 
                 <div class="mt-6 space-y-2">
                     <flux:heading size="xl" class="!font-bold !text-black">{{ __('Déconnexion') }}</flux:heading>
-                    <flux:subheading class="!text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta ?') }}</flux:subheading>
+                    <flux:subheading class="!text-base !leading-7 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta ?') }}</flux:subheading>
                 </div>
 
                 <div class="mt-8 flex w-full gap-3">
