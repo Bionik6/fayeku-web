@@ -23,7 +23,7 @@
             </div>
 
             <div class="auth-field-stack">
-                <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center justify-between gap-1">
                     <span class="auth-field-label">{{ __('Mot de passe') }} *</span>
                     <a href="{{ route('auth.forgot-password') }}" wire:navigate class="text-sm auth-link">{{ __('Mot de passe oublié ?') }}</a>
                 </div>

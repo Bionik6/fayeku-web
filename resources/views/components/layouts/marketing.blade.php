@@ -16,7 +16,7 @@
         <meta name="twitter:description" content="{{ $metaDescription ?? config('marketing.site.description') }}" />
         <meta name="twitter:image" content="{{ config('marketing.site.url') }}/og-image.svg" />
         <link rel="canonical" href="{{ $canonicalUrl ?? config('marketing.site.url') }}" />
-        <link rel="stylesheet" href="/marketing-static.css">
+        <link rel="stylesheet" href="/marketing-static.css" data-navigate-track>
     </head>
     <body class="marketing-site">
         <div class="flex min-h-screen flex-col">

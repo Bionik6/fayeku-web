@@ -23,8 +23,8 @@
     $phoneClasses = trim('min-w-0 grow rounded-r-2xl border-0 bg-transparent px-4 py-3 text-base text-ink placeholder:text-slate-400 outline-none focus:ring-0 '.$inputClass);
 @endphp
 
-<div {{ $attributes->class(['space-y-3']) }} data-phone-field>
-    <span class="{{ $labelClass }}">
+<div {{ $attributes->class(['space-y-1']) }} data-phone-field>
+    <span class="block {{ $labelClass }}">
         {{ $label }}@if ($required) * @endif
     </span>
 
