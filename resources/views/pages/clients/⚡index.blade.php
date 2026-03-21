@@ -23,13 +23,14 @@ new #[Title('Clients')] class extends Component {
 
     #[Url] public string $sortDirection = 'asc';
 
-    public bool $showAll = false;
-
     public string $tierValue = 'partner';
 
     public string $tierLabel = 'Partner';
 
     public string $currentMonth = '';
+
+    /** @var array<int, array<string, mixed>>|null */
+    private ?array $portfolioCache = null;
 
     public function mount(): void
     {
@@ -145,14 +146,17 @@ new #[Title('Clients')] class extends Component {
     public function setFilterStatus(string $status): void
     {
         $this->filterStatus = $status;
-        $this->showAll = false;
     }
 
     /** @return array<int, array<string, mixed>> */
     private function buildRawPortfolio(): array
     {
+        if ($this->portfolioCache !== null) {
+            return $this->portfolioCache;
+        }
+
         if (! $this->firm) {
-            return [];
+            return $this->portfolioCache = [];
         }
 
         $smeIds = AccountantCompany::query()
@@ -242,7 +246,7 @@ new #[Title('Clients')] class extends Component {
             ];
         }
 
-        return $portfolio;
+        return $this->portfolioCache = $portfolio;
     }
 }; ?>
 
@@ -261,22 +265,12 @@ new #[Title('Clients')] class extends Component {
             </div>
 
             <div class="flex shrink-0 items-center gap-3">
-                @if ($firm)
-                    <span @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold',
-                        'bg-primary text-white' => $tierValue === 'partner',
-                        'bg-amber-400 text-amber-950' => $tierValue === 'gold',
-                        'bg-ink text-accent' => $tierValue === 'platinum',
-                    ])>
-                        {{ $tierLabel }}
-                        @if ($tierValue !== 'partner') ★ @endif
-                    </span>
-                @endif
                 <a
                     href="#"
-                    class="inline-flex items-center gap-2 rounded-[1.75rem] border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
+                    class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
                 >
-                    + {{ __('Inviter un client') }}
+                    <flux:icon name="plus" variant="micro" />
+                    {{ __('Inviter un client') }}
                 </a>
             </div>
         </div>
@@ -340,10 +334,6 @@ new #[Title('Clients')] class extends Component {
 
     {{-- Tableau --}}
     <section class="app-shell-panel overflow-hidden">
-        @php
-            $visibleRows = $showAll ? $this->rows : array_slice($this->rows, 0, 6);
-        @endphp
-
         @if (count($this->rows) > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -354,9 +344,10 @@ new #[Title('Clients')] class extends Component {
                                 <button wire:click="sort('name')" class="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary">
                                     {{ __('Client') }}
                                     @if ($sortBy === 'name')
-                                        <span class="text-primary">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
+                                        @else <flux:icon.chevron-down class="size-3.5 text-primary" /> @endif
                                     @else
-                                        <span class="text-slate-300">↕</span>
+                                        <flux:icon.chevrons-up-down class="size-3.5 text-slate-300" />
                                     @endif
                                 </button>
                             </th>
@@ -365,9 +356,10 @@ new #[Title('Clients')] class extends Component {
                                 <button wire:click="sort('plan')" class="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary">
                                     {{ __('Plan') }}
                                     @if ($sortBy === 'plan')
-                                        <span class="text-primary">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
+                                        @else <flux:icon.chevron-down class="size-3.5 text-primary" /> @endif
                                     @else
-                                        <span class="text-slate-300">↕</span>
+                                        <flux:icon.chevrons-up-down class="size-3.5 text-slate-300" />
                                     @endif
                                 </button>
                             </th>
@@ -376,9 +368,10 @@ new #[Title('Clients')] class extends Component {
                                 <button wire:click="sort('last_invoice')" class="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary">
                                     {{ __('Dernière facture') }}
                                     @if ($sortBy === 'last_invoice')
-                                        <span class="text-primary">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
+                                        @else <flux:icon.chevron-down class="size-3.5 text-primary" /> @endif
                                     @else
-                                        <span class="text-slate-300">↕</span>
+                                        <flux:icon.chevrons-up-down class="size-3.5 text-slate-300" />
                                     @endif
                                 </button>
                             </th>
@@ -391,9 +384,10 @@ new #[Title('Clients')] class extends Component {
                                 <button wire:click="sort('pending_amount')" class="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary">
                                     {{ __('Montant en attente') }}
                                     @if ($sortBy === 'pending_amount')
-                                        <span class="text-primary">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
+                                        @else <flux:icon.chevron-down class="size-3.5 text-primary" /> @endif
                                     @else
-                                        <span class="text-slate-300">↕</span>
+                                        <flux:icon.chevrons-up-down class="size-3.5 text-slate-300" />
                                     @endif
                                 </button>
                             </th>
@@ -402,9 +396,10 @@ new #[Title('Clients')] class extends Component {
                                 <button wire:click="sort('recovery_rate')" class="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary">
                                     {{ __('Taux recouvrement') }}
                                     @if ($sortBy === 'recovery_rate')
-                                        <span class="text-primary">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
+                                        @else <flux:icon.chevron-down class="size-3.5 text-primary" /> @endif
                                     @else
-                                        <span class="text-slate-300">↕</span>
+                                        <flux:icon.chevrons-up-down class="size-3.5 text-slate-300" />
                                     @endif
                                 </button>
                             </th>
@@ -413,9 +408,10 @@ new #[Title('Clients')] class extends Component {
                                 <button wire:click="sort('status')" class="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary">
                                     {{ __('Statut') }}
                                     @if ($sortBy === 'status')
-                                        <span class="text-primary">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
+                                        @else <flux:icon.chevron-down class="size-3.5 text-primary" /> @endif
                                     @else
-                                        <span class="text-slate-300">↕</span>
+                                        <flux:icon.chevrons-up-down class="size-3.5 text-slate-300" />
                                     @endif
                                 </button>
                             </th>
@@ -426,7 +422,7 @@ new #[Title('Clients')] class extends Component {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @forelse ($visibleRows as $row)
+                        @forelse ($this->rows as $row)
                             <tr class="transition hover:bg-slate-50/60">
                                 {{-- Client --}}
                                 <td class="px-6 py-4">
@@ -522,19 +518,8 @@ new #[Title('Clients')] class extends Component {
                 </table>
             </div>
 
-            {{-- Footer show-all --}}
-            @if (! $showAll && count($this->rows) > 6)
-                <div class="flex items-center justify-center border-t border-slate-100 px-6 py-4">
-                    <button
-                        wire:click="$set('showAll', true)"
-                        class="text-sm font-semibold text-primary hover:underline"
-                    >
-                        + {{ count($this->rows) - 6 }} {{ __('autres clients') }} · {{ __('Afficher tout') }}
-                    </button>
-                </div>
-            @endif
 
-        @elseif ($this->statusCounts['all'] > 0)
+@elseif ($this->statusCounts['all'] > 0)
             <div class="px-6 py-10 text-center">
                 <p class="text-sm text-slate-400">{{ __('Aucun client ne correspond à ces filtres.') }}</p>
             </div>

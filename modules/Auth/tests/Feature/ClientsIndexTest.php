@@ -89,13 +89,13 @@ test('le sous-titre affiche le nombre correct de clients', function () {
         ->assertSee('4 clients');
 });
 
-test('le badge tier est Gold avec 7 clients', function () {
+test('le tier est calculé à Gold avec 7 clients', function () {
     ['user' => $user] = setupClientsPortfolio(7);
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
         ->assertSet('tierValue', 'gold')
-        ->assertSee('Gold');
+        ->assertSet('tierLabel', 'Gold');
 });
 
 test('un cabinet sans clients affiche le message vide', function () {
@@ -205,14 +205,13 @@ test('setFilterStatus("a_jour") ne retourne que les clients sains', function () 
     expect($rows[0]['status'])->toBe('a_jour');
 });
 
-test('setFilterStatus réinitialise showAll', function () {
+test('setFilterStatus change le filtre actif', function () {
     ['user' => $user] = setupClientsPortfolio(1);
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->set('showAll', true)
         ->call('setFilterStatus', 'a_jour')
-        ->assertSet('showAll', false);
+        ->assertSet('filterStatus', 'a_jour');
 });
 
 // ─── Filtrage par plan ────────────────────────────────────────────────────────
@@ -399,36 +398,20 @@ test('le tri par statut met les critiques en premier par défaut', function () {
     expect($rows[2]['status'])->toBe('a_jour');
 });
 
-// ─── Show-all ─────────────────────────────────────────────────────────────────
+// ─── Affichage complet (pas de pagination) ────────────────────────────────────
 
-test('au maximum 6 lignes sont affichées par défaut avec plus de 6 clients', function () {
+test('tous les clients sont affichés sans limite', function () {
     ['user' => $user] = setupClientsPortfolio(8);
 
-    Livewire::actingAs($user)
+    $rows = Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->assertSet('showAll', false)
-        ->assertSee('Afficher tout');
+        ->get('rows');
+
+    expect($rows)->toHaveCount(8);
 });
 
-test('le bouton affiche le bon nombre de clients restants', function () {
+test('le bouton "Afficher tout" est toujours absent', function () {
     ['user' => $user] = setupClientsPortfolio(8);
-
-    Livewire::actingAs($user)
-        ->test('pages::clients.index')
-        ->assertSee('+ 2 autres clients');
-});
-
-test('showAll=true expose tous les clients', function () {
-    ['user' => $user] = setupClientsPortfolio(8);
-
-    Livewire::actingAs($user)
-        ->test('pages::clients.index')
-        ->set('showAll', true)
-        ->assertDontSee('Afficher tout');
-});
-
-test('avec 6 clients ou moins le bouton Afficher tout est absent', function () {
-    ['user' => $user] = setupClientsPortfolio(6);
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
