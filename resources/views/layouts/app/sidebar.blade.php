@@ -182,7 +182,7 @@
         </div>
 
         <flux:modal name="confirm-logout" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
-            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col rounded-[2rem] bg-white px-8 py-7 text-center shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col rounded-[2rem] bg-white px-8 pt-7 pb-8 text-center shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
                 <div class="flex justify-center">
                     <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
                         <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
@@ -191,21 +191,21 @@
                     </div>
                 </div>
 
-                <div class="mt-6 space-y-2 px-2">
+                <div class="mt-5 px-3">
                     <flux:heading size="xl" class="!font-bold !text-black">{{ __('Déconnexion') }}</flux:heading>
-                    <flux:subheading class="!text-base !leading-7 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta?') }}</flux:subheading>
+                    <flux:subheading class="mt-3 !text-lg !leading-8 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta?') }}</flux:subheading>
                 </div>
 
-                <div class="mt-auto flex w-full gap-3">
+                <div class="mt-8 flex w-full gap-4 px-1">
                     <flux:modal.close class="flex-1">
-                        <flux:button class="w-full !rounded-[1.75rem] !border-0 !bg-zinc-700 !py-3.5 !text-base !font-semibold !text-white hover:!bg-zinc-800">
+                        <flux:button class="w-full !rounded-[1.75rem] !border-0 !px-6 !py-4 !text-lg !font-semibold !text-white hover:!bg-zinc-800 !bg-zinc-700">
                             {{ __('Annuler') }}
                         </flux:button>
                     </flux:modal.close>
 
                     <form method="POST" action="{{ route('auth.logout') }}" class="flex-1">
                         @csrf
-                        <flux:button type="submit" variant="danger" class="w-full !rounded-[1.75rem] !border-0 !py-3.5 !text-base !font-semibold">
+                        <flux:button type="submit" variant="danger" class="w-full !rounded-[1.75rem] !border-0 !px-6 !py-4 !text-lg !font-semibold">
                             {{ __('Se déconnecter') }}
                         </flux:button>
                     </form>
