@@ -3,92 +3,184 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-page">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-primary/10 bg-white">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
-            </flux:sidebar.header>
+    <body class="min-h-screen bg-page text-ink antialiased">
+        @php
+            $user = auth()->user();
+            $primaryNavigation = [
+                [
+                    'label' => __('Dashboard'),
+                    'icon' => 'dashboard',
+                    'href' => route('dashboard'),
+                    'current' => request()->routeIs('dashboard'),
+                    'navigate' => true,
+                ],
+                [
+                    'label' => __('Clients'),
+                    'icon' => 'clients',
+                    'href' => '#',
+                ],
+                [
+                    'label' => __('Export Groupé'),
+                    'icon' => 'export',
+                    'href' => '#',
+                ],
+                [
+                    'label' => __('Commissions'),
+                    'icon' => 'commissions',
+                    'href' => '#',
+                ],
+                [
+                    'label' => __('Invitations'),
+                    'icon' => 'invitations',
+                    'href' => '#',
+                ],
+            ];
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Fayeku')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-            </flux:sidebar.nav>
+            $secondaryNavigation = [
+                [
+                    'label' => __('Paramètres'),
+                    'icon' => 'settings',
+                    'href' => route('profile.edit'),
+                    'current' => request()->routeIs('profile.*'),
+                    'navigate' => true,
+                ],
+                [
+                    'label' => __('Aide & Support'),
+                    'icon' => 'support',
+                    'href' => '#',
+                ],
+            ];
+        @endphp
 
-            <flux:spacer />
+        <div class="min-h-screen lg:flex" data-app-shell data-sidebar-open="false">
+            <button
+                type="button"
+                class="fixed inset-0 z-30 hidden bg-slate-950/45 lg:hidden"
+                data-app-shell-overlay
+                data-app-shell-close
+                aria-label="{{ __('Fermer le menu') }}"
+            ></button>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="layout-grid" :href="route('home')">
-                    {{ __('Site public') }}
-                </flux:sidebar.item>
+            <aside
+                class="fixed inset-y-0 left-0 z-40 flex w-[18.5rem] -translate-x-full flex-col border-e border-slate-200/80 bg-white px-5 py-5 transition duration-300 ease-out lg:translate-x-0"
+                data-app-shell-sidebar
+            >
+                <div class="flex items-center justify-between gap-3">
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3" wire:navigate>
+                        <span class="flex size-11 items-center justify-center rounded-2xl bg-primary text-accent shadow-[0_16px_35px_rgba(2,77,77,0.18)]">
+                            <x-app-logo-icon class="size-6" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-lg font-bold tracking-tight text-ink">Fayeku</p>
+                            <p class="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">Compta</p>
+                        </div>
+                    </a>
 
-                <flux:sidebar.item icon="book-open-text" :href="route('marketing.pricing')">
-                    {{ __('Tarifs') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
+                    <button
+                        type="button"
+                        class="app-shell-icon-button lg:hidden"
+                        data-app-shell-close
+                        aria-label="{{ __('Fermer le menu') }}"
+                    >
+                        <x-app.icon name="close" class="size-5" />
+                    </button>
+                </div>
 
-            <x-desktop-user-menu class="hidden lg:block" />
-        </flux:sidebar>
+                <div class="mt-8 flex flex-1 flex-col">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{{ __('Navigation') }}</p>
+                        <nav class="mt-3 grid gap-2">
+                            @foreach ($primaryNavigation as $item)
+                                <a
+                                    href="{{ $item['href'] }}"
+                                    class="app-shell-nav-link"
+                                    @if (($item['current'] ?? false)) aria-current="page" @elseif (($item['href'] ?? '#') === '#') aria-disabled="true" @endif
+                                    @if ($item['navigate'] ?? false) wire:navigate @endif
+                                >
+                                    <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
+                                    <span class="app-shell-nav-label">{{ $item['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </nav>
+                    </div>
 
-        <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+                    <div class="mt-auto border-t border-slate-200/80 pt-6">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{{ __('Compte') }}</p>
+                        <nav class="mt-3 grid gap-2">
+                            @foreach ($secondaryNavigation as $item)
+                                <a
+                                    href="{{ $item['href'] }}"
+                                    class="app-shell-nav-link"
+                                    @if (($item['current'] ?? false)) aria-current="page" @elseif (($item['href'] ?? '#') === '#') aria-disabled="true" @endif
+                                    @if ($item['navigate'] ?? false) wire:navigate @endif
+                                >
+                                    <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
+                                    <span class="app-shell-nav-label">{{ $item['label'] }}</span>
+                                </a>
+                            @endforeach
 
-            <flux:spacer />
+                            <form method="POST" action="{{ route('auth.logout') }}">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="app-shell-nav-link w-full"
+                                    data-test="logout-button"
+                                >
+                                    <x-app.icon name="logout" class="app-shell-nav-icon" />
+                                    <span class="app-shell-nav-label">{{ __('Déconnexion') }}</span>
+                                </button>
+                            </form>
+                        </nav>
+                    </div>
+                </div>
+            </aside>
 
-            <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
+            <div class="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[18.5rem]">
+                <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-page/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <button
+                                type="button"
+                                class="app-shell-icon-button lg:hidden"
+                                data-app-shell-toggle
+                                aria-label="{{ __('Ouvrir le menu') }}"
+                            >
+                                <x-app.icon name="menu" class="size-5" />
+                            </button>
 
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->full_name"
-                                    :initials="auth()->user()->initials()"
-                                />
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-slate-500">
+                                    <span>{{ __('Dashboard') }}</span>
+                                    <span class="px-2 text-slate-300">/</span>
+                                    <span class="text-slate-700">{{ __('Overview') }}</span>
+                                </p>
+                                <h1 class="truncate text-xl font-semibold tracking-tight text-ink">{{ $title ?? __('Dashboard') }}</h1>
+                            </div>
+                        </div>
 
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->full_name }}</flux:heading>
-                                    <flux:text class="truncate">{{ auth()->user()->phone }}</flux:text>
+                        <div class="flex items-center gap-3">
+                            <button type="button" class="app-shell-icon-button hidden sm:inline-flex" aria-label="{{ __('Notifications') }}">
+                                <x-app.icon name="bell" class="size-5" />
+                            </button>
+
+                            <div class="app-shell-panel flex items-center gap-3 px-3 py-2.5">
+                                <div class="flex size-11 items-center justify-center rounded-2xl bg-mist text-sm font-bold text-primary">
+                                    {{ $user->initials() }}
+                                </div>
+                                <div class="hidden min-w-0 sm:block">
+                                    <p class="truncate text-sm font-semibold text-ink">{{ $user->full_name }}</p>
+                                    <p class="truncate text-xs text-slate-500">{{ __('Cabinet Fayeku') }}</p>
                                 </div>
                             </div>
                         </div>
-                    </flux:menu.radio.group>
+                    </div>
+                </header>
 
-                    <flux:menu.separator />
-
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <form method="POST" action="{{ route('auth.logout') }}" class="w-full">
-                        @csrf
-                        <flux:menu.item
-                            as="button"
-                            type="submit"
-                            icon="arrow-right-start-on-rectangle"
-                            class="w-full cursor-pointer"
-                            data-test="logout-button"
-                        >
-                            {{ __('Log out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        </flux:header>
-
-        {{ $slot }}
+                <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                    {{ $slot }}
+                </main>
+            </div>
+        </div>
 
         @fluxScripts
     </body>

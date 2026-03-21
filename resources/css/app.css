@@ -112,6 +112,62 @@ select:focus[data-flux-control] {
 }
 
 @layer components {
+    .app-shell-panel {
+        @apply rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.06)];
+    }
+
+    .app-shell-icon-button {
+        @apply inline-flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-primary/20 hover:text-primary;
+    }
+
+    .app-shell-search {
+        @apply flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-500;
+    }
+
+    .app-shell-kbd {
+        @apply inline-flex h-7 min-w-7 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-slate-400;
+    }
+
+    .app-shell-nav-link {
+        @apply flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-primary;
+    }
+
+    .app-shell-nav-link:hover .app-shell-nav-icon {
+        @apply text-primary;
+    }
+
+    .app-shell-nav-link[aria-current='page'] {
+        @apply bg-primary text-white shadow-[0_16px_32px_rgba(2,77,77,0.18)];
+    }
+
+    .app-shell-nav-link[aria-current='page'] .app-shell-nav-icon {
+        @apply text-accent;
+    }
+
+    .app-shell-nav-link[aria-disabled='true'] {
+        @apply cursor-default opacity-70;
+    }
+
+    .app-shell-nav-icon {
+        @apply size-5 shrink-0 text-slate-400 transition;
+    }
+
+    .app-shell-nav-label {
+        @apply truncate;
+    }
+
+    .app-shell-stat-card {
+        @apply rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.06)] p-5;
+    }
+
+    .app-shell-stat-pill {
+        @apply inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700;
+    }
+
+    .app-shell-skeleton-line {
+        @apply h-3 rounded-full bg-slate-100;
+    }
+
     .marketing-input {
         @apply w-full rounded-2xl border border-primary/10 bg-white px-4 py-3 text-base text-ink outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/15;
     }

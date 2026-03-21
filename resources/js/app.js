@@ -254,7 +254,58 @@ function bindPhoneFields() {
     });
 }
 
+function bindAppShell() {
+    const root = document.querySelector("[data-app-shell]");
+
+    if (!root || root.dataset.bound === "true") {
+        return;
+    }
+
+    root.dataset.bound = "true";
+
+    const sidebar = root.querySelector("[data-app-shell-sidebar]");
+    const overlay = root.querySelector("[data-app-shell-overlay]");
+    const toggles = root.querySelectorAll("[data-app-shell-toggle]");
+    const closers = root.querySelectorAll("[data-app-shell-close]");
+    const desktopMedia = window.matchMedia("(min-width: 1024px)");
+
+    function setSidebarState(isOpen) {
+        root.dataset.sidebarOpen = String(isOpen);
+
+        if (overlay) {
+            overlay.classList.toggle("hidden", !isOpen);
+        }
+
+        if (sidebar) {
+            sidebar.classList.toggle("-translate-x-full", !isOpen);
+            sidebar.classList.toggle("translate-x-0", isOpen);
+        }
+
+        document.body.classList.toggle("overflow-hidden", isOpen && !desktopMedia.matches);
+    }
+
+    toggles.forEach((toggle) => {
+        toggle.addEventListener("click", () => {
+            const isOpen = root.dataset.sidebarOpen === "true";
+            setSidebarState(!isOpen);
+        });
+    });
+
+    closers.forEach((closer) => {
+        closer.addEventListener("click", () => setSidebarState(false));
+    });
+
+    desktopMedia.addEventListener("change", (event) => {
+        if (event.matches) {
+            setSidebarState(false);
+        }
+    });
+
+    setSidebarState(false);
+}
+
 function initializePage() {
+    bindAppShell();
     bindNavigation();
     bindHomeHero();
     bindPricingPersona();

@@ -17,3 +17,35 @@ test('authenticated users can visit the dashboard', function () {
     $response = $this->get(route('dashboard'));
     $response->assertOk();
 });
+
+test('dashboard shell renders the compta navigation', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSeeInOrder([
+        'Dashboard',
+        'Clients',
+        'Export Groupé',
+        'Commissions',
+        'Invitations',
+        'Paramètres',
+        'Aide & Support',
+        'Déconnexion',
+    ]);
+    $response->assertSee('aria-current="page"', false);
+    $response->assertSee('data-test="logout-button"', false);
+});
+
+test('settings entry is highlighted on the settings screen', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->get(route('profile.edit'));
+
+    $response->assertOk();
+    $response->assertSee('Paramètres', false);
+    $response->assertSee('aria-current="page"', false);
+});
