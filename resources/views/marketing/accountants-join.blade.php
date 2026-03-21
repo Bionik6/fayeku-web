@@ -1,7 +1,7 @@
 <x-layouts.marketing-immersive :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
 <section class="relative overflow-hidden bg-[#024D4D]">
       <div class="absolute left-1/2 top-0 hidden h-full w-[1px] bg-white/18 lg:block"></div>
-      <div class="absolute -right-24 top-24 hidden h-56 w-56 rounded-full border-[12px] border-white/40 lg:block"></div>
+
       <div class="absolute -bottom-16 right-24 hidden h-64 w-64 rounded-full border-[12px] border-white/40 lg:block"></div>
 
       <div class="grid min-h-screen lg:grid-cols-[0.94fr_1.06fr]">
@@ -27,7 +27,7 @@
 
         <div class="relative px-5 py-12 sm:px-8 lg:px-14 lg:py-16">
           <div class="mx-auto max-w-xl lg:ml-10 lg:mr-auto lg:mt-4">
-            
+
     <div class="relative">
       <div class="absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] bg-accent" aria-hidden></div>
       <form action="#" method="post" data-demo-form class="relative space-y-5 rounded-[2rem] border border-[#024D4D]/10 bg-white p-6 shadow-soft sm:p-8">
@@ -46,20 +46,6 @@
             <input required type="text" name="last_name" placeholder="Entrez votre nom" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
           </label>
         </div>
-
-        <label class="block space-y-2 text-sm font-medium text-ink">
-          <span>E-mail professionnel *</span>
-          <input required type="email" name="email" placeholder="Entrez votre adresse email..." class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15" />
-        </label>
-
-        <x-phone-input
-          label="Numéro de téléphone"
-          country-name="country_code"
-          country-value="SN"
-          phone-name="phone"
-          :required="true"
-          phone-placeholder="XX XXX XX XX"
-        />
 
         <label class="block space-y-2 text-sm font-medium text-ink">
           <span>Nom du cabinet *</span>
@@ -99,7 +85,7 @@
         </p>
       </form>
     </div>
-  
+
           </div>
         </div>
       </div>
