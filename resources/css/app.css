@@ -112,6 +112,14 @@ select:focus[data-flux-control] {
 }
 
 @layer components {
+    [data-flux-modal] > dialog[data-modal='confirm-logout'] {
+        --tw-ring-color: transparent !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
     .app-shell-panel {
         @apply rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.06)];
     }

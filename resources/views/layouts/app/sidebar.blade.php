@@ -180,7 +180,7 @@
             </div>
         </div>
 
-        <flux:modal name="confirm-logout" class="!w-[450px] !max-w-[450px] !bg-white">
+        <flux:modal name="confirm-logout" class="!w-[450px] !max-w-[450px] !border-0 !bg-white !shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
             <div class="flex h-[315px] flex-col items-center justify-center text-center">
                 <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
                     <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
@@ -189,18 +189,20 @@
                 </div>
 
                 <div class="mt-6 space-y-2">
-                    <flux:heading size="xl" class="!font-bold">{{ __('Déconnexion') }}</flux:heading>
-                    <flux:subheading>{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta ?') }}</flux:subheading>
+                    <flux:heading size="xl" class="!font-bold !text-black">{{ __('Déconnexion') }}</flux:heading>
+                    <flux:subheading class="!text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku Compta ?') }}</flux:subheading>
                 </div>
 
                 <div class="mt-8 flex w-full gap-3">
                     <flux:modal.close class="flex-1">
-                        <flux:button class="w-full !rounded-2xl !py-3.5 !text-base !font-semibold">{{ __('Annuler') }}</flux:button>
+                        <flux:button class="w-full !rounded-[1.75rem] !border-0 !bg-zinc-700 !py-3.5 !text-base !font-semibold !text-white hover:!bg-zinc-800">
+                            {{ __('Annuler') }}
+                        </flux:button>
                     </flux:modal.close>
 
                     <form method="POST" action="{{ route('auth.logout') }}" class="flex-1">
                         @csrf
-                        <flux:button type="submit" variant="danger" class="w-full !rounded-2xl !py-3.5 !text-base !font-semibold">
+                        <flux:button type="submit" variant="danger" class="w-full !rounded-[1.75rem] !border-0 !py-3.5 !text-base !font-semibold">
                             {{ __('Se déconnecter') }}
                         </flux:button>
                     </form>
