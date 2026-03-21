@@ -12,5 +12,9 @@
       "mcp__laravel-boost__database-schema",
       "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/modules/PME/Invoicing -name *.php)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ],
+  "enableAllProjectMcpServers": true
 }
