@@ -6,6 +6,7 @@ use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Enums\PartnerTier;
 use Modules\Compta\Partnership\Models\Commission;
+use Modules\Compta\Portfolio\Models\DismissedAlert;
 use Modules\Compta\Portfolio\Services\AlertService;
 use Modules\Compta\Portfolio\Services\PortfolioService;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
@@ -109,6 +110,19 @@ new #[Title('Dashboard')] class extends Component {
 
         $this->alerts = app(AlertService::class)->build($this->firm, null, 5);
         $this->portfolio = $this->buildPortfolio($smeIds, $allInvoices);
+    }
+
+    public function dismiss(string $alertKey): void
+    {
+        DismissedAlert::firstOrCreate(
+            ['user_id' => auth()->id(), 'alert_key' => $alertKey],
+            ['dismissed_at' => now()]
+        );
+
+        $this->alerts = array_values(array_filter(
+            $this->alerts,
+            fn (array $a) => $a['alert_key'] !== $alertKey
+        ));
     }
 
     /** @return array{int, int, string, string} */
@@ -347,15 +361,35 @@ new #[Title('Dashboard')] class extends Component {
                             <p class="truncate font-semibold text-ink">{{ $alert['title'] }}</p>
                             <p class="mt-0.5 truncate text-sm text-slate-500">{{ $alert['subtitle'] }}</p>
                         </div>
-                        @if ($alert['company_id'])
-                            <a
-                                href="{{ route('clients.show', $alert['company_id']) }}"
-                                wire:navigate
-                                class="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:border-primary/20 hover:text-primary"
-                            >
-                                {{ __('Voir fiche') }}
-                            </a>
-                        @endif
+                        {{-- Dropdown actions --}}
+                        <flux:dropdown position="bottom" align="end">
+                            <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                {{ __('Actions') }}
+                                <x-app.icon name="chevron-down" class="size-3.5" />
+                            </button>
+                            <flux:menu>
+                                @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
+                                    <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
+                                        <x-app.icon name="invoice" class="size-4 text-slate-400" />
+                                        {{ __('Voir Facture') }}
+                                    </flux:menu.item>
+                                @endif
+
+                                @if ($alert['company_id'] ?? null)
+                                    <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
+                                        <x-app.icon name="user" class="size-4 text-slate-400" />
+                                        {{ __('Voir Fiche Client') }}
+                                    </flux:menu.item>
+                                @endif
+
+                                <flux:menu.separator />
+
+                                <flux:menu.item wire:click="dismiss('{{ $alert['alert_key'] }}')">
+                                    <x-app.icon name="check" class="size-4 text-slate-400" />
+                                    {{ __('Marquer comme vu') }}
+                                </flux:menu.item>
+                            </flux:menu>
+                        </flux:dropdown>
                     </div>
                 @endforeach
             </div>
