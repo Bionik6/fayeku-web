@@ -37,7 +37,9 @@
                 [
                     'label' => __('Export Groupé'),
                     'icon' => 'export',
-                    'href' => '#',
+                    'href' => route('export.index'),
+                    'current' => request()->routeIs('export.*'),
+                    'navigate' => true,
                 ],
                 [
                     'label' => __('Commissions'),

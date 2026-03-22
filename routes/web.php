@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified.phone'])->group(function () {
     Route::livewire('alertes', 'pages::alerts.index')->name('alerts.index');
     Route::livewire('clients', 'pages::clients.index')->name('clients.index');
     Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
+    Route::livewire('export-groupe', 'pages::export.index')->name('export.index');
 });
 
 require __DIR__.'/settings.php';
