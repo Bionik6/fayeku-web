@@ -322,51 +322,95 @@ new #[Title('Fiche client')] class extends Component {
 
         {{-- CA facturé --}}
         <section class="app-shell-panel p-5">
-            <p class="text-xs font-medium text-slate-500">
-                {{ __('CA facturé') }}
-                ({{ ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('M')) }})
-            </p>
-            <p class="mt-2 text-2xl font-bold tracking-tight text-ink">
+            <div class="flex items-start justify-between">
+                <div class="flex size-10 items-center justify-center rounded-xl bg-slate-100">
+                    <flux:icon name="document-chart-bar" class="size-5 text-slate-600" />
+                </div>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                    {{ ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('M Y')) }}
+                </span>
+            </div>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('CA facturé') }}</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-ink">
                 {{ number_format($this->stats['billed_month'], 0, ',', ' ') }} FCFA
             </p>
         </section>
 
         {{-- Encaissé --}}
         <section class="app-shell-panel p-5">
-            <p class="text-xs font-medium text-slate-500">{{ __('Encaissé') }}</p>
-            <p class="mt-2 text-2xl font-bold tracking-tight text-accent">
+            <div class="flex items-start justify-between">
+                <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
+                    <flux:icon name="banknotes" class="size-5 text-accent" />
+                </div>
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    All-time
+                </span>
+            </div>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Encaissé') }}</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-accent">
                 {{ number_format($this->stats['collected'], 0, ',', ' ') }} FCFA
             </p>
         </section>
 
         {{-- En attente --}}
         <section class="app-shell-panel p-5">
-            <p class="text-xs font-medium text-slate-500">{{ __('En attente') }}</p>
+            <div class="flex items-start justify-between">
+                <div @class([
+                    'flex size-10 items-center justify-center rounded-xl',
+                    'bg-rose-50'   => $this->statusValue === 'critique',
+                    'bg-amber-50'  => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
+                    'bg-slate-100' => $this->stats['pending_amount'] === 0,
+                ])>
+                    <flux:icon name="exclamation-circle" @class([
+                        'size-5',
+                        'text-rose-500'   => $this->statusValue === 'critique',
+                        'text-amber-500'  => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
+                        'text-slate-400'  => $this->stats['pending_amount'] === 0,
+                    ]) />
+                </div>
+                @if ($this->stats['pending_count'] > 0)
+                    <span @class([
+                        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
+                        'bg-rose-50 text-rose-700'   => $this->statusValue === 'critique',
+                        'bg-amber-50 text-amber-700' => $this->statusValue !== 'critique',
+                    ])>
+                        {{ $this->stats['pending_count'] }} {{ $this->stats['pending_count'] > 1 ? __('factures') : __('facture') }}
+                    </span>
+                @else
+                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                        À jour
+                    </span>
+                @endif
+            </div>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('En attente') }}</p>
             <p @class([
-                'mt-2 text-2xl font-bold tracking-tight',
+                'mt-1 text-2xl font-bold tracking-tight',
                 'text-rose-500'  => $this->statusValue === 'critique',
                 'text-amber-500' => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
                 'text-ink'       => $this->stats['pending_amount'] === 0,
             ])>
                 {{ number_format($this->stats['pending_amount'], 0, ',', ' ') }} FCFA
             </p>
-            @if ($this->stats['pending_count'] > 0)
-                <p class="mt-1 text-xs text-slate-500">
-                    {{ $this->stats['pending_count'] }} {{ $this->stats['pending_count'] > 1 ? __('factures impayées') : __('facture impayée') }}
-                </p>
-            @endif
         </section>
 
         {{-- Délai moyen · Taux --}}
         <section class="app-shell-panel p-5">
-            <p class="text-xs font-medium text-slate-500">{{ __('Délai moyen · Taux') }}</p>
-            <p class="mt-2 text-2xl font-bold tracking-tight text-amber-500">
+            <div class="flex items-start justify-between">
+                <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
+                    <flux:icon name="clock" class="size-5 text-amber-500" />
+                </div>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                    Recouvrement
+                </span>
+            </div>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Délai moyen · Taux') }}</p>
+            <p class="mt-1 text-2xl font-bold tracking-tight text-amber-500">
                 {{ $this->stats['avg_days'] }}j
                 <span class="text-slate-400">·</span>
                 {{ $this->stats['recovery_rate'] }}%
             </p>
-            <p class="mt-1 text-xs text-slate-500">{{ __('Recouvrement') }}</p>
         </section>
+
     </div>
 
     {{-- ─── Factures du mois ─────────────────────────────────────────────── --}}

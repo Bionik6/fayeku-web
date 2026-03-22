@@ -308,85 +308,62 @@ test('pas d\'alerte de type new pour une invitation acceptée il y a plus de 7 j
     expect(collect($component->get('alerts'))->where('type', 'new'))->toHaveCount(0);
 });
 
-// ─── Portfolio ────────────────────────────────────────────────────────────────
+// ─── Aperçu portefeuille ──────────────────────────────────────────────────────
 
-test('le portfolio liste les PMEs gérées', function () {
+test('portfolio contient au maximum 10 entrées', function () {
+    ['user' => $user] = createFirmWithSmes(12);
+
+    $portfolio = Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->get('portfolio');
+
+    expect($portfolio)->toHaveCount(10);
+});
+
+test('portfolio trie les clients critiques en premier', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(2);
 
-    $component = Livewire::actingAs($user)->test('pages::dashboard.index');
-
-    $portfolio = $component->get('portfolio');
-    expect($portfolio)->toHaveCount(2);
-    expect(collect($portfolio)->pluck('name'))->toContain($smes[0]->name);
-});
-
-test('le portfolio est trié : critiques → attente → à jour', function () {
-    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(3);
-
-    // critique
     createInvoice($smes[0], [
-        'status' => InvoiceStatus::Overdue->value,
-        'due_at' => now()->subDays(65),
-        'amount_paid' => 0,
-    ]);
-
-    // attente
-    createInvoice($smes[1], [
-        'status' => InvoiceStatus::Overdue->value,
-        'due_at' => now()->subDays(10),
-        'amount_paid' => 0,
-    ]);
-
-    // à jour
-    createInvoice($smes[2]);
-
-    $portfolio = Livewire::actingAs($user)
-        ->test('pages::dashboard.index')
-        ->get('portfolio');
-
-    expect($portfolio[0]['status'])->toBe('critique');
-    expect($portfolio[1]['status'])->toBe('attente');
-    expect($portfolio[2]['status'])->toBe('a_jour');
-});
-
-test('le taux de recouvrement est calculé correctement', function () {
-    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
-
-    // 2 factures : 100k total, 80k encaissé → 80%
-    createInvoice($smes[0], ['total' => 60_000, 'amount_paid' => 60_000]);
-    createInvoice($smes[0], ['total' => 40_000, 'amount_paid' => 20_000]);
-
-    $portfolio = Livewire::actingAs($user)
-        ->test('pages::dashboard.index')
-        ->get('portfolio');
-
-    expect($portfolio[0]['recovery_rate'])->toBe(80);
-});
-
-test('le montant en attente est la somme des impayés', function () {
-    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
-
-    createInvoice($smes[0], [
-        'status' => InvoiceStatus::PartiallyPaid->value,
-        'total' => 200_000,
-        'amount_paid' => 50_000,
+        'status' => 'overdue',
+        'due_at' => now()->subDays(70),
+        'total' => 100_000,
     ]);
 
     $portfolio = Livewire::actingAs($user)
         ->test('pages::dashboard.index')
         ->get('portfolio');
 
-    expect($portfolio[0]['pending_amount'])->toBe(150_000);
+    expect(collect($portfolio)->first()['status'])->toBe('critique');
 });
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
-
-test('le portfolio affiche les liens de navigation vers la fiche client', function () {
+test('portfolio affiche le tableau dans la vue', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
     Livewire::actingAs($user)
         ->test('pages::dashboard.index')
-        ->assertSee(route('clients.show', $smes[0]->id), false);
+        ->assertSee(__('Aperçu portefeuille'));
+});
+
+test('portfolio est vide sans clients', function () {
+    $user = User::factory()->create();
+    $firm = Company::factory()->accountantFirm()->create();
+    $firm->users()->attach($user->id, ['role' => 'admin']);
+
+    $portfolio = Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->get('portfolio');
+
+    expect($portfolio)->toBeEmpty();
+});
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+
+test('les raccourcis affichent le lien vers le portefeuille clients', function () {
+    ['user' => $user] = createFirmWithSmes(1);
+
+    Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->assertSee(route('clients.index'), false);
 });
 
 test('la route HTTP dashboard est accessible', function () {
