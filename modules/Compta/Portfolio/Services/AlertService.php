@@ -5,8 +5,10 @@ namespace Modules\Compta\Portfolio\Services;
 use Illuminate\Support\Collection;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Portfolio\Models\DismissedAlert;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
+use Modules\Shared\Models\User;
 
 class AlertService
 {
@@ -43,9 +45,19 @@ class AlertService
         return $limit > 0 ? array_slice($alerts, 0, $limit) : $alerts;
     }
 
-    public function count(Company $firm): int
+    public function count(Company $firm, ?User $user = null): int
     {
-        return count($this->build($firm));
+        $all = $this->build($firm);
+
+        if (! $user) {
+            return count($all);
+        }
+
+        $dismissed = DismissedAlert::where('user_id', $user->id)
+            ->pluck('alert_key')
+            ->toArray();
+
+        return count(array_filter($all, fn (array $a) => ! in_array($a['alert_key'], $dismissed)));
     }
 
     /** @param array<int, array<string, mixed>> $alerts */
@@ -68,9 +80,11 @@ class AlertService
 
             $alerts[] = [
                 'type' => 'critical',
+                'alert_key' => 'critical_'.$invoice->id,
+                'invoice_id' => $invoice->id,
+                'company_id' => $invoice->company_id,
                 'title' => $invoice->company->name.' — impayé critique',
                 'subtitle' => ($invoice->reference ?? 'FAC').' · '.number_format($invoice->total, 0, ',', ' ').' FCFA · J+'.$daysLate.' · '.$reminderLabel,
-                'company_id' => $invoice->company_id,
             ];
         }
     }
@@ -102,9 +116,11 @@ class AlertService
 
             $alerts[] = [
                 'type' => 'watch',
+                'alert_key' => 'watch_'.$company->id,
+                'invoice_id' => null,
+                'company_id' => $company->id,
                 'title' => $company->name.' — inactif depuis '.($daysSince ? $daysSince.' jours' : 'longtemps'),
                 'subtitle' => 'Aucune facture émise ce mois'.($daysSince ? ' · Dernier contact il y a '.$daysSince.'j' : ''),
-                'company_id' => $company->id,
             ];
         }
     }
@@ -126,9 +142,11 @@ class AlertService
 
             $alerts[] = [
                 'type' => 'new',
+                'alert_key' => 'new_'.$invitation->id,
+                'invoice_id' => null,
+                'company_id' => $invitation->sme_company_id,
                 'title' => ($newSme?->name ?? $invitation->invitee_name)." — vient de s'inscrire",
                 'subtitle' => 'Via votre lien partenaire · Plan '.ucfirst($invitation->recommended_plan ?? 'Essentiel').' · Trial 2 mois',
-                'company_id' => $invitation->sme_company_id,
             ];
         }
     }

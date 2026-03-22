@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Portfolio\Models\DismissedAlert;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\Shared\Models\User;
 
@@ -284,4 +285,227 @@ test('$set filter met à jour les alertes affichées', function () {
     $component->set('filter', 'all');
     $types = collect($component->get('alerts'))->pluck('type')->unique();
     expect($types)->toContain('critical')->and($types)->toContain('new');
+});
+
+// ─── Dismiss / Undismiss ──────────────────────────────────────────────────────
+
+test('dismiss() crée un enregistrement DismissedAlert et masque l\'alerte', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $alertKey = 'critical_'.$invoice->id;
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+
+    expect(collect($component->get('alerts'))->where('alert_key', $alertKey))->toHaveCount(1);
+
+    $component->call('dismiss', $alertKey);
+
+    expect(DismissedAlert::where('user_id', $user->id)->where('alert_key', $alertKey)->exists())->toBeTrue()
+        ->and(collect($component->get('alerts'))->where('alert_key', $alertKey))->toHaveCount(0);
+});
+
+test('dismiss() est idempotent pour la même alerte', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $alertKey = 'critical_'.$invoice->id;
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $component->call('dismiss', $alertKey);
+    $component->call('dismiss', $alertKey);
+
+    expect(DismissedAlert::where('user_id', $user->id)->where('alert_key', $alertKey)->count())->toBe(1);
+});
+
+test('undismiss() supprime l\'enregistrement et restaure l\'alerte', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $alertKey = 'critical_'.$invoice->id;
+
+    DismissedAlert::create([
+        'user_id' => $user->id,
+        'alert_key' => $alertKey,
+        'dismissed_at' => now(),
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+
+    expect(collect($component->get('alerts'))->where('alert_key', $alertKey))->toHaveCount(0);
+
+    $component->call('undismiss', $alertKey);
+
+    expect(DismissedAlert::where('user_id', $user->id)->where('alert_key', $alertKey)->exists())->toBeFalse()
+        ->and(collect($component->get('alerts'))->where('alert_key', $alertKey))->toHaveCount(1);
+});
+
+test('counts() inclut le nombre d\'alertes archivées', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    DismissedAlert::create([
+        'user_id' => $user->id,
+        'alert_key' => 'critical_'.$invoice->id,
+        'dismissed_at' => now(),
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $counts = $component->get('counts');
+
+    expect($counts['dismissed'])->toBe(1)
+        ->and($counts['critical'])->toBe(0);
+});
+
+// ─── showDismissed ────────────────────────────────────────────────────────────
+
+test('showDismissed=true affiche uniquement les alertes archivées avec le flag dismissed', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $alertKey = 'critical_'.$invoice->id;
+
+    DismissedAlert::create([
+        'user_id' => $user->id,
+        'alert_key' => $alertKey,
+        'dismissed_at' => now(),
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $component->set('showDismissed', true);
+
+    $alerts = $component->get('alerts');
+
+    expect($alerts)->toHaveCount(1)
+        ->and($alerts[0]['alert_key'])->toBe($alertKey)
+        ->and($alerts[0]['dismissed'])->toBeTrue();
+});
+
+test('showDismissed=true retourne une liste vide quand aucune alerte n\'est archivée', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $component->set('showDismissed', true);
+
+    expect($component->get('alerts'))->toHaveCount(0);
+});
+
+// ─── Modale facture ───────────────────────────────────────────────────────────
+
+test('viewInvoice() définit selectedInvoiceId', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+
+    expect($component->get('selectedInvoiceId'))->toBeNull();
+
+    $component->call('viewInvoice', $invoice->id);
+
+    expect($component->get('selectedInvoiceId'))->toBe($invoice->id);
+});
+
+test('closeInvoice() réinitialise selectedInvoiceId à null', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $component->call('viewInvoice', $invoice->id);
+    $component->call('closeInvoice');
+
+    expect($component->get('selectedInvoiceId'))->toBeNull();
+});
+
+test('selectedInvoice retourne la facture correspondante quand un ID est sélectionné', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $component->call('viewInvoice', $invoice->id);
+
+    expect($component->get('selectedInvoice'))->not->toBeNull()
+        ->and($component->get('selectedInvoice')->id)->toBe($invoice->id);
+});
+
+// ─── alert_key ────────────────────────────────────────────────────────────────
+
+test('chaque alerte contient une alert_key unique selon son type', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = createFirmWithSmes(2);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'issued_at' => now()->subDays(90),
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+    createInvoice($smes[1], ['issued_at' => now()->subDays(45)]);
+    PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => fake()->uuid(),
+        'invitee_phone' => '+221701234580',
+        'invitee_name' => 'Test PME',
+        'status' => 'accepted',
+        'accepted_at' => now()->subDay(),
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $alerts = $component->get('alerts');
+
+    $keys = collect($alerts)->pluck('alert_key');
+
+    expect($keys->unique())->toHaveCount($keys->count());
+
+    $criticalAlert = collect($alerts)->firstWhere('type', 'critical');
+    $watchAlert = collect($alerts)->firstWhere('type', 'watch');
+    $newAlert = collect($alerts)->firstWhere('type', 'new');
+
+    expect($criticalAlert['alert_key'])->toStartWith('critical_')
+        ->and($watchAlert['alert_key'])->toStartWith('watch_')
+        ->and($newAlert['alert_key'])->toStartWith('new_');
 });

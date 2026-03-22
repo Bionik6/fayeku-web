@@ -30,7 +30,7 @@ return new class extends Migration
             $table->integer('amount_paid')->default(0);
             $table->text('notes')->nullable();
             $table->string('certification_authority')->nullable();
-            $table->json('certification_data')->nullable();
+            $table->jsonb('certification_data')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

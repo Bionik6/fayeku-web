@@ -9,7 +9,7 @@
 
             $user = auth()->user();
             $firm = $user->companies()->where('type', 'accountant_firm')->first();
-            $alertsCount = $firm ? app(AlertService::class)->count($firm) : 0;
+            $alertsCount = $firm ? app(AlertService::class)->count($firm, $user) : 0;
 
             $primaryNavigation = [
                 [

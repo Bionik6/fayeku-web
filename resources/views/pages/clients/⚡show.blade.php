@@ -300,13 +300,13 @@ new #[Title('Fiche client')] class extends Component {
                     'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold',
                     'border-rose-200 bg-rose-50 text-rose-700'      => $this->statusValue === 'critique',
                     'border-amber-200 bg-amber-50 text-amber-700'   => $this->statusValue === 'attente',
-                    'border-emerald-200 bg-emerald-50 text-emerald-700' => $this->statusValue === 'a_jour',
+                    'border-green-200 bg-green-50 text-green-700' => $this->statusValue === 'a_jour',
                 ])>
                     <span @class([
                         'size-2 rounded-full',
-                        'bg-rose-500'    => $this->statusValue === 'critique',
-                        'bg-amber-400'   => $this->statusValue === 'attente',
-                        'bg-emerald-500' => $this->statusValue === 'a_jour',
+                        'bg-rose-500'  => $this->statusValue === 'critique',
+                        'bg-amber-400' => $this->statusValue === 'attente',
+                        'bg-green-500' => $this->statusValue === 'a_jour',
                     ])></span>
                     @if ($this->statusValue === 'critique') Critique
                     @elseif ($this->statusValue === 'attente') Attente
@@ -475,7 +475,7 @@ new #[Title('Fiche client')] class extends Component {
                             }
 
                             $statusConfig = match ($invoice->status) {
-                                InvoiceStatus::Paid               => ['label' => 'Payée',       'class' => 'bg-teal-100 text-teal-700'],
+                                InvoiceStatus::Paid               => ['label' => 'Payée',       'class' => 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'],
                                 InvoiceStatus::Overdue            => ['label' => 'Impayée',     'class' => 'bg-rose-100 text-rose-700'],
                                 InvoiceStatus::PartiallyPaid      => ['label' => 'Partiel',     'class' => 'bg-orange-100 text-orange-700'],
                                 InvoiceStatus::Sent,
@@ -560,7 +560,7 @@ new #[Title('Fiche client')] class extends Component {
             $client = $inv->client;
 
             $statusConfig = match ($inv->status) {
-                InvoiceStatus::Paid               => ['label' => 'Payée',       'class' => 'bg-teal-100 text-teal-700'],
+                InvoiceStatus::Paid               => ['label' => 'Payée',       'class' => 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'],
                 InvoiceStatus::Overdue            => ['label' => 'Impayée',     'class' => 'bg-rose-100 text-rose-700'],
                 InvoiceStatus::PartiallyPaid      => ['label' => 'Partiel',     'class' => 'bg-orange-100 text-orange-700'],
                 InvoiceStatus::Sent,

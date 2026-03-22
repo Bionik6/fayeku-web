@@ -10,11 +10,12 @@
       "mcp__laravel-boost__last-error",
       "mcp__laravel-boost__browser-logs",
       "mcp__laravel-boost__database-schema",
-      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/modules/PME/Invoicing -name *.php)"
+      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web/modules/PME/Invoicing -name *.php)",
+      "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web -name Company.php -path */Models/*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "laravel-boost"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
