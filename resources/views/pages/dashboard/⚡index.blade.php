@@ -7,8 +7,7 @@ use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Enums\PartnerTier;
 use Modules\Compta\Partnership\Models\Commission;
-use Modules\Compta\Partnership\Models\PartnerInvitation;
-use Modules\PME\Collection\Models\Reminder;
+use Modules\Compta\Portfolio\Services\AlertService;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
@@ -111,7 +110,7 @@ new #[Title('Dashboard')] class extends Component {
 
         [$this->tierProgress, $this->nextThreshold, $this->tierRangeLabel, $this->nextTierLabel] = $this->computeTierProgress($tier);
 
-        $this->alerts = $this->buildAlerts($smeIds, $allInvoices);
+        $this->alerts = app(AlertService::class)->build($this->firm, null, 5);
         $this->portfolio = $this->buildPortfolio($smeIds, $allInvoices);
     }
 
@@ -133,74 +132,6 @@ new #[Title('Dashboard')] class extends Component {
             ],
             PartnerTier::Platinum => [100, 15, '15+ clients', ''],
         };
-    }
-
-    /** @return array<int, array<string, mixed>> */
-    private function buildAlerts(Collection $smeIds, Collection $allInvoices): array
-    {
-        $alerts = [];
-
-        $criticalInvoice = Invoice::query()
-            ->whereIn('company_id', $smeIds)
-            ->where('status', InvoiceStatus::Overdue->value)
-            ->where('due_at', '<', now()->subDays(60))
-            ->with('company')
-            ->orderBy('due_at')
-            ->first();
-
-        if ($criticalInvoice) {
-            $daysLate = (int) now()->diffInDays($criticalInvoice->due_at);
-            $alerts[] = [
-                'type'       => 'critical',
-                'title'      => $criticalInvoice->company->name.' — impayé critique',
-                'subtitle'   => ($criticalInvoice->reference ?? 'FAC').' · '.number_format($criticalInvoice->total, 0, ',', ' ').' FCFA · J+'.$daysLate.' · Aucune relance envoyée',
-                'company_id' => $criticalInvoice->company_id,
-            ];
-        }
-
-        $recentCompanyIds = Invoice::query()
-            ->whereIn('company_id', $smeIds)
-            ->where('issued_at', '>=', now()->subDays(30))
-            ->pluck('company_id')
-            ->unique();
-
-        $inactiveIds = $smeIds->diff($recentCompanyIds);
-
-        if ($inactiveIds->isNotEmpty()) {
-            $inactiveCompany = Company::query()->find($inactiveIds->first());
-
-            if ($inactiveCompany) {
-                $invoices = $allInvoices->get($inactiveCompany->id, collect());
-                $lastInvoice = $invoices->sortByDesc('issued_at')->first();
-                $daysSince = $lastInvoice ? (int) now()->diffInDays($lastInvoice->issued_at) : null;
-
-                $alerts[] = [
-                    'type'       => 'watch',
-                    'title'      => $inactiveCompany->name.' — inactif depuis '.($daysSince ? $daysSince.' jours' : 'longtemps'),
-                    'subtitle'   => 'Aucune facture émise ce mois'.($daysSince ? ' · Dernier contact il y a '.$daysSince.'j' : ''),
-                    'company_id' => $inactiveCompany->id,
-                ];
-            }
-        }
-
-        $newInvitation = PartnerInvitation::query()
-            ->where('accountant_firm_id', $this->firm->id)
-            ->where('status', 'accepted')
-            ->where('accepted_at', '>=', now()->subDays(7))
-            ->orderByDesc('accepted_at')
-            ->first();
-
-        if ($newInvitation) {
-            $newSme = $newInvitation->sme_company_id ? Company::query()->find($newInvitation->sme_company_id) : null;
-            $alerts[] = [
-                'type'       => 'new',
-                'title'      => ($newSme?->name ?? $newInvitation->invitee_name)." — vient de s'inscrire",
-                'subtitle'   => 'Via votre lien partenaire · Plan '.ucfirst($newInvitation->recommended_plan ?? 'Essentiel').' · Trial 2 mois',
-                'company_id' => $newInvitation->sme_company_id,
-            ];
-        }
-
-        return $alerts;
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -393,19 +324,14 @@ new #[Title('Dashboard')] class extends Component {
 
     </section>
 
-    {{-- Alertes du jour --}}
+    {{-- Alertes récentes --}}
     <section class="app-shell-panel p-6">
         <div class="flex items-center justify-between gap-4">
-            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Alertes du jour') }}</h3>
-            @if (count($alerts) > 0)
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
-                    {{ count($alerts) }} {{ count($alerts) === 1 ? 'alerte' : 'alertes' }}
-                </span>
-            @else
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    {{ __('Aucune alerte') }}
-                </span>
-            @endif
+            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Alertes récentes') }}</h3>
+            <a href="{{ route('alerts.index') }}" wire:navigate
+               class="text-sm font-semibold text-primary hover:underline">
+                {{ __('Voir toutes les alertes') }} →
+            </a>
         </div>
 
         @if (count($alerts) > 0)
@@ -414,8 +340,8 @@ new #[Title('Dashboard')] class extends Component {
                     <div class="flex items-center gap-4 py-4">
                         <span @class([
                             'flex size-10 shrink-0 items-center justify-center rounded-2xl text-base font-bold',
-                            'bg-rose-100 text-rose-600' => $alert['type'] === 'critical',
-                            'bg-amber-100 text-amber-600' => $alert['type'] === 'watch',
+                            'bg-rose-100 text-rose-600'      => $alert['type'] === 'critical',
+                            'bg-amber-100 text-amber-600'    => $alert['type'] === 'watch',
                             'bg-emerald-100 text-emerald-600' => $alert['type'] === 'new',
                         ])>
                             @if ($alert['type'] === 'critical') ! @elseif ($alert['type'] === 'watch') ~ @else + @endif
@@ -427,6 +353,7 @@ new #[Title('Dashboard')] class extends Component {
                         @if ($alert['company_id'])
                             <a
                                 href="{{ route('clients.show', $alert['company_id']) }}"
+                                wire:navigate
                                 class="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:border-primary/20 hover:text-primary"
                             >
                                 {{ __('Voir fiche') }}
@@ -435,6 +362,7 @@ new #[Title('Dashboard')] class extends Component {
                     </div>
                 @endforeach
             </div>
+
         @else
             <p class="mt-4 text-sm text-slate-400">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
         @endif

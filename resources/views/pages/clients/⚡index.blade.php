@@ -257,28 +257,30 @@ new #[Title('Clients')] class extends Component {
     {{-- Onglets statut + filtres --}}
     <section class="app-shell-panel p-5">
         {{-- Onglets de filtre --}}
+        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Filtrer par statut') }}</p>
         <div class="flex flex-wrap items-center gap-2">
-            @foreach (['all' => 'Tous', 'a_jour' => 'À jour', 'attente' => 'Attention', 'critique' => 'Critiques'] as $key => $label)
+            @foreach ([
+                'all'      => ['label' => 'Tous',       'dot' => null,        'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'a_jour'   => ['label' => 'À jour',     'dot' => 'bg-accent', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'attente'  => ['label' => 'Attention',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',  'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'critique' => ['label' => 'Critiques',  'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',   'badgeInactive' => 'bg-rose-100 text-rose-700'],
+            ] as $key => $tab)
                 <button
                     wire:click="setFilterStatus('{{ $key }}')"
                     @class([
                         'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                        'bg-primary text-white shadow-sm' => $filterStatus === $key,
-                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => $filterStatus !== $key,
+                        $tab['activeClass']                                                                              => $filterStatus === $key,
+                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary'   => $filterStatus !== $key,
                     ])
                 >
-                    @if ($key === 'a_jour')
-                        <span @class(['size-2 rounded-full', 'bg-white' => $filterStatus === $key, 'bg-accent' => $filterStatus !== $key])></span>
-                    @elseif ($key === 'attente')
-                        <span @class(['size-2 rounded-full', 'bg-white' => $filterStatus === $key, 'bg-amber-400' => $filterStatus !== $key])></span>
-                    @elseif ($key === 'critique')
-                        <span @class(['size-2 rounded-full', 'bg-white' => $filterStatus === $key, 'bg-rose-500' => $filterStatus !== $key])></span>
+                    @if ($tab['dot'])
+                        <span @class(['size-2 rounded-full', 'bg-white' => $filterStatus === $key, $tab['dot'] => $filterStatus !== $key])></span>
                     @endif
-                    {{ $label }}
+                    {{ $tab['label'] }}
                     <span @class([
                         'rounded-full px-1.5 py-px text-xs font-bold',
-                        'bg-white/20 text-white' => $filterStatus === $key,
-                        'bg-slate-100 text-slate-500' => $filterStatus !== $key,
+                        'bg-white/20 text-white'       => $filterStatus === $key,
+                        $tab['badgeInactive']           => $filterStatus !== $key,
                     ])>{{ $this->statusCounts[$key] }}</span>
                 </button>
             @endforeach

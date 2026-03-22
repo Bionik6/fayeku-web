@@ -5,7 +5,12 @@
     </head>
     <body class="min-h-screen bg-page text-ink antialiased">
         @php
+            use Modules\Compta\Portfolio\Services\AlertService;
+
             $user = auth()->user();
+            $firm = $user->companies()->where('type', 'accountant_firm')->first();
+            $alertsCount = $firm ? app(AlertService::class)->count($firm) : 0;
+
             $primaryNavigation = [
                 [
                     'label' => __('Dashboard'),
@@ -20,6 +25,14 @@
                     'href' => route('clients.index'),
                     'current' => request()->routeIs('clients.*'),
                     'navigate' => true,
+                ],
+                [
+                    'label' => __('Alertes'),
+                    'icon' => 'bell',
+                    'href' => route('alerts.index'),
+                    'current' => request()->routeIs('alerts.*'),
+                    'navigate' => true,
+                    'badge' => $alertsCount,
                 ],
                 [
                     'label' => __('Export Groupé'),
@@ -101,6 +114,11 @@
                                 >
                                     <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
                                     <span class="app-shell-nav-label">{{ $item['label'] }}</span>
+                                    @if (($item['badge'] ?? 0) > 0)
+                                        <span class="ml-auto rounded-full bg-rose-500 px-1.5 py-0.5 text-xs font-bold leading-none text-white">
+                                            {{ $item['badge'] }}
+                                        </span>
+                                    @endif
                                 </a>
                             @endforeach
                         </nav>
