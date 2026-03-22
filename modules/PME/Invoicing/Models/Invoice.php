@@ -36,6 +36,7 @@ class Invoice extends Model
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
+        'amount_paid' => 'integer',
         'fne_balance_sticker' => 'integer',
         'fne_raw_response' => 'array',
         'status' => InvoiceStatus::class,

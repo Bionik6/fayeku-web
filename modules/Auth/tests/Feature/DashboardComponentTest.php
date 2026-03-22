@@ -378,3 +378,21 @@ test('le montant en attente est la somme des impayés', function () {
 
     expect($portfolio[0]['pending_amount'])->toBe(150_000);
 });
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+
+test('le portfolio affiche les liens de navigation vers la fiche client', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->assertSee(route('clients.show', $smes[0]->id), false);
+});
+
+test('la route HTTP dashboard est accessible', function () {
+    ['user' => $user] = createFirmWithSmes(1);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSuccessful();
+});

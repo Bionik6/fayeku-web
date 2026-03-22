@@ -6,7 +6,6 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
-use Modules\Compta\Partnership\Enums\PartnerTier;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
@@ -23,10 +22,6 @@ new #[Title('Clients')] class extends Component {
 
     #[Url] public string $sortDirection = 'asc';
 
-    public string $tierValue = 'partner';
-
-    public string $tierLabel = 'Partner';
-
     public string $currentMonth = '';
 
     /** @var array<int, array<string, mixed>>|null */
@@ -39,23 +34,6 @@ new #[Title('Clients')] class extends Component {
         $this->firm = auth()->user()->companies()
             ->where('type', 'accountant_firm')
             ->first();
-
-        if (! $this->firm) {
-            return;
-        }
-
-        $activeCount = AccountantCompany::query()
-            ->where('accountant_firm_id', $this->firm->id)
-            ->whereNull('ended_at')
-            ->count();
-
-        $tier = PartnerTier::fromActiveClients($activeCount);
-        $this->tierValue = $tier->value;
-        $this->tierLabel = match ($tier) {
-            PartnerTier::Partner => 'Partner',
-            PartnerTier::Gold => 'Gold',
-            PartnerTier::Platinum => 'Platinum',
-        };
     }
 
     /** @return array<int, array<string, mixed>> */

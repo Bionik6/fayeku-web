@@ -475,7 +475,7 @@ new #[Title('Dashboard')] class extends Component {
         <section class="app-shell-panel overflow-hidden">
             <div class="flex items-center justify-between gap-4 p-6 pb-4">
                 <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Aperçu portefeuille') }}</h3>
-                <a href="#" class="text-sm font-semibold text-primary hover:underline">{{ __('Voir tout') }} →</a>
+                <a href="{{ route('clients.index') }}" wire:navigate class="text-sm font-semibold text-primary hover:underline">{{ __('Voir tout') }} →</a>
             </div>
 
             @if (count($portfolio) > 0)
@@ -494,7 +494,7 @@ new #[Title('Dashboard')] class extends Component {
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @foreach ($portfolio as $row)
-                                <tr class="transition hover:bg-slate-50/60">
+                                <tr @click="Livewire.navigate('{{ route('clients.show', $row['id']) }}')" class="cursor-pointer transition hover:bg-slate-50/60" data-navigate="{{ route('clients.show', $row['id']) }}">
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
                                             <span class="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-xs font-bold text-primary">

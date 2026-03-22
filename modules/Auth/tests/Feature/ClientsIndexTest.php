@@ -89,13 +89,12 @@ test('le sous-titre affiche le nombre correct de clients', function () {
         ->assertSee('4 clients');
 });
 
-test('le tier est calculé à Gold avec 7 clients', function () {
+test('la page affiche 7 clients dans le sous-titre', function () {
     ['user' => $user] = setupClientsPortfolio(7);
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->assertSet('tierValue', 'gold')
-        ->assertSet('tierLabel', 'Gold');
+        ->assertSee('7 clients');
 });
 
 test('un cabinet sans clients affiche le message vide', function () {
@@ -458,4 +457,29 @@ test('#[Url] — sortBy et sortDirection sont persistés après sort()', functio
         ->call('sort', 'name')
         ->assertSet('sortBy', 'name')
         ->assertSet('sortDirection', 'desc');
+});
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+
+test('le bouton "Voir fiche" contient le lien vers la fiche du client', function () {
+    ['user' => $user, 'firm' => $firm] = setupClientsPortfolio(0);
+
+    $sme = Company::factory()->create();
+    AccountantCompany::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $sme->id,
+        'started_at' => now()->subMonth(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::clients.index')
+        ->assertSee(route('clients.show', $sme->id), false);
+});
+
+test('la route HTTP clients.index est accessible', function () {
+    ['user' => $user] = setupClientsPortfolio(0);
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertSuccessful();
 });
