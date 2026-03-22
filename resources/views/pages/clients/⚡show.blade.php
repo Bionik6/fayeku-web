@@ -7,6 +7,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
+use Modules\Compta\Export\Enums\ExportFormat;
 use Modules\Compta\Partnership\Enums\PartnerTier;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -244,6 +245,106 @@ new #[Title('Fiche client')] class extends Component {
         $this->selectedInvoiceId = null;
     }
 
+    // ─── Export comptable ────────────────────────────────────────────────
+
+    public string $exportPeriod = '';
+
+    public string $exportFormat = 'sage100';
+
+    /** @return array<int, array{value: string, label: string, type: string}> */
+    #[Computed]
+    public function exportPeriods(): array
+    {
+        $year = now()->year;
+        $periods = [];
+
+        // Mois individuels du plus récent au plus ancien
+        for ($m = (int) now()->month; $m >= 1; $m--) {
+            $date = now()->setMonth($m)->startOfMonth();
+            $periods[] = [
+                'value' => $date->format('Y-m'),
+                'label' => ucfirst($date->locale('fr_FR')->translatedFormat('F Y')),
+                'type' => 'Mois',
+            ];
+        }
+
+        // Trimestres
+        $quarterLabels = ['T1' => [1, 3], 'T2' => [4, 6], 'T3' => [7, 9], 'T4' => [10, 12]];
+        foreach ($quarterLabels as $label => [$from, $to]) {
+            if ($from <= now()->month) {
+                $periods[] = [
+                    'value' => $year.'-'.$label,
+                    'label' => $label.' '.$year,
+                    'type' => 'Trimestre',
+                ];
+            }
+        }
+
+        // Semestres
+        $periods[] = ['value' => $year.'-S1', 'label' => 'S1 '.$year, 'type' => 'Semestre'];
+        if (now()->month > 6) {
+            $periods[] = ['value' => $year.'-S2', 'label' => 'S2 '.$year, 'type' => 'Semestre'];
+        }
+
+        // Année complète
+        $periods[] = ['value' => (string) $year, 'label' => 'Année '.$year, 'type' => 'Année'];
+
+        return $periods;
+    }
+
+    /** @return int */
+    #[Computed]
+    public function exportInvoiceCount(): int
+    {
+        if (empty($this->exportPeriod)) {
+            return 0;
+        }
+
+        return $this->exportFilteredInvoices()->count();
+    }
+
+    public function exportPeriodLabel(): string
+    {
+        if (empty($this->exportPeriod)) {
+            return '';
+        }
+
+        $period = collect($this->exportPeriods)->firstWhere('value', $this->exportPeriod);
+
+        return $period['label'] ?? $this->exportPeriod;
+    }
+
+    private function exportFilteredInvoices(): Collection
+    {
+        $query = Invoice::query()->where('company_id', $this->company->id);
+
+        $period = $this->exportPeriod;
+        $year = (int) substr($period, 0, 4);
+
+        return match (true) {
+            str_contains($period, '-T1') => $query->whereYear('issued_at', $year)->whereMonth('issued_at', '>=', 1)->whereMonth('issued_at', '<=', 3)->get(),
+            str_contains($period, '-T2') => $query->whereYear('issued_at', $year)->whereMonth('issued_at', '>=', 4)->whereMonth('issued_at', '<=', 6)->get(),
+            str_contains($period, '-T3') => $query->whereYear('issued_at', $year)->whereMonth('issued_at', '>=', 7)->whereMonth('issued_at', '<=', 9)->get(),
+            str_contains($period, '-T4') => $query->whereYear('issued_at', $year)->whereMonth('issued_at', '>=', 10)->whereMonth('issued_at', '<=', 12)->get(),
+            str_contains($period, '-S1') => $query->whereYear('issued_at', $year)->whereMonth('issued_at', '>=', 1)->whereMonth('issued_at', '<=', 6)->get(),
+            str_contains($period, '-S2') => $query->whereYear('issued_at', $year)->whereMonth('issued_at', '>=', 7)->whereMonth('issued_at', '<=', 12)->get(),
+            strlen($period) === 4        => $query->whereYear('issued_at', $year)->get(),
+            default                      => $query->whereYear('issued_at', $year)->whereMonth('issued_at', (int) substr($period, 5, 2))->get(),
+        };
+    }
+
+    public function mountExportModal(): void
+    {
+        $this->exportPeriod = now()->format('Y-m');
+        $this->exportFormat = 'sage100';
+        unset($this->exportInvoiceCount);
+    }
+
+    public function updatedExportPeriod(): void
+    {
+        unset($this->exportInvoiceCount);
+    }
+
     public function archive(): void
     {
         $this->relation->update(['ended_at' => now()]);
@@ -283,9 +384,16 @@ new #[Title('Fiche client')] class extends Component {
 
             {{-- Actions --}}
             <div class="flex shrink-0 flex-wrap items-center gap-2">
-                <flux:button variant="ghost" class="border border-slate-200" icon="arrow-down-tray">
-                    {{ __('Exporter') }}
-                </flux:button>
+                <flux:modal.trigger name="export-comptable">
+                    <button
+                        type="button"
+                        wire:click="mountExportModal"
+                        class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
+                    >
+                        <x-app.icon name="export" class="size-4" />
+                        {{ __('Export Comptable') }}
+                    </button>
+                </flux:modal.trigger>
 
                 <flux:button
                     variant="danger"
@@ -769,5 +877,83 @@ new #[Title('Fiche client')] class extends Component {
             </div>
         </div>
     @endif
+
+    {{-- ─── Modale Export Comptable ──────────────────────────────────────── --}}
+    <flux:modal name="export-comptable" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
+        <div class="w-[500px] max-w-[500px] rounded-[2rem] bg-white p-8 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+
+            <h3 class="text-xl font-bold text-ink">{{ __('Export comptable') }}</h3>
+            <p class="mt-1 text-sm text-slate-500">{{ $company->name }}</p>
+
+            {{-- Période --}}
+            <div class="mt-6">
+                <label class="text-sm font-medium text-slate-700">{{ __('Période') }}</label>
+                <select
+                    wire:model.live="exportPeriod"
+                    class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                >
+                    @foreach (['Mois', 'Trimestre', 'Semestre', 'Année'] as $groupType)
+                        @php $grouped = collect($this->exportPeriods)->where('type', $groupType); @endphp
+                        @if ($grouped->isNotEmpty())
+                            <optgroup label="{{ $groupType }}">
+                                @foreach ($grouped as $period)
+                                    <option value="{{ $period['value'] }}">{{ $period['label'] }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Format --}}
+            <div class="mt-5">
+                <label class="text-sm/6 font-medium text-slate-700">{{ __('Format') }}</label>
+                <div class="mt-3 flex items-center space-x-10">
+                    @foreach ([
+                        'sage100' => 'Sage 100',
+                        'ebp'    => 'EBP',
+                        'excel'  => 'Excel',
+                    ] as $value => $label)
+                        <div class="flex items-center">
+                            <input
+                                id="export-format-{{ $value }}"
+                                type="radio"
+                                wire:model="exportFormat"
+                                value="{{ $value }}"
+                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
+                            />
+                            <label for="export-format-{{ $value }}" class="ml-3 block cursor-pointer text-sm/6 font-medium text-ink">
+                                {{ $label }}
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Résumé --}}
+            @if ($exportPeriod)
+                <div class="mt-6 rounded-xl bg-slate-50 px-5 py-3 text-sm font-medium text-slate-600">
+                    {{ $this->exportInvoiceCount }} {{ $this->exportInvoiceCount > 1 ? 'factures' : 'facture' }}
+                    · {{ $this->exportPeriodLabel() }}
+                    · Format {{ ['sage100' => 'Sage 100', 'ebp' => 'EBP', 'excel' => 'Excel'][$exportFormat] ?? $exportFormat }}
+                </div>
+            @endif
+
+            {{-- Action --}}
+            <div class="mt-6">
+                <button
+                    type="button"
+                    @class([
+                        'w-full rounded-2xl py-3.5 text-base font-semibold transition',
+                        'bg-primary text-white shadow-sm hover:bg-primary/90' => $this->exportInvoiceCount > 0,
+                        'cursor-not-allowed bg-slate-100 text-slate-400' => $this->exportInvoiceCount === 0,
+                    ])
+                    @if ($this->exportInvoiceCount === 0) disabled @endif
+                >
+                    {{ __('Télécharger l\'export') }}
+                </button>
+            </div>
+        </div>
+    </flux:modal>
 
 </div>
