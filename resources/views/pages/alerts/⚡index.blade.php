@@ -51,6 +51,12 @@ new #[Title('Alertes')] class extends Component {
             ->first();
     }
 
+    public function setFilter(string $key): void
+    {
+        $this->filter = $key;
+        $this->showDismissed = false;
+    }
+
     public function dismiss(string $alertKey): void
     {
         DismissedAlert::firstOrCreate(
@@ -157,31 +163,29 @@ new #[Title('Alertes')] class extends Component {
         <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Filtrer par criticité') }}</p>
         <div class="flex flex-wrap gap-2">
 
-            {{-- Filtres actifs --}}
-            @if (! $showDismissed)
-                @foreach ([
-                    'all'      => ['label' => 'Toutes',    'count' => $this->counts['all'],      'activeClass' => 'bg-primary text-white',     'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'critical' => ['label' => 'Critiques', 'count' => $this->counts['critical'], 'activeClass' => 'bg-rose-500 text-white',    'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                    'watch'    => ['label' => 'En veille', 'count' => $this->counts['watch'],    'activeClass' => 'bg-amber-500 text-white',   'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                    'new'      => ['label' => 'Nouvelles', 'count' => $this->counts['new'],      'activeClass' => 'bg-emerald-600 text-white', 'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                ] as $key => $tab)
-                    <button
-                        wire:click="$set('filter', '{{ $key }}')"
-                        @class([
-                            'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                            $tab['activeClass']                                                                             => $filter === $key,
-                            'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary'  => $filter !== $key,
-                        ])
-                    >
-                        {{ $tab['label'] }}
-                        <span @class([
-                            'rounded-full px-1.5 py-px text-xs font-bold',
-                            $tab['badgeActive']   => $filter === $key,
-                            $tab['badgeInactive'] => $filter !== $key,
-                        ])>{{ $tab['count'] }}</span>
-                    </button>
-                @endforeach
-            @endif
+            {{-- Filtres par criticité --}}
+            @foreach ([
+                'all'      => ['label' => 'Toutes',    'count' => $this->counts['all'],      'activeClass' => 'bg-primary text-white',     'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'critical' => ['label' => 'Critiques', 'count' => $this->counts['critical'], 'activeClass' => 'bg-rose-500 text-white',    'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'watch'    => ['label' => 'En veille', 'count' => $this->counts['watch'],    'activeClass' => 'bg-amber-500 text-white',   'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'new'      => ['label' => 'Nouvelles', 'count' => $this->counts['new'],      'activeClass' => 'bg-emerald-600 text-white', 'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+            ] as $key => $tab)
+                <button
+                    wire:click="setFilter('{{ $key }}')"
+                    @class([
+                        'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
+                        $tab['activeClass']                                                                            => ! $showDismissed && $filter === $key,
+                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => $showDismissed || $filter !== $key,
+                    ])
+                >
+                    {{ $tab['label'] }}
+                    <span @class([
+                        'rounded-full px-1.5 py-px text-xs font-bold',
+                        $tab['badgeActive']   => ! $showDismissed && $filter === $key,
+                        $tab['badgeInactive'] => $showDismissed || $filter !== $key,
+                    ])>{{ $tab['count'] }}</span>
+                </button>
+            @endforeach
 
             {{-- Onglet Archivées --}}
             <button

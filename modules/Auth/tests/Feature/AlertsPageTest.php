@@ -287,6 +287,26 @@ test('$set filter met à jour les alertes affichées', function () {
     expect($types)->toContain('critical')->and($types)->toContain('new');
 });
 
+test('setFilter() désactive showDismissed et applique le filtre', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $component->set('showDismissed', true);
+
+    expect($component->get('showDismissed'))->toBeTrue();
+
+    $component->call('setFilter', 'critical');
+
+    expect($component->get('showDismissed'))->toBeFalse()
+        ->and($component->get('filter'))->toBe('critical');
+});
+
 // ─── Dismiss / Undismiss ──────────────────────────────────────────────────────
 
 test('dismiss() crée un enregistrement DismissedAlert et masque l\'alerte', function () {
