@@ -10,11 +10,18 @@ use Modules\PME\Invoicing\Models\Invoice;
 
 class PortfolioService
 {
+    /** @var array<string, Collection> */
+    private array $smeIdsCache = [];
+
     public function activeSmeIds(Company $firm): Collection
     {
-        return AccountantCompany::where('accountant_firm_id', $firm->id)
-            ->whereNull('ended_at')
-            ->pluck('sme_company_id');
+        if (! isset($this->smeIdsCache[$firm->id])) {
+            $this->smeIdsCache[$firm->id] = AccountantCompany::where('accountant_firm_id', $firm->id)
+                ->whereNull('ended_at')
+                ->pluck('sme_company_id');
+        }
+
+        return $this->smeIdsCache[$firm->id];
     }
 
     public function invoicesForFirm(Company $firm): Builder

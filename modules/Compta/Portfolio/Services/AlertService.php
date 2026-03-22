@@ -12,6 +12,9 @@ use Modules\Shared\Models\User;
 
 class AlertService
 {
+    /** @var array<string, array<int, array<string, mixed>>> */
+    private array $buildCache = [];
+
     public function __construct(private readonly PortfolioService $portfolio) {}
 
     /**
@@ -19,28 +22,13 @@ class AlertService
      */
     public function build(Company $firm, ?string $filter = null, int $limit = 0): array
     {
-        $smeIds = $this->portfolio->activeSmeIds($firm);
+        $cacheKey = $firm->id.':'.($filter ?? 'all');
 
-        $alerts = [];
-
-        if ($smeIds->isNotEmpty()) {
-            $allInvoices = Invoice::query()
-                ->whereIn('company_id', $smeIds)
-                ->get()
-                ->groupBy('company_id');
-
-            if ($filter === null || $filter === 'critical') {
-                $this->appendCritical($alerts, $smeIds);
-            }
-
-            if ($filter === null || $filter === 'watch') {
-                $this->appendWatch($alerts, $smeIds, $allInvoices);
-            }
+        if (! isset($this->buildCache[$cacheKey])) {
+            $this->buildCache[$cacheKey] = $this->doBuild($firm, $filter);
         }
 
-        if ($filter === null || $filter === 'new') {
-            $this->appendNew($alerts, $firm);
-        }
+        $alerts = $this->buildCache[$cacheKey];
 
         return $limit > 0 ? array_slice($alerts, 0, $limit) : $alerts;
     }
@@ -58,6 +46,37 @@ class AlertService
             ->toArray();
 
         return count(array_filter($all, fn (array $a) => ! in_array($a['alert_key'], $dismissed)));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function doBuild(Company $firm, ?string $filter): array
+    {
+        $smeIds = $this->portfolio->activeSmeIds($firm);
+
+        $alerts = [];
+
+        if ($smeIds->isNotEmpty()) {
+            if ($filter === null || $filter === 'critical') {
+                $this->appendCritical($alerts, $smeIds);
+            }
+
+            if ($filter === null || $filter === 'watch') {
+                $allInvoices = Invoice::query()
+                    ->whereIn('company_id', $smeIds)
+                    ->get()
+                    ->groupBy('company_id');
+
+                $this->appendWatch($alerts, $smeIds, $allInvoices);
+            }
+        }
+
+        if ($filter === null || $filter === 'new') {
+            $this->appendNew($alerts, $firm);
+        }
+
+        return $alerts;
     }
 
     /** @param array<int, array<string, mixed>> $alerts */
@@ -95,11 +114,11 @@ class AlertService
      */
     private function appendWatch(array &$alerts, Collection $smeIds, Collection $allInvoices): void
     {
-        $recentCompanyIds = Invoice::query()
-            ->whereIn('company_id', $smeIds)
-            ->where('issued_at', '>=', now()->subDays(30))
-            ->pluck('company_id')
-            ->unique();
+        $cutoff = now()->subDays(30);
+
+        $recentCompanyIds = $allInvoices
+            ->filter(fn (Collection $invoices) => $invoices->contains(fn ($inv) => $inv->issued_at >= $cutoff))
+            ->keys();
 
         $inactiveIds = $smeIds->diff($recentCompanyIds);
 
@@ -135,9 +154,18 @@ class AlertService
             ->orderByDesc('accepted_at')
             ->get();
 
+        $smeCompanyIds = $newInvitations
+            ->pluck('sme_company_id')
+            ->filter()
+            ->unique();
+
+        $smeCompanies = $smeCompanyIds->isNotEmpty()
+            ? Company::query()->whereIn('id', $smeCompanyIds)->get()->keyBy('id')
+            : collect();
+
         foreach ($newInvitations as $invitation) {
             $newSme = $invitation->sme_company_id
-                ? Company::query()->find($invitation->sme_company_id)
+                ? $smeCompanies->get($invitation->sme_company_id)
                 : null;
 
             $alerts[] = [

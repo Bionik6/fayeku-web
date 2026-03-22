@@ -3,11 +3,11 @@
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Enums\PartnerTier;
 use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Portfolio\Services\AlertService;
+use Modules\Compta\Portfolio\Services\PortfolioService;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
@@ -59,10 +59,7 @@ new #[Title('Dashboard')] class extends Component {
             return;
         }
 
-        $smeIds = AccountantCompany::query()
-            ->where('accountant_firm_id', $this->firm->id)
-            ->whereNull('ended_at')
-            ->pluck('sme_company_id');
+        $smeIds = app(PortfolioService::class)->activeSmeIds($this->firm);
 
         $this->activeClientsCount = $smeIds->count();
 

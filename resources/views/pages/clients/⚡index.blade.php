@@ -4,8 +4,8 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
+use Modules\Compta\Portfolio\Services\PortfolioService;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
@@ -137,10 +137,7 @@ new #[Title('Clients')] class extends Component {
             return $this->portfolioCache = [];
         }
 
-        $smeIds = AccountantCompany::query()
-            ->where('accountant_firm_id', $this->firm->id)
-            ->whereNull('ended_at')
-            ->pluck('sme_company_id');
+        $smeIds = app(PortfolioService::class)->activeSmeIds($this->firm);
 
         if ($smeIds->isEmpty()) {
             return [];

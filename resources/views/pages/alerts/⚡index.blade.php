@@ -76,6 +76,14 @@ new #[Title('Alertes')] class extends Component {
         unset($this->alerts, $this->counts);
     }
 
+    /** @return array<string> */
+    private function dismissedKeys(): array
+    {
+        return once(fn () => DismissedAlert::where('user_id', auth()->id())
+            ->pluck('alert_key')
+            ->toArray());
+    }
+
     /** @return array<int, array<string, mixed>> */
     #[Computed]
     public function alerts(): array
@@ -87,9 +95,7 @@ new #[Title('Alertes')] class extends Component {
         $filterValue = (! $this->showDismissed && $this->filter !== 'all') ? $this->filter : null;
         $all = app(AlertService::class)->build($this->firm, $filterValue);
 
-        $dismissedKeys = DismissedAlert::where('user_id', auth()->id())
-            ->pluck('alert_key')
-            ->toArray();
+        $dismissedKeys = $this->dismissedKeys();
 
         if ($this->showDismissed) {
             return array_values(array_map(
@@ -114,9 +120,7 @@ new #[Title('Alertes')] class extends Component {
 
         $all = app(AlertService::class)->build($this->firm);
 
-        $dismissedKeys = DismissedAlert::where('user_id', auth()->id())
-            ->pluck('alert_key')
-            ->toArray();
+        $dismissedKeys = $this->dismissedKeys();
 
         $active = array_filter($all, fn (array $a) => ! in_array($a['alert_key'], $dismissedKeys));
 
@@ -125,7 +129,7 @@ new #[Title('Alertes')] class extends Component {
             'critical'  => count(array_filter($active, fn ($a) => $a['type'] === 'critical')),
             'watch'     => count(array_filter($active, fn ($a) => $a['type'] === 'watch')),
             'new'       => count(array_filter($active, fn ($a) => $a['type'] === 'new')),
-            'dismissed' => count($dismissedKeys),
+            'dismissed' => count(array_filter($all, fn (array $a) => in_array($a['alert_key'], $dismissedKeys))),
         ];
     }
 }
