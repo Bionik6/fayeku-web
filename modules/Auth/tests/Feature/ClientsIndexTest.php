@@ -461,7 +461,7 @@ test('#[Url] — sortBy et sortDirection sont persistés après sort()', functio
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
-test('le bouton "Voir fiche" contient le lien vers la fiche du client', function () {
+test('chaque ligne du tableau contient la route de la fiche client (navigation au clic)', function () {
     ['user' => $user, 'firm' => $firm] = setupClientsPortfolio(0);
 
     $sme = Company::factory()->create();

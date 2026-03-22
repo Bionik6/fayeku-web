@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Database\Factories\Support\SenegalFaker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -10,8 +11,10 @@ use Modules\Auth\Models\Company;
 use Modules\Auth\Models\Subscription;
 use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
+use Modules\PME\Invoicing\Models\InvoiceLine;
 use Modules\Shared\Models\User;
 
 class DashboardDemoSeeder extends Seeder
@@ -153,8 +156,8 @@ class DashboardDemoSeeder extends Seeder
     private function createSme(Company $firm, string $name, string $plan, string $phone): Company
     {
         $owner = User::create([
-            'first_name' => explode(' ', $name)[0],
-            'last_name' => 'Owner',
+            'first_name' => SenegalFaker::firstNameMale(),
+            'last_name' => SenegalFaker::lastName(),
             'phone' => $phone,
             'password' => 'passer1234',
             'profile_type' => 'sme',
@@ -367,26 +370,26 @@ class DashboardDemoSeeder extends Seeder
         /** @var array<string, int> */
         $amounts = [
             // 5 × 15 000 F = 75 000 F
-            'kane_import'        => 15_000,
-            'thies_industries'   => 15_000,
-            'sow_btp'            => 15_000,
-            'coulibaly_tech'     => 15_000,
-            'ba_industries'      => 15_000,
+            'kane_import' => 15_000,
+            'thies_industries' => 15_000,
+            'sow_btp' => 15_000,
+            'coulibaly_tech' => 15_000,
+            'ba_industries' => 15_000,
             // 8 × 10 000 F = 80 000 F
-            'mbaye_transport'    => 10_000,
-            'coury_commerce'     => 10_000,
-            'diye_consulting'    => 10_000,
-            'diop_services'      => 10_000,
-            'dakar_pharma'       => 10_000,
-            'ndiaye_commerce'    => 10_000,
-            'sy_consulting'      => 10_000,
+            'mbaye_transport' => 10_000,
+            'coury_commerce' => 10_000,
+            'diye_consulting' => 10_000,
+            'diop_services' => 10_000,
+            'dakar_pharma' => 10_000,
+            'ndiaye_commerce' => 10_000,
+            'sy_consulting' => 10_000,
             'traore_agriculture' => 10_000,
             // 5 × 6 500 F = 32 500 F
-            'toure_immobilier'   =>  6_500,
-            'ly_fashion'         =>  6_500,
-            'kone_services'      =>  6_500,
-            'cisse_associes'     =>  6_500,
-            'fall_digital'       =>  6_500,
+            'toure_immobilier' => 6_500,
+            'ly_fashion' => 6_500,
+            'kone_services' => 6_500,
+            'cisse_associes' => 6_500,
+            'fall_digital' => 6_500,
         ];
         // Total : 75 000 + 80 000 + 32 500 = 187 500 F ✓
 
@@ -397,21 +400,21 @@ class DashboardDemoSeeder extends Seeder
 
             Commission::create([
                 'accountant_firm_id' => $firm->id,
-                'sme_company_id'     => $smes[$key]->id,
-                'amount'             => $amount,
-                'period_month'       => now()->startOfMonth(),
-                'status'             => 'pending',
+                'sme_company_id' => $smes[$key]->id,
+                'amount' => $amount,
+                'period_month' => now()->startOfMonth(),
+                'status' => 'pending',
             ]);
 
             // Historique sur 2 mois
             foreach ([1, 2] as $monthsAgo) {
                 Commission::create([
                     'accountant_firm_id' => $firm->id,
-                    'sme_company_id'     => $smes[$key]->id,
-                    'amount'             => $amount,
-                    'period_month'       => now()->subMonths($monthsAgo)->startOfMonth(),
-                    'status'             => 'paid',
-                    'paid_at'            => now()->subMonths($monthsAgo)->endOfMonth(),
+                    'sme_company_id' => $smes[$key]->id,
+                    'amount' => $amount,
+                    'period_month' => now()->subMonths($monthsAgo)->startOfMonth(),
+                    'status' => 'paid',
+                    'paid_at' => now()->subMonths($monthsAgo)->endOfMonth(),
                 ]);
             }
         }
@@ -422,10 +425,85 @@ class DashboardDemoSeeder extends Seeder
      */
     private function createInvoice(Company $sme, array $attributes): Invoice
     {
-        return Invoice::unguarded(fn () => Invoice::create(array_merge([
+        // Créer un client final si pas fourni
+        $clientId = $attributes['client_id'] ?? null;
+        if (! $clientId) {
+            $firstName = SenegalFaker::firstName();
+            $lastName = SenegalFaker::lastName();
+            $client = Client::create([
+                'company_id' => $sme->id,
+                'name' => SenegalFaker::companyName(),
+                'phone' => SenegalFaker::phone(),
+                'email' => SenegalFaker::email($firstName, $lastName),
+                'address' => SenegalFaker::address(),
+                'tax_id' => 'SN'.strtoupper(fake()->numerify('##########')),
+            ]);
+            $clientId = $client->id;
+        }
+
+        $total = $attributes['total'] ?? 0;
+        $taxRate = 18;
+        // Calculer HT depuis TTC si pas fourni séparément
+        $subtotal = $attributes['subtotal'] ?? (int) round($total / 1.18);
+        $taxAmount = $total - $subtotal;
+
+        /** @var Invoice $invoice */
+        $invoice = Invoice::unguarded(fn () => Invoice::create(array_merge([
             'company_id' => $sme->id,
-            'subtotal'   => $attributes['total'] ?? 0,
-            'tax_amount' => 0,
+            'client_id' => $clientId,
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
         ], $attributes)));
+
+        // Créer 2 à 4 lignes de facture avec des montants variés
+        $lineCount = rand(2, 4);
+        $lineDescriptions = [
+            'Prestation de conseil',
+            'Tenue de comptabilité',
+            'Audit financier',
+            'Déclaration fiscale',
+            'Formation',
+            'Révision des comptes',
+            'Mission de commissariat',
+            'Assistance juridique',
+        ];
+        shuffle($lineDescriptions);
+        $descriptions = array_slice($lineDescriptions, 0, $lineCount);
+
+        // Répartition aléatoire : on génère des poids (ex: 3, 5, 2) puis on scale
+        $weights = array_map(fn () => rand(1, 9), range(1, $lineCount));
+        $totalWeight = array_sum($weights);
+        $amounts = [];
+        $allocated = 0;
+        foreach ($weights as $idx => $weight) {
+            if ($idx === $lineCount - 1) {
+                // Dernière ligne absorbe le reste pour éviter les arrondis
+                $amounts[] = $subtotal - $allocated;
+            } else {
+                $amount = (int) round($subtotal * $weight / $totalWeight);
+                $amounts[] = $amount;
+                $allocated += $amount;
+            }
+        }
+
+        foreach ($descriptions as $idx => $description) {
+            $lineTotal = $amounts[$idx];
+            $qty = rand(1, 5);
+            $unitPrice = (int) round($lineTotal / $qty);
+            // Recalibrer pour éviter les écarts d'arrondi sur la ligne
+            $lineTotal = $unitPrice * $qty;
+
+            InvoiceLine::create([
+                'invoice_id' => $invoice->id,
+                'description' => $description,
+                'quantity' => $qty,
+                'unit_price' => $unitPrice,
+                'tax_rate' => $taxRate,
+                'discount' => 0,
+                'total' => $lineTotal,
+            ]);
+        }
+
+        return $invoice;
     }
 }

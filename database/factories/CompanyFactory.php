@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use Database\Factories\Support\SenegalFaker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Modules\Auth\Models\Company;
 
@@ -18,11 +19,11 @@ class CompanyFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->company(),
+            'name' => SenegalFaker::companyName(),
             'type' => 'sme',
             'plan' => 'basique',
             'country_code' => 'SN',
-            'phone' => '+221'.fake()->unique()->numerify('#########'),
+            'phone' => SenegalFaker::phone(),
         ];
     }
 

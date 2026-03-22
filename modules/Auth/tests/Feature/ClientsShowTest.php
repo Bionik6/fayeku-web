@@ -282,41 +282,42 @@ test('changer perPage met à jour le nombre de lignes visibles', function () {
     $component->assertSee('Afficher tout');
 });
 
-// ─── Édition ──────────────────────────────────────────────────────────────────
+// ─── Modale facture ───────────────────────────────────────────────────────────
 
-test('saveEdit() met à jour le nom et le plan de la company', function () {
+test('viewInvoice() sélectionne la facture et la modale de détail est visible', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
+    $invoice = makeShowInvoice($sme);
 
     Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
-        ->set('editName', 'Nouveau Nom SARL')
-        ->set('editPlan', 'essentiel')
-        ->call('saveEdit');
-
-    expect($sme->fresh()->name)->toBe('Nouveau Nom SARL');
-    expect($sme->fresh()->plan)->toBe('essentiel');
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id)
+        ->assertSee($invoice->reference);
 });
 
-test('saveEdit() ferme la modale après enregistrement', function () {
+test('closeInvoice() remet selectedInvoiceId à null', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
+    $invoice = makeShowInvoice($sme);
 
     Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
-        ->set('showEditModal', true)
-        ->set('editName', 'Société Modifiée')
-        ->set('editPlan', 'basique')
-        ->call('saveEdit')
-        ->assertSet('showEditModal', false);
+        ->call('viewInvoice', $invoice->id)
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
 });
 
-test('saveEdit() retourne une erreur de validation si le nom est vide', function () {
+test('selectedInvoice eager-load les lignes de facture', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
+    $invoice = makeShowInvoice($sme);
 
-    Livewire::actingAs($user)
+    $component = Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
-        ->set('editName', '')
-        ->call('saveEdit')
-        ->assertHasErrors(['editName' => 'required']);
+        ->call('viewInvoice', $invoice->id);
+
+    $selected = $component->get('selectedInvoice');
+    expect($selected)->not->toBeNull();
+    expect($selected->relationLoaded('lines'))->toBeTrue();
+    expect($selected->relationLoaded('client'))->toBeTrue();
 });
 
 // ─── Archive ──────────────────────────────────────────────────────────────────

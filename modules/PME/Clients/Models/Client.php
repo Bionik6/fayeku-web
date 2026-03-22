@@ -2,6 +2,8 @@
 
 namespace Modules\PME\Clients\Models;
 
+use Database\Factories\ClientFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +14,12 @@ use Modules\Shared\Traits\HasUlid;
 
 class Client extends Model
 {
-    use HasUlid, SoftDeletes;
+    use HasFactory, HasUlid, SoftDeletes;
+
+    protected static function newFactory(): ClientFactory
+    {
+        return ClientFactory::new();
+    }
 
     protected $fillable = [
         'company_id', 'name', 'phone', 'email', 'address', 'tax_id',

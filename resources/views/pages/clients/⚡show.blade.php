@@ -32,13 +32,8 @@ new #[Title('Fiche client')] class extends Component {
 
     #[Url] public int $perPage = 20;
 
-    public bool $showEditModal = false;
-
-    public string $editName = '';
-
-    public string $editPhone = '';
-
-    public string $editPlan = '';
+    // Invoice detail modal
+    public ?string $selectedInvoiceId = null;
 
     public function mount(Company $company): void
     {
@@ -83,11 +78,6 @@ new #[Title('Fiche client')] class extends Component {
         $this->initials = $nameParts->map(fn ($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
         $this->companyRef = $this->initials.'-'.strtoupper(substr($company->id, -4));
         $this->clientSince = ucfirst($this->relation->started_at->locale('fr_FR')->translatedFormat('M Y'));
-
-        // État du formulaire d'édition
-        $this->editName = $company->name;
-        $this->editPhone = $company->phone ?? '';
-        $this->editPlan = $company->plan ?? '';
     }
 
     private function selectedYear(): int
@@ -114,7 +104,7 @@ new #[Title('Fiche client')] class extends Component {
     }
 
     /**
-     * Factures du mois sélectionné, avec client et compteur de relances.
+     * Factures du mois sélectionné, avec client, lignes et compteur de relances.
      *
      * @return Collection<int, Invoice>
      */
@@ -125,7 +115,7 @@ new #[Title('Fiche client')] class extends Component {
             ->where('company_id', $this->company->id)
             ->whereYear('issued_at', $this->selectedYear())
             ->whereMonth('issued_at', $this->selectedMonth())
-            ->with('client')
+            ->with(['client', 'lines'])
             ->withCount('reminders')
             ->orderByDesc('issued_at')
             ->get();
@@ -230,31 +220,28 @@ new #[Title('Fiche client')] class extends Component {
         return $hasPending ? 'attente' : 'a_jour';
     }
 
-    public function updatedPerPage(): void
+    /** Facture sélectionnée pour la modale de détail. */
+    #[Computed]
+    public function selectedInvoice(): ?Invoice
     {
-        // réinitialise la fenêtre au changement de taille de page
+        if (! $this->selectedInvoiceId) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->where('id', $this->selectedInvoiceId)
+            ->with(['client', 'lines'])
+            ->first();
     }
 
-    public function saveEdit(): void
+    public function viewInvoice(string $id): void
     {
-        $this->validate([
-            'editName'  => 'required|min:2|max:255',
-            'editPhone' => 'nullable|max:25',
-            'editPlan'  => 'required|in:basique,essentiel,premium',
-        ]);
+        $this->selectedInvoiceId = $id;
+    }
 
-        $this->company->update([
-            'name'  => $this->editName,
-            'phone' => $this->editPhone ?: null,
-            'plan'  => $this->editPlan,
-        ]);
-
-        // Recalcule les propriétés d'affichage
-        $nameParts = collect(explode(' ', $this->editName));
-        $this->initials = $nameParts->map(fn ($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
-        $this->companyRef = $this->initials.'-'.strtoupper(substr($this->company->id, -4));
-
-        $this->showEditModal = false;
+    public function closeInvoice(): void
+    {
+        $this->selectedInvoiceId = null;
     }
 
     public function archive(): void
@@ -300,9 +287,13 @@ new #[Title('Fiche client')] class extends Component {
                     {{ __('Exporter') }}
                 </flux:button>
 
-                <flux:button variant="ghost" class="border border-slate-200" icon="pencil-square"
-                    wire:click="$set('showEditModal', true)">
-                    {{ __('Modifier') }}
+                <flux:button
+                    variant="danger"
+                    wire:click="archive"
+                    wire:confirm="{{ __('Archiver ce client ? Cette action retirera la PME de votre portefeuille actif.') }}"
+                    icon="archive-box-x-mark"
+                >
+                    {{ __('Archiver') }}
                 </flux:button>
 
                 <span @class([
@@ -450,7 +441,10 @@ new #[Title('Fiche client')] class extends Component {
                                 default                           => ['label' => ucfirst($invoice->status->value), 'class' => 'bg-slate-100 text-slate-600'],
                             };
                         @endphp
-                        <tr class="transition hover:bg-slate-50/60">
+                        <tr
+                            wire:click="viewInvoice('{{ $invoice->id }}')"
+                            class="cursor-pointer transition hover:bg-slate-50/80"
+                        >
                             <td class="px-6 py-4 font-mono text-xs font-semibold text-ink">
                                 {{ $invoice->reference }}
                             </td>
@@ -515,58 +509,221 @@ new #[Title('Fiche client')] class extends Component {
         @endif
     </section>
 
-    {{-- ─── Modal édition ────────────────────────────────────────────────── --}}
-    <flux:modal wire:model="showEditModal" class="max-w-md">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ __('Modifier le client') }}</flux:heading>
-                <flux:text class="mt-1 text-slate-500">{{ __('Informations de base de la PME.') }}</flux:text>
-            </div>
+    {{-- ─── Modale détail facture ─────────────────────────────────────────── --}}
+    @if ($this->selectedInvoice)
+        @php
+            $inv = $this->selectedInvoice;
+            $client = $inv->client;
 
-            <form wire:submit="saveEdit" class="space-y-4">
-                <flux:field>
-                    <flux:label>{{ __('Nom de la société') }}</flux:label>
-                    <flux:input wire:model="editName" />
-                    <flux:error name="editName" />
-                </flux:field>
+            $statusConfig = match ($inv->status) {
+                InvoiceStatus::Paid               => ['label' => 'Payée',       'class' => 'bg-teal-100 text-teal-700'],
+                InvoiceStatus::Overdue            => ['label' => 'Impayée',     'class' => 'bg-rose-100 text-rose-700'],
+                InvoiceStatus::PartiallyPaid      => ['label' => 'Partiel',     'class' => 'bg-orange-100 text-orange-700'],
+                InvoiceStatus::Sent,
+                InvoiceStatus::Certified          => ['label' => 'En attente',  'class' => 'bg-amber-50 text-amber-700'],
+                InvoiceStatus::Draft              => ['label' => 'Brouillon',   'class' => 'bg-slate-100 text-slate-600'],
+                InvoiceStatus::Cancelled          => ['label' => 'Annulée',     'class' => 'bg-slate-100 text-slate-500'],
+                default                           => ['label' => ucfirst($inv->status->value), 'class' => 'bg-slate-100 text-slate-600'],
+            };
+        @endphp
 
-                <flux:field>
-                    <flux:label>{{ __('Téléphone') }}</flux:label>
-                    <flux:input wire:model="editPhone" type="tel" />
-                    <flux:error name="editPhone" />
-                </flux:field>
+        {{-- Overlay --}}
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            wire:click.self="closeInvoice"
+        >
+            <div class="relative w-full max-w-[1200px] overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-                <flux:field>
-                    <flux:label>{{ __('Plan') }}</flux:label>
-                    <flux:select wire:model="editPlan">
-                        <flux:select.option value="basique">{{ __('Basique') }}</flux:select.option>
-                        <flux:select.option value="essentiel">{{ __('Essentiel') }}</flux:select.option>
-                        <flux:select.option value="premium">{{ __('Premium') }}</flux:select.option>
-                    </flux:select>
-                    <flux:error name="editPlan" />
-                </flux:field>
+                {{-- Header --}}
+                <div class="flex items-start justify-between border-b border-slate-100 px-10 py-7">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Facture') }}</p>
+                        <h2 class="mt-1 text-xl font-bold text-ink">{{ $inv->reference }}</h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            {{ __('Émise le') }} {{ $inv->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                            &nbsp;·&nbsp;
+                            {{ __('Échéance') }} {{ $inv->due_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $statusConfig['class'] }}">
+                            {{ $statusConfig['label'] }}
+                        </span>
+                        <button
+                            wire:click="closeInvoice"
+                            class="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        >
+                            <flux:icon name="x-mark" class="size-5" />
+                        </button>
+                    </div>
+                </div>
 
-                <div class="flex justify-end gap-3 pt-2">
-                    <flux:button variant="ghost" wire:click="$set('showEditModal', false)" type="button">
-                        {{ __('Annuler') }}
-                    </flux:button>
-                    <flux:button variant="primary" type="submit">
-                        {{ __('Enregistrer') }}
+                {{-- Body --}}
+                <div class="max-h-[80vh] overflow-y-auto">
+                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-3">
+
+                        {{-- Colonne principale : Destinataire + lignes --}}
+                        <div class="col-span-2 px-10 py-8">
+
+                            {{-- Destinataire --}}
+                            @if ($client)
+                                <div class="mb-6">
+                                    <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Destinataire') }}</p>
+                                    <div class="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4">
+                                        <p class="font-semibold text-ink">{{ $client->name }}</p>
+                                        @if ($client->phone)
+                                            <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+                                                <flux:icon name="phone" class="size-3.5 shrink-0" />
+                                                {{ $client->phone }}
+                                            </p>
+                                        @endif
+                                        @if ($client->email)
+                                            <p class="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                                                <flux:icon name="envelope" class="size-3.5 shrink-0" />
+                                                {{ $client->email }}
+                                            </p>
+                                        @endif
+                                        @if ($client->address)
+                                            <p class="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                                                <flux:icon name="map-pin" class="size-3.5 shrink-0" />
+                                                {{ $client->address }}
+                                            </p>
+                                        @endif
+                                        @if ($client->tax_id)
+                                            <p class="mt-1 text-xs font-mono text-slate-400">{{ __('Réf. fiscale') }} : {{ $client->tax_id }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @else
+                                <div class="mb-6 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-700">
+                                    {{ __('Aucun client final renseigné sur cette facture.') }}
+                                </div>
+                            @endif
+
+                            {{-- Lignes de facture --}}
+                            <div>
+                                <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Détail des prestations') }}</p>
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b border-slate-100 text-left">
+                                            <th class="pb-2 pr-4 text-xs font-semibold text-slate-500">{{ __('Description') }}</th>
+                                            <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('Qté') }}</th>
+                                            <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('PU HT') }}</th>
+                                            <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('TVA') }}</th>
+                                            <th class="pb-2 pl-4 text-right text-xs font-semibold text-slate-500">{{ __('Total HT') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50">
+                                        @forelse ($inv->lines as $line)
+                                            <tr>
+                                                <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600">{{ $line->quantity }}</td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600">
+                                                    {{ number_format($line->unit_price, 0, ',', ' ') }} F
+                                                </td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-500">{{ $line->tax_rate }} %</td>
+                                                <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink">
+                                                    {{ number_format($line->total, 0, ',', ' ') }} F
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="py-4 text-center text-slate-400">{{ __('Aucune ligne.') }}</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                    <tfoot class="border-t border-slate-200">
+                                        <tr>
+                                            <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
+                                            <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink">
+                                                {{ number_format($inv->subtotal, 0, ',', ' ') }} F
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
+                                            <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink">
+                                                {{ number_format($inv->tax_amount, 0, ',', ' ') }} F
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
+                                            <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink">
+                                                {{ number_format($inv->total, 0, ',', ' ') }} F
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- Colonne latérale : récap montants --}}
+                        <div class="border-t border-slate-100 bg-slate-50/60 px-8 py-8 lg:border-t-0 lg:border-l">
+                            <p class="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Récapitulatif') }}</p>
+
+                            <dl class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
+                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->subtotal, 0, ',', ' ') }} F</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-slate-500">{{ __('TVA') }}</dt>
+                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->tax_amount, 0, ',', ' ') }} F</dd>
+                                </div>
+                                <div class="flex justify-between border-t border-slate-200 pt-3">
+                                    <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
+                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ number_format($inv->total, 0, ',', ' ') }} F</dd>
+                                </div>
+
+                                @if ($inv->status === InvoiceStatus::PartiallyPaid)
+                                    <div class="flex justify-between text-amber-600">
+                                        <dt>{{ __('Encaissé') }}</dt>
+                                        <dd class="tabular-nums font-medium">{{ number_format($inv->amount_paid, 0, ',', ' ') }} F</dd>
+                                    </div>
+                                    <div class="flex justify-between text-rose-600">
+                                        <dt class="font-semibold">{{ __('Reste dû') }}</dt>
+                                        <dd class="tabular-nums font-bold">{{ number_format($inv->total - $inv->amount_paid, 0, ',', ' ') }} F</dd>
+                                    </div>
+                                @endif
+                            </dl>
+
+                            <div class="mt-6 space-y-2 border-t border-slate-200 pt-4 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">{{ __('Émise le') }}</span>
+                                    <span class="text-ink">{{ $inv->issued_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">{{ __('Échéance') }}</span>
+                                    <span @class([
+                                        'font-medium',
+                                        'text-rose-600' => $inv->status === InvoiceStatus::Overdue,
+                                        'text-ink'      => $inv->status !== InvoiceStatus::Overdue,
+                                    ])>{{ $inv->due_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
+                                </div>
+                                @if ($inv->paid_at)
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">{{ __('Payée le') }}</span>
+                                        <span class="text-teal-600">{{ $inv->paid_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="mt-6">
+                                <span class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold {{ $statusConfig['class'] }}">
+                                    {{ $statusConfig['label'] }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="flex justify-end border-t border-slate-100 px-10 py-5">
+                    <flux:button variant="ghost" wire:click="closeInvoice">
+                        {{ __('Fermer') }}
                     </flux:button>
                 </div>
-            </form>
-
-            <div class="border-t border-slate-100 pt-4">
-                <p class="mb-3 text-sm text-slate-500">{{ __('Zone dangereuse') }}</p>
-                <flux:button
-                    variant="danger"
-                    wire:click="archive"
-                    wire:confirm="{{ __('Archiver ce client ? Cette action retirera la PME de votre portefeuille actif.') }}"
-                >
-                    {{ __('Archiver le client') }}
-                </flux:button>
             </div>
         </div>
-    </flux:modal>
+    @endif
 
 </div>

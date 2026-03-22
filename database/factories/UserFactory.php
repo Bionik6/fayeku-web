@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use Database\Factories\Support\SenegalFaker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Modules\Shared\Models\User;
@@ -21,9 +22,9 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
-            'phone' => '+221'.fake()->unique()->numerify('#########'),
+            'first_name' => SenegalFaker::firstName(),
+            'last_name' => SenegalFaker::lastName(),
+            'phone' => SenegalFaker::phone(),
             'password' => static::$password ??= Hash::make('password'),
             'profile_type' => 'sme',
             'country_code' => 'SN',
