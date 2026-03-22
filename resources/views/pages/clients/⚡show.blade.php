@@ -920,7 +920,7 @@ new #[Title('Fiche client')] class extends Component {
                                 type="radio"
                                 wire:model="exportFormat"
                                 value="{{ $value }}"
-                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
+                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
                             />
                             <label for="export-format-{{ $value }}" class="ml-3 block cursor-pointer text-sm/6 font-medium text-ink">
                                 {{ $label }}

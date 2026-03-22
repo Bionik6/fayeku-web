@@ -381,7 +381,7 @@ new #[Title('Export Groupé')] class extends Component {
                                         type="button"
                                         class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-ink shadow-sm transition hover:bg-slate-50"
                                     >
-                                        <x-app.icon name="export" class="size-3.5" />
+                                        <x-app.icon name="download" class="size-3.5" />
                                         {{ __('Re-télécharger') }}
                                     </button>
                                 </td>
@@ -529,7 +529,7 @@ new #[Title('Export Groupé')] class extends Component {
                                 type="radio"
                                 wire:model="exportFormat"
                                 value="{{ $value }}"
-                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
+                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
                             />
                             <label for="export-format-{{ $value }}" class="ml-3 block cursor-pointer text-sm/6 font-medium text-ink">
                                 {{ $label }}
@@ -553,7 +553,7 @@ new #[Title('Export Groupé')] class extends Component {
                                 type="radio"
                                 wire:model.live="clientSelection"
                                 value="{{ $value }}"
-                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
+                                class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary not-checked:before:hidden forced-colors:appearance-auto forced-colors:before:hidden"
                             />
                             <label for="client-selection-{{ $value }}" class="ml-3 block cursor-pointer text-sm/6 font-medium text-ink">
                                 {{ $label }}
@@ -577,16 +577,27 @@ new #[Title('Export Groupé')] class extends Component {
                                 {{ count($selectedClientIds) === $this->clients->count() ? __('Tout désélectionner') : __('Tout sélectionner') }}
                             </button>
                         </div>
-                        <div class="max-h-48 overflow-y-auto rounded-xl border border-slate-200 p-3">
+                        <div class="max-h-48 overflow-y-auto rounded-xl border border-slate-200">
                             @foreach ($this->clients as $client)
-                                <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-slate-50">
-                                    <input
-                                        type="checkbox"
-                                        wire:click="toggleClient('{{ $client->id }}')"
-                                        @checked(in_array($client->id, $selectedClientIds))
-                                        class="size-4 rounded border-slate-300 text-accent focus:ring-accent"
-                                    />
-                                    <span class="text-sm font-medium text-ink">{{ $client->name }}</span>
+                                <label
+                                    for="client-{{ $client->id }}"
+                                    class="relative flex cursor-pointer items-center gap-3 px-3 py-2.5 transition select-none hover:bg-slate-50"
+                                >
+                                    <div class="flex h-6 shrink-0 items-center">
+                                        <div class="group grid size-4 grid-cols-1">
+                                            <input
+                                                id="client-{{ $client->id }}"
+                                                type="checkbox"
+                                                wire:click="toggleClient('{{ $client->id }}')"
+                                                @checked(in_array($client->id, $selectedClientIds))
+                                                class="col-start-1 row-start-1 appearance-none rounded-sm border border-slate-300 bg-white checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:border-slate-300 disabled:bg-slate-100 disabled:checked:bg-slate-100 forced-colors:appearance-auto"
+                                            />
+                                            <svg viewBox="0 0 14 14" fill="none" class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-slate-950/25">
+                                                <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-has-checked:opacity-100" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm/6 font-medium text-ink">{{ $client->name }}</span>
                                 </label>
                             @endforeach
                         </div>

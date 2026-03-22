@@ -22,6 +22,7 @@
         'check'        => 'resources/icons/check.svg',
         'restore'      => 'resources/icons/arrow-circle-left.svg',
         'chevron-down' => 'resources/icons/chevron-down.svg',
+        'download'     => 'resources/icons/download-01.svg',
     ];
 
     $path = $icons[$name] ?? null;
