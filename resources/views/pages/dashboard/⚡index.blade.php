@@ -152,7 +152,7 @@ new #[Title('Dashboard')] class extends Component {
             $alerts[] = [
                 'type' => 'critical',
                 'title' => $criticalInvoice->company->name.' — impayé critique',
-                'subtitle' => ($criticalInvoice->reference ?? 'FAC').' · '.number_format($criticalInvoice->total, 0, ',', ' ').' F · J+'.$daysLate.' · Aucune relance envoyée',
+                'subtitle' => ($criticalInvoice->reference ?? 'FAC').' · '.number_format($criticalInvoice->total, 0, ',', ' ').' FCFA · J+'.$daysLate.' · Aucune relance envoyée',
                 'company_id' => $criticalInvoice->company_id,
             ];
         }
@@ -346,7 +346,7 @@ new #[Title('Dashboard')] class extends Component {
                     {{ __('Commission') }} {{ ucfirst(now()->locale('fr_FR')->translatedFormat('M')) }}
                 </p>
                 <p class="mt-2 text-3xl font-semibold tracking-tight text-primary">
-                    {{ number_format($commissionAmount, 0, ',', ' ') }} F
+                    {{ number_format($commissionAmount, 0, ',', ' ') }} FCFA
                 </p>
                 @if ($nextPaymentDate)
                     <p class="mt-1 text-xs text-slate-400">Versement {{ $nextPaymentDate }}</p>

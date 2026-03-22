@@ -3,6 +3,7 @@
 namespace Modules\Compta\Compliance\Services;
 
 use Modules\Compta\Compliance\Interfaces\FiscalConnectorInterface;
+use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
 class ComplianceService
@@ -23,16 +24,22 @@ class ComplianceService
 
         try {
             $cert = $connector->certify($invoice);
+
+            $data = array_filter([
+                'reference' => $cert->reference,
+                'token' => $cert->token,
+                'certified_at' => now()->toIso8601String(),
+                'balance_sticker' => $cert->balanceSticker,
+                'raw_response' => $cert->rawResponse ?: null,
+            ], fn ($v) => $v !== null);
+
             $invoice->update([
-                'fne_reference' => $cert->reference,
-                'fne_token' => $cert->token,
-                'fne_certified_at' => now(),
-                'fne_balance_sticker' => $cert->balanceSticker,
-                'fne_raw_response' => $cert->rawResponse,
-                'status' => 'certified',
+                'certification_authority' => $cert->authority->value,
+                'certification_data' => $data,
+                'status' => InvoiceStatus::Certified,
             ]);
         } catch (\RuntimeException $e) {
-            $invoice->update(['status' => 'certification_failed']);
+            $invoice->update(['status' => InvoiceStatus::CertificationFailed]);
             throw $e;
         }
     }

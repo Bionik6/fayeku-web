@@ -2,11 +2,14 @@
 
 namespace Modules\PME\Invoicing\Models;
 
+use Database\Factories\InvoiceFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Auth\Models\Company;
+use Modules\Compta\Compliance\Enums\CertificationAuthority;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
@@ -14,32 +17,32 @@ use Modules\Shared\Traits\HasUlid;
 
 class Invoice extends Model
 {
-    use HasUlid, SoftDeletes;
+    /** @use HasFactory<InvoiceFactory> */
+    use HasFactory, HasUlid, SoftDeletes;
+
+    protected static function newFactory(): InvoiceFactory
+    {
+        return InvoiceFactory::new();
+    }
 
     protected $fillable = [
         'company_id', 'client_id', 'reference', 'status',
         'issued_at', 'due_at', 'paid_at',
-        'subtotal', 'tax_amount', 'total', 'notes',
-        // FNE (Côte d'Ivoire)
-        'fne_reference', 'fne_token', 'fne_certified_at',
-        'fne_balance_sticker', 'fne_raw_response',
-        // DGID (Sénégal — reserved, API not yet published)
-        'dgid_reference', 'dgid_token', 'dgid_certified_at',
+        'subtotal', 'tax_amount', 'total', 'amount_paid', 'notes',
+        'certification_authority', 'certification_data',
     ];
 
     protected $casts = [
         'issued_at' => 'date',
         'due_at' => 'date',
         'paid_at' => 'datetime',
-        'fne_certified_at' => 'datetime',
-        'dgid_certified_at' => 'datetime',
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
         'amount_paid' => 'integer',
-        'fne_balance_sticker' => 'integer',
-        'fne_raw_response' => 'array',
         'status' => InvoiceStatus::class,
+        'certification_authority' => CertificationAuthority::class,
+        'certification_data' => 'array',
     ];
 
     public function company(): BelongsTo

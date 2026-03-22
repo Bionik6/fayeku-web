@@ -29,14 +29,8 @@ return new class extends Migration
             $table->integer('total')->default(0);
             $table->integer('amount_paid')->default(0);
             $table->text('notes')->nullable();
-            $table->string('fne_reference')->nullable();
-            $table->string('fne_token')->nullable();
-            $table->datetime('fne_certified_at')->nullable();
-            $table->integer('fne_balance_sticker')->nullable();
-            $table->text('fne_raw_response')->nullable();
-            $table->string('dgid_reference')->nullable();
-            $table->string('dgid_token')->nullable();
-            $table->datetime('dgid_certified_at')->nullable();
+            $table->string('certification_authority')->nullable();
+            $table->json('certification_data')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

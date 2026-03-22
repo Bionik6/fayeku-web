@@ -3,10 +3,11 @@
 namespace Modules\Compta\Compliance\Services;
 
 use Modules\Compta\Compliance\DTOs\FiscalCertification;
+use Modules\Compta\Compliance\Enums\CertificationAuthority;
 use Modules\Compta\Compliance\Interfaces\FiscalConnectorInterface;
 use Modules\PME\Invoicing\Models\Invoice;
 
-class DgidConnector implements FiscalConnectorInterface
+class DGIDConnector implements FiscalConnectorInterface
 {
     public function certify(Invoice $invoice): FiscalCertification
     {
@@ -20,5 +21,10 @@ class DgidConnector implements FiscalConnectorInterface
     public function supportsCountry(string $countryCode): bool
     {
         return $countryCode === 'SN';
+    }
+
+    public function authority(): CertificationAuthority
+    {
+        return CertificationAuthority::DGID;
     }
 }

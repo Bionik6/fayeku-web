@@ -5,10 +5,11 @@ namespace Modules\Compta\Compliance\Services;
 use Illuminate\Support\Facades\Http;
 use Modules\Compta\Compliance\DTOs\FiscalCertification;
 use Modules\Compta\Compliance\DTOs\FneInvoicePayload;
+use Modules\Compta\Compliance\Enums\CertificationAuthority;
 use Modules\Compta\Compliance\Interfaces\FiscalConnectorInterface;
 use Modules\PME\Invoicing\Models\Invoice;
 
-class FneConnector implements FiscalConnectorInterface
+class FNEFiscalConnector implements FiscalConnectorInterface
 {
     public function certify(Invoice $invoice): FiscalCertification
     {
@@ -24,6 +25,7 @@ class FneConnector implements FiscalConnectorInterface
         $data = $response->json();
 
         return new FiscalCertification(
+            authority: CertificationAuthority::FNE,
             reference: $data['reference'],
             token: $data['token'],
             balanceSticker: $data['balance_sticker'] ?? null,
@@ -34,5 +36,10 @@ class FneConnector implements FiscalConnectorInterface
     public function supportsCountry(string $countryCode): bool
     {
         return $countryCode === 'CI';
+    }
+
+    public function authority(): CertificationAuthority
+    {
+        return CertificationAuthority::FNE;
     }
 }

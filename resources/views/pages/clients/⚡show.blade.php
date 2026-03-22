@@ -327,7 +327,7 @@ new #[Title('Fiche client')] class extends Component {
                 ({{ ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('M')) }})
             </p>
             <p class="mt-2 text-2xl font-bold tracking-tight text-ink">
-                {{ number_format($this->stats['billed_month'], 0, ',', ' ') }} F
+                {{ number_format($this->stats['billed_month'], 0, ',', ' ') }} FCFA
             </p>
         </section>
 
@@ -335,7 +335,7 @@ new #[Title('Fiche client')] class extends Component {
         <section class="app-shell-panel p-5">
             <p class="text-xs font-medium text-slate-500">{{ __('Encaissé') }}</p>
             <p class="mt-2 text-2xl font-bold tracking-tight text-accent">
-                {{ number_format($this->stats['collected'], 0, ',', ' ') }} F
+                {{ number_format($this->stats['collected'], 0, ',', ' ') }} FCFA
             </p>
         </section>
 
@@ -348,7 +348,7 @@ new #[Title('Fiche client')] class extends Component {
                 'text-amber-500' => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
                 'text-ink'       => $this->stats['pending_amount'] === 0,
             ])>
-                {{ number_format($this->stats['pending_amount'], 0, ',', ' ') }} F
+                {{ number_format($this->stats['pending_amount'], 0, ',', ' ') }} FCFA
             </p>
             @if ($this->stats['pending_count'] > 0)
                 <p class="mt-1 text-xs text-slate-500">
@@ -663,25 +663,25 @@ new #[Title('Fiche client')] class extends Component {
                             <dl class="space-y-3 text-sm">
                                 <div class="flex justify-between">
                                     <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
-                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->subtotal, 0, ',', ' ') }} F</dd>
+                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->subtotal, 0, ',', ' ') }} FCFA</dd>
                                 </div>
                                 <div class="flex justify-between">
                                     <dt class="text-slate-500">{{ __('TVA') }}</dt>
-                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->tax_amount, 0, ',', ' ') }} F</dd>
+                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->tax_amount, 0, ',', ' ') }} FCFA</dd>
                                 </div>
                                 <div class="flex justify-between border-t border-slate-200 pt-3">
                                     <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
-                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ number_format($inv->total, 0, ',', ' ') }} F</dd>
+                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ number_format($inv->total, 0, ',', ' ') }} FCFA</dd>
                                 </div>
 
                                 @if ($inv->status === InvoiceStatus::PartiallyPaid)
                                     <div class="flex justify-between text-amber-600">
                                         <dt>{{ __('Encaissé') }}</dt>
-                                        <dd class="tabular-nums font-medium">{{ number_format($inv->amount_paid, 0, ',', ' ') }} F</dd>
+                                        <dd class="tabular-nums font-medium">{{ number_format($inv->amount_paid, 0, ',', ' ') }} FCFA</dd>
                                     </div>
                                     <div class="flex justify-between text-rose-600">
                                         <dt class="font-semibold">{{ __('Reste dû') }}</dt>
-                                        <dd class="tabular-nums font-bold">{{ number_format($inv->total - $inv->amount_paid, 0, ',', ' ') }} F</dd>
+                                        <dd class="tabular-nums font-bold">{{ number_format($inv->total - $inv->amount_paid, 0, ',', ' ') }} FCFA</dd>
                                     </div>
                                 @endif
                             </dl>
