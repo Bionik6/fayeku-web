@@ -102,7 +102,7 @@ class AlertService
                 'alert_key' => 'critical_'.$invoice->id,
                 'invoice_id' => $invoice->id,
                 'company_id' => $invoice->company_id,
-                'title' => $invoice->company->name.' — impayé critique',
+                'title' => $invoice->company->name.' · Impayé critique',
                 'subtitle' => ($invoice->reference ?? 'FAC').' · '.number_format($invoice->total, 0, ',', ' ').' FCFA · J+'.$daysLate.' · '.$reminderLabel,
             ];
         }
@@ -138,8 +138,8 @@ class AlertService
                 'alert_key' => 'watch_'.$company->id,
                 'invoice_id' => null,
                 'company_id' => $company->id,
-                'title' => $company->name.' — inactif depuis '.($daysSince ? $daysSince.' jours' : 'longtemps'),
-                'subtitle' => 'Aucune facture émise ce mois'.($daysSince ? ' · Dernier contact il y a '.$daysSince.'j' : ''),
+                'title' => $company->name.' · Inactif depuis '.($daysSince ? $daysSince.' jours' : 'longtemps'),
+                'subtitle' => 'Aucune facture émise ce mois'.($daysSince ? ' · Dernier contact il y a '.$daysSince.' jours' : ''),
             ];
         }
     }
@@ -173,8 +173,8 @@ class AlertService
                 'alert_key' => 'new_'.$invitation->id,
                 'invoice_id' => null,
                 'company_id' => $invitation->sme_company_id,
-                'title' => ($newSme?->name ?? $invitation->invitee_name)." — vient de s'inscrire",
-                'subtitle' => 'Via votre lien partenaire · Plan '.ucfirst($invitation->recommended_plan ?? 'Essentiel').' · Trial 2 mois',
+                'title' => ($newSme?->name ?? $invitation->invitee_name).' · Nouvelle inscription',
+                'subtitle' => 'Via votre lien partenaire · Offre '.ucfirst($invitation->recommended_plan ?? 'Essentiel').' · Essai 2 mois',
             ];
         }
     }

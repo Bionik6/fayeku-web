@@ -256,7 +256,7 @@ test('une facture overdue > 60j génère une alerte critique', function () {
     $alerts = $component->get('alerts');
     expect($alerts)->toHaveCount(1);
     expect($alerts[0]['type'])->toBe('critical');
-    expect($alerts[0]['title'])->toContain('impayé critique');
+    expect($alerts[0]['title'])->toContain('Impayé critique');
 });
 
 test('une PME inactive depuis 30j génère une alerte watch', function () {
@@ -269,7 +269,7 @@ test('une PME inactive depuis 30j génère une alerte watch', function () {
     $alerts = $component->get('alerts');
     expect($alerts)->toHaveCount(1);
     expect($alerts[0]['type'])->toBe('watch');
-    expect($alerts[0]['title'])->toContain('inactif');
+    expect($alerts[0]['title'])->toContain('Inactif');
 });
 
 test('une invitation acceptée récemment génère une alerte new', function () {

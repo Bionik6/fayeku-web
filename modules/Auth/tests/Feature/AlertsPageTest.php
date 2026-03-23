@@ -41,6 +41,25 @@ test('le composant alertes se rend sans erreur pour un cabinet sans client', fun
         ->assertSee('Alertes');
 });
 
+test('la page affiche le nouveau copy du hero et des filtres', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::alerts.index')
+        ->assertSee('1 alerte active · 1 critique à traiter')
+        ->assertSee('1 critique à traiter')
+        ->assertSee('Filtrer les alertes')
+        ->assertSee('À surveiller')
+        ->assertDontSee('Filtrer par criticité')
+        ->assertDontSee('En veille');
+});
+
 // ─── Alertes critiques ────────────────────────────────────────────────────────
 
 test('une facture en retard > 60 jours génère une alerte critique', function () {
@@ -99,6 +118,21 @@ test('un client sans facture ce mois génère une alerte en veille', function ()
     expect(collect($alerts)->where('type', 'watch'))->toHaveCount(1);
 });
 
+test('une alerte à surveiller utilise le nouveau copy narratif', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    createInvoice($smes[0], ['issued_at' => now()->startOfDay()->subDays(45)]);
+
+    Livewire::actingAs($user)
+        ->test('pages::alerts.index')
+        ->assertSee('Inactif depuis')
+        ->assertSee('Dernier contact il y a')
+        ->assertSee('jours')
+        ->assertSee('À surveiller')
+        ->assertSee('Actions')
+        ->assertDontSee('En veille');
+});
+
 test('un client avec une facture récente ne génère pas d\'alerte en veille', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
@@ -129,6 +163,25 @@ test('une invitation acceptée dans les 7 jours génère une alerte nouvelle', f
     $alerts = $component->get('alerts');
 
     expect(collect($alerts)->where('type', 'new'))->toHaveCount(1);
+});
+
+test('une nouvelle inscription utilise le copy harmonisé', function () {
+    ['user' => $user, 'firm' => $firm] = createFirmWithSmes(0);
+
+    PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => fake()->uuid(),
+        'invitee_phone' => '+221701234568',
+        'invitee_name' => 'Bâ Industries',
+        'recommended_plan' => 'essentiel',
+        'status' => 'accepted',
+        'accepted_at' => now()->subDays(2),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::alerts.index')
+        ->assertSee('Bâ Industries · Nouvelle inscription')
+        ->assertSee('Via votre lien partenaire · Offre Essentiel · Essai 2 mois');
 });
 
 test('une invitation acceptée il y a plus de 7 jours ne génère pas d\'alerte nouvelle', function () {
@@ -424,6 +477,25 @@ test('showDismissed=true affiche uniquement les alertes archivées avec le flag 
     expect($alerts)->toHaveCount(1)
         ->and($alerts[0]['alert_key'])->toBe($alertKey)
         ->and($alerts[0]['dismissed'])->toBeTrue();
+});
+
+test('une alerte critique conserve le menu actions et son copy secondaire', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::alerts.index')
+        ->assertSee('Actions')
+        ->assertSee('Voir le dossier')
+        ->assertSee('Marquer comme traité')
+        ->assertDontSee('Marquer comme vu')
+        ->assertDontSee('Relancer')
+        ->assertDontSee('Contacter');
 });
 
 test('showDismissed=true retourne une liste vide quand aucune alerte n\'est archivée', function () {

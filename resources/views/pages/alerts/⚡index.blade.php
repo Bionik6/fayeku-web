@@ -134,6 +134,41 @@ new #[Title('Alertes')] class extends Component {
             'dismissed' => count(array_filter($all, fn (array $a) => in_array($a['alert_key'], $dismissedKeys))),
         ];
     }
+
+    #[Computed]
+    public function heroSummary(): string
+    {
+        $activeLabel = $this->counts['all'] > 1 ? 'alertes actives' : 'alerte active';
+        $criticalLabel = $this->counts['critical'] > 1 ? 'critiques à traiter' : 'critique à traiter';
+
+        return sprintf(
+            '%s %s · %s %s · %s',
+            $this->counts['all'],
+            $activeLabel,
+            $this->counts['critical'],
+            $criticalLabel,
+            ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'))
+        );
+    }
+
+    public function heroBadgeLabel(): string
+    {
+        if ($this->counts['critical'] === 0) {
+            return __('Aucune critique à traiter');
+        }
+
+        return $this->counts['critical'].' '.($this->counts['critical'] > 1 ? 'critiques à traiter' : 'critique à traiter');
+    }
+
+    public function alertBadgeLabel(string $type): string
+    {
+        return match ($type) {
+            'critical' => 'Critique',
+            'watch' => 'À surveiller',
+            default => 'Nouvelle inscription',
+        };
+    }
+
 }
 
 ?>
@@ -146,15 +181,12 @@ new #[Title('Alertes')] class extends Component {
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">{{ __('Surveillance') }}</p>
                 <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Alertes') }}</h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    {{ $this->counts['all'] }} {{ $this->counts['all'] > 1 ? 'alertes actives' : 'alerte active' }}
-                    · {{ ucfirst(now()->locale('fr_FR')->translatedFormat('F Y')) }}
-                </p>
+                <p class="mt-1 text-sm text-slate-500">{{ $this->heroSummary }}</p>
             </div>
 
             @if ($this->counts['all'] > 0)
                 <span class="inline-flex shrink-0 items-center self-start rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20 lg:self-center">
-                    {{ $this->counts['critical'] > 0 ? $this->counts['critical'].' critique'.($this->counts['critical'] > 1 ? 's' : '') : __('Tout est à jour') }}
+                    {{ $this->heroBadgeLabel() }}
                 </span>
             @else
                 <span class="inline-flex shrink-0 items-center self-start rounded-full bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 ring-1 ring-inset ring-green-600/20 lg:self-center">
@@ -166,14 +198,14 @@ new #[Title('Alertes')] class extends Component {
 
     {{-- ─── Filtres ────────────────────────────────────────────────────── --}}
     <section class="app-shell-panel p-5">
-        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Filtrer par criticité') }}</p>
+        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Filtrer les alertes') }}</p>
         <div class="flex flex-wrap gap-2">
 
             {{-- Filtres par criticité --}}
             @foreach ([
                 'all'      => ['label' => 'Toutes',    'count' => $this->counts['all'],      'activeClass' => 'bg-primary text-white',     'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-slate-100 text-slate-500'],
                 'critical' => ['label' => 'Critiques', 'count' => $this->counts['critical'], 'activeClass' => 'bg-rose-500 text-white',    'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                'watch'    => ['label' => 'En veille', 'count' => $this->counts['watch'],    'activeClass' => 'bg-amber-500 text-white',   'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'watch'    => ['label' => 'À surveiller', 'count' => $this->counts['watch'], 'activeClass' => 'bg-amber-500 text-white',   'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
                 'new'      => ['label' => 'Nouvelles', 'count' => $this->counts['new'],      'activeClass' => 'bg-emerald-600 text-white', 'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
             ] as $key => $tab)
                 <button
@@ -198,8 +230,8 @@ new #[Title('Alertes')] class extends Component {
                 wire:click="$set('showDismissed', {{ $showDismissed ? 'false' : 'true' }})"
                 @class([
                     'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                    'bg-slate-600 text-white'                                                                           => $showDismissed,
-                    'bg-white border border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-700'      => ! $showDismissed,
+                    'bg-slate-500 text-white'                                                                      => $showDismissed,
+                    'bg-white border border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600' => ! $showDismissed,
                 ])
             >
                 <flux:icon name="archive-box" class="size-3.5" />
@@ -260,31 +292,28 @@ new #[Title('Alertes')] class extends Component {
                                     'bg-amber-500' => $alert['type'] === 'watch',
                                     'bg-green-500' => $alert['type'] === 'new',
                                 ])></span>
-                                @if ($alert['type'] === 'critical') Critique
-                                @elseif ($alert['type'] === 'watch') En veille
-                                @else Nouvelle inscription
-                                @endif
+                                {{ $this->alertBadgeLabel($alert['type']) }}
                             </span>
                         @endif
 
-                        {{-- Dropdown actions --}}
-                        <flux:dropdown position="bottom" align="end">
-                            <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
-                                {{ __('Actions') }}
-                                <x-app.icon name="chevron-down" class="size-3.5" />
-                            </button>
+                        <div class="flex shrink-0 items-center gap-2">
+                            <flux:dropdown position="bottom" align="end">
+                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                    {{ __('Actions') }}
+                                    <x-app.icon name="chevron-down" class="size-3.5" />
+                                </button>
                             <flux:menu>
                                 @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
                                     <flux:menu.item wire:click="viewInvoice('{{ $alert['invoice_id'] }}')">
                                         <x-app.icon name="invoice" class="size-4 text-slate-400" />
-                                        {{ __('Voir Facture') }}
+                                        {{ __('Voir la facture') }}
                                     </flux:menu.item>
                                 @endif
 
                                 @if ($alert['company_id'] ?? null)
                                     <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
                                         <x-app.icon name="user" class="size-4 text-slate-400" />
-                                        {{ __('Voir Fiche Client') }}
+                                        {{ __('Voir le dossier') }}
                                     </flux:menu.item>
                                 @endif
 
@@ -298,11 +327,12 @@ new #[Title('Alertes')] class extends Component {
                                 @else
                                     <flux:menu.item wire:click="dismiss('{{ $alert['alert_key'] }}')">
                                         <x-app.icon name="check" class="size-4 text-slate-400" />
-                                        {{ __('Marquer comme vu') }}
+                                        {{ __('Marquer comme traité') }}
                                     </flux:menu.item>
                                 @endif
                             </flux:menu>
                         </flux:dropdown>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -315,7 +345,7 @@ new #[Title('Alertes')] class extends Component {
                     @if ($showDismissed) {{ __('Aucune alerte archivée') }}
                     @elseif ($filter === 'all') {{ __('Aucune alerte pour le moment') }}
                     @elseif ($filter === 'critical') {{ __('Aucun impayé critique') }}
-                    @elseif ($filter === 'watch') {{ __('Aucun client en veille') }}
+                    @elseif ($filter === 'watch') {{ __('Aucun client à surveiller') }}
                     @else {{ __('Aucune nouvelle inscription cette semaine') }}
                     @endif
                 </p>
