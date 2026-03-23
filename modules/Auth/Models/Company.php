@@ -15,7 +15,7 @@ class Company extends Model
 {
     use HasFactory, HasUlid;
 
-    protected $fillable = ['name', 'type', 'plan', 'country_code', 'phone'];
+    protected $fillable = ['name', 'type', 'plan', 'country_code', 'phone', 'email', 'address', 'city', 'ninea', 'rccm', 'logo_path'];
 
     protected static function newFactory(): CompanyFactory
     {

@@ -46,16 +46,8 @@ it('generates invitations index URL with compta prefix', function () {
     expect(route('invitations.index'))->toContain('/compta/invitations');
 });
 
-it('generates profile edit URL with compta prefix', function () {
-    expect(route('profile.edit'))->toContain('/compta/settings/profile');
-});
-
-it('generates appearance edit URL with compta prefix', function () {
-    expect(route('appearance.edit'))->toContain('/compta/settings/appearance');
-});
-
-it('generates security edit URL with compta prefix', function () {
-    expect(route('security.edit'))->toContain('/compta/settings/security');
+it('generates settings index URL with compta prefix', function () {
+    expect(route('settings.index'))->toContain('/compta/settings');
 });
 
 // ─── Route accessibility (authenticated + verified) ────────────────────────
@@ -96,28 +88,10 @@ it('serves compta/invitations for authenticated users', function () {
         ->assertOk();
 });
 
-it('serves compta/settings/profile for authenticated users', function () {
-    $this->actingAs($this->user)
-        ->get('/compta/settings/profile')
-        ->assertOk();
-});
-
-it('serves compta/settings/appearance for authenticated users', function () {
-    $this->actingAs($this->user)
-        ->get('/compta/settings/appearance')
-        ->assertOk();
-});
-
-it('serves compta/settings/security for authenticated users', function () {
-    $this->actingAs($this->user)
-        ->get('/compta/settings/security')
-        ->assertOk();
-});
-
-it('redirects compta/settings to compta/settings/profile', function () {
+it('serves compta/settings for authenticated users', function () {
     $this->actingAs($this->user)
         ->get('/compta/settings')
-        ->assertRedirect('/compta/settings/profile');
+        ->assertOk();
 });
 
 // ─── Old URLs without prefix should return 404 ────────────────────────────
@@ -158,9 +132,9 @@ it('returns 404 for old /invitations URL', function () {
         ->assertNotFound();
 });
 
-it('returns 404 for old /settings/profile URL', function () {
+it('returns 404 for old /settings URL', function () {
     $this->actingAs($this->user)
-        ->get('/settings/profile')
+        ->get('/settings')
         ->assertNotFound();
 });
 
@@ -173,6 +147,7 @@ it('redirects unauthenticated users from compta routes to login', function () {
     $this->get('/compta/exports')->assertRedirect(route('login'));
     $this->get('/compta/commissions')->assertRedirect(route('login'));
     $this->get('/compta/invitations')->assertRedirect(route('login'));
+    $this->get('/compta/settings')->assertRedirect(route('login'));
 });
 
 // ─── Fortify home config ───────────────────────────────────────────────────

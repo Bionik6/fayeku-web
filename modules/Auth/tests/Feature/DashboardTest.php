@@ -43,7 +43,7 @@ test('settings entry is highlighted on the settings screen', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->get(route('profile.edit'));
+    $response = $this->get(route('settings.index'));
 
     $response->assertOk();
     $response->assertSee('Paramètres', false);

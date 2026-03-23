@@ -264,4 +264,25 @@ select:focus[data-flux-control] {
     .auth-checkbox-wrap:has(.auth-checkbox:checked) .auth-checkbox-icon path {
         @apply opacity-100;
     }
+
+    .settings-page input[data-flux-control],
+    .settings-page textarea[data-flux-control],
+    .settings-page select[data-flux-control] {
+        @apply border-slate-300 bg-white text-ink placeholder:text-slate-400 shadow-none;
+        -webkit-text-fill-color: var(--color-ink);
+    }
+
+    .settings-page input[data-flux-control]:disabled,
+    .settings-page textarea[data-flux-control]:disabled,
+    .settings-page select[data-flux-control]:disabled,
+    .settings-page input[data-flux-control][readonly],
+    .settings-page textarea[data-flux-control][readonly],
+    .settings-page select[data-flux-control][readonly] {
+        @apply border-slate-200 bg-slate-50 text-ink opacity-100;
+        -webkit-text-fill-color: var(--color-ink);
+    }
+
+    .settings-page [data-flux-label] {
+        @apply text-sm font-semibold text-ink;
+    }
 }

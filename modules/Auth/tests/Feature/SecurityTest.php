@@ -7,21 +7,19 @@ use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
 
-test('security settings page can be rendered', function () {
+test('security settings are available on the settings page', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('security.edit'))
-        ->assertOk()
-        ->assertSee('Update password')
-        ->assertDontSee('Two-factor authentication');
+        ->get(route('settings.index'))
+        ->assertOk();
 });
 
-test('unverified users are redirected to otp from the security page', function () {
+test('unverified users are redirected to otp from the settings page', function () {
     $user = User::factory()->unverified()->create();
 
     $this->actingAs($user)
-        ->get(route('security.edit'))
+        ->get(route('settings.index'))
         ->assertRedirect(route('auth.otp'));
 });
 
@@ -32,10 +30,11 @@ test('password can be updated', function () {
 
     $this->actingAs($user);
 
-    $response = Livewire::test('pages::settings.security')
-        ->set('current_password', 'password')
-        ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
+    $response = Livewire::test('pages::settings.index')
+        ->call('setSection', 'account')
+        ->set('currentPassword', 'password')
+        ->set('newPassword', 'new-password')
+        ->set('newPasswordConfirmation', 'new-password')
         ->call('updatePassword');
 
     $response->assertHasNoErrors();
@@ -50,11 +49,12 @@ test('correct password must be provided to update password', function () {
 
     $this->actingAs($user);
 
-    $response = Livewire::test('pages::settings.security')
-        ->set('current_password', 'wrong-password')
-        ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
+    $response = Livewire::test('pages::settings.index')
+        ->call('setSection', 'account')
+        ->set('currentPassword', 'wrong-password')
+        ->set('newPassword', 'new-password')
+        ->set('newPasswordConfirmation', 'new-password')
         ->call('updatePassword');
 
-    $response->assertHasErrors(['current_password']);
+    $response->assertHasErrors(['currentPassword']);
 });

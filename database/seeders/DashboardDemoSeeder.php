@@ -61,6 +61,11 @@ class DashboardDemoSeeder extends Seeder
             'plan' => 'gold',
             'country_code' => 'SN',
             'phone' => '+221338220100',
+            'email' => 'contact@diallo-associes.sn',
+            'address' => '25 Rue Carnot, Plateau',
+            'city' => 'Dakar',
+            'ninea' => 'SN123456789',
+            'rccm' => 'SN-DKR-2024-B-12345',
         ]);
 
         $firm->users()->attach($owner->id, ['role' => 'owner']);

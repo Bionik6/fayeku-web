@@ -57,8 +57,8 @@
                 [
                     'label' => __('Paramètres'),
                     'icon' => 'settings',
-                    'href' => route('profile.edit'),
-                    'current' => request()->routeIs('profile.*'),
+                    'href' => route('settings.index'),
+                    'current' => request()->routeIs('settings.*'),
                     'navigate' => true,
                 ],
                 [
@@ -114,7 +114,7 @@
                     ],
                     'title' => __('Export groupé'),
                 ],
-                request()->routeIs('profile.*') => [
+                request()->routeIs('settings.*') => [
                     'segments' => [
                         __('Compte'),
                         __('Paramètres'),
