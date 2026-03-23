@@ -286,10 +286,6 @@
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <button type="button" class="app-shell-icon-button hidden sm:inline-flex" aria-label="{{ __('Notifications') }}">
-                                <x-app.icon name="bell" class="size-5" />
-                            </button>
-
                             <div class="flex items-center gap-3">
                                 <div class="flex size-9 items-center justify-center rounded-xl bg-mist text-xs font-bold text-primary">
                                     {{ $user->initials() }}
