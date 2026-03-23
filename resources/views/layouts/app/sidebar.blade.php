@@ -171,15 +171,6 @@
 
                 </div>
 
-                <button
-                    type="button"
-                    class="hidden lg:inline-flex app-shell-collapse-button mt-4 self-end"
-                    data-app-shell-collapse
-                    aria-label="{{ __('Réduire le menu') }}"
-                >
-                    <x-app.icon name="chevron" class="app-shell-collapse-chevron size-4 transition-transform duration-300" />
-                </button>
-
                 <div class="mt-4 flex flex-1 flex-col">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 sidebar-collapsible">{{ __('Navigation') }}</p>
@@ -241,7 +232,7 @@
             </aside>
 
             <div class="app-shell-main flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[18.5rem] transition-[padding] duration-300 ease-out">
-                <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-page/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+                <header class="sticky top-0 z-50 border-b border-slate-200/80 bg-page/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
                     <div class="flex items-center justify-between gap-4">
                         <div class="flex min-w-0 items-center gap-3">
                             <button
@@ -252,6 +243,21 @@
                             >
                                 <x-app.icon name="menu" class="size-5" />
                             </button>
+
+                            <div class="group relative hidden lg:block">
+                                <button
+                                    type="button"
+                                    class="inline-flex size-10 items-center justify-center rounded-xl bg-white text-slate-500 transition hover:text-primary"
+                                    data-app-shell-collapse
+                                    aria-label="{{ __('Afficher/Masquer la barre de navigation') }}"
+                                >
+                                    <x-app.icon name="layout-left" class="size-4" />
+                                </button>
+                                <div class="pointer-events-none absolute left-1/2 top-full z-[9999] mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                    <span class="sidebar-tooltip-expand">{{ __('Afficher la barre de navigation') }}</span>
+                                    <span class="sidebar-tooltip-collapse">{{ __('Masquer la barre de navigation') }}</span>
+                                </div>
+                            </div>
 
                             <div class="min-w-0">
                                 <p class="text-sm font-medium text-slate-500">

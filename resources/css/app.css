@@ -169,15 +169,11 @@ select:focus[data-flux-control] {
         @apply truncate;
     }
 
-    /* Collapse toggle button */
-    .app-shell-collapse-button {
-        @apply items-center justify-center size-8 rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-primary;
-    }
-
-    /* Expanded: chevron points left (collapse). Collapsed: chevron points right (expand). */
-    .app-shell-collapse-chevron {
-        transform: rotate(90deg);
-    }
+    /* Sidebar collapse toggle tooltip */
+    .sidebar-tooltip-expand { display: none; }
+    .sidebar-tooltip-collapse { display: inline; }
+    html.sidebar-collapsed .sidebar-tooltip-expand { display: inline; }
+    html.sidebar-collapsed .sidebar-tooltip-collapse { display: none; }
 
     /* Collapsed sidebar styles — desktop only.
        Keyed off html.sidebar-collapsed so the inline <script> in <head>

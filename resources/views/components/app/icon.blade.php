@@ -24,6 +24,7 @@
         'chevron-down' => 'resources/icons/chevron-down.svg',
         'download'     => 'resources/icons/download-01.svg',
         'chevron'      => 'resources/icons/chevron-down.svg',
+        'layout-left'  => 'resources/icons/layout-left.svg',
     ];
 
     $path = $icons[$name] ?? null;
