@@ -272,16 +272,20 @@ function bindAppShell() {
     function setSidebarState(isOpen) {
         root.dataset.sidebarOpen = String(isOpen);
 
-        if (overlay) {
-            overlay.classList.toggle("hidden", !isOpen);
-        }
+        // Only manipulate translate classes on mobile — on desktop the sidebar
+        // is always visible (via lg:translate-x-0) or collapsed via CSS.
+        if (!desktopMedia.matches) {
+            if (overlay) {
+                overlay.classList.toggle("hidden", !isOpen);
+            }
 
-        if (sidebar) {
-            sidebar.classList.toggle("-translate-x-full", !isOpen);
-            sidebar.classList.toggle("translate-x-0", isOpen);
-        }
+            if (sidebar) {
+                sidebar.classList.toggle("-translate-x-full", !isOpen);
+                sidebar.classList.toggle("translate-x-0", isOpen);
+            }
 
-        document.body.classList.toggle("overflow-hidden", isOpen && !desktopMedia.matches);
+            document.body.classList.toggle("overflow-hidden", isOpen);
+        }
     }
 
     toggles.forEach((toggle) => {
@@ -302,6 +306,21 @@ function bindAppShell() {
     });
 
     setSidebarState(false);
+
+    // Sidebar collapse (desktop icon-only mode)
+    const collapseToggle = root.querySelector("[data-app-shell-collapse]");
+
+    function setCollapsedState(isCollapsed) {
+        document.documentElement.classList.toggle("sidebar-collapsed", isCollapsed);
+        localStorage.setItem("sidebar-collapsed", String(isCollapsed));
+    }
+
+    if (collapseToggle) {
+        collapseToggle.addEventListener("click", () => {
+            const isCollapsed = document.documentElement.classList.contains("sidebar-collapsed");
+            setCollapsedState(!isCollapsed);
+        });
+    }
 }
 
 function initializePage() {

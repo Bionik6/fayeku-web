@@ -169,6 +169,70 @@ select:focus[data-flux-control] {
         @apply truncate;
     }
 
+    /* Collapse toggle button */
+    .app-shell-collapse-button {
+        @apply items-center justify-center size-8 rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-primary;
+    }
+
+    /* Expanded: chevron points left (collapse). Collapsed: chevron points right (expand). */
+    .app-shell-collapse-chevron {
+        transform: rotate(90deg);
+    }
+
+    /* Collapsed sidebar styles — desktop only.
+       Keyed off html.sidebar-collapsed so the inline <script> in <head>
+       can apply them before first paint. */
+    @media (min-width: 1024px) {
+        html.sidebar-collapsed [data-app-shell-sidebar] {
+            width: 4.5rem !important;
+            padding-inline: 0.5rem !important;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .sidebar-collapsible {
+            display: none !important;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .sidebar-header {
+            justify-content: center;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .sidebar-header > a {
+            justify-content: center;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .app-shell-nav-link {
+            justify-content: center;
+            gap: 0;
+            width: 2.75rem;
+            height: 2.75rem;
+            padding: 0 !important;
+            border-radius: 0.875rem;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .app-shell-collapse-button {
+            align-self: center !important;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .app-shell-collapse-button svg {
+            transform: rotate(-90deg) !important;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] .sidebar-section-divider {
+            border-color: transparent;
+            padding-top: 0.75rem;
+        }
+
+        html.sidebar-collapsed [data-app-shell-sidebar] nav {
+            align-items: center;
+        }
+
+        html.sidebar-collapsed .app-shell-main {
+            padding-left: 4.5rem !important;
+        }
+    }
+
     .app-shell-stat-card {
         @apply rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.06)] p-5;
     }
