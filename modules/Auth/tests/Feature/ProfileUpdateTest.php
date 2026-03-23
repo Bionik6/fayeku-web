@@ -10,7 +10,13 @@ uses(RefreshDatabase::class);
 test('settings page is displayed', function () {
     $this->actingAs($user = User::factory()->create());
 
-    $this->get(route('settings.index'))->assertOk();
+    $this->get(route('settings.index'))
+        ->assertOk()
+        ->assertSee('Profil du cabinet')
+        ->assertSee('Compte & sécurité')
+        ->assertSee('Sections des paramètres', false)
+        ->assertSee("wire:click=\"setSection('profile')\"", false)
+        ->assertSee("wire:click=\"setSection('account')\"", false);
 });
 
 test('profile information can be updated', function () {
@@ -62,14 +68,15 @@ test('settings page uses the shared phone component for cabinet and account phon
         ->get(route('settings.index'))
         ->assertOk()
         ->assertSee('Téléphone du cabinet')
-        ->assertSee('+221338001122')
+        ->assertSee('SEN (+221)')
+        ->assertSee('33 800 11 22')
         ->assertSee('data-phone-field', false);
 
     Livewire::actingAs($user)
         ->test('pages::settings.index')
         ->call('setSection', 'account')
         ->assertSee('Téléphone')
-        ->assertSee('+221771234567')
+        ->assertSee('77 123 45 67')
         ->assertSee('data-phone-field', false);
 });
 
@@ -85,17 +92,17 @@ test('cabinet profile can be updated from the settings page', function () {
     $response = Livewire::actingAs($user)
         ->test('pages::settings.index')
         ->set('firmName', 'Cabinet Fayeku Conseil')
-        ->set('firmPhone', '+2250700000000')
-        ->set('firmCountry', 'CI')
-        ->set('firmCity', 'Abidjan')
+        ->set('firmPhone', '33 822 01 00')
+        ->set('firmCountry', 'SN')
+        ->set('firmCity', 'Dakar')
         ->call('saveFirmProfile');
 
     $response->assertHasNoErrors();
 
     expect($firm->refresh()->name)->toEqual('Cabinet Fayeku Conseil');
-    expect($firm->phone)->toEqual('+2250700000000');
-    expect($firm->country_code)->toEqual('CI');
-    expect($firm->city)->toEqual('Abidjan');
+    expect($firm->phone)->toEqual('+221338220100');
+    expect($firm->country_code)->toEqual('SN');
+    expect($firm->city)->toEqual('Dakar');
 });
 
 test('user can delete their account', function () {

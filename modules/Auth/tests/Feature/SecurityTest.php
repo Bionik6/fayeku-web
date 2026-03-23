@@ -56,5 +56,26 @@ test('correct password must be provided to update password', function () {
         ->set('newPasswordConfirmation', 'new-password')
         ->call('updatePassword');
 
-    $response->assertHasErrors(['currentPassword']);
+    $response
+        ->assertHasErrors(['currentPassword'])
+        ->assertSee('Le mot de passe actuel est incorrect.');
+});
+
+test('password confirmation errors are displayed in french', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('password'),
+    ]);
+
+    $this->actingAs($user);
+
+    $response = Livewire::test('pages::settings.index')
+        ->call('setSection', 'account')
+        ->set('currentPassword', 'password')
+        ->set('newPassword', 'new-password')
+        ->set('newPasswordConfirmation', 'different-password')
+        ->call('updatePassword');
+
+    $response
+        ->assertHasErrors(['newPassword'])
+        ->assertSee('La confirmation du nouveau mot de passe ne correspond pas.');
 });

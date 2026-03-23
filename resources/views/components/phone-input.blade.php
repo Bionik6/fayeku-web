@@ -29,6 +29,29 @@
     $containerClasses = trim($containerClass ?: 'flex items-stretch rounded-2xl border border-slate-300 bg-white transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15');
     $phoneClasses = trim('min-w-0 grow rounded-r-2xl border-0 bg-transparent px-4 py-3 text-base text-ink placeholder:text-slate-400 outline-none focus:ring-0 '.$inputClass);
     $selectedCountryLabel = $countries[$countryValue] ?? $countryValue;
+    $formattedPhoneValue = (function (string $country, string $phone): string {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+        $prefix = preg_replace('/\D+/', '', (string) config("fayeku.countries.{$country}.prefix", '')) ?? '';
+
+        if ($prefix !== '' && str_starts_with($digits, $prefix)) {
+            $digits = substr($digits, strlen($prefix));
+        }
+
+        return match ($country) {
+            'SN' => (function (string $value): string {
+                $normalized = substr($value, 0, 9);
+
+                return match (true) {
+                    strlen($normalized) <= 2 => $normalized,
+                    strlen($normalized) <= 5 => substr($normalized, 0, 2).' '.substr($normalized, 2),
+                    strlen($normalized) <= 7 => substr($normalized, 0, 2).' '.substr($normalized, 2, 3).' '.substr($normalized, 5),
+                    default => substr($normalized, 0, 2).' '.substr($normalized, 2, 3).' '.substr($normalized, 5, 2).' '.substr($normalized, 7),
+                };
+            })($digits),
+            'CI' => trim(implode(' ', str_split(substr($digits, 0, 10), 2))),
+            default => $digits,
+        };
+    })($countryValue, (string) $phoneValue);
 @endphp
 
 <div {{ $attributes->class(['space-y-1']) }} data-phone-field>
@@ -66,13 +89,13 @@
 
         @if ($readonly)
             <div class="flex min-h-[3.25rem] min-w-0 grow items-center px-4 py-3 text-base text-ink">
-                {{ filled($phoneValue) ? $phoneValue : '—' }}
+                {{ filled($phoneValue) ? $formattedPhoneValue : '—' }}
             </div>
         @else
             <input
                 name="{{ $phoneName }}"
                 type="tel"
-                value="{{ $phoneValue }}"
+                value="{{ $formattedPhoneValue }}"
                 @if (filled($phoneModel)) wire:model.live="{{ $phoneModel }}" @endif
                 @if ($required) required @endif
                 @if ($autofocus) autofocus @endif
