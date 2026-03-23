@@ -5,11 +5,7 @@
     </head>
     <body class="min-h-screen bg-page text-ink antialiased">
         @php
-            use Modules\Compta\Portfolio\Services\AlertService;
-
             $user = auth()->user();
-            $firm = $user->companies()->where('type', 'accountant_firm')->first();
-            $alertsCount = $firm ? app(AlertService::class)->count($firm, $user) : 0;
 
             $primaryNavigation = [
                 [
@@ -32,7 +28,7 @@
                     'href' => route('alerts.index'),
                     'current' => request()->routeIs('alerts.*'),
                     'navigate' => true,
-                    'badge' => $alertsCount,
+                    'badge_component' => true,
                 ],
                 [
                     'label' => __('Export Groupé'),
@@ -120,7 +116,9 @@
                                 >
                                     <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
                                     <span class="app-shell-nav-label">{{ $item['label'] }}</span>
-                                    @if (($item['badge'] ?? 0) > 0)
+                                    @if ($item['badge_component'] ?? false)
+                                        <livewire:sidebar.alerts-badge />
+                                    @elseif (($item['badge'] ?? 0) > 0)
                                         <span class="ml-auto rounded-full bg-rose-500 px-1.5 py-0.5 text-xs font-bold leading-none text-white">
                                             {{ $item['badge'] }}
                                         </span>

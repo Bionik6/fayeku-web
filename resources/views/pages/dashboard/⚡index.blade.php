@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
@@ -14,6 +15,8 @@ use Modules\PME\Invoicing\Models\Invoice;
 
 new #[Title('Dashboard')] class extends Component {
     public ?Company $firm = null;
+
+    public string $heroSummary = '';
 
     public int $activeClientsCount = 0;
 
@@ -35,14 +38,11 @@ new #[Title('Dashboard')] class extends Component {
 
     public int $nextThreshold = 5;
 
-    public string $tierRangeLabel = '1-4 clients';
+    public string $tierRangeLabel = '1–4 clients actifs';
 
     public string $nextTierLabel = 'Gold';
 
     public bool $isPlatinum = false;
-
-    /** @var array<int, array<string, mixed>> */
-    public array $alerts = [];
 
     /** @var array<int, array<string, mixed>> */
     public array $portfolio = [];
@@ -108,8 +108,19 @@ new #[Title('Dashboard')] class extends Component {
 
         [$this->tierProgress, $this->nextThreshold, $this->tierRangeLabel, $this->nextTierLabel] = $this->computeTierProgress($tier);
 
-        $this->alerts = app(AlertService::class)->build($this->firm, null, 5);
         $this->portfolio = $this->buildPortfolio($smeIds, $allInvoices);
+
+        $criticalSummary = match ($this->criticalCount) {
+            0 => 'Aucun impayé critique à traiter',
+            1 => '1 impayé critique à traiter',
+            default => $this->criticalCount.' impayés critiques à traiter',
+        };
+
+        $this->heroSummary = $this->currentMonth.' · '.$criticalSummary;
+
+        if ($this->nextPaymentDate !== '') {
+            $this->heroSummary .= ' · Versement partenaire le '.$this->nextPaymentDate;
+        }
     }
 
     public function dismiss(string $alertKey): void
@@ -119,10 +130,35 @@ new #[Title('Dashboard')] class extends Component {
             ['dismissed_at' => now()]
         );
 
-        $this->alerts = array_values(array_filter(
-            $this->alerts,
-            fn (array $a) => $a['alert_key'] !== $alertKey
+        unset($this->alerts);
+        $this->dispatch('alerts-updated');
+    }
+
+    /** @return array<string> */
+    private function dismissedKeys(): array
+    {
+        return DismissedAlert::where('user_id', auth()->id())
+            ->pluck('alert_key')
+            ->toArray();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    #[Computed]
+    public function alerts(): array
+    {
+        if (! $this->firm) {
+            return [];
+        }
+
+        $all = app(AlertService::class)->build($this->firm);
+        $dismissedKeys = $this->dismissedKeys();
+
+        $active = array_values(array_filter(
+            $all,
+            fn (array $a) => ! in_array($a['alert_key'], $dismissedKeys)
         ));
+
+        return array_slice($active, 0, 5);
     }
 
     /** @return array{int, int, string, string} */
@@ -132,16 +168,16 @@ new #[Title('Dashboard')] class extends Component {
             PartnerTier::Partner => [
                 min(100, (int) round($this->activeClientsCount / 5 * 100)),
                 5,
-                '1-4 clients',
+                '1–4 clients actifs',
                 'Gold',
             ],
             PartnerTier::Gold => [
                 min(100, (int) round(($this->activeClientsCount - 5) / 10 * 100)),
                 15,
-                '5-14 clients',
+                '5–14 clients actifs',
                 'Platinum',
             ],
-            PartnerTier::Platinum => [100, 15, '15+ clients', ''],
+            PartnerTier::Platinum => [100, 15, '15+ clients actifs', ''],
         };
     }
 
@@ -229,10 +265,7 @@ new #[Title('Dashboard')] class extends Component {
                     {{ __('Bonjour,') }} {{ $firm?->name ?? auth()->user()->first_name }}
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    {{ $currentMonth }}
-                    @if ($firm && $nextPaymentDate)
-                        · Versement Wave le {{ $nextPaymentDate }}
-                    @endif
+                    {{ $firm ? $heroSummary : $currentMonth }}
                 </p>
             </div>
 
@@ -271,7 +304,8 @@ new #[Title('Dashboard')] class extends Component {
                     Portefeuille
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Clients actifs suivis') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Clients suivis') }}</p>
+            <p class="mt-1 text-xs text-slate-400">{{ __('Portefeuille actif') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">{{ $activeClientsCount }}</p>
         </article>
 
@@ -285,7 +319,8 @@ new #[Title('Dashboard')] class extends Component {
                     À jour
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Factures à jour') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Clients à jour') }}</p>
+            <p class="mt-1 text-xs text-slate-400">{{ __('Aucun retard en cours') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-accent">{{ $upToDateCount }}</p>
         </article>
 
@@ -299,7 +334,8 @@ new #[Title('Dashboard')] class extends Component {
                     À surveiller
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Inactifs ou retard') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Dossiers à relancer') }}</p>
+            <p class="mt-1 text-xs text-slate-400">{{ __('Clients à surveiller') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $watchCount }}</p>
         </article>
 
@@ -314,6 +350,7 @@ new #[Title('Dashboard')] class extends Component {
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Impayés critiques') }}</p>
+            <p class="mt-1 text-xs text-slate-400">{{ __('Plus de 60 jours') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-rose-500">{{ $criticalCount }}</p>
         </article>
 
@@ -324,12 +361,18 @@ new #[Title('Dashboard')] class extends Component {
                     <flux:icon name="banknotes" class="size-5 text-primary" />
                 </div>
                 <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                    {{ ucfirst(now()->locale('fr_FR')->translatedFormat('M Y')) }}
+                    {{ $currentMonth }}
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Commissions estimées') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Commissions du mois') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-primary">
                 {{ number_format($commissionAmount, 0, ',', ' ') }} FCFA
+            </p>
+            <p class="mt-1 text-xs text-slate-400">
+                {{ $currentMonth }}
+                @if ($nextPaymentDate)
+                    · {{ __('Versement prévu le') }} {{ $nextPaymentDate }}
+                @endif
             </p>
         </article>
 
@@ -345,10 +388,21 @@ new #[Title('Dashboard')] class extends Component {
             </a>
         </div>
 
-        @if (count($alerts) > 0)
+        @if (count($this->alerts) > 0)
             <div class="mt-4 divide-y divide-slate-100">
-                @foreach ($alerts as $alert)
-                    <div class="flex items-center gap-4 py-4">
+                @foreach ($this->alerts as $alert)
+                    @php
+                        $alertTitle = (string) str($alert['title'])->before(' — ');
+                        $alertBadge = match ($alert['type']) {
+                            'critical' => __('Impayé critique'),
+                            'watch' => __('Client à surveiller'),
+                            default => __('Nouvelle inscription'),
+                        };
+                        $primaryActionLabel = in_array($alert['type'], ['critical', 'watch'], true)
+                            ? __('Relancer')
+                            : __('Voir le dossier');
+                    @endphp
+                    <div wire:key="dashboard-alert-{{ $alert['alert_key'] }}" class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
                         <span @class([
                             'flex size-10 shrink-0 items-center justify-center rounded-2xl text-base font-bold',
                             'bg-rose-100 text-rose-600'      => $alert['type'] === 'critical',
@@ -358,38 +412,63 @@ new #[Title('Dashboard')] class extends Component {
                             @if ($alert['type'] === 'critical') ! @elseif ($alert['type'] === 'watch') ~ @else + @endif
                         </span>
                         <div class="min-w-0 flex-1">
-                            <p class="truncate font-semibold text-ink">{{ $alert['title'] }}</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="truncate font-semibold text-ink">{{ $alertTitle }}</p>
+                                <span @class([
+                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                                    'bg-rose-50 text-rose-700 ring-rose-600/20' => $alert['type'] === 'critical',
+                                    'bg-amber-50 text-amber-700 ring-amber-600/20' => $alert['type'] === 'watch',
+                                    'bg-green-50 text-green-700 ring-green-600/20' => $alert['type'] === 'new',
+                                ])>
+                                    {{ $alertBadge }}
+                                </span>
+                            </div>
                             <p class="mt-0.5 truncate text-sm text-slate-500">{{ $alert['subtitle'] }}</p>
                         </div>
-                        {{-- Dropdown actions --}}
-                        <flux:dropdown position="bottom" align="end">
-                            <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
-                                {{ __('Actions') }}
-                                <x-app.icon name="chevron-down" class="size-3.5" />
-                            </button>
-                            <flux:menu>
-                                @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
-                                    <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                        <x-app.icon name="invoice" class="size-4 text-slate-400" />
-                                        {{ __('Voir Facture') }}
+                        <div class="flex shrink-0 items-center gap-2 self-start sm:self-center">
+                            @if ($alert['company_id'] ?? null)
+                                <a
+                                    href="{{ route('clients.show', $alert['company_id']) }}"
+                                    wire:navigate
+                                    class="inline-flex items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
+                                >
+                                    {{ $primaryActionLabel }}
+                                </a>
+                            @endif
+
+                            <flux:dropdown position="bottom" align="end">
+                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                    <x-app.icon name="chevron-down" class="size-3.5" />
+                                </button>
+                                <flux:menu>
+                                    @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
+                                        <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
+                                            <x-app.icon name="invoice" class="size-4 text-slate-400" />
+                                            {{ __('Voir la facture') }}
+                                        </flux:menu.item>
+                                    @endif
+
+                                    @if ($alert['company_id'] ?? null)
+                                        <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
+                                            <x-app.icon name="user" class="size-4 text-slate-400" />
+                                            {{ __('Voir le dossier') }}
+                                        </flux:menu.item>
+
+                                        <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
+                                            <flux:icon name="phone" class="size-4 text-slate-400" />
+                                            {{ __('Contacter le client') }}
+                                        </flux:menu.item>
+                                    @endif
+
+                                    <flux:menu.separator />
+
+                                    <flux:menu.item wire:click="dismiss('{{ $alert['alert_key'] }}')">
+                                        <x-app.icon name="check" class="size-4 text-slate-400" />
+                                        {{ __('Marquer comme traité') }}
                                     </flux:menu.item>
-                                @endif
-
-                                @if ($alert['company_id'] ?? null)
-                                    <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                        <x-app.icon name="user" class="size-4 text-slate-400" />
-                                        {{ __('Voir Fiche Client') }}
-                                    </flux:menu.item>
-                                @endif
-
-                                <flux:menu.separator />
-
-                                <flux:menu.item wire:click="dismiss('{{ $alert['alert_key'] }}')">
-                                    <x-app.icon name="check" class="size-4 text-slate-400" />
-                                    {{ __('Marquer comme vu') }}
-                                </flux:menu.item>
-                            </flux:menu>
-                        </flux:dropdown>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -399,80 +478,89 @@ new #[Title('Dashboard')] class extends Component {
         @endif
     </section>
 
-    {{-- Progression statut partenaire --}}
+    {{-- Votre niveau partenaire --}}
     @if ($firm)
         <section class="app-shell-panel p-6">
-            <div class="flex items-center justify-between gap-4">
-                <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Progression statut partenaire') }}</h3>
-                <span @class([
-                    'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold',
-                    'bg-primary text-white' => $tierValue === 'partner',
-                    'bg-amber-400 text-amber-950' => $tierValue === 'gold',
-                    'bg-ink text-accent' => $tierValue === 'platinum',
-                ])>
-                    {{ $tierLabel }} @if ($tierValue !== 'partner') ★ @endif
-                </span>
+            <div class="flex flex-col gap-1">
+                <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Votre niveau partenaire') }}</h3>
+                <p class="text-sm text-slate-500">{{ __('Votre statut évolue selon le nombre de clients référés actifs sur Fayeku.') }}</p>
             </div>
 
-            <div class="mt-6 grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-slate-200">
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div @class([
-                    'p-4',
-                    'bg-slate-50' => $tierValue !== 'partner',
-                    'bg-primary/8' => $tierValue === 'partner',
+                    'rounded-2xl border border-slate-200 bg-slate-50 p-4',
+                    'ring-2 ring-slate-300' => $tierValue === 'partner',
                 ])>
-                    <p class="text-xs font-semibold text-slate-500">Partner · 1-4 clients</p>
-                    <p class="mt-1 text-sm font-semibold text-ink">Commission 15%</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-700">Partner</p>
+                    <p class="mt-1 text-base font-bold text-ink">1–4 clients actifs</p>
+                    @if ($tierValue === 'partner')
+                        <span class="mt-2 inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white">{{ __('Niveau actuel') }}</span>
+                    @endif
+                    <ul class="mt-3 space-y-1 text-sm text-slate-600">
+                        <li>{{ __('Commission de 15 %') }}</li>
+                        <li>{{ __('Accès Fayeku Compta') }}</li>
+                    </ul>
                 </div>
                 <div @class([
-                    'p-4',
-                    'bg-amber-50' => $tierValue === 'gold',
-                    'bg-slate-50' => $tierValue !== 'gold',
+                    'rounded-2xl border border-amber-200 bg-amber-50 p-4',
+                    'ring-2 ring-amber-300' => $tierValue === 'gold',
                 ])>
-                    <p @class(['text-xs font-semibold', 'text-amber-700' => $tierValue === 'gold', 'text-slate-500' => $tierValue !== 'gold'])>
-                        Gold ★ · 5-14 clients @if ($tierValue === 'gold') · Actuel @endif
-                    </p>
-                    <p class="mt-1 text-sm font-semibold text-ink">Commission 15% + badge + leads</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Gold</p>
+                    <p class="mt-1 text-base font-bold text-ink">5–14 clients actifs</p>
+                    @if ($tierValue === 'gold')
+                        <span class="mt-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-semibold text-amber-950">{{ __('Niveau actuel') }}</span>
+                    @endif
+                    <ul class="mt-3 space-y-1 text-sm text-slate-600">
+                        <li class="font-medium text-amber-700">{{ __('Commission récurrente de 15 %') }}</li>
+                        <li>{{ __('Badge partenaire · Leads PME') }}</li>
+                    </ul>
                 </div>
                 <div @class([
-                    'p-4',
-                    'bg-ink text-white' => $tierValue === 'platinum',
-                    'bg-slate-50' => $tierValue !== 'platinum',
+                    'rounded-2xl border border-sky-200 bg-sky-50 p-4',
+                    'ring-2 ring-sky-300' => $tierValue === 'platinum',
                 ])>
-                    <p @class(['text-xs font-semibold', 'text-accent' => $tierValue === 'platinum', 'text-slate-500' => $tierValue !== 'platinum'])>
-                        Platinum · 15+ clients @if ($tierValue === 'platinum') · Actuel @endif
-                    </p>
-                    <p @class(['mt-1 text-sm font-semibold', 'text-white' => $tierValue === 'platinum', 'text-ink' => $tierValue !== 'platinum'])>
-                        + account manager + co-mktg
-                    </p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-sky-800">Platinum</p>
+                    <p class="mt-1 text-base font-bold text-ink">15+ clients actifs</p>
+                    @if ($tierValue === 'platinum')
+                        <span class="mt-2 inline-flex items-center rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold text-accent">{{ __('Niveau actuel') }}</span>
+                    @endif
+                    <ul class="mt-3 space-y-1 text-sm text-slate-600">
+                        <li>{{ __('Tous les avantages Gold') }}</li>
+                        <li>{{ __('Account manager · Co-marketing') }}</li>
+                    </ul>
                 </div>
             </div>
 
-            @if (! $isPlatinum)
-                <div class="mt-4">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium text-primary">
-                            Progression vers {{ $nextTierLabel }} :
-                            <span class="font-bold">{{ $activeClientsCount }}/{{ $nextThreshold }} clients</span>
-                            @if ($activeClientsCount >= $nextThreshold)
-                                — Éligible {{ $nextTierLabel }} dès ce mois ✓
-                            @endif
-                        </span>
-                    </div>
-                    <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                            class="h-2 rounded-full bg-accent transition-all duration-500"
-                            style="width: {{ $tierProgress }}%"
-                        ></div>
-                    </div>
+            <div class="mt-5">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="font-medium text-slate-600">
+                        {{ $activeClientsCount }} {{ $activeClientsCount > 1 ? 'clients actifs' : 'client actif' }}
+                        @if ($isPlatinum)
+                            · {{ __('Niveau Platinum atteint') }}
+                        @else
+                            · {{ __('Prochain niveau') }} {{ $nextTierLabel }} : {{ $nextThreshold }}
+                        @endif
+                    </span>
                 </div>
-            @endif
+                <div class="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                        @class([
+                            'h-full rounded-full transition-all duration-500',
+                            'bg-primary' => $tierValue === 'partner',
+                            'bg-amber-400' => $tierValue === 'gold',
+                            'bg-gradient-to-r from-amber-400 to-primary' => $tierValue === 'platinum',
+                        ])
+                        style="width: {{ $tierProgress }}%"
+                    ></div>
+                </div>
+            </div>
         </section>
     @endif
 
-    {{-- Aperçu portefeuille --}}
+    {{-- Aperçu du portefeuille --}}
     <section class="app-shell-panel overflow-hidden">
         <div class="flex items-center justify-between gap-4 p-6 pb-4">
-            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Aperçu portefeuille') }}</h3>
+            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Aperçu du portefeuille') }}</h3>
             <a href="{{ route('clients.index') }}" wire:navigate class="text-sm font-semibold text-primary hover:underline">{{ __('Voir tout') }} →</a>
         </div>
 
@@ -481,18 +569,19 @@ new #[Title('Dashboard')] class extends Component {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-y border-slate-100 bg-slate-50/80">
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Client') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Plan') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Dernière facture') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Impayés') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Montant en attente') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Taux recouvrement') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Statut') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Offre') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Dernière facture') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Impayés') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Montant en attente') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Taux de recouvrement') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Statut') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($portfolio as $row)
                             <tr
+                                wire:key="dashboard-portfolio-{{ $row['id'] }}"
                                 class="cursor-pointer transition hover:bg-slate-50/60"
                                 @click="Livewire.navigate('{{ route('clients.show', $row['id']) }}')"
                             >

@@ -6,6 +6,7 @@ use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Portfolio\Models\DismissedAlert;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 use Modules\Shared\Models\User;
@@ -291,6 +292,73 @@ test('une invitation acceptée récemment génère une alerte new', function () 
     expect(collect($alerts)->where('type', 'new'))->toHaveCount(1);
 });
 
+test('le widget alertes du dashboard exclut les alertes archivées', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    DismissedAlert::create([
+        'user_id' => $user->id,
+        'alert_key' => 'critical_'.$invoice->id,
+        'dismissed_at' => now(),
+    ]);
+
+    $alerts = Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->get('alerts');
+
+    expect(collect($alerts)->where('alert_key', 'critical_'.$invoice->id))->toHaveCount(0);
+});
+
+test('le widget alertes du dashboard reflète les mêmes alertes actives que la page alertes', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = createFirmWithSmes(2);
+
+    $dismissedInvoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(70),
+        'amount_paid' => 0,
+    ]);
+
+    createInvoice($smes[1], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    createInvoice($smes[0], ['issued_at' => now()->subDays(45)]);
+    createInvoice($smes[1], ['issued_at' => now()->subDays(40)]);
+
+    PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => fake()->uuid(),
+        'invitee_phone' => '+221701234579',
+        'invitee_name' => 'Ba Industries',
+        'status' => 'accepted',
+        'accepted_at' => now()->subDay(),
+    ]);
+
+    DismissedAlert::create([
+        'user_id' => $user->id,
+        'alert_key' => 'critical_'.$dismissedInvoice->id,
+        'dismissed_at' => now(),
+    ]);
+
+    $dashboardAlerts = Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->get('alerts');
+
+    $pageAlerts = Livewire::actingAs($user)
+        ->test('pages::alerts.index')
+        ->get('alerts');
+
+    expect(collect($dashboardAlerts)->pluck('alert_key')->values()->all())
+        ->toEqual(collect($pageAlerts)->take(5)->pluck('alert_key')->values()->all());
+});
+
 test('pas d\'alerte de type new pour une invitation acceptée il y a plus de 7 jours', function () {
     ['user' => $user, 'firm' => $firm] = createFirmWithSmes(0);
 
@@ -341,7 +409,37 @@ test('portfolio affiche le tableau dans la vue', function () {
 
     Livewire::actingAs($user)
         ->test('pages::dashboard.index')
-        ->assertSee(__('Aperçu portefeuille'));
+        ->assertSee(__('Aperçu du portefeuille'));
+});
+
+test('le dashboard affiche le nouveau copy métier', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = createFirmWithSmes(2);
+
+    createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(70),
+        'amount_paid' => 0,
+    ]);
+
+    Commission::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $smes[0]->id,
+        'amount' => 187_500,
+        'period_month' => now()->startOfMonth(),
+        'status' => 'pending',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::dashboard.index')
+        ->assertSee('1 impayé critique à traiter')
+        ->assertSee(__('Clients suivis'))
+        ->assertSee(__('Clients à jour'))
+        ->assertSee(__('Dossiers à relancer'))
+        ->assertSee(__('Commissions du mois'))
+        ->assertSee(__('Votre niveau partenaire'))
+        ->assertSee(__('Aperçu du portefeuille'))
+        ->assertSee(__('Offre'))
+        ->assertSee(__('Taux de recouvrement'));
 });
 
 test('portfolio est vide sans clients', function () {

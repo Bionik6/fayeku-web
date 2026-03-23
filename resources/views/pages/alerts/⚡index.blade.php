@@ -65,6 +65,7 @@ new #[Title('Alertes')] class extends Component {
         );
 
         unset($this->alerts, $this->counts);
+        $this->dispatch('alerts-updated');
     }
 
     public function undismiss(string $alertKey): void
@@ -74,6 +75,7 @@ new #[Title('Alertes')] class extends Component {
             ->delete();
 
         unset($this->alerts, $this->counts);
+        $this->dispatch('alerts-updated');
     }
 
     /** @return array<string> */
