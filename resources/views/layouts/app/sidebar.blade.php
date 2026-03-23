@@ -44,7 +44,9 @@
                 [
                     'label' => __('Commissions'),
                     'icon' => 'commissions',
-                    'href' => '#',
+                    'href' => route('commissions.index'),
+                    'current' => request()->routeIs('commissions.*'),
+                    'navigate' => true,
                 ],
                 [
                     'label' => __('Invitations'),

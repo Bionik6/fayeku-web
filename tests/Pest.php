@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature', '../modules/Auth/tests/Feature', '../modules/Compta/Compliance/tests/Feature', '../modules/Compta/Export/tests/Feature');
+    ->in('Feature', '../modules/Auth/tests/Feature', '../modules/Compta/Compliance/tests/Feature', '../modules/Compta/Export/tests/Feature', '../modules/Compta/Partnership/tests/Feature');
 
 /*
 |--------------------------------------------------------------------------
