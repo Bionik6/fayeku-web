@@ -10,6 +10,7 @@ use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Auth\Models\Subscription;
 use Modules\Compta\Partnership\Models\Commission;
+use Modules\Compta\Partnership\Models\CommissionPayment;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
@@ -25,6 +26,8 @@ class DashboardDemoSeeder extends Seeder
             $firm = $this->createCabinet();
             $smes = $this->createPortfolio($firm);
             $this->createCommissions($firm, $smes);
+            $this->createCommissionPayments($firm);
+            $this->createInvitations($firm, $smes);
         });
     }
 
@@ -107,7 +110,6 @@ class DashboardDemoSeeder extends Seeder
 
         $dakarPharma = $this->createSme($firm, 'Dakar Pharma', 'essentiel', '+221338220108');
         $this->createHealthyInvoices($dakarPharma, count: 2, totalPerInvoice: 480_000);
-        $this->createPartnerInvitation($firm, $dakarPharma, 'Dakar Pharma', '+221701890001');
         $smes['dakar_pharma'] = $dakarPharma;
 
         $coulibaly = $this->createSme($firm, 'Coulibaly Tech', 'essentiel', '+221338220109');
@@ -345,21 +347,6 @@ class DashboardDemoSeeder extends Seeder
         }
     }
 
-    private function createPartnerInvitation(Company $firm, Company $sme, string $name, string $phone): void
-    {
-        PartnerInvitation::create([
-            'accountant_firm_id' => $firm->id,
-            'token' => Str::uuid(),
-            'invitee_phone' => $phone,
-            'invitee_name' => $name,
-            'recommended_plan' => 'essentiel',
-            'status' => 'accepted',
-            'expires_at' => now()->addDays(28),
-            'accepted_at' => now()->subDays(2),
-            'sme_company_id' => $sme->id,
-        ]);
-    }
-
     /**
      * Commissions du mois courant — total exactement 187 500 F.
      *
@@ -505,5 +492,237 @@ class DashboardDemoSeeder extends Seeder
         }
 
         return $invoice;
+    }
+
+    /**
+     * Historique des versements — 3 mois passés payés via Wave.
+     */
+    private function createCommissionPayments(Company $firm): void
+    {
+        // Mois M-1 : 16 clients actifs
+        CommissionPayment::create([
+            'accountant_firm_id' => $firm->id,
+            'period_month' => now()->subMonths(1)->startOfMonth(),
+            'active_clients_count' => 16,
+            'amount' => 162_000,
+            'paid_at' => now()->subMonths(1)->startOfMonth()->addDays(4),
+            'payment_method' => 'wave',
+            'status' => 'paid',
+        ]);
+
+        // Mois M-2 : 14 clients actifs
+        CommissionPayment::create([
+            'accountant_firm_id' => $firm->id,
+            'period_month' => now()->subMonths(2)->startOfMonth(),
+            'active_clients_count' => 14,
+            'amount' => 138_000,
+            'paid_at' => now()->subMonths(2)->startOfMonth()->addDays(4),
+            'payment_method' => 'wave',
+            'status' => 'paid',
+        ]);
+
+        // Mois M-3 : 12 clients actifs
+        CommissionPayment::create([
+            'accountant_firm_id' => $firm->id,
+            'period_month' => now()->subMonths(3)->startOfMonth(),
+            'active_clients_count' => 12,
+            'amount' => 112_500,
+            'paid_at' => now()->subMonths(3)->startOfMonth()->addDays(4),
+            'payment_method' => 'wave',
+            'status' => 'paid',
+        ]);
+
+        // Mois courant : pas encore versé
+        CommissionPayment::create([
+            'accountant_firm_id' => $firm->id,
+            'period_month' => now()->startOfMonth(),
+            'active_clients_count' => 18,
+            'amount' => 187_500,
+            'paid_at' => null,
+            'payment_method' => null,
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Invitations variées — différents statuts pour la page Invitations.
+     *
+     * @param  array<string, Company>  $smes
+     */
+    private function createInvitations(Company $firm, array $smes): void
+    {
+        // ─── Activées (clients existants référés via invitation) ──────────
+        $activatedSmes = ['dakar_pharma', 'coulibaly_tech', 'sy_consulting', 'fall_digital', 'ba_industries'];
+        $activatedContacts = [
+            ['Amadou Ba', '+221701890001', 'Dakar Pharma'],
+            ['Fatou Seck', '+221771230001', 'Coulibaly Tech'],
+            ['Ibrahima Sy', '+221781340001', 'Sy Consulting'],
+            ['Awa Fall', '+221771450001', 'Fall Digital'],
+            ['Mamadou Bâ', '+221761560001', 'Bâ Industries'],
+        ];
+        foreach ($activatedSmes as $i => $key) {
+            if (! isset($smes[$key])) {
+                continue;
+            }
+            PartnerInvitation::create([
+                'accountant_firm_id' => $firm->id,
+                'token' => Str::random(32),
+                'invitee_company_name' => $activatedContacts[$i][2],
+                'invitee_name' => $activatedContacts[$i][0],
+                'invitee_phone' => $activatedContacts[$i][1],
+                'recommended_plan' => $i % 2 === 0 ? 'essentiel' : 'basique',
+                'channel' => 'whatsapp',
+                'status' => 'accepted',
+                'expires_at' => now()->addDays(20),
+                'accepted_at' => now()->subDays(rand(2, 45)),
+                'sme_company_id' => $smes[$key]->id,
+                'link_opened_at' => now()->subDays(rand(3, 50)),
+                'reminder_count' => 0,
+            ]);
+        }
+
+        // ─── Pending — lien non ouvert (à relancer) ──────────────────────
+        $notOpened = [
+            ['Transport Ngor SARL', 'Moussa Diallo', '+221770100001', 3],
+            ['Garage Fass Auto', 'Cheikh Ndiaye', '+221780200002', 5],
+            ['Imprimerie Plateau', 'Aïda Thiam', '+221760300003', 1],
+        ];
+        foreach ($notOpened as [$company, $contact, $phone, $daysAgo]) {
+            PartnerInvitation::create([
+                'accountant_firm_id' => $firm->id,
+                'token' => Str::random(32),
+                'invitee_company_name' => $company,
+                'invitee_name' => $contact,
+                'invitee_phone' => $phone,
+                'recommended_plan' => 'essentiel',
+                'channel' => 'whatsapp',
+                'status' => 'pending',
+                'expires_at' => now()->addDays(30 - $daysAgo),
+                'link_opened_at' => null,
+                'last_reminder_at' => null,
+                'reminder_count' => 0,
+                'created_at' => now()->subDays($daysAgo),
+                'updated_at' => now()->subDays($daysAgo),
+            ]);
+        }
+
+        // ─── Pending — lien ouvert mais pas inscrit ──────────────────────
+        $opened = [
+            ['Boutique Mode HLM', 'Awa Ndiaye', '+221780400004', 7, 2],
+            ['Clinique Mamelles', 'Dr. Sarr', '+221760500005', 4, 1],
+        ];
+        foreach ($opened as [$company, $contact, $phone, $daysAgo, $reminderDays]) {
+            PartnerInvitation::create([
+                'accountant_firm_id' => $firm->id,
+                'token' => Str::random(32),
+                'invitee_company_name' => $company,
+                'invitee_name' => $contact,
+                'invitee_phone' => $phone,
+                'recommended_plan' => 'essentiel',
+                'channel' => 'whatsapp',
+                'status' => 'pending',
+                'expires_at' => now()->addDays(30 - $daysAgo),
+                'link_opened_at' => now()->subDays($daysAgo - 1),
+                'last_reminder_at' => now()->subDays($reminderDays),
+                'reminder_count' => 1,
+                'created_at' => now()->subDays($daysAgo),
+                'updated_at' => now()->subDays($reminderDays),
+            ]);
+        }
+
+        // ─── En inscription (registration commencée) ────────────────────
+        $registering = [
+            ['Cabinet Dentaire Fann', 'Dr. Diop', '+221760600006', 2],
+            ['Sénégal Shipping', 'Oumar Gueye', '+221770700007', 1],
+        ];
+        foreach ($registering as [$company, $contact, $phone, $daysAgo]) {
+            PartnerInvitation::create([
+                'accountant_firm_id' => $firm->id,
+                'token' => Str::random(32),
+                'invitee_company_name' => $company,
+                'invitee_name' => $contact,
+                'invitee_phone' => $phone,
+                'recommended_plan' => 'essentiel',
+                'channel' => $daysAgo === 2 ? 'link' : 'whatsapp',
+                'status' => 'registering',
+                'expires_at' => now()->addDays(30 - $daysAgo),
+                'link_opened_at' => now()->subDays($daysAgo),
+                'last_reminder_at' => null,
+                'reminder_count' => 0,
+                'created_at' => now()->subDays($daysAgo + 1),
+                'updated_at' => now()->subDays($daysAgo),
+            ]);
+        }
+
+        // ─── Expirées ────────────────────────────────────────────────────
+        $expired = [
+            ['Keur Digital Legacy', 'Abdou Mbaye', '+221780800008', 45],
+            ['Touba Express', 'Serigne Fall', '+221770900009', 60],
+        ];
+        foreach ($expired as [$company, $contact, $phone, $daysAgo]) {
+            PartnerInvitation::create([
+                'accountant_firm_id' => $firm->id,
+                'token' => Str::random(32),
+                'invitee_company_name' => $company,
+                'invitee_name' => $contact,
+                'invitee_phone' => $phone,
+                'recommended_plan' => 'basique',
+                'channel' => 'whatsapp',
+                'status' => 'expired',
+                'expires_at' => now()->subDays($daysAgo - 30),
+                'link_opened_at' => null,
+                'last_reminder_at' => now()->subDays($daysAgo - 5),
+                'reminder_count' => 2,
+                'created_at' => now()->subDays($daysAgo),
+                'updated_at' => now()->subDays($daysAgo - 30),
+            ]);
+        }
+
+        // ─── Invitations supplémentaires activées plus anciennes ─────────
+        $olderActivated = [
+            ['Ndiaye Commerce', 'Abdoulaye Ndiaye', '+221771010010', 'ndiaye_commerce'],
+            ['Traoré Agriculture', 'Moussa Traoré', '+221771110011', 'traore_agriculture'],
+            ['Koné Services', 'Ibrahim Koné', '+221771210012', 'kone_services'],
+        ];
+        foreach ($olderActivated as [$company, $contact, $phone, $key]) {
+            if (! isset($smes[$key])) {
+                continue;
+            }
+            PartnerInvitation::create([
+                'accountant_firm_id' => $firm->id,
+                'token' => Str::random(32),
+                'invitee_company_name' => $company,
+                'invitee_name' => $contact,
+                'invitee_phone' => $phone,
+                'recommended_plan' => 'basique',
+                'channel' => 'whatsapp',
+                'status' => 'accepted',
+                'expires_at' => now()->subDays(30),
+                'accepted_at' => now()->subMonths(2)->subDays(rand(0, 15)),
+                'sme_company_id' => $smes[$key]->id,
+                'link_opened_at' => now()->subMonths(2)->subDays(rand(16, 25)),
+                'reminder_count' => 0,
+                'created_at' => now()->subMonths(3),
+                'updated_at' => now()->subMonths(2),
+            ]);
+        }
+
+        // ─── Invitation via lien partenaire (pas WhatsApp) ──────────────
+        PartnerInvitation::create([
+            'accountant_firm_id' => $firm->id,
+            'token' => Str::random(32),
+            'invitee_company_name' => 'Atelier Bois Yoff',
+            'invitee_name' => 'Lamine Cissé',
+            'invitee_phone' => '+221761310013',
+            'recommended_plan' => 'essentiel',
+            'channel' => 'link',
+            'status' => 'pending',
+            'expires_at' => now()->addDays(25),
+            'link_opened_at' => now()->subDays(1),
+            'last_reminder_at' => null,
+            'reminder_count' => 0,
+            'created_at' => now()->subDays(5),
+            'updated_at' => now()->subDays(1),
+        ]);
     }
 }
