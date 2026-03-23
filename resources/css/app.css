@@ -178,12 +178,32 @@ select:focus[data-flux-control] {
     /* Collapsed sidebar styles — desktop only.
        Keyed off html.sidebar-collapsed so the inline <script> in <head>
        can apply them before first paint. */
+    /* Nav item tooltip shown when sidebar is collapsed */
+    .sidebar-nav-tooltip {
+        position: absolute;
+        left: calc(100% + 0.625rem);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #0f172a;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        display: none;
+    }
+
     @media (min-width: 1024px) {
         html.sidebar-collapsed [data-app-shell-sidebar] {
             width: 4.5rem !important;
             padding-inline: 0.5rem !important;
             align-items: center;
-            overflow: hidden;
+            overflow: visible;
         }
 
         html.sidebar-collapsed [data-app-shell-sidebar] .sidebar-collapsible {
@@ -222,6 +242,14 @@ select:focus[data-flux-control] {
 
         html.sidebar-collapsed [data-app-shell-sidebar] nav {
             align-items: center;
+        }
+
+        html.sidebar-collapsed .sidebar-nav-tooltip {
+            display: block;
+        }
+
+        html.sidebar-collapsed .sidebar-nav-item:hover .sidebar-nav-tooltip {
+            opacity: 1;
         }
 
         html.sidebar-collapsed .app-shell-main {

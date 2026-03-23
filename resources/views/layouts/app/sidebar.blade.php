@@ -176,25 +176,28 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 sidebar-collapsible">{{ __('Navigation') }}</p>
                         <nav class="mt-3 grid gap-2">
                             @foreach ($primaryNavigation as $item)
-                                <a
-                                    href="{{ $item['href'] }}"
-                                    class="app-shell-nav-link"
-                                    title="{{ $item['label'] }}"
-                                    @if (($item['current'] ?? false)) aria-current="page" @elseif (($item['href'] ?? '#') === '#') aria-disabled="true" @endif
-                                    @if ($item['navigate'] ?? false) wire:navigate @endif
-                                >
-                                    <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
-                                    <span class="app-shell-nav-label sidebar-collapsible">{{ $item['label'] }}</span>
-                                    @if ($item['badge_component'] ?? false)
-                                        <span class="sidebar-collapsible">
-                                            <livewire:sidebar.alerts-badge />
-                                        </span>
-                                    @elseif (($item['badge'] ?? 0) > 0)
-                                        <span class="ml-auto rounded-full bg-rose-500 px-1.5 py-0.5 text-xs font-bold leading-none text-white sidebar-collapsible">
-                                            {{ $item['badge'] }}
-                                        </span>
-                                    @endif
-                                </a>
+                                <div class="sidebar-nav-item relative">
+                                    <a
+                                        href="{{ $item['href'] }}"
+                                        class="app-shell-nav-link"
+                                        title="{{ $item['label'] }}"
+                                        @if (($item['current'] ?? false)) aria-current="page" @elseif (($item['href'] ?? '#') === '#') aria-disabled="true" @endif
+                                        @if ($item['navigate'] ?? false) wire:navigate @endif
+                                    >
+                                        <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
+                                        <span class="app-shell-nav-label sidebar-collapsible">{{ $item['label'] }}</span>
+                                        @if ($item['badge_component'] ?? false)
+                                            <span class="sidebar-collapsible">
+                                                <livewire:sidebar.alerts-badge />
+                                            </span>
+                                        @elseif (($item['badge'] ?? 0) > 0)
+                                            <span class="ml-auto rounded-full bg-rose-500 px-1.5 py-0.5 text-xs font-bold leading-none text-white sidebar-collapsible">
+                                                {{ $item['badge'] }}
+                                            </span>
+                                        @endif
+                                    </a>
+                                    <div class="sidebar-nav-tooltip">{{ $item['label'] }}</div>
+                                </div>
                             @endforeach
                         </nav>
                     </div>
@@ -203,29 +206,35 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 sidebar-collapsible">{{ __('Compte') }}</p>
                         <nav class="mt-3 grid gap-2">
                             @foreach ($secondaryNavigation as $item)
-                                <a
-                                    href="{{ $item['href'] }}"
-                                    class="app-shell-nav-link"
-                                    title="{{ $item['label'] }}"
-                                    @if (($item['current'] ?? false)) aria-current="page" @elseif (($item['href'] ?? '#') === '#') aria-disabled="true" @endif
-                                    @if ($item['navigate'] ?? false) wire:navigate @endif
-                                >
-                                    <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
-                                    <span class="app-shell-nav-label sidebar-collapsible">{{ $item['label'] }}</span>
-                                </a>
+                                <div class="sidebar-nav-item relative">
+                                    <a
+                                        href="{{ $item['href'] }}"
+                                        class="app-shell-nav-link"
+                                        title="{{ $item['label'] }}"
+                                        @if (($item['current'] ?? false)) aria-current="page" @elseif (($item['href'] ?? '#') === '#') aria-disabled="true" @endif
+                                        @if ($item['navigate'] ?? false) wire:navigate @endif
+                                    >
+                                        <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
+                                        <span class="app-shell-nav-label sidebar-collapsible">{{ $item['label'] }}</span>
+                                    </a>
+                                    <div class="sidebar-nav-tooltip">{{ $item['label'] }}</div>
+                                </div>
                             @endforeach
 
-                            <flux:modal.trigger name="confirm-logout" class="w-full">
-                                <button
-                                    type="button"
-                                    class="app-shell-nav-link w-full"
-                                    title="{{ __('Déconnexion') }}"
-                                    data-test="logout-button"
-                                >
-                                    <x-app.icon name="logout" class="app-shell-nav-icon" />
-                                    <span class="app-shell-nav-label sidebar-collapsible">{{ __('Déconnexion') }}</span>
-                                </button>
-                            </flux:modal.trigger>
+                            <div class="sidebar-nav-item relative">
+                                <flux:modal.trigger name="confirm-logout" class="w-full">
+                                    <button
+                                        type="button"
+                                        class="app-shell-nav-link w-full"
+                                        title="{{ __('Déconnexion') }}"
+                                        data-test="logout-button"
+                                    >
+                                        <x-app.icon name="logout" class="app-shell-nav-icon" />
+                                        <span class="app-shell-nav-label sidebar-collapsible">{{ __('Déconnexion') }}</span>
+                                    </button>
+                                </flux:modal.trigger>
+                                <div class="sidebar-nav-tooltip">{{ __('Déconnexion') }}</div>
+                            </div>
                         </nav>
                     </div>
                 </div>
