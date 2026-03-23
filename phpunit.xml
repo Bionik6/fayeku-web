@@ -9,6 +9,7 @@
             <directory>modules/Auth/tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
+            <directory>tests/Feature</directory>
             <directory>modules/Auth/tests/Feature</directory>
             <directory>modules/Compta/Export/tests/Feature</directory>
             <directory>modules/Compta/Partnership/tests/Feature</directory>

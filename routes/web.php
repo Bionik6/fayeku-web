@@ -13,12 +13,12 @@ Route::get('/contact', [MarketingPageController::class, 'contact'])->name('marke
 Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defaults('page', 'mentions-legales')->name('marketing.legal');
 Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defaults('page', 'confidentialite')->name('marketing.privacy');
 
-Route::middleware(['auth', 'verified.phone'])->group(function () {
+Route::middleware(['auth', 'verified.phone'])->prefix('compta')->group(function () {
     Route::livewire('dashboard', 'pages::dashboard.index')->name('dashboard');
     Route::livewire('alertes', 'pages::alerts.index')->name('alerts.index');
     Route::livewire('clients', 'pages::clients.index')->name('clients.index');
     Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
-    Route::livewire('export-groupe', 'pages::export.index')->name('export.index');
+    Route::livewire('exports', 'pages::export.index')->name('export.index');
     Route::livewire('commissions', 'pages::commissions.index')->name('commissions.index');
     Route::livewire('invitations', 'pages::invitations.index')->name('invitations.index');
 });
