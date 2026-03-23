@@ -245,12 +245,46 @@ function bindPhoneFields() {
         }
 
         input.addEventListener("input", () => {
+            const pos = input.selectionStart;
+            const before = input.value;
             input.value = formatPhoneValue(country.value, input.value);
+            // Preserve cursor — if the formatted string grew (space inserted), nudge forward.
+            if (input.value.length > before.length) {
+                input.setSelectionRange(pos + 1, pos + 1);
+            } else {
+                input.setSelectionRange(pos, pos);
+            }
         });
 
-        country.addEventListener("change", render);
+        country.addEventListener("change", () => {
+            // Clear phone when country changes so old format doesn't bleed over.
+            input.value = "";
+            render();
+        });
 
+        // Format on initial bind — covers the case where Livewire's deferred
+        // wire:model initialises the input from its snapshot (raw digits).
         render();
+    });
+}
+
+function reFormatPhoneFields() {
+    const placeholders = {
+        SN: "XX XXX XX XX",
+        CI: "XX XX XX XX XX",
+    };
+
+    document.querySelectorAll("[data-phone-field]").forEach((field) => {
+        const country = field.querySelector("[data-phone-country]");
+        const input = field.querySelector("[data-phone-input]");
+
+        // Skip fields the user is currently typing in.
+        if (!country || !input || document.activeElement === input) {
+            return;
+        }
+
+        input.placeholder = placeholders[country.value] || "Numéro de téléphone";
+        input.value = formatPhoneValue(country.value, input.value);
     });
 }
 
@@ -348,3 +382,8 @@ document.addEventListener("livewire:navigated", () => {
 });
 
 document.addEventListener("livewire:navigated", initializePage);
+
+// Re-format phone fields after every Livewire network round-trip (e.g. country
+// selector change triggering a re-render).  We skip fields the user is typing
+// in to avoid interrupting their input.
+document.addEventListener("livewire:commit", reFormatPhoneFields);

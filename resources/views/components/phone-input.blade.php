@@ -96,7 +96,7 @@
                 name="{{ $phoneName }}"
                 type="tel"
                 value="{{ $formattedPhoneValue }}"
-                @if (filled($phoneModel)) wire:model.live="{{ $phoneModel }}" @endif
+                @if (filled($phoneModel)) wire:model="{{ $phoneModel }}" @endif
                 @if ($required) required @endif
                 @if ($autofocus) autofocus @endif
                 autocomplete="{{ $autocomplete }}"

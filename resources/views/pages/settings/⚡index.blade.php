@@ -43,10 +43,14 @@ new #[Title('Paramètres')] class extends Component {
         if ($firm) {
             $this->firmName = $firm->name ?? '';
             $this->firmEmail = $firm->email ?? '';
-            $this->firmPhone = $this->extractLocalPhone($firm->phone ?? '', $firm->country_code ?? 'SN');
+            $country = $firm->country_code ?? 'SN';
+            $this->firmPhone = $this->formatLocalPhone(
+                $this->extractLocalPhone($firm->phone ?? '', $country),
+                $country,
+            );
             $this->firmAddress = $firm->address ?? '';
             $this->firmCity = $firm->city ?? '';
-            $this->firmCountry = $firm->country_code ?? 'SN';
+            $this->firmCountry = $country;
             $this->firmNinea = $firm->ninea ?? '';
             $this->firmRccm = $firm->rccm ?? '';
         }
@@ -162,6 +166,24 @@ new #[Title('Paramètres')] class extends Component {
 
         return $digits;
     }
+
+    protected function formatLocalPhone(string $digits, string $countryCode): string
+    {
+        return match ($countryCode) {
+            'SN' => (function (string $value): string {
+                $normalized = substr($value, 0, 9);
+
+                return match (true) {
+                    strlen($normalized) <= 2 => $normalized,
+                    strlen($normalized) <= 5 => substr($normalized, 0, 2).' '.substr($normalized, 2),
+                    strlen($normalized) <= 7 => substr($normalized, 0, 2).' '.substr($normalized, 2, 3).' '.substr($normalized, 5),
+                    default => substr($normalized, 0, 2).' '.substr($normalized, 2, 3).' '.substr($normalized, 5, 2).' '.substr($normalized, 7),
+                };
+            })($digits),
+            'CI' => trim(implode(' ', str_split(substr($digits, 0, 10), 2))),
+            default => $digits,
+        };
+    }
 }; ?>
 
 <div class="settings-page">
@@ -230,13 +252,7 @@ new #[Title('Paramètres')] class extends Component {
                                     <input wire:model="firmName" type="text" required class="auth-input" />
                                     @error('firmName') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
-                                <label class="auth-label">
-                                    <span>{{ __('Adresse e-mail professionnelle') }}</span>
-                                    <input wire:model="firmEmail" type="email" class="auth-input" />
-                                    @error('firmEmail') <p class="auth-error">{{ $message }}</p> @enderror
-                                </label>
                                 <x-phone-input
-                                    class="sm:col-span-2"
                                     :label="__('Téléphone du cabinet')"
                                     country-name="firmCountry"
                                     :country-value="$firmCountry"
@@ -247,7 +263,12 @@ new #[Title('Paramètres')] class extends Component {
                                     phone-model="firmPhone"
                                     phone-placeholder="77 000 00 00"
                                 />
-                                @error('firmPhone') <p class="auth-error sm:col-span-2">{{ $message }}</p> @enderror
+                                @error('firmPhone') <p class="auth-error">{{ $message }}</p> @enderror
+                                <label class="auth-label">
+                                    <span>{{ __('Adresse e-mail professionnelle') }}</span>
+                                    <input wire:model="firmEmail" type="email" class="auth-input" />
+                                    @error('firmEmail') <p class="auth-error">{{ $message }}</p> @enderror
+                                </label>
                                 <label class="auth-label sm:col-span-2">
                                     <span>{{ __('Adresse') }}</span>
                                     <input wire:model="firmAddress" type="text" class="auth-input" />
@@ -327,7 +348,6 @@ new #[Title('Paramètres')] class extends Component {
                                     @error('userEmail') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <x-phone-input
-                                    class="sm:col-span-2"
                                     :label="__('Téléphone')"
                                     country-name="userCountryDisplay"
                                     :country-value="Auth::user()->country_code ?? 'SN'"
@@ -335,6 +355,7 @@ new #[Title('Paramètres')] class extends Component {
                                     phone-name="userPhoneDisplay"
                                     :phone-value="Auth::user()->phone"
                                     :readonly="true"
+                                    container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50 cursor-not-allowed"
                                 />
                             </div>
 
@@ -384,38 +405,6 @@ new #[Title('Paramètres')] class extends Component {
                         </form>
                     </section>
 
-                    {{-- Double authentification --}}
-                    <section class="app-shell-panel px-6 py-6">
-                        <h2 class="text-base font-bold text-ink">{{ __('Authentification à deux facteurs') }}</h2>
-                        <p class="mt-1 text-sm text-slate-500">{{ __('Ajoutez une couche de sécurité supplémentaire à votre compte.') }}</p>
-
-                        <div class="mt-6">
-                            @if (Auth::user()->two_factor_confirmed_at)
-                                <div class="flex items-center gap-3">
-                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{{ __('Activée') }}</span>
-                                    <span class="text-sm text-slate-500">{{ __('L\'authentification à deux facteurs est active sur votre compte.') }}</span>
-                                </div>
-                            @else
-                                <flux:modal.trigger name="two-factor-setup-modal">
-                                    <button
-                                        type="button"
-                                        wire:click="$dispatch('start-two-factor-setup')"
-                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-                                    >
-                                        <flux:icon name="shield-check" variant="outline" class="mr-2 size-4" />
-                                        {{ __('Activer la double authentification') }}
-                                    </button>
-                                </flux:modal.trigger>
-                            @endif
-                        </div>
-
-                        <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="true" />
-                    </section>
-
-                    {{-- Supprimer le compte --}}
-                    <section class="app-shell-panel px-6 py-6">
-                        <livewire:pages::settings.delete-user-form />
-                    </section>
                 </div>
             @endif
 
