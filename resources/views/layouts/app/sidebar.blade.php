@@ -275,7 +275,7 @@
         </div>
 
         <flux:modal name="confirm-logout" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
-            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col rounded-[2rem] bg-white px-8 pt-7 pb-8 text-center shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+            <div class="flex h-[315px] w-[450px] max-w-[450px] flex-col rounded-[2rem] bg-white px-8 pt-7 pb-8 text-center">
                 <div class="flex justify-center">
                     <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
                         <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">

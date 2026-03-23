@@ -584,7 +584,7 @@ new #[Title('Invitations')] class extends Component {
 
     {{-- ─── Modale : Inviter une PME ─────────────────────────────────────── --}}
     <flux:modal name="invite-pme" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
-        <div class="w-[540px] max-w-[540px] rounded-[2rem] bg-white p-8 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+        <div class="w-[540px] max-w-[540px] rounded-[2rem] bg-white p-8">
             <h3 class="text-xl font-bold text-ink">{{ __('Inviter une PME') }}</h3>
             <p class="mt-1 text-sm text-slate-500">{{ __('Envoyez une invitation personnalisée à une PME pour l\'aider à rejoindre Fayeku.') }}</p>
 

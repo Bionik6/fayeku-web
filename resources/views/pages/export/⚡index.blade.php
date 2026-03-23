@@ -489,7 +489,7 @@ new #[Title('Export Groupé')] class extends Component {
 
     {{-- ─── Modale Export Groupé ───────────────────────────────────────── --}}
     <flux:modal name="export-groupe" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
-        <div class="w-[540px] max-w-[540px] rounded-[2rem] bg-white p-8 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+        <div class="w-[540px] max-w-[540px] rounded-[2rem] bg-white p-8">
 
             <h3 class="text-xl font-bold text-ink">{{ __('Export groupé') }}</h3>
             <p class="mt-1 text-sm text-slate-500">{{ __('Paramètres de l\'export comptable') }}</p>

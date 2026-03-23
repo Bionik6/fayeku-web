@@ -565,6 +565,23 @@ test('selectedInvoice retourne la facture correspondante quand un ID est sélect
         ->and($component->get('selectedInvoice')->id)->toBe($invoice->id);
 });
 
+test('la modale facture sur alertes réutilise le copy partagé de la fiche client', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    $invoice = createInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::alerts.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSee('Échéance le')
+        ->assertSee('Détail des prestations')
+        ->assertSee('Récapitulatif');
+});
+
 // ─── alert_key ────────────────────────────────────────────────────────────────
 
 test('chaque alerte contient une alert_key unique selon son type', function () {
