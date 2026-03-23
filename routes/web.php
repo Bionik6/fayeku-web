@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified.phone'])->prefix('compta')->group(function 
     Route::livewire('exports', 'pages::export.index')->name('export.index');
     Route::livewire('commissions', 'pages::commissions.index')->name('commissions.index');
     Route::livewire('invitations', 'pages::invitations.index')->name('invitations.index');
+    Route::livewire('support', 'pages::support.index')->name('support.index');
 });
 
 require __DIR__.'/settings.php';

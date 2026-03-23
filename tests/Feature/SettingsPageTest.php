@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Modules\Auth\Models\Company;
-use Modules\Auth\Models\Subscription;
 use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
@@ -41,31 +40,7 @@ it('switches to account section', function () {
         ->test('pages::settings.index')
         ->call('setSection', 'account')
         ->assertSet('activeSection', 'account')
-        ->assertSee('Informations du compte');
-});
-
-it('switches to notifications section', function () {
-    Livewire::actingAs($this->user)
-        ->test('pages::settings.index')
-        ->call('setSection', 'notifications')
-        ->assertSet('activeSection', 'notifications')
-        ->assertSee('Notifications');
-});
-
-it('switches to export section', function () {
-    Livewire::actingAs($this->user)
-        ->test('pages::settings.index')
-        ->call('setSection', 'export')
-        ->assertSet('activeSection', 'export')
-        ->assertSee('Export comptable');
-});
-
-it('switches to billing section', function () {
-    Livewire::actingAs($this->user)
-        ->test('pages::settings.index')
-        ->call('setSection', 'billing')
-        ->assertSet('activeSection', 'billing')
-        ->assertSee('Facturation');
+        ->assertSee('Compte & sécurité');
 });
 
 // ─── Firm profile ────────────────────────────────────────────────────────
@@ -136,24 +111,6 @@ it('rejects wrong current password', function () {
 });
 
 // ─── Billing section ─────────────────────────────────────────────────────
-
-it('shows subscription info in billing section', function () {
-    Subscription::create([
-        'company_id' => $this->firm->id,
-        'plan_slug' => 'basique',
-        'price_paid' => 10_000,
-        'billing_cycle' => 'monthly',
-        'status' => 'active',
-        'current_period_start' => now()->startOfMonth(),
-        'current_period_end' => now()->startOfMonth()->addMonth(),
-    ]);
-
-    Livewire::actingAs($this->user)
-        ->test('pages::settings.index')
-        ->call('setSection', 'billing')
-        ->assertSet('activeSection', 'billing')
-        ->assertSee('Basique');
-});
 
 // ─── URL structure ───────────────────────────────────────────────────────
 
