@@ -272,7 +272,7 @@ new #[Title('Clients')] class extends Component {
                 <a
                     href="{{ route('invitations.index') }}"
                     wire:navigate
-                    class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
+                    class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
                 >
                     <flux:icon name="plus" variant="micro" />
                     {{ __('Inviter une PME') }}

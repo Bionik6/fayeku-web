@@ -332,7 +332,7 @@ new #[Title('Export groupé')] class extends Component {
                     <button
                         type="button"
                         wire:click="mountExportModal"
-                        class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
+                        class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
                     >
                         <x-app.icon name="export" class="size-4" />
                         {{ __('Lancer un export') }}

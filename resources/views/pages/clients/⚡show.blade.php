@@ -421,7 +421,7 @@ new #[Title('Clients')] class extends Component {
                     <button
                         type="button"
                         wire:click="mountExportModal"
-                        class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
                     >
                         <x-app.icon name="export" class="size-4" />
                         {{ __('Exporter') }}
@@ -431,7 +431,7 @@ new #[Title('Clients')] class extends Component {
                 <flux:dropdown position="bottom" align="end">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
                     >
                         {{ __('Actions') }}
                         <x-app.icon name="chevron-down" class="size-3.5" />

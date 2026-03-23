@@ -276,7 +276,7 @@ new #[Title('Invitations')] class extends Component {
                 <button
                     type="button"
                     wire:click="$dispatch('copy-partner-link')"
-                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
                 >
                     <flux:icon name="link" class="size-4" />
                     {{ __('Copier mon lien') }}
@@ -285,7 +285,7 @@ new #[Title('Invitations')] class extends Component {
                     <button
                         type="button"
                         wire:click="resetInviteForm"
-                        class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
+                        class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
                     >
                         <flux:icon name="plus" class="size-4" />
                         {{ __('Inviter une PME') }}
@@ -464,7 +464,7 @@ new #[Title('Invitations')] class extends Component {
                         <button
                             type="button"
                             wire:click="resetInviteForm"
-                            class="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
+                            class="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
                         >
                             <flux:icon name="plus" class="size-4" />
                             {{ __('Inviter une PME') }}

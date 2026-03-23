@@ -430,14 +430,14 @@ new #[Title('Dashboard')] class extends Component {
                                 <a
                                     href="{{ route('clients.show', $alert['company_id']) }}"
                                     wire:navigate
-                                    class="inline-flex items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
+                                    class="inline-flex items-center rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
                                 >
                                     {{ $primaryActionLabel }}
                                 </a>
                             @endif
 
                             <flux:dropdown position="bottom" align="end">
-                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
                                     <x-app.icon name="chevron-down" class="size-3.5" />
                                 </button>
                                 <flux:menu>

@@ -297,7 +297,7 @@ new #[Title('Alertes')] class extends Component {
 
                         <div class="flex shrink-0 items-center gap-2">
                             <flux:dropdown position="bottom" align="end">
-                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
                                     {{ __('Actions') }}
                                     <x-app.icon name="chevron-down" class="size-3.5" />
                                 </button>
