@@ -61,9 +61,9 @@ test('le composant commissions affiche les sections principales', function () {
     Livewire::actingAs($user)
         ->test('pages::commissions.index')
         ->assertOk()
-        ->assertSee('Programme Partenaire')
-        ->assertSee('Statut partenaire')
-        ->assertSee('Détail des commissions')
+        ->assertSee('Programme Partenaire Fayeku')
+        ->assertSee('Votre niveau partenaire')
+        ->assertSee('Commissions du mois')
         ->assertSee('Historique des versements');
 });
 
