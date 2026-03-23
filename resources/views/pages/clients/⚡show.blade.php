@@ -12,7 +12,7 @@ use Modules\Compta\Partnership\Enums\PartnerTier;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
-new #[Title('Fiche client')] class extends Component {
+new #[Title('Clients')] class extends Component {
     public Company $company;
 
     public ?Company $firm = null;
@@ -78,7 +78,7 @@ new #[Title('Fiche client')] class extends Component {
         $nameParts = collect(explode(' ', $company->name));
         $this->initials = $nameParts->map(fn ($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
         $this->companyRef = $this->initials.'-'.strtoupper(substr($company->id, -4));
-        $this->clientSince = ucfirst($this->relation->started_at->locale('fr_FR')->translatedFormat('M Y'));
+        $this->clientSince = $this->relation->started_at->locale('fr_FR')->translatedFormat('M Y');
     }
 
     private function selectedYear(): int
@@ -218,7 +218,40 @@ new #[Title('Fiche client')] class extends Component {
             InvoiceStatus::PartiallyPaid,
         ]));
 
-        return $hasPending ? 'attente' : 'a_jour';
+        return $hasPending ? 'a_surveiller' : 'a_jour';
+    }
+
+    #[Computed]
+    public function statusLabel(): string
+    {
+        return match ($this->statusValue) {
+            'critique' => 'Critique',
+            'a_surveiller' => 'À surveiller',
+            default => 'À jour',
+        };
+    }
+
+    #[Computed]
+    public function heroSummary(): string
+    {
+        $pendingLabel = $this->stats['pending_count'] === 1 ? 'facture' : 'factures';
+
+        return sprintf(
+            '%s %s en attente · %s F à recouvrer · Taux de recouvrement de %s%%',
+            number_format($this->stats['pending_count'], 0, ',', ' '),
+            $pendingLabel,
+            number_format($this->stats['pending_amount'], 0, ',', ' '),
+            $this->stats['recovery_rate']
+        );
+    }
+
+    #[Computed]
+    public function selectedPeriodLabel(): string
+    {
+        $selectedPeriod = collect($this->availableMonths)->firstWhere('value', $this->selectedPeriod);
+
+        return $selectedPeriod['label']
+            ?? ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('F Y'));
     }
 
     /** Facture sélectionnée pour la modale de détail. */
@@ -364,8 +397,7 @@ new #[Title('Fiche client')] class extends Component {
                     {{ $initials }}
                 </span>
                 <div>
-                    <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">{{ __('Fiche client') }}</p>
-                    <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink">{{ $company->name }}</h2>
+                    <h2 class="text-2xl font-semibold tracking-tight text-ink">{{ $company->name }}</h2>
                     <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                         <span @class([
                             'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
@@ -379,6 +411,7 @@ new #[Title('Fiche client')] class extends Component {
                         <span>· {{ __('Client depuis') }} {{ $clientSince }}</span>
                         <span>· {{ __('Réf.') }} {{ $companyRef }}</span>
                     </p>
+                    <p class="mt-2 text-sm text-slate-500">{{ $this->heroSummary }}</p>
                 </div>
             </div>
 
@@ -391,35 +424,50 @@ new #[Title('Fiche client')] class extends Component {
                         class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
                     >
                         <x-app.icon name="export" class="size-4" />
-                        {{ __('Export Comptable') }}
+                        {{ __('Exporter') }}
                     </button>
                 </flux:modal.trigger>
 
-                <flux:button
-                    variant="danger"
-                    wire:click="archive"
-                    wire:confirm="{{ __('Archiver ce client ? Cette action retirera la PME de votre portefeuille actif.') }}"
-                    icon="archive-box-x-mark"
-                >
-                    {{ __('Archiver') }}
-                </flux:button>
+                <flux:dropdown position="bottom" align="end">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
+                    >
+                        {{ __('Actions') }}
+                        <x-app.icon name="chevron-down" class="size-3.5" />
+                    </button>
+
+                    <flux:menu>
+                        <flux:menu.item href="#factures-client">
+                            <x-app.icon name="invoice" class="size-4 text-slate-400" />
+                            {{ __('Voir l’historique') }}
+                        </flux:menu.item>
+
+                        <flux:menu.separator />
+
+                        <flux:menu.item
+                            wire:click="archive"
+                            wire:confirm="{{ __('Archiver ce client ? Cette action retirera la PME de votre portefeuille actif.') }}"
+                        >
+                            <flux:icon name="archive-box-x-mark" class="size-4 text-rose-500" />
+                            {{ __('Archiver') }}
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
 
                 <span @class([
                     'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold',
                     'border-rose-200 bg-rose-50 text-rose-700'      => $this->statusValue === 'critique',
-                    'border-amber-200 bg-amber-50 text-amber-700'   => $this->statusValue === 'attente',
+                    'border-amber-200 bg-amber-50 text-amber-700'   => $this->statusValue === 'a_surveiller',
                     'border-green-200 bg-green-50 text-green-700' => $this->statusValue === 'a_jour',
                 ])>
                     <span @class([
                         'size-2 rounded-full',
                         'bg-rose-500'  => $this->statusValue === 'critique',
-                        'bg-amber-400' => $this->statusValue === 'attente',
+                        'bg-amber-400' => $this->statusValue === 'a_surveiller',
                         'bg-green-500' => $this->statusValue === 'a_jour',
                     ])></span>
-                    @if ($this->statusValue === 'critique') Critique
-                    @elseif ($this->statusValue === 'attente') Attente
-                    @else À jour
-                    @endif
+                    {{ $this->statusLabel }}
                 </span>
             </div>
         </div>
@@ -451,7 +499,7 @@ new #[Title('Fiche client')] class extends Component {
                     <flux:icon name="banknotes" class="size-5 text-accent" />
                 </div>
                 <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                    All-time
+                    {{ __('Cumul') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Encaissé') }}</p>
@@ -490,7 +538,7 @@ new #[Title('Fiche client')] class extends Component {
                     </span>
                 @endif
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('En attente') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Montant en attente') }}</p>
             <p @class([
                 'mt-1 text-2xl font-bold tracking-tight',
                 'text-rose-500'  => $this->statusValue === 'critique',
@@ -507,13 +555,10 @@ new #[Title('Fiche client')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                    Recouvrement
-                </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Délai moyen · Taux') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Délai moyen de paiement · Taux de recouvrement') }}</p>
             <p class="mt-1 text-2xl font-bold tracking-tight text-amber-500">
-                {{ $this->stats['avg_days'] }}j
+                {{ $this->stats['avg_days'] }} j
                 <span class="text-slate-400">·</span>
                 {{ $this->stats['recovery_rate'] }}%
             </p>
@@ -522,11 +567,11 @@ new #[Title('Fiche client')] class extends Component {
     </div>
 
     {{-- ─── Factures du mois ─────────────────────────────────────────────── --}}
-    <section class="app-shell-panel overflow-hidden">
+    <section id="factures-client" class="app-shell-panel overflow-hidden">
 
         {{-- En-tête section --}}
         <div class="flex flex-col gap-3 p-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Factures du mois') }}</h3>
+            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Factures du mois') }} · {{ ucfirst($this->selectedPeriodLabel) }}</h3>
 
             <div class="flex items-center gap-2">
                 {{-- Par page --}}
@@ -556,16 +601,16 @@ new #[Title('Fiche client')] class extends Component {
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-y border-slate-100 bg-slate-50/80">
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Référence') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Client final') }}</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Montant HT') }}</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('TVA') }}</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Montant TTC') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Émise le') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Échéance') }}</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Délai') }}</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Relances') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Statut') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Référence') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client final') }}</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('Montant HT') }}</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('TVA') }}</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Émise le') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Échéance') }}</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500">{{ __('Retard') }}</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500">{{ __('Relances') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Statut') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -575,12 +620,18 @@ new #[Title('Fiche client')] class extends Component {
                             $isOverdue = $invoice->status === InvoiceStatus::Overdue;
 
                             if ($isPaid && $invoice->paid_at) {
-                                $delayDays  = (int) abs($invoice->due_at->diffInDays($invoice->paid_at));
-                                $delayClass = $invoice->paid_at->lte($invoice->due_at) ? 'text-accent' : 'text-rose-500';
+                                $delayDays = $invoice->paid_at->gt($invoice->due_at)
+                                    ? (int) $invoice->due_at->diffInDays($invoice->paid_at)
+                                    : 0;
                             } else {
-                                $delayDays  = (int) abs(now()->diffInDays($invoice->due_at));
-                                $delayClass = $isOverdue ? 'text-rose-500' : 'text-amber-500';
+                                $delayDays = $isOverdue ? (int) $invoice->due_at->diffInDays(now()) : 0;
                             }
+
+                            $delayClass = match (true) {
+                                $delayDays >= 60 => 'text-rose-500',
+                                $delayDays > 0 => 'text-amber-500',
+                                default => 'text-slate-500',
+                            };
 
                             $statusConfig = match ($invoice->status) {
                                 InvoiceStatus::Paid               => ['label' => 'Payée',       'class' => 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'],
@@ -619,7 +670,7 @@ new #[Title('Fiche client')] class extends Component {
                                 {{ $invoice->due_at->locale('fr_FR')->translatedFormat('j M.') }}
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <span class="font-semibold {{ $delayClass }}">J+{{ $delayDays }}</span>
+                                <span class="font-semibold {{ $delayClass }}">{{ $delayDays }} j</span>
                             </td>
                             <td class="px-4 py-4 text-center text-slate-600">
                                 @if ($invoice->reminders_count === 0)
@@ -689,12 +740,12 @@ new #[Title('Fiche client')] class extends Component {
                 {{-- Header --}}
                 <div class="flex items-start justify-between border-b border-slate-100 px-10 py-7">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Facture') }}</p>
+                        <p class="text-xs font-semibold tracking-[0.24em] text-slate-400">{{ __('Facture') }}</p>
                         <h2 class="mt-1 text-xl font-bold text-ink">{{ $inv->reference }}</h2>
                         <p class="mt-1 text-sm text-slate-500">
                             {{ __('Émise le') }} {{ $inv->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
                             &nbsp;·&nbsp;
-                            {{ __('Échéance') }} {{ $inv->due_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                            {{ __('Échéance le') }} {{ $inv->due_at->locale('fr_FR')->translatedFormat('j F Y') }}
                         </p>
                     </div>
                     <div class="flex items-center gap-3">
@@ -703,7 +754,7 @@ new #[Title('Fiche client')] class extends Component {
                         </span>
                         <button
                             wire:click="closeInvoice"
-                            class="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                            class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                         >
                             <flux:icon name="x-mark" class="size-5" />
                         </button>
@@ -720,7 +771,7 @@ new #[Title('Fiche client')] class extends Component {
                             {{-- Destinataire --}}
                             @if ($client)
                                 <div class="mb-6">
-                                    <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Destinataire') }}</p>
+                                    <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Destinataire') }}</p>
                                     <div class="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4">
                                         <p class="font-semibold text-ink">{{ $client->name }}</p>
                                         @if ($client->phone)
@@ -742,7 +793,7 @@ new #[Title('Fiche client')] class extends Component {
                                             </p>
                                         @endif
                                         @if ($client->tax_id)
-                                            <p class="mt-1 text-xs font-mono text-slate-400">{{ __('Réf. fiscale') }} : {{ $client->tax_id }}</p>
+                                            <p class="mt-2 text-xs font-mono text-slate-400">{{ __('Référence fiscale') }} : {{ $client->tax_id }}</p>
                                         @endif
                                     </div>
                                 </div>
@@ -754,7 +805,7 @@ new #[Title('Fiche client')] class extends Component {
 
                             {{-- Lignes de facture --}}
                             <div>
-                                <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Détail des prestations') }}</p>
+                                <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Détail des prestations') }}</p>
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="border-b border-slate-100 text-left">
@@ -810,7 +861,7 @@ new #[Title('Fiche client')] class extends Component {
 
                         {{-- Colonne latérale : récap montants --}}
                         <div class="border-t border-slate-100 bg-slate-50/60 px-8 py-8 lg:border-t-0 lg:border-l">
-                            <p class="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-400">{{ __('Récapitulatif') }}</p>
+                            <p class="mb-4 text-sm font-semibold text-slate-500">{{ __('Récapitulatif') }}</p>
 
                             <dl class="space-y-3 text-sm">
                                 <div class="flex justify-between">

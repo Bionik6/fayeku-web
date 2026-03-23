@@ -93,12 +93,23 @@ test('un user autorisé peut voir la fiche du client', function () {
 test('le header affiche le nom, le plan et la référence', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
 
+    makeShowInvoice($sme, [
+        'status' => InvoiceStatus::Overdue->value,
+        'total' => 145_000,
+        'amount_paid' => 0,
+        'paid_at' => null,
+        'due_at' => now()->subDays(12),
+    ]);
+
     Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
         ->assertSee($sme->name)
         ->assertSee('Basique')
         ->assertSee('Client depuis')
-        ->assertSee('Réf.');
+        ->assertSee('Réf.')
+        ->assertSee('1 facture en attente')
+        ->assertSee('145 000 F à recouvrer')
+        ->assertSee('Taux de recouvrement de 0%');
 });
 
 test('le badge statut est visible', function () {
@@ -108,6 +119,23 @@ test('le badge statut est visible', function () {
     Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
         ->assertSee('À jour');
+});
+
+test('le badge statut à surveiller est affiché quand une facture reste ouverte sans criticité', function () {
+    ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
+
+    makeShowInvoice($sme, [
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->addDays(7),
+        'paid_at' => null,
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::clients.show', ['company' => $sme]);
+
+    expect($component->get('statusValue'))->toBe('a_surveiller');
+    $component->assertSee('À surveiller');
 });
 
 test('le badge statut critique est affiché quand une facture est overdue > 60j', function () {
@@ -193,6 +221,23 @@ test('stats.recovery_rate est calculé correctement', function () {
     expect($stats['recovery_rate'])->toBe(72);
 });
 
+test('les cartes KPI utilisent le copy métier harmonisé', function () {
+    ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
+
+    makeShowInvoice($sme, [
+        'status' => InvoiceStatus::Overdue->value,
+        'paid_at' => null,
+        'amount_paid' => 0,
+        'due_at' => now()->subDays(8),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::clients.show', ['company' => $sme])
+        ->assertSee('Montant en attente')
+        ->assertSee('Délai moyen de paiement · Taux de recouvrement')
+        ->assertSee('Cumul');
+});
+
 // ─── Table des factures ───────────────────────────────────────────────────────
 
 test('la table filtre les factures sur le mois sélectionné', function () {
@@ -205,6 +250,25 @@ test('la table filtre les factures sur le mois sélectionné', function () {
         ->test('pages::clients.show', ['company' => $sme])
         ->assertSee('FAC-CURRENT')
         ->assertDontSee('FAC-OLD');
+});
+
+test('la table utilise la colonne retard avec un format lisible', function () {
+    ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
+
+    makeShowInvoice($sme, [
+        'reference' => 'FAC-RETARD',
+        'status' => InvoiceStatus::Overdue->value,
+        'paid_at' => null,
+        'amount_paid' => 0,
+        'due_at' => now()->startOfDay()->subDays(12),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::clients.show', ['company' => $sme])
+        ->assertSee('Factures du mois')
+        ->assertSee('Retard')
+        ->assertSee('12 j')
+        ->assertDontSee('J+12');
 });
 
 test('changer selectedPeriod recharge les factures du mois cible', function () {
@@ -348,7 +412,10 @@ test('la route HTTP clients.show retourne une réponse 200', function () {
 
     $this->actingAs($user)
         ->get(route('clients.show', $sme))
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertSee('Tableau de bord')
+        ->assertSee('Clients')
+        ->assertSee($sme->name);
 });
 
 test('la fiche se charge avec des factures et leurs relances sans erreur', function () {
@@ -361,7 +428,8 @@ test('la fiche se charge avec des factures et leurs relances sans erreur', funct
     Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
         ->assertOk()
-        ->assertSee('Factures du mois');
+        ->assertSee('Factures du mois')
+        ->assertSee('Actions');
 });
 
 test('un client archivé n\'est plus accessible via la fiche', function () {

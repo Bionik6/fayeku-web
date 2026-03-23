@@ -68,34 +68,65 @@
                 ],
             ];
 
+            $clientRouteCompany = request()->route('company');
+
             $headerBreadcrumbs = match (true) {
+                request()->routeIs('clients.show') && $clientRouteCompany instanceof \Modules\Auth\Models\Company => [
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Clients'),
+                        $clientRouteCompany->name,
+                    ],
+                    'title' => $clientRouteCompany->name,
+                ],
                 request()->routeIs('clients.*') => [
-                    'parent' => __('Tableau de bord'),
-                    'current' => __('Clients'),
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Clients'),
+                    ],
+                    'title' => __('Clients'),
                 ],
                 request()->routeIs('alerts.*') => [
-                    'parent' => __('Tableau de bord'),
-                    'current' => __('Alertes'),
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Alertes'),
+                    ],
+                    'title' => __('Alertes'),
                 ],
                 request()->routeIs('commissions.*') => [
-                    'parent' => __('Tableau de bord'),
-                    'current' => __('Commissions'),
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Commissions'),
+                    ],
+                    'title' => __('Commissions'),
                 ],
                 request()->routeIs('invitations.*') => [
-                    'parent' => __('Tableau de bord'),
-                    'current' => __('Invitations'),
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Invitations'),
+                    ],
+                    'title' => __('Invitations'),
                 ],
                 request()->routeIs('export.*') => [
-                    'parent' => __('Tableau de bord'),
-                    'current' => __('Export Groupé'),
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Export Groupé'),
+                    ],
+                    'title' => __('Export Groupé'),
                 ],
                 request()->routeIs('profile.*') => [
-                    'parent' => __('Compte'),
-                    'current' => __('Paramètres'),
+                    'segments' => [
+                        __('Compte'),
+                        __('Paramètres'),
+                    ],
+                    'title' => __('Paramètres'),
                 ],
                 default => [
-                    'parent' => __('Dashboard'),
-                    'current' => __('Overview'),
+                    'segments' => [
+                        __('Dashboard'),
+                        __('Overview'),
+                    ],
+                    'title' => $title ?? __('Dashboard'),
                 ],
             };
         @endphp
@@ -204,11 +235,18 @@
 
                             <div class="min-w-0">
                                 <p class="text-sm font-medium text-slate-500">
-                                    <span>{{ $headerBreadcrumbs['parent'] }}</span>
-                                    <span class="px-2 text-slate-300">/</span>
-                                    <span class="text-slate-700">{{ $headerBreadcrumbs['current'] }}</span>
+                                    @foreach ($headerBreadcrumbs['segments'] as $index => $segment)
+                                        @if ($index > 0)
+                                            <span class="px-2 text-slate-300">/</span>
+                                        @endif
+
+                                        <span @class([
+                                            'text-slate-500' => $index < count($headerBreadcrumbs['segments']) - 1,
+                                            'text-slate-700' => $index === count($headerBreadcrumbs['segments']) - 1,
+                                        ])>{{ $segment }}</span>
+                                    @endforeach
                                 </p>
-                                <h1 class="truncate text-xl font-semibold tracking-tight text-ink">{{ $title ?? __('Dashboard') }}</h1>
+                                <h1 class="truncate text-xl font-semibold tracking-tight text-ink">{{ $headerBreadcrumbs['title'] ?? $title ?? __('Dashboard') }}</h1>
                             </div>
                         </div>
 
