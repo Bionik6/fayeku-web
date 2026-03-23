@@ -86,7 +86,7 @@ test('le sous-titre affiche le nombre correct de clients', function () {
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->assertSee('4 clients');
+        ->assertSee('4 clients suivis');
 });
 
 test('la page affiche 7 clients dans le sous-titre', function () {
@@ -94,7 +94,7 @@ test('la page affiche 7 clients dans le sous-titre', function () {
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->assertSee('7 clients');
+        ->assertSee('7 clients suivis');
 });
 
 test('un cabinet sans clients affiche le message vide', function () {
@@ -103,6 +103,82 @@ test('un cabinet sans clients affiche le message vide', function () {
     Livewire::actingAs($user)
         ->test('pages::clients.index')
         ->assertSee('Aucun client dans votre portefeuille');
+});
+
+test('la page affiche le nouveau copy portefeuille et les libellés harmonisés', function () {
+    ['user' => $user, 'smes' => $smes] = setupClientsPortfolio(3);
+
+    makeClientInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+        'total' => 400_000,
+    ]);
+
+    makeClientInvoice($smes[1], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(10),
+        'amount_paid' => 0,
+        'total' => 150_000,
+    ]);
+
+    makeClientInvoice($smes[2], ['issued_at' => now()->subDays(7)]);
+
+    Livewire::actingAs($user)
+        ->test('pages::clients.index')
+        ->assertSee('3 clients suivis')
+        ->assertSee('1 client critique')
+        ->assertSee('1 à surveiller')
+        ->assertSee('Inviter une PME')
+        ->assertSee('Filtrer les clients')
+        ->assertSee('Rechercher une entreprise...')
+        ->assertSee('Toutes les offres')
+        ->assertSee('Offre')
+        ->assertSee('Impayés')
+        ->assertSee('Taux de recouvrement')
+        ->assertSee('Montant total en attente')
+        ->assertSee('Clients critiques')
+        ->assertSee('Taux moyen de recouvrement')
+        ->assertSee('À surveiller');
+});
+
+test('summaryStats calcule la synthèse portefeuille', function () {
+    ['user' => $user, 'smes' => $smes] = setupClientsPortfolio(3);
+
+    makeClientInvoice($smes[0], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(65),
+        'amount_paid' => 0,
+        'total' => 400_000,
+    ]);
+    makeClientInvoice($smes[1], [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(10),
+        'amount_paid' => 0,
+        'total' => 200_000,
+    ]);
+    makeClientInvoice($smes[2], [
+        'total' => 500_000,
+        'amount_paid' => 500_000,
+    ]);
+
+    $stats = Livewire::actingAs($user)
+        ->test('pages::clients.index')
+        ->get('summaryStats');
+
+    expect($stats['pending_amount_total'])->toBe(600_000)
+        ->and($stats['critical_clients'])->toBe(1)
+        ->and($stats['average_recovery_rate'])->toBe(45);
+});
+
+test('la route HTTP clients affiche le breadcrumb tableau de bord / clients', function () {
+    ['user' => $user] = setupClientsPortfolio(0);
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertSuccessful()
+        ->assertSee('Tableau de bord', false)
+        ->assertSee('Clients', false);
 });
 
 // ─── statusCounts ─────────────────────────────────────────────────────────────

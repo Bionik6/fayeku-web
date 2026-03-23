@@ -67,6 +67,37 @@
                     'href' => '#',
                 ],
             ];
+
+            $headerBreadcrumbs = match (true) {
+                request()->routeIs('clients.*') => [
+                    'parent' => __('Tableau de bord'),
+                    'current' => __('Clients'),
+                ],
+                request()->routeIs('alerts.*') => [
+                    'parent' => __('Tableau de bord'),
+                    'current' => __('Alertes'),
+                ],
+                request()->routeIs('commissions.*') => [
+                    'parent' => __('Tableau de bord'),
+                    'current' => __('Commissions'),
+                ],
+                request()->routeIs('invitations.*') => [
+                    'parent' => __('Tableau de bord'),
+                    'current' => __('Invitations'),
+                ],
+                request()->routeIs('export.*') => [
+                    'parent' => __('Tableau de bord'),
+                    'current' => __('Export Groupé'),
+                ],
+                request()->routeIs('profile.*') => [
+                    'parent' => __('Compte'),
+                    'current' => __('Paramètres'),
+                ],
+                default => [
+                    'parent' => __('Dashboard'),
+                    'current' => __('Overview'),
+                ],
+            };
         @endphp
 
         <div class="min-h-screen lg:flex" data-app-shell data-sidebar-open="false">
@@ -173,9 +204,9 @@
 
                             <div class="min-w-0">
                                 <p class="text-sm font-medium text-slate-500">
-                                    <span>{{ __('Dashboard') }}</span>
+                                    <span>{{ $headerBreadcrumbs['parent'] }}</span>
                                     <span class="px-2 text-slate-300">/</span>
-                                    <span class="text-slate-700">{{ __('Overview') }}</span>
+                                    <span class="text-slate-700">{{ $headerBreadcrumbs['current'] }}</span>
                                 </p>
                                 <h1 class="truncate text-xl font-semibold tracking-tight text-ink">{{ $title ?? __('Dashboard') }}</h1>
                             </div>
