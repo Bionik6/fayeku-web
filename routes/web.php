@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified.phone'])->group(function () {
     Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
     Route::livewire('export-groupe', 'pages::export.index')->name('export.index');
     Route::livewire('commissions', 'pages::commissions.index')->name('commissions.index');
+    Route::livewire('invitations', 'pages::invitations.index')->name('invitations.index');
 });
 
 require __DIR__.'/settings.php';

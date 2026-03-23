@@ -51,7 +51,9 @@
                 [
                     'label' => __('Invitations'),
                     'icon' => 'invitations',
-                    'href' => '#',
+                    'href' => route('invitations.index'),
+                    'current' => request()->routeIs('invitations.*'),
+                    'navigate' => true,
                 ],
             ];
 
