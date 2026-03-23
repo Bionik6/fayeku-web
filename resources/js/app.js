@@ -315,6 +315,10 @@ function bindAppShell() {
         localStorage.setItem("sidebar-collapsed", String(isCollapsed));
     }
 
+    // Re-apply collapsed class — Livewire wire:navigate replaces <html> classes
+    const savedCollapsed = localStorage.getItem("sidebar-collapsed") === "true";
+    setCollapsedState(savedCollapsed);
+
     if (collapseToggle) {
         collapseToggle.addEventListener("click", () => {
             const isCollapsed = document.documentElement.classList.contains("sidebar-collapsed");
@@ -334,5 +338,13 @@ function initializePage() {
 }
 
 initializePage();
+
+// Re-apply sidebar collapsed class early — Livewire wire:navigate replaces
+// <html> attributes, stripping our class before livewire:navigated fires.
+document.addEventListener("livewire:navigated", () => {
+    if (localStorage.getItem("sidebar-collapsed") === "true") {
+        document.documentElement.classList.add("sidebar-collapsed");
+    }
+});
 
 document.addEventListener("livewire:navigated", initializePage);
