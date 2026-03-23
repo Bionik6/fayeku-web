@@ -11,7 +11,7 @@ use Modules\Compta\Export\Models\ExportHistory;
 use Modules\Compta\Portfolio\Services\PortfolioService;
 use Modules\PME\Invoicing\Models\Invoice;
 
-new #[Title('Export Groupé')] class extends Component {
+new #[Title('Export groupé')] class extends Component {
     public ?Company $firm = null;
 
     #[Url] public string $searchClient = '';
@@ -249,6 +249,18 @@ new #[Title('Export Groupé')] class extends Component {
         return $period['label'] ?? $this->exportPeriod;
     }
 
+    public function currentPeriodLabel(): string
+    {
+        return now()->locale('fr_FR')->translatedFormat('F Y');
+    }
+
+    public function selectedClientsLabel(): string
+    {
+        $count = $this->selectedClientsCount;
+
+        return $count.' '.($count > 1 ? 'clients sélectionnés' : 'client sélectionné');
+    }
+
     /** @return array<int, string> */
     private function resolveClientIds(): array
     {
@@ -305,10 +317,13 @@ new #[Title('Export Groupé')] class extends Component {
         <div class="flex flex-col gap-4 p-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">{{ __('Comptabilité') }}</p>
-                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Export Groupé') }}</h2>
+                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Export groupé') }}</h2>
+                <p class="mt-2 max-w-3xl text-sm text-slate-500">
+                    {{ __('Exportez les écritures de plusieurs clients sur une période donnée, dans un format compatible avec votre logiciel comptable.') }}
+                </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    {{ $this->clients->count() }} {{ $this->clients->count() > 1 ? 'clients' : 'client' }}
-                    · {{ ucfirst(now()->locale('fr_FR')->translatedFormat('F Y')) }}
+                    {{ $this->clients->count() }} {{ $this->clients->count() > 1 ? 'clients éligibles' : 'client éligible' }}
+                    · {{ __('Période sélectionnée :') }} {{ $this->currentPeriodLabel() }}
                 </p>
             </div>
 
@@ -320,7 +335,7 @@ new #[Title('Export Groupé')] class extends Component {
                         class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
                     >
                         <x-app.icon name="export" class="size-4" />
-                        {{ __('Exporter') }}
+                        {{ __('Lancer un export') }}
                     </button>
                 </flux:modal.trigger>
             </div>
@@ -338,6 +353,7 @@ new #[Title('Export Groupé')] class extends Component {
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
             <h2 class="text-lg font-bold text-ink">{{ __('Historique des exports') }}</h2>
+            <p class="mt-1 text-sm text-slate-400">{{ __('Retrouvez les derniers exports générés pour votre cabinet.') }}</p>
         </div>
 
         @if ($this->exportHistories->isEmpty())
@@ -353,8 +369,9 @@ new #[Title('Export Groupé')] class extends Component {
                             <th class="px-6 py-3">{{ __('Période') }}</th>
                             <th class="px-6 py-3">{{ __('Format') }}</th>
                             <th class="px-6 py-3">{{ __('Clients') }}</th>
-                            <th class="px-6 py-3">{{ __('Utilisateur') }}</th>
-                            <th class="px-6 py-3 text-right"></th>
+                            <th class="px-6 py-3">{{ __('Lancé par') }}</th>
+                            <th class="px-6 py-3">{{ __('Statut') }}</th>
+                            <th class="px-6 py-3 text-right">{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -376,13 +393,18 @@ new #[Title('Export Groupé')] class extends Component {
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $history->clients_count }}</td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $history->user?->full_name ?? '—' }}</td>
+                                <td class="whitespace-nowrap px-6 py-3.5">
+                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                        {{ __('Terminé') }}
+                                    </span>
+                                </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-right">
                                     <button
                                         type="button"
                                         class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-ink shadow-sm transition hover:bg-slate-50"
                                     >
                                         <x-app.icon name="download" class="size-3.5" />
-                                        {{ __('Re-télécharger') }}
+                                        {{ __('Télécharger') }}
                                     </button>
                                 </td>
                             </tr>
@@ -396,13 +418,16 @@ new #[Title('Export Groupé')] class extends Component {
     {{-- ─── Export client individuel ───────────────────────────────────── --}}
     <section class="app-shell-panel">
         <div class="flex items-center justify-between px-6 pt-6 pb-4">
-            <h2 class="text-lg font-bold text-ink">{{ __('Export client individuel') }}</h2>
+            <div>
+                <h2 class="text-lg font-bold text-ink">{{ __('Export par client') }}</h2>
+                <p class="mt-1 text-sm text-slate-400">{{ __('Exportez les écritures comptables d’un client spécifique.') }}</p>
+            </div>
 
             <div class="relative">
                 <input
                     type="text"
                     wire:model.live.debounce.300ms="searchClient"
-                    placeholder="{{ __('Rechercher un client...') }}"
+                    placeholder="{{ __('Rechercher une entreprise...') }}"
                     class="w-64 rounded-xl border border-slate-200 bg-white px-4 py-2 pl-10 text-sm text-ink placeholder-slate-400 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -434,7 +459,9 @@ new #[Title('Export Groupé')] class extends Component {
                                         </div>
                                         <div>
                                             <p class="font-medium text-ink">{{ $client->name }}</p>
-                                            <p class="text-xs text-slate-400">{{ $client->ninea ?? $client->email }}</p>
+                                            <p class="text-xs text-slate-400">
+                                                {{ ucfirst($client->plan ?? 'Offre non définie') }} · {{ $this->currentPeriodLabel() }}
+                                            </p>
                                         </div>
                                     </div>
                                 </td>
@@ -460,7 +487,7 @@ new #[Title('Export Groupé')] class extends Component {
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
             <h2 class="text-lg font-bold text-ink">{{ __('Plan de comptes (Sage 100)') }}</h2>
-            <p class="mt-1 text-sm text-slate-400">{{ __('Comptes utilisés pour les écritures comptables') }}</p>
+            <p class="mt-1 text-sm text-slate-400">{{ __('Comptes utilisés pour générer les écritures du fichier exporté.') }}</p>
         </div>
 
         <div class="overflow-x-auto">
@@ -541,10 +568,10 @@ new #[Title('Export Groupé')] class extends Component {
 
             {{-- Clients inclus --}}
             <div class="mt-5">
-                <label class="text-sm/6 font-medium text-slate-700">{{ __('Clients inclus') }}</label>
+                <label class="text-sm/6 font-medium text-slate-700">{{ __('Périmètre clients') }}</label>
                 <div class="mt-3 flex items-center space-x-10">
                     @foreach ([
-                        'all'    => __('Tous les clients'),
+                        'all'    => __('Tous les clients éligibles'),
                         'manual' => __('Sélection manuelle'),
                     ] as $value => $label)
                         <div class="flex items-center">
@@ -567,7 +594,7 @@ new #[Title('Export Groupé')] class extends Component {
                     <div class="mt-3">
                         <div class="mb-2 flex items-center justify-between">
                             <span class="text-xs text-slate-400">
-                                {{ count($selectedClientIds) }} {{ __('sélectionné(s)') }}
+                                {{ $this->selectedClientsLabel() }}
                             </span>
                             <button
                                 type="button"

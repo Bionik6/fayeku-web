@@ -110,9 +110,9 @@
                 request()->routeIs('export.*') => [
                     'segments' => [
                         __('Tableau de bord'),
-                        __('Export Groupé'),
+                        __('Export groupé'),
                     ],
-                    'title' => __('Export Groupé'),
+                    'title' => __('Export groupé'),
                 ],
                 request()->routeIs('profile.*') => [
                     'segments' => [

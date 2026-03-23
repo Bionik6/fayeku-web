@@ -80,8 +80,23 @@ test('le composant export affiche les trois sections', function () {
         ->test('pages::export.index')
         ->assertOk()
         ->assertSee('Historique des exports')
-        ->assertSee('Export client individuel')
+        ->assertSee('Retrouvez les derniers exports générés pour votre cabinet.')
+        ->assertSee('Export par client')
         ->assertSee('Plan de comptes');
+});
+
+test('la page affiche le nouveau copy métier export', function () {
+    ['user' => $user] = exportTestCreateFirm(1);
+
+    Livewire::actingAs($user)
+        ->test('pages::export.index')
+        ->assertSee('Export groupé')
+        ->assertSee('Exportez les écritures de plusieurs clients sur une période donnée')
+        ->assertSee('client éligible')
+        ->assertSee('Période sélectionnée :')
+        ->assertSee('Lancer un export')
+        ->assertSee('Rechercher une entreprise...')
+        ->assertSee('Comptes utilisés pour générer les écritures du fichier exporté.');
 });
 
 // ─── Historique ───────────────────────────────────────────────────────────────
@@ -102,7 +117,11 @@ test('l\'historique affiche les exports passés', function () {
     Livewire::actingAs($user)
         ->test('pages::export.index')
         ->assertSee('2026-03')
-        ->assertSee('Sage 100');
+        ->assertSee('Sage 100')
+        ->assertSee('Lancé par')
+        ->assertSee('Statut')
+        ->assertSee('Télécharger')
+        ->assertSee('Terminé');
 });
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
@@ -148,7 +167,10 @@ test('exportClient pré-remplit la modale avec le client sélectionné', functio
         ->test('pages::export.index')
         ->call('exportClient', $smes[0]->id)
         ->assertSet('clientSelection', 'manual')
-        ->assertSet('selectedClientIds', [$smes[0]->id]);
+        ->assertSet('selectedClientIds', [$smes[0]->id])
+        ->assertSee('Périmètre clients')
+        ->assertSee('Tous les clients éligibles')
+        ->assertSee('1 client sélectionné');
 });
 
 test('toggleClient ajoute et retire un client', function () {
