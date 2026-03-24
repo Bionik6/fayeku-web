@@ -3,11 +3,45 @@
 namespace Modules\PME\Invoicing\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Auth\Models\Company;
+use Modules\PME\Clients\Models\Client;
+use Modules\PME\Invoicing\Enums\QuoteStatus;
 use Modules\Shared\Traits\HasUlid;
 
 class Quote extends Model
 {
     use HasUlid, SoftDeletes;
-    // TODO: add fillable, casts, relationships
+
+    protected $fillable = [
+        'company_id', 'client_id', 'reference', 'status',
+        'issued_at', 'valid_until',
+        'subtotal', 'tax_amount', 'total', 'notes',
+    ];
+
+    protected $casts = [
+        'issued_at' => 'date',
+        'valid_until' => 'date',
+        'subtotal' => 'integer',
+        'tax_amount' => 'integer',
+        'total' => 'integer',
+        'status' => QuoteStatus::class,
+    ];
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function lines(): HasMany
+    {
+        return $this->hasMany(QuoteLine::class);
+    }
 }
