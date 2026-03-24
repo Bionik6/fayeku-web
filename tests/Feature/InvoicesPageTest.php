@@ -489,6 +489,84 @@ test('un filtre période vide retourne tous les documents', function () {
     expect($component->get('rows'))->toHaveCount(3);
 });
 
+test('typeCounts reflète les documents de la période sélectionnée', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $selectedPeriod = now()->format('Y-m');
+
+    makeInvoice($company, [
+        'reference' => 'FAC-CURRENT',
+        'issued_at' => now()->copy()->startOfMonth()->addDays(2),
+        'status' => InvoiceStatus::Paid->value,
+    ]);
+    makeQuote($company, [
+        'reference' => 'DEV-CURRENT',
+        'issued_at' => now()->copy()->startOfMonth()->addDays(3),
+        'status' => QuoteStatus::Accepted->value,
+    ]);
+    makeInvoice($company, [
+        'reference' => 'FAC-OLD',
+        'issued_at' => now()->copy()->subMonth()->startOfMonth()->addDays(2),
+        'status' => InvoiceStatus::Paid->value,
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
+    $component->set('period', $selectedPeriod);
+
+    expect($component->get('typeCounts'))->toMatchArray([
+        'all' => 2,
+        'invoice' => 1,
+        'quote' => 1,
+    ]);
+});
+
+test('une période spécifique conserve des filtres type et statut actifs', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $selectedPeriod = now()->format('Y-m');
+
+    makeInvoice($company, [
+        'reference' => 'FAC-CURRENT',
+        'issued_at' => now()->copy()->startOfMonth()->addDays(2),
+        'status' => InvoiceStatus::Paid->value,
+    ]);
+    makeInvoice($company, [
+        'reference' => 'FAC-CURRENT-SENT',
+        'issued_at' => now()->copy()->startOfMonth()->addDays(3),
+        'status' => InvoiceStatus::Sent->value,
+        'amount_paid' => 0,
+    ]);
+    makeInvoice($company, [
+        'reference' => 'FAC-OLD-PAID',
+        'issued_at' => now()->copy()->subMonth()->startOfMonth()->addDays(2),
+        'status' => InvoiceStatus::Paid->value,
+    ]);
+    makeQuote($company, [
+        'reference' => 'DEV-CURRENT',
+        'issued_at' => now()->copy()->startOfMonth()->addDays(4),
+        'status' => QuoteStatus::Accepted->value,
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->withQueryParams([
+            'periode' => $selectedPeriod,
+            'type' => 'invoice',
+            'statut' => 'paid',
+        ])
+        ->test('pages::pme.invoices.index');
+
+    expect($component->get('period'))->toBe($selectedPeriod);
+    expect($component->get('typeFilter'))->toBe('invoice');
+    expect($component->get('statusFilter'))->toBe('paid');
+    expect(collect($component->get('rows'))->pluck('reference')->all())
+        ->toEqual(['FAC-CURRENT']);
+    expect($component->get('statusCounts'))->toMatchArray([
+        'all' => 2,
+        'paid' => 1,
+        'sent' => 1,
+    ]);
+});
+
 // ─── typeCounts ───────────────────────────────────────────────────────────────
 
 test('typeCounts reflète le nombre de factures et devis', function () {
@@ -720,4 +798,20 @@ test('le bouton Réinitialiser les filtres est affiché dans l\'état vide filtr
     $component->set('search', 'RIEN');
 
     $component->assertSee('Réinitialiser les filtres');
+});
+
+test('les filtres type et statut restent visibles quand une période spécifique est choisie', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    makeInvoice($company, [
+        'reference' => 'FAC-CURRENT',
+        'issued_at' => now()->copy()->startOfMonth()->addDays(2),
+        'status' => InvoiceStatus::Paid->value,
+    ]);
+
+    Livewire::actingAs($user)
+        ->withQueryParams(['periode' => now()->format('Y-m')])
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml('wire:click="setTypeFilter(\'invoice\')"')
+        ->assertSeeHtml('wire:click="setStatusFilter(\'paid\')"');
 });

@@ -78,95 +78,10 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     #[Computed]
     public function rows(): array
     {
-        if (! $this->company) {
-            return [];
-        }
+        $rows = $this->rowsBeforeAggregateFilters();
+        $rows = $this->applyTypeFilter($rows);
 
-        $invoices = Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->whereNotIn('status', [InvoiceStatus::Cancelled])
-            ->with('client')
-            ->get()
-            ->map(function ($inv) {
-                $delayDays = $inv->due_at ? (int) abs(now()->diffInDays($inv->due_at)) : 0;
-                $isOverdue = $inv->status === InvoiceStatus::Overdue;
-
-                return [
-                    'id'           => $inv->id,
-                    'type'         => 'invoice',
-                    'reference'    => $inv->reference ?? '—',
-                    'client_name'  => $inv->client?->name ?? '—',
-                    'subtotal'     => $inv->subtotal,
-                    'tax_amount'   => $inv->tax_amount,
-                    'total'        => $inv->total,
-                    'issued_at'    => $inv->issued_at,
-                    'due_at'       => $inv->due_at,
-                    'status_value' => $inv->status->value,
-                    'is_overdue'   => $isOverdue,
-                    'delay_days'   => $isOverdue ? $delayDays : 0,
-                    'amount_paid'  => $inv->amount_paid,
-                ];
-            });
-
-        $quotes = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->with('client')
-            ->get()
-            ->map(function ($q) {
-                $isExpired = $q->status === QuoteStatus::Expired ||
-                    ($q->valid_until && $q->valid_until->isPast() && $q->status === QuoteStatus::Sent);
-
-                return [
-                    'id'           => $q->id,
-                    'type'         => 'quote',
-                    'reference'    => $q->reference ?? '—',
-                    'client_name'  => $q->client?->name ?? '—',
-                    'subtotal'     => $q->subtotal,
-                    'tax_amount'   => $q->tax_amount,
-                    'total'        => $q->total,
-                    'issued_at'    => $q->issued_at,
-                    'due_at'       => $q->valid_until,
-                    'status_value' => $q->status->value,
-                    'is_overdue'   => $isExpired,
-                    'delay_days'   => 0,
-                    'amount_paid'  => 0,
-                ];
-            });
-
-        $all = collect([...$invoices, ...$quotes])->sortByDesc('issued_at')->values()->toArray();
-
-        // Filtre type
-        if ($this->typeFilter !== 'all') {
-            $all = array_values(array_filter($all, fn ($r) => $r['type'] === $this->typeFilter));
-        }
-
-        // Filtre statut
-        if ($this->statusFilter !== 'all') {
-            $all = array_values(array_filter($all, fn ($r) => $r['status_value'] === $this->statusFilter));
-        }
-
-        // Filtre recherche
-        if ($this->search !== '') {
-            $term = mb_strtolower($this->search);
-            $all = array_values(array_filter(
-                $all,
-                fn ($r) => str_contains(mb_strtolower($r['reference']), $term)
-                    || str_contains(mb_strtolower($r['client_name']), $term)
-            ));
-        }
-
-        // Filtre période
-        if ($this->period !== '') {
-            [$year, $month] = explode('-', $this->period);
-            $all = array_values(array_filter(
-                $all,
-                fn ($r) => $r['issued_at'] &&
-                    $r['issued_at']->year == $year &&
-                    $r['issued_at']->month == $month
-            ));
-        }
-
-        return $all;
+        return $this->applyStatusFilter($rows);
     }
 
     /** @return array<string, int> */
@@ -177,7 +92,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             return ['all' => 0, 'invoice' => 0, 'quote' => 0];
         }
 
-        $base = $this->baseRows();
+        $base = $this->applyStatusFilter($this->rowsBeforeAggregateFilters());
 
         return [
             'all'     => count($base),
@@ -190,7 +105,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     #[Computed]
     public function statusCounts(): array
     {
-        $base = $this->typeFilteredRows();
+        $base = $this->applyTypeFilter($this->rowsBeforeAggregateFilters());
         $counts = ['all' => count($base)];
 
         foreach ($base as $row) {
@@ -247,6 +162,11 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         unset($this->rows, $this->statusCounts);
     }
 
+    public function updatedPeriod(string $value): void
+    {
+        unset($this->rows, $this->typeCounts, $this->statusCounts);
+    }
+
     /** @return array<int, array<string, mixed>> */
     private function baseRows(): array
     {
@@ -271,13 +191,139 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     /** @return array<int, array<string, mixed>> */
     private function typeFilteredRows(): array
     {
-        $base = $this->baseRows();
+        return $this->applyTypeFilter($this->baseRows());
+    }
 
-        if ($this->typeFilter !== 'all') {
-            return array_values(array_filter($base, fn ($r) => $r['type'] === $this->typeFilter));
+    /** @return array<int, array<string, mixed>> */
+    private function rowsBeforeAggregateFilters(): array
+    {
+        return $this->applySearchFilter($this->applyPeriodFilter($this->allRows()));
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function allRows(): array
+    {
+        if (! $this->company) {
+            return [];
         }
 
-        return $base;
+        $invoices = Invoice::query()
+            ->where('company_id', $this->company->id)
+            ->whereNotIn('status', [InvoiceStatus::Cancelled])
+            ->with('client')
+            ->get()
+            ->map(function ($inv) {
+                $delayDays = $inv->due_at ? (int) abs(now()->diffInDays($inv->due_at)) : 0;
+                $isOverdue = $inv->status === InvoiceStatus::Overdue;
+
+                return [
+                    'id'           => $inv->id,
+                    'type'         => 'invoice',
+                    'reference'    => $inv->reference ?? '—',
+                    'client_name'  => $inv->client?->name ?? '—',
+                    'subtotal'     => $inv->subtotal,
+                    'tax_amount'   => $inv->tax_amount,
+                    'total'        => $inv->total,
+                    'issued_at'    => $inv->issued_at,
+                    'due_at'       => $inv->due_at,
+                    'status_value' => $inv->status->value,
+                    'is_overdue'   => $isOverdue,
+                    'delay_days'   => $isOverdue ? $delayDays : 0,
+                    'amount_paid'  => $inv->amount_paid,
+                ];
+            });
+
+        $quotes = Quote::query()
+            ->where('company_id', $this->company->id)
+            ->with('client')
+            ->get()
+            ->map(function ($q) {
+                $isExpired = $q->status === QuoteStatus::Expired ||
+                    ($q->valid_until && $q->valid_until->isPast() && $q->status === QuoteStatus::Sent);
+
+                return [
+                    'id'           => $q->id,
+                    'type'         => 'quote',
+                    'reference'    => $q->reference ?? '—',
+                    'client_name'  => $q->client?->name ?? '—',
+                    'subtotal'     => $q->subtotal,
+                    'tax_amount'   => $q->tax_amount,
+                    'total'        => $q->total,
+                    'issued_at'    => $q->issued_at,
+                    'due_at'       => $q->valid_until,
+                    'status_value' => $q->status->value,
+                    'is_overdue'   => $isExpired,
+                    'delay_days'   => 0,
+                    'amount_paid'  => 0,
+                ];
+            });
+
+        return collect([...$invoices, ...$quotes])->sortByDesc('issued_at')->values()->toArray();
+    }
+
+    /** @param array<int, array<string, mixed>> $rows
+     *  @return array<int, array<string, mixed>>
+     */
+    private function applyPeriodFilter(array $rows): array
+    {
+        if ($this->period === '') {
+            return $rows;
+        }
+
+        [$year, $month] = explode('-', $this->period);
+
+        return array_values(array_filter(
+            $rows,
+            fn ($row) => $row['issued_at']
+                && $row['issued_at']->year == $year
+                && $row['issued_at']->month == $month
+        ));
+    }
+
+    /** @param array<int, array<string, mixed>> $rows
+     *  @return array<int, array<string, mixed>>
+     */
+    private function applySearchFilter(array $rows): array
+    {
+        if ($this->search === '') {
+            return $rows;
+        }
+
+        $term = mb_strtolower($this->search);
+
+        return array_values(array_filter(
+            $rows,
+            fn ($row) => str_contains(mb_strtolower($row['reference']), $term)
+                || str_contains(mb_strtolower($row['client_name']), $term)
+        ));
+    }
+
+    /** @param array<int, array<string, mixed>> $rows
+     *  @return array<int, array<string, mixed>>
+     */
+    private function applyTypeFilter(array $rows, ?string $type = null): array
+    {
+        $type ??= $this->typeFilter;
+
+        if ($type === 'all') {
+            return $rows;
+        }
+
+        return array_values(array_filter($rows, fn ($row) => $row['type'] === $type));
+    }
+
+    /** @param array<int, array<string, mixed>> $rows
+     *  @return array<int, array<string, mixed>>
+     */
+    private function applyStatusFilter(array $rows, ?string $status = null): array
+    {
+        $status ??= $this->statusFilter;
+
+        if ($status === 'all') {
+            return $rows;
+        }
+
+        return array_values(array_filter($rows, fn ($row) => $row['status_value'] === $status));
     }
 }; ?>
 
