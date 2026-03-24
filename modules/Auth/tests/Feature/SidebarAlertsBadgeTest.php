@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 function createFirmForSidebarBadge(): array
 {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $firm = Company::factory()->accountantFirm()->create();
     $firm->users()->attach($user->id, ['role' => 'admin']);
 

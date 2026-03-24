@@ -8,7 +8,7 @@ use Modules\Shared\Models\User;
 uses(RefreshDatabase::class);
 
 test('security settings are available on the settings page', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user)
         ->get(route('settings.index'))
@@ -16,7 +16,7 @@ test('security settings are available on the settings page', function () {
 });
 
 test('unverified users are redirected to otp from the settings page', function () {
-    $user = User::factory()->unverified()->create();
+    $user = User::factory()->accountantFirm()->unverified()->create();
 
     $this->actingAs($user)
         ->get(route('settings.index'))

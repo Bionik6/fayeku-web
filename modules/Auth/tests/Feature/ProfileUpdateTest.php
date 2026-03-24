@@ -8,7 +8,7 @@ use Modules\Shared\Models\User;
 uses(RefreshDatabase::class);
 
 test('settings page is displayed', function () {
-    $this->actingAs($user = User::factory()->create());
+    $this->actingAs($user = User::factory()->accountantFirm()->create());
 
     $this->get(route('settings.index'))
         ->assertOk()
@@ -20,7 +20,7 @@ test('settings page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user);
 
@@ -39,7 +39,7 @@ test('profile information can be updated', function () {
 });
 
 test('phone number remains unchanged when profile information is updated', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user);
 
@@ -54,7 +54,7 @@ test('phone number remains unchanged when profile information is updated', funct
 });
 
 test('settings page uses the shared phone component for cabinet and account phone fields', function () {
-    $user = User::factory()->create([
+    $user = User::factory()->accountantFirm()->create([
         'phone' => '+221771234567',
         'country_code' => 'SN',
     ]);
@@ -81,7 +81,7 @@ test('settings page uses the shared phone component for cabinet and account phon
 });
 
 test('cabinet profile can be updated from the settings page', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $firm = Company::factory()->accountantFirm()->create([
         'name' => 'Cabinet Initial',
         'phone' => '+221330000000',
@@ -106,7 +106,7 @@ test('cabinet profile can be updated from the settings page', function () {
 });
 
 test('user can delete their account', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user);
 
@@ -123,7 +123,7 @@ test('user can delete their account', function () {
 });
 
 test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user);
 

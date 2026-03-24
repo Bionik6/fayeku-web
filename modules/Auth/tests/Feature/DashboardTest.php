@@ -11,7 +11,7 @@ test('guests are redirected to the login page', function () {
 });
 
 test('authenticated users can visit the dashboard', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
@@ -19,7 +19,7 @@ test('authenticated users can visit the dashboard', function () {
 });
 
 test('dashboard shell renders the compta navigation', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
@@ -40,7 +40,7 @@ test('dashboard shell renders the compta navigation', function () {
 });
 
 test('settings entry is highlighted on the settings screen', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('settings.index'));

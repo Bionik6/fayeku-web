@@ -17,7 +17,7 @@ uses(RefreshDatabase::class);
  */
 function setupClientsPortfolio(int $count = 3): array
 {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $firm = Company::factory()->accountantFirm()->create();
     $firm->users()->attach($user->id, ['role' => 'admin']);
 

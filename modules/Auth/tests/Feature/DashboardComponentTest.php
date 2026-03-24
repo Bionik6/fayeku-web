@@ -20,7 +20,7 @@ uses(RefreshDatabase::class);
  */
 function createFirmWithSmes(int $smeCount = 3): array
 {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $firm = Company::factory()->accountantFirm()->create();
     $firm->users()->attach($user->id, ['role' => 'admin']);
 
@@ -443,7 +443,7 @@ test('le dashboard affiche le nouveau copy métier', function () {
 });
 
 test('portfolio est vide sans clients', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
     $firm = Company::factory()->accountantFirm()->create();
     $firm->users()->attach($user->id, ['role' => 'admin']);
 

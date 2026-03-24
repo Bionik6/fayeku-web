@@ -25,7 +25,7 @@ test('la page alertes redirige un utilisateur non authentifié', function () {
 });
 
 test('le composant alertes se rend sans erreur pour un user sans cabinet', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->accountantFirm()->create();
 
     Livewire::actingAs($user)
         ->test('pages::alerts.index')

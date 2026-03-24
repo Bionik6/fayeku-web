@@ -7,7 +7,7 @@ use Modules\Shared\Models\User;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create([
+    $this->user = User::factory()->accountantFirm()->create([
         'phone_verified_at' => now(),
     ]);
 
