@@ -1,10 +1,44 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Modules\Auth\Models\Company;
+use Modules\PME\Invoicing\Enums\InvoiceStatus;
+use Modules\PME\Invoicing\Models\Invoice;
 use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
+
+/**
+ * @return array{user: User, company: Company}
+ */
+function createPmeDashboardUser(): array
+{
+    $user = User::factory()->create(['profile_type' => 'sme']);
+    $company = Company::factory()->create(['type' => 'sme']);
+    $company->users()->attach($user->id, ['role' => 'owner']);
+
+    return compact('user', 'company');
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function createPmeDashboardInvoice(Company $company, array $overrides = []): Invoice
+{
+    return Invoice::unguarded(fn () => Invoice::create(array_merge([
+        'company_id' => $company->id,
+        'client_id' => null,
+        'reference' => 'FAC-'.fake()->unique()->numerify('###'),
+        'status' => InvoiceStatus::Paid->value,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 18_000,
+        'total' => 118_000,
+        'amount_paid' => 118_000,
+    ], $overrides)));
+}
 
 test('guests are redirected to login when accessing pme dashboard', function () {
     $this->get(route('pme.dashboard'))
@@ -107,3 +141,40 @@ test('all pme pages are accessible to sme user', function (string $routeName) {
     'pme.support.index',
     'pme.settings.index',
 ]);
+
+test('pme dashboard uses FCFA outside tables and keeps F inside tables', function () {
+    ['user' => $user, 'company' => $company] = createPmeDashboardUser();
+
+    createPmeDashboardInvoice($company, [
+        'reference' => 'FAC-PAID',
+        'total' => 118_000,
+        'amount_paid' => 118_000,
+        'status' => InvoiceStatus::Paid->value,
+    ]);
+
+    createPmeDashboardInvoice($company, [
+        'reference' => 'FAC-SENT',
+        'subtotal' => 200_000,
+        'tax_amount' => 36_000,
+        'total' => 236_000,
+        'amount_paid' => 0,
+        'status' => InvoiceStatus::Sent->value,
+    ]);
+
+    createPmeDashboardInvoice($company, [
+        'reference' => 'FAC-OVERDUE',
+        'subtotal' => 300_000,
+        'tax_amount' => 54_000,
+        'total' => 354_000,
+        'amount_paid' => 0,
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(45),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.dashboard.index')
+        ->assertSee('708 000 FCFA')
+        ->assertSee('118 000 FCFA')
+        ->assertSee('+236 000 FCFA')
+        ->assertSee('354 000 F');
+});

@@ -403,7 +403,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             <p class="mt-1 text-xs text-slate-400">{{ __('HT ce mois') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-primary">
                 @if ($invoicedAmount > 0)
-                    {{ number_format($invoicedAmount, 0, ',', ' ') }} F
+                    {{ number_format($invoicedAmount, 0, ',', ' ') }} FCFA
                 @else
                     —
                 @endif

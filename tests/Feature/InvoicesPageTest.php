@@ -713,6 +713,24 @@ test('la page affiche les KPI labels', function () {
         ->assertSee('En retard ou en attente');
 });
 
+test('la page factures utilise FCFA hors tableau et conserve F dans le tableau', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    makeInvoice($company, [
+        'reference' => 'FAC-FORMAT',
+        'subtotal' => 321_000,
+        'tax_amount' => 57_780,
+        'total' => 378_780,
+        'amount_paid' => 378_780,
+        'issued_at' => now(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSee('321 000 FCFA')
+        ->assertSee('378 780 F');
+});
+
 test('la page affiche les boutons CTA principaux', function () {
     ['user' => $user] = createSmeWithCompany();
 
