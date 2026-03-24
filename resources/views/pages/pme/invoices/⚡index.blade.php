@@ -36,6 +36,15 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
     public int $actionRequiredCount = 0;
 
+    /** @var array<int, array<string, mixed>>|null */
+    private ?array $allRowsCache = null;
+
+    /** @var array<int, array<string, mixed>>|null */
+    private ?array $baseRowsCache = null;
+
+    /** @var array<int, array<string, mixed>>|null */
+    private ?array $rowsBeforeAggregateFiltersCache = null;
+
     public function mount(): void
     {
         $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
@@ -140,6 +149,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             'paid_at' => now(),
         ]);
 
+        $this->flushDocumentCaches();
         unset($this->rows, $this->typeCounts, $this->statusCounts);
 
         // Refresh KPI
@@ -170,41 +180,35 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     /** @return array<int, array<string, mixed>> */
     private function baseRows(): array
     {
-        if (! $this->company) {
-            return [];
+        if ($this->baseRowsCache !== null) {
+            return $this->baseRowsCache;
         }
 
-        $invoices = Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->whereNotIn('status', [InvoiceStatus::Cancelled])
-            ->get()
-            ->map(fn ($inv) => ['type' => 'invoice', 'status_value' => $inv->status->value]);
-
-        $quotes = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->get()
-            ->map(fn ($q) => ['type' => 'quote', 'status_value' => $q->status->value]);
-
-        return collect([...$invoices, ...$quotes])->values()->toArray();
-    }
-
-    /** @return array<int, array<string, mixed>> */
-    private function typeFilteredRows(): array
-    {
-        return $this->applyTypeFilter($this->baseRows());
+        return $this->baseRowsCache = array_map(
+            fn ($row) => ['type' => $row['type'], 'status_value' => $row['status_value']],
+            $this->allRows()
+        );
     }
 
     /** @return array<int, array<string, mixed>> */
     private function rowsBeforeAggregateFilters(): array
     {
-        return $this->applySearchFilter($this->applyPeriodFilter($this->allRows()));
+        if ($this->rowsBeforeAggregateFiltersCache !== null) {
+            return $this->rowsBeforeAggregateFiltersCache;
+        }
+
+        return $this->rowsBeforeAggregateFiltersCache = $this->applySearchFilter($this->applyPeriodFilter($this->allRows()));
     }
 
     /** @return array<int, array<string, mixed>> */
     private function allRows(): array
     {
+        if ($this->allRowsCache !== null) {
+            return $this->allRowsCache;
+        }
+
         if (! $this->company) {
-            return [];
+            return $this->allRowsCache = [];
         }
 
         $invoices = Invoice::query()
@@ -258,7 +262,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 ];
             });
 
-        return collect([...$invoices, ...$quotes])->sortByDesc('issued_at')->values()->toArray();
+        return $this->allRowsCache = collect([...$invoices, ...$quotes])->sortByDesc('issued_at')->values()->toArray();
     }
 
     /** @param array<int, array<string, mixed>> $rows
@@ -324,6 +328,13 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         }
 
         return array_values(array_filter($rows, fn ($row) => $row['status_value'] === $status));
+    }
+
+    private function flushDocumentCaches(): void
+    {
+        $this->allRowsCache = null;
+        $this->baseRowsCache = null;
+        $this->rowsBeforeAggregateFiltersCache = null;
     }
 }; ?>
 

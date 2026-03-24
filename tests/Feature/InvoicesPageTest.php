@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
@@ -258,6 +259,32 @@ test('rows() retourne un tableau vide si la PME n\'a aucun document', function (
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
 
     expect($component->get('rows'))->toBeArray()->toBeEmpty();
+});
+
+test('la page ne recharge les documents qu\'une seule fois par rendu', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    makeInvoice($company, ['reference' => 'FAC-ONLY']);
+    makeQuote($company, ['reference' => 'DEV-ONLY']);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSee('Factures & Devis');
+
+    $queries = collect(DB::getQueryLog())
+        ->pluck('query')
+        ->map(fn (string $query) => mb_strtolower($query));
+
+    $invoiceSelects = $queries->filter(fn (string $query) => str_starts_with($query, 'select * from "invoices"')
+        && str_contains($query, '"status" not in'));
+
+    $quoteSelects = $queries->filter(fn (string $query) => str_starts_with($query, 'select * from "quotes"'));
+
+    expect($invoiceSelects)->toHaveCount(1);
+    expect($quoteSelects)->toHaveCount(1);
 });
 
 // ─── Filtre type ──────────────────────────────────────────────────────────────
