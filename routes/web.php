@@ -24,4 +24,13 @@ Route::middleware(['auth', 'verified.phone'])->prefix('compta')->group(function 
     Route::livewire('support', 'pages::support.index')->name('support.index');
 });
 
+Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
+    Route::livewire('dashboard', 'pages::pme.dashboard.index')->name('pme.dashboard');
+    Route::livewire('factures', 'pages::pme.invoices.index')->name('pme.invoices.index');
+    Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');
+    Route::livewire('recouvrement', 'pages::pme.collection.index')->name('pme.collection.index');
+    Route::livewire('tresorerie', 'pages::pme.treasury.index')->name('pme.treasury.index');
+    Route::livewire('support', 'pages::pme.support.index')->name('pme.support.index');
+});
+
 require __DIR__.'/settings.php';

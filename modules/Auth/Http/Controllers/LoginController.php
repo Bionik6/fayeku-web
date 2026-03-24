@@ -88,6 +88,11 @@ class LoginController extends Controller
             return redirect()->route('auth.otp');
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended($this->dashboardRouteForUser($user));
+    }
+
+    private function dashboardRouteForUser(User $user): string
+    {
+        return $user->profile_type === 'sme' ? route('pme.dashboard') : route('dashboard');
     }
 }

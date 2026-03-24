@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -46,4 +48,18 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function createOtpCode(string $phone, string $code, string $purpose = 'verification', ?string $expiresAt = null): void
+{
+    DB::table('otp_codes')->insert([
+        'id' => (string) Str::ulid(),
+        'phone' => $phone,
+        'code' => hash('sha256', $code),
+        'purpose' => $purpose,
+        'expires_at' => $expiresAt ?? now()->addMinutes(10),
+        'attempts' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 }

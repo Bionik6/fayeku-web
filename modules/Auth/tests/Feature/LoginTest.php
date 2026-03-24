@@ -10,8 +10,24 @@ test('login page can be rendered', function () {
         ->assertOk();
 });
 
-test('user can login with correct credentials', function () {
+test('sme user is redirected to pme dashboard after login', function () {
     $user = User::factory()->create([
+        'phone' => '+221771234567',
+        'profile_type' => 'sme',
+    ]);
+
+    $response = $this->post(route('auth.login.submit'), [
+        'phone' => '771234567',
+        'password' => 'password',
+        'country_code' => 'SN',
+    ]);
+
+    $response->assertRedirect(route('pme.dashboard'));
+    $this->assertAuthenticatedAs($user);
+});
+
+test('accountant user is redirected to compta dashboard after login', function () {
+    $user = User::factory()->accountantFirm()->create([
         'phone' => '+221771234567',
     ]);
 

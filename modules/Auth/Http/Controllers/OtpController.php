@@ -56,7 +56,7 @@ class OtpController extends Controller
             return response()->json(['message' => 'Téléphone vérifié avec succès.']);
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->route($this->dashboardRouteNameForUser());
     }
 
     public function resend(OtpService $otpService): JsonResponse|RedirectResponse
@@ -88,6 +88,13 @@ class OtpController extends Controller
         }
 
         return back()->with('status', 'Un nouveau code a été envoyé.');
+    }
+
+    private function dashboardRouteNameForUser(): string
+    {
+        $user = auth()->user();
+
+        return $user?->profile_type === 'sme' ? 'pme.dashboard' : 'dashboard';
     }
 
     private function maskPhone(string $phone): string

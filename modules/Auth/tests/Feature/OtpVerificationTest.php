@@ -1,25 +1,9 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
-
-function createOtpCode(string $phone, string $code, string $purpose = 'verification', ?string $expiresAt = null): void
-{
-    DB::table('otp_codes')->insert([
-        'id' => (string) Str::ulid(),
-        'phone' => $phone,
-        'code' => hash('sha256', $code),
-        'purpose' => $purpose,
-        'expires_at' => $expiresAt ?? now()->addMinutes(10),
-        'attempts' => 0,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-}
 
 test('otp page can be rendered for authenticated user', function () {
     $user = User::factory()->unverified()->create();
@@ -35,8 +19,20 @@ test('otp page redirects to login if no phone in session', function () {
         ->assertRedirect(route('login'));
 });
 
-test('valid otp code verifies phone', function () {
-    $user = User::factory()->unverified()->create(['phone' => '+221771234567']);
+test('valid otp code verifies phone and redirects sme to pme dashboard', function () {
+    $user = User::factory()->unverified()->create(['phone' => '+221771234567', 'profile_type' => 'sme']);
+    createOtpCode('+221771234567', '123456');
+
+    $response = $this->actingAs($user)
+        ->withSession(['otp_phone' => '+221771234567'])
+        ->post(route('auth.otp.verify'), ['code' => '123456']);
+
+    $response->assertRedirect(route('pme.dashboard'));
+    expect($user->fresh()->phone_verified_at)->not->toBeNull();
+});
+
+test('valid otp code verifies phone and redirects accountant to compta dashboard', function () {
+    $user = User::factory()->accountantFirm()->unverified()->create(['phone' => '+221771234567']);
     createOtpCode('+221771234567', '123456');
 
     $response = $this->actingAs($user)
