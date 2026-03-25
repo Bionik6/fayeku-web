@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Auth\Models\Company;
 use Modules\PME\Invoicing\Models\Invoice;
+use Modules\PME\Invoicing\Models\Quote;
 use Modules\Shared\Traits\HasUlid;
 
 class Client extends Model
@@ -22,7 +23,7 @@ class Client extends Model
     }
 
     protected $fillable = [
-        'company_id', 'name', 'phone', 'email', 'address', 'tax_id',
+        'company_id', 'name', 'sector', 'phone', 'email', 'address', 'tax_id',
     ];
 
     public function company(): BelongsTo
@@ -33,5 +34,10 @@ class Client extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(Quote::class);
     }
 }
