@@ -28,7 +28,6 @@ class InvoiceFactory extends Factory
             'company_id' => Company::factory(),
             'client_id' => null,
             'reference' => 'FYK-FAC-'.strtoupper(fake()->unique()->bothify('??????')),
-            'subject' => null,
             'currency' => 'XOF',
             'status' => InvoiceStatus::Draft,
             'issued_at' => now(),

@@ -26,7 +26,7 @@ class Invoice extends Model
     }
 
     protected $fillable = [
-        'company_id', 'client_id', 'reference', 'subject', 'currency', 'status',
+        'company_id', 'client_id', 'reference', 'currency', 'status',
         'issued_at', 'due_at', 'paid_at',
         'subtotal', 'tax_amount', 'total', 'amount_paid',
         'notes', 'payment_terms', 'payment_instructions',

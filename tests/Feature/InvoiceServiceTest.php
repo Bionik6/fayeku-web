@@ -121,7 +121,6 @@ test('create stores invoice with lines in transaction', function () {
     $invoice = $service->create($company, [
         'client_id' => $client->id,
         'reference' => 'FYK-FAC-TEST01',
-        'subject' => 'Test invoice',
         'currency' => 'XOF',
         'tax_rate' => 18,
         'issued_at' => now()->format('Y-m-d'),

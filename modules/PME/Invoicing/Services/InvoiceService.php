@@ -88,7 +88,6 @@ class InvoiceService
                 'company_id' => $company->id,
                 'client_id' => $data['client_id'],
                 'reference' => $data['reference'],
-                'subject' => $data['subject'] ?? null,
                 'currency' => $data['currency'] ?? 'XOF',
                 'status' => InvoiceStatus::Draft,
                 'issued_at' => $data['issued_at'],
@@ -125,7 +124,6 @@ class InvoiceService
 
             $invoice->update([
                 'client_id' => $data['client_id'],
-                'subject' => $data['subject'] ?? null,
                 'currency' => $data['currency'] ?? 'XOF',
                 'issued_at' => $data['issued_at'],
                 'due_at' => $data['due_at'],

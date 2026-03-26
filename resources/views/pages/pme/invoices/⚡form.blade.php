@@ -25,8 +25,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public string $clientSearch = '';
 
-    public string $subject = '';
-
     public string $issuedAt = '';
 
     public string $dueAt = '';
@@ -107,7 +105,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             $this->isEditing = true;
             $this->reference = $invoice->reference ?? '';
             $this->clientId = $invoice->client_id ?? '';
-            $this->subject = $invoice->subject ?? '';
             $this->issuedAt = $invoice->issued_at?->format('Y-m-d') ?? '';
             $this->dueAt = $invoice->due_at?->format('Y-m-d') ?? '';
             $this->currency = $invoice->currency ?? 'XOF';
@@ -440,7 +437,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $this->validate([
             'clientId' => ['required', 'string', 'exists:clients,id'],
             'reference' => ['required', 'string', 'max:50'],
-            'subject' => ['nullable', 'string', 'max:255'],
             'issuedAt' => ['required', 'date'],
             'dueAt' => ['required', 'date', 'after_or_equal:issuedAt'],
             'currency' => ['required', 'string', 'in:'.implode(',', CurrencyService::codes())],
@@ -474,7 +470,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         return [
             'client_id' => $this->clientId,
             'reference' => $this->reference,
-            'subject' => $this->emptyToNull($this->subject),
             'currency' => $this->currency,
             'issued_at' => $this->issuedAt,
             'due_at' => $this->dueAt,
@@ -741,10 +736,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         @error('dueAt') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Objet') }}</label>
-                        <input wire:model.blur="subject" type="text" placeholder="{{ __('Ex : Livraison de matériaux chantier Dakar…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                    </div>
                 </div>
             </section>
 
