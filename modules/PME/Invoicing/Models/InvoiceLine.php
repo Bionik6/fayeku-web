@@ -2,13 +2,21 @@
 
 namespace Modules\PME\Invoicing\Models;
 
+use Database\Factories\InvoiceLineFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Shared\Traits\HasUlid;
 
 class InvoiceLine extends Model
 {
-    use HasUlid;
+    /** @use HasFactory<InvoiceLineFactory> */
+    use HasFactory, HasUlid;
+
+    protected static function newFactory(): InvoiceLineFactory
+    {
+        return InvoiceLineFactory::new();
+    }
 
     protected $fillable = [
         'invoice_id', 'description', 'quantity',

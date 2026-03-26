@@ -14,7 +14,11 @@
       "Bash(find /Users/iciss/Data/Business/Fayeku/Developments/fayeku-web -name Company.php -path */Models/*)",
       "Bash(npm run:*)",
       "mcp__laravel-boost__get-absolute-url",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "mcp__laravel-boost__search-docs",
+      "Read(//private/tmp/**)",
+      "Bash(python3 -c \":*)",
+      "Bash(pip3 install:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

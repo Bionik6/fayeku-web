@@ -7,6 +7,7 @@ use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
+use Modules\PME\Invoicing\Models\InvoiceLine;
 
 /**
  * @extends Factory<Invoice>
@@ -26,7 +27,9 @@ class InvoiceFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'client_id' => null,
-            'reference' => 'FAC-'.fake()->unique()->numerify('####'),
+            'reference' => 'FYK-FAC-'.strtoupper(fake()->unique()->bothify('??????')),
+            'subject' => null,
+            'currency' => 'XOF',
             'status' => InvoiceStatus::Draft,
             'issued_at' => now(),
             'due_at' => now()->addDays(30),
@@ -72,5 +75,45 @@ class InvoiceFactory extends Factory
             'status' => InvoiceStatus::Overdue,
             'due_at' => now()->subDays(10),
         ]);
+    }
+
+    public function draft(): static
+    {
+        return $this->state(['status' => InvoiceStatus::Draft]);
+    }
+
+    public function withLines(int $count = 2): static
+    {
+        return $this->afterCreating(function (Invoice $invoice) use ($count) {
+            $subtotal = 0;
+            $taxAmount = 0;
+
+            for ($i = 0; $i < $count; $i++) {
+                $quantity = fake()->numberBetween(1, 10);
+                $unitPrice = fake()->numberBetween(5_000, 100_000);
+                $taxRate = fake()->randomElement([0, 18]);
+                $lineTotal = $quantity * $unitPrice;
+                $lineTax = (int) round($lineTotal * $taxRate / 100);
+
+                InvoiceLine::query()->create([
+                    'invoice_id' => $invoice->id,
+                    'description' => fake()->sentence(3),
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'tax_rate' => $taxRate,
+                    'discount' => 0,
+                    'total' => $lineTotal,
+                ]);
+
+                $subtotal += $lineTotal;
+                $taxAmount += $lineTax;
+            }
+
+            $invoice->update([
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
+                'total' => $subtotal + $taxAmount,
+            ]);
+        });
     }
 }

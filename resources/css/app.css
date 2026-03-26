@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import 'flatpickr/dist/flatpickr.min.css' layer(base);
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -373,4 +374,28 @@ select:focus[data-flux-control] {
     .settings-page [data-flux-label] {
         @apply text-sm font-semibold text-ink;
     }
+}
+
+/* Flatpickr theme overrides (plain CSS, outside @layer to support !important) */
+.flatpickr-calendar {
+    border-radius: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    font-family: var(--font-sans) !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+}
+
+.flatpickr-day:hover {
+    background: var(--color-mist) !important;
+    border-color: var(--color-mist) !important;
+}
+
+.flatpickr-day.today {
+    border-color: var(--color-accent) !important;
 }

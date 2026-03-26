@@ -26,6 +26,8 @@ Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix
 
 Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
     Route::livewire('dashboard', 'pages::pme.dashboard.index')->name('pme.dashboard');
+    Route::livewire('invoices/create', 'pages::pme.invoices.form')->name('pme.invoices.create');
+    Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
     Route::livewire('invoices', 'pages::pme.invoices.index')->name('pme.invoices.index');
     Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');
     Route::livewire('clients/{client}', 'pages::pme.clients.show')->name('pme.clients.show');
