@@ -50,6 +50,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     /** @var array<int, array<string, mixed>> */
     public array $lines = [];
 
+    public bool $showCancelModal = false;
+
     public bool $showClientModal = false;
 
     public bool $showSendModal = false;
@@ -247,6 +249,42 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         } catch (\Exception) {
             return '';
         }
+    }
+
+    #[Computed]
+    public function hasFormData(): bool
+    {
+        if ($this->clientId !== '') {
+            return true;
+        }
+
+        foreach ($this->lines as $line) {
+            if (($line['description'] ?? '') !== '' || ($line['unit_price'] ?? 0) > 0) {
+                return true;
+            }
+        }
+
+        if ($this->notes !== '' || $this->paymentTerms !== '' || $this->paymentInstructions !== '') {
+            return true;
+        }
+
+        return $this->discount > 0;
+    }
+
+    public function confirmCancel(): void
+    {
+        if ($this->hasFormData) {
+            $this->showCancelModal = true;
+
+            return;
+        }
+
+        $this->redirect(route('pme.invoices.index'), navigate: true);
+    }
+
+    public function cancel(): void
+    {
+        $this->redirect(route('pme.invoices.index'), navigate: true);
     }
 
     public function updatedTaxMode(string $value): void
@@ -569,23 +607,27 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         {{ $isEditing ? __('Modifier la facture') : __('Nouvelle facture') }}
                     </h2>
                     @if ($isEditing && $invoice)
-                        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ $reference }}</span>
+                        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ $reference }}</span>
                     @endif
                 </div>
-                <div class="mt-1 flex items-center gap-3 text-sm text-slate-500">
+                <div class="mt-1 flex items-center gap-3 text-sm text-slate-700">
                     @if ($isEditing && $invoice?->status === InvoiceStatus::Sent)
                         <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-blue-400"></span>{{ __('Envoyée') }}</span>
                     @else
                         <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-amber-400"></span>{{ __('Brouillon') }}</span>
                     @endif
                     @if ($lastSavedAt)
-                        <span class="text-xs text-slate-400">{{ __('Sauvegardé à :time', ['time' => $lastSavedAt]) }}</span>
+                        <span class="text-xs text-slate-600">{{ __('Sauvegardé à :time', ['time' => $lastSavedAt]) }}</span>
                     @endif
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('pme.invoices.index') }}" wire:navigate class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</a>
-                <button type="button" wire:click="saveDraft" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                <button type="button" wire:click="confirmCancel" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
+                <button type="button" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
+                    <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                    {{ __('Aperçu PDF') }}
+                </button>
+                <button type="button" wire:click="saveDraft" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
                     <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
                     {{ __('Enregistrer brouillon') }}
                 </button>
@@ -610,31 +652,35 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
             {{-- Client block --}}
             <section class="app-shell-panel p-6">
-                <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{{ __('Client') }}</h3>
+                <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Client') }}</h3>
                 @if ($clientId && $this->selectedClient)
-                    <div class="flex items-start justify-between rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                        <div>
-                            <p class="font-semibold text-ink">{{ $this->selectedClient->name }}</p>
-                            <div class="mt-1 flex flex-wrap gap-3 text-sm text-slate-500">
-                                @if ($this->selectedClient->email) <span>{{ $this->selectedClient->email }}</span> @endif
-                                @if ($this->selectedClient->phone) <span>{{ $this->selectedClient->phone }}</span> @endif
-                            </div>
-                            @php $ctx = $this->clientContext; @endphp
-                            @if ($ctx['average_days'] > 0 || $ctx['outstanding'] > 0 || $ctx['last_invoice_date'])
-                                <div class="mt-3 flex flex-wrap gap-4 text-xs text-slate-500">
-                                    @if ($ctx['average_days'] > 0) <span>{{ __('Délai moyen :days jours', ['days' => $ctx['average_days']]) }}</span> @endif
-                                    @if ($ctx['outstanding'] > 0) <span class="text-amber-600">{{ __('Impayé : :amount', ['amount' => CurrencyService::format($ctx['outstanding'], $currency)]) }}</span> @endif
-                                    @if ($ctx['last_invoice_date']) <span>{{ __('Dernière facture : :date', ['date' => $ctx['last_invoice_date']]) }}</span> @endif
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="font-semibold text-ink">{{ $this->selectedClient->name }}</p>
+                                <div class="mt-1 flex flex-wrap gap-3 text-sm text-slate-700">
+                                    @if ($this->selectedClient->email) <span>{{ $this->selectedClient->email }}</span> @endif
+                                    @if ($this->selectedClient->phone) <span>{{ $this->selectedClient->phone }}</span> @endif
                                 </div>
-                            @endif
+                            </div>
+                            <div class="ml-4 flex shrink-0 items-center gap-2">
+                                <button type="button" wire:click="clearClient" class="text-xs font-medium text-primary transition hover:text-primary-strong">{{ __('Changer') }}</button>
+                                <span class="text-slate-300">|</span>
+                                <button type="button" wire:click="clearClient" class="text-xs font-medium text-slate-600 transition hover:text-rose-600">{{ __('Retirer') }}</button>
+                            </div>
                         </div>
-                        <button type="button" wire:click="clearClient" class="ml-4 shrink-0 rounded-full border border-slate-200 p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
-                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                        </button>
+                        @php $ctx = $this->clientContext; @endphp
+                        @if ($ctx['average_days'] > 0 || $ctx['outstanding'] > 0 || $ctx['last_invoice_date'])
+                            <div class="mt-3 flex flex-wrap gap-4 text-xs text-slate-700">
+                                @if ($ctx['average_days'] > 0) <span>{{ __('Délai moyen :days jours', ['days' => $ctx['average_days']]) }}</span> @endif
+                                @if ($ctx['outstanding'] > 0) <span class="text-amber-600">{{ __('Impayé : :amount', ['amount' => CurrencyService::format($ctx['outstanding'], $currency)]) }}</span> @endif
+                                @if ($ctx['last_invoice_date']) <span>{{ __('Dernière facture : :date', ['date' => $ctx['last_invoice_date']]) }}</span> @endif
+                            </div>
+                        @endif
                     </div>
                 @else
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <input wire:model.live.debounce.300ms="clientSearch" @focus="open = true" type="text" placeholder="{{ __('Rechercher un client…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                        <input wire:model.live.debounce.300ms="clientSearch" @focus="open = true" type="text" placeholder="{{ __('Rechercher un client…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                         @error('clientId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         @if (count($this->clients) > 0)
                             <div x-show="open" x-transition class="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 bg-white py-2 shadow-lg">
@@ -642,7 +688,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                     <button type="button" wire:click="selectClient('{{ $c['id'] }}')" @click="open = false" class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-slate-50">
                                         <div>
                                             <p class="font-medium text-ink">{{ $c['name'] }}</p>
-                                            <p class="text-xs text-slate-500">{{ $c['email'] ?? $c['phone'] ?? $c['sector'] ?? '' }}</p>
+                                            <p class="text-xs text-slate-600">{{ $c['email'] ?? $c['phone'] ?? $c['sector'] ?? '' }}</p>
                                         </div>
                                     </button>
                                 @endforeach
@@ -658,15 +704,15 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
             {{-- Invoice info --}}
             <section class="app-shell-panel p-6">
-                <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{{ __('Informations') }}</h3>
+                <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Informations') }}</h3>
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Référence') }} <span class="text-rose-500">*</span></label>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Référence') }} <span class="text-rose-500">*</span></label>
                         <input wire:model.blur="reference" type="text" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                         @error('reference') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Devise') }}</label>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Devise') }}</label>
                         <select wire:model.live="currency" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
                             @foreach (CurrencyService::currencies() as $code => $config)
                                 <option value="{{ $code }}">{{ $config['name'] }}</option>
@@ -693,17 +739,17 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             destroy() { if (this.picker) this.picker.destroy(); }
                         }"
                     >
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __("Date d'émission") }} <span class="text-rose-500">*</span></label>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __("Date d'émission") }} <span class="text-rose-500">*</span></label>
                         <input x-ref="input" type="text" readonly class="w-full cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                         @error('issuedAt') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Échéance --}}
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Échéance') }} <span class="text-rose-500">*</span></label>
-                        <div class="mb-2 flex flex-wrap gap-2">
-                            @foreach ([['0', __('À réception')], ['7', '7j'], ['15', '15j'], ['30', '30j'], ['custom', __('Personnalisé')]] as [$val, $label])
-                                <button type="button" wire:click="$set('dueDatePreset', '{{ $val }}')" class="rounded-full border px-3 py-1 text-xs font-medium transition {{ $dueDatePreset === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' }}">{{ $label }}</button>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Échéance') }} <span class="text-rose-500">*</span></label>
+                        <div class="mb-2 flex flex-wrap gap-2.5">
+                            @foreach ([['0', __('À réception')], ['7', '7j'], ['15', '15j'], ['30', '30j'], ['custom', __('Autre date')]] as [$val, $label])
+                                <button type="button" wire:click="$set('dueDatePreset', '{{ $val }}')" class="rounded-full border px-3 py-1 text-xs font-medium transition {{ $dueDatePreset === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30 hover:text-primary' }}">{{ $label }}</button>
                             @endforeach
                         </div>
                         <div
@@ -742,23 +788,23 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
             {{-- Invoice lines --}}
             <section class="app-shell-panel p-6">
-                <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{{ __('Lignes de facture') }}</h3>
+                <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Lignes de facture') }}</h3>
                 @error('lines') <p class="mb-3 text-xs text-rose-600">{{ $message }}</p> @enderror
 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     @foreach ($lines as $index => $line)
-                        <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-4">
+                        <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-5">
                             <div class="flex flex-wrap items-start gap-3">
                                 {{-- Désignation --}}
                                 <div class="w-full min-w-0 md:flex-1">
-                                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Désignation') }}</label>
-                                    <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Désignation') }}</label>
+                                    <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                     @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Quantité --}}
                                 <div class="w-16 shrink-0 md:w-20">
-                                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Qté') }}</label>
+                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Qté') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 </div>
 
@@ -799,7 +845,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                         }
                                     }"
                                 >
-                                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('P.U.') }} (<span x-text="$wire.currencyJs.label"></span>)</label>
+                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('P.U.') }} (<span x-text="$wire.currencyJs.label"></span>)</label>
                                     <input
                                         type="text"
                                         :inputmode="noDecimals ? 'numeric' : 'decimal'"
@@ -829,8 +875,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                          }
                                      }"
                                 >
-                                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Total') }}</label>
-                                    <input type="text" readonly :value="display" tabindex="-1" class="w-full cursor-default rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-right text-sm font-semibold tabular-nums text-ink focus:outline-none" />
+                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Total') }}</label>
+                                    <p class="px-1 py-2.5 text-right text-sm font-bold tabular-nums text-ink" x-text="display"></p>
                                 </div>
 
                                 {{-- Delete button (inline, with tooltip) --}}
@@ -841,9 +887,9 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                             wire:click="removeLine({{ $index }})"
                                             @mouseenter="show = true"
                                             @mouseleave="show = false"
-                                            class="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                            class="rounded-xl border border-transparent p-2 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
                                         >
-                                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                                         </button>
                                         <div x-show="show" x-transition class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-medium text-white shadow-lg">
                                             {{ __('Supprimer') }}
@@ -855,165 +901,206 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     @endforeach
                 </div>
 
-                <div class="mt-4 flex justify-end">
-                    <button type="button" wire:click="addLine" class="inline-flex items-center text-sm font-medium text-primary transition hover:text-primary-strong">
-                        <svg class="mr-1.5 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                <div class="mt-5">
+                    <button type="button" wire:click="addLine" class="inline-flex w-full items-center justify-center rounded-2xl border border-dashed border-slate-300 py-3 text-sm font-medium text-primary transition hover:border-primary/40 hover:bg-primary/5">
+                        <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                         {{ __('Ajouter une ligne') }}
                     </button>
                 </div>
             </section>
 
-            {{-- Remise, TVA & Totals block --}}
+            {{-- Montants et taxes --}}
             <section class="app-shell-panel p-6">
+                <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Montants et taxes') }}</h3>
+                <p class="mb-5 text-xs text-slate-600">{{ __('Ajustez la remise et la TVA. Le total se met à jour automatiquement.') }}</p>
+
                 @php $totals = $this->computedTotals; @endphp
-                <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                    {{-- Left: Remise + TVA controls --}}
-                    <div class="space-y-5 md:w-1/2">
+
+                <div class="flex flex-col gap-8 md:flex-row md:items-start">
+                    {{-- Left: Ajustements --}}
+                    <div class="space-y-6 md:w-[55%]">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-600">{{ __('Ajustements') }}</p>
+
                         {{-- Remise globale --}}
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">{{ __('Remise globale') }}</label>
-                            <div class="flex items-center gap-2">
-                                <input wire:model.live="discount" type="number" min="0" max="100" placeholder="0" class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                <span class="text-sm text-slate-500">%</span>
+                            <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Remise globale') }}</label>
+                            <div class="flex items-center gap-0.5">
+                                <span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 px-3 py-2.5 text-xs font-semibold text-slate-700">%</span>
+                                <input wire:model.live="discount" type="number" min="0" max="100" placeholder="0" class="w-20 rounded-r-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                             </div>
+                            <p class="mt-1.5 text-xs text-slate-600">{{ __('Appliquée sur le sous-total HT') }}</p>
                         </div>
 
                         {{-- TVA --}}
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">{{ __('TVA') }}</label>
-                            <div class="flex gap-2">
-                                <button type="button" wire:click="$set('taxMode', '0')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === '0' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ __('Sans TVA') }}</button>
-                                <button type="button" wire:click="$set('taxMode', '18')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === '18' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">18%</button>
-                                <button type="button" wire:click="$set('taxMode', 'custom')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === 'custom' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ __('Autre') }}</button>
+                            <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('TVA') }}</label>
+                            <div class="inline-flex overflow-hidden rounded-xl border border-slate-200">
+                                <button type="button" wire:click="$set('taxMode', '0')" class="border-r border-slate-200 px-4 py-2.5 text-sm font-medium transition {{ $taxMode === '0' ? 'bg-primary/10 text-primary' : 'bg-white text-slate-700 hover:bg-slate-50' }}">{{ __('Sans TVA') }}</button>
+                                <button type="button" wire:click="$set('taxMode', '18')" class="border-r border-slate-200 px-4 py-2.5 text-sm font-medium transition {{ $taxMode === '18' ? 'bg-primary/10 text-primary' : 'bg-white text-slate-700 hover:bg-slate-50' }}">18 %</button>
+                                <button type="button" wire:click="$set('taxMode', 'custom')" class="px-4 py-2.5 text-sm font-medium transition {{ $taxMode === 'custom' ? 'bg-primary/10 text-primary' : 'bg-white text-slate-700 hover:bg-slate-50' }}">{{ __('Autre') }}</button>
                             </div>
                             @if ($taxMode === 'custom')
                                 <div class="mt-3 flex items-center gap-2">
+                                    <label class="text-xs font-medium text-slate-700">{{ __('Taux personnalisé') }}</label>
                                     <input wire:model.live="customTaxRate" type="number" min="0" max="100" class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                    <span class="text-sm text-slate-500">%</span>
+                                    <span class="text-sm text-slate-700">%</span>
                                 </div>
                             @endif
+                            <p class="mt-1.5 text-xs text-slate-600">{{ __('La TVA est calculée après application de la remise.') }}</p>
                         </div>
                     </div>
 
-                    {{-- Right: Totals display --}}
-                    <div class="space-y-2 text-sm md:w-1/2 md:text-right">
-                        <div class="flex justify-between md:justify-end md:gap-8">
-                            <span class="text-slate-500">{{ __('Sous-total HT') }}</span>
-                            <span class="font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
-                        </div>
-                        @if ($totals['discount_amount'] > 0)
-                            <div class="flex justify-between md:justify-end md:gap-8">
-                                <span class="text-slate-500">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
-                                <span class="tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
+                    {{-- Vertical separator (desktop) --}}
+                    <div class="hidden self-stretch border-l border-slate-100 md:block"></div>
+
+                    {{-- Right: Récapitulatif --}}
+                    <div class="md:w-[45%]">
+                        <p class="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-600">{{ __('Récapitulatif') }}</p>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="text-slate-600">{{ __('Sous-total HT') }}</span>
+                                <span class="whitespace-nowrap font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
                             </div>
-                        @endif
-                        @if ($totals['tax_amount'] > 0)
-                            <div class="flex justify-between md:justify-end md:gap-8">
-                                <span class="text-slate-500">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
-                                <span class="tabular-nums text-ink">{{ CurrencyService::format($totals['tax_amount'], $currency) }}</span>
+                            @if ($totals['discount_amount'] > 0)
+                                <div class="flex items-baseline justify-between gap-3">
+                                    <span class="text-slate-600">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                    <span class="whitespace-nowrap tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
+                                </div>
+                            @endif
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="text-slate-600">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
+                                <span class="whitespace-nowrap tabular-nums text-ink">{{ CurrencyService::format($totals['tax_amount'], $currency) }}</span>
                             </div>
-                        @endif
-                        <hr class="border-slate-100">
-                        <div class="flex justify-between md:justify-end md:gap-8">
-                            <span class="font-semibold text-ink">{{ __('Total TTC') }}</span>
-                            <span class="text-xl font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
+
+                            <hr class="border-slate-200">
+
+                            <div class="flex items-baseline justify-between gap-3 pt-1">
+                                <span class="text-base font-semibold text-ink">{{ __('Total TTC') }}</span>
+                                <span class="whitespace-nowrap text-2xl font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {{-- Notes & conditions --}}
-            <section class="app-shell-panel p-6" x-data="{ open: true }">
+            <section class="app-shell-panel p-6" x-data="{ open: false }">
                 <button type="button" @click="open = !open" class="flex w-full items-center justify-between">
-                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{{ __('Notes & conditions') }}</h3>
-                    <svg class="size-5 text-slate-400 transition" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Notes & conditions') }}</h3>
+                    <svg class="size-5 text-slate-500 transition" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                 </button>
                 <div x-show="open" x-collapse class="mt-4 space-y-5">
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Notes (visible sur la facture)') }}</label>
-                        <textarea wire:model.blur="notes" rows="3" placeholder="{{ __('Ex : Merci pour votre confiance…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Notes (visible sur la facture)') }}</label>
+                        <textarea wire:model.blur="notes" rows="2" placeholder="{{ __('Ex : Merci pour votre confiance…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                     </div>
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Conditions de paiement') }}</label>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Conditions de paiement') }}</label>
                         <div class="mb-2 flex flex-wrap gap-2">
                             @foreach ([__('Paiement à réception'), __('Paiement à 30 jours'), __('50% à la commande, 50% à la livraison')] as $template)
-                                <button type="button" wire:click="$set('paymentTerms', '{{ $template }}')" class="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 transition hover:border-primary/30 hover:text-primary">{{ $template }}</button>
+                                <button type="button" wire:click="$set('paymentTerms', '{{ $template }}')" class="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ $template }}</button>
                             @endforeach
                         </div>
-                        <textarea wire:model.blur="paymentTerms" rows="2" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
+                        <textarea wire:model.blur="paymentTerms" rows="2" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                     </div>
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Instructions de règlement') }}</label>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Instructions de règlement') }}</label>
                         <div class="mb-2 flex flex-wrap gap-2">
                             @foreach ([__('Virement bancaire'), __('Mobile Money'), __('Espèces')] as $template)
-                                <button type="button" wire:click="$set('paymentInstructions', '{{ $template }}')" class="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 transition hover:border-primary/30 hover:text-primary">{{ $template }}</button>
+                                <button type="button" wire:click="$set('paymentInstructions', '{{ $template }}')" class="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ $template }}</button>
                             @endforeach
                         </div>
-                        <textarea wire:model.blur="paymentInstructions" rows="2" placeholder="{{ __('Ex : Virement au compte BCEAO n° …') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
+                        <textarea wire:model.blur="paymentInstructions" rows="2" placeholder="{{ __('Ex : Virement au compte BCEAO n° …') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                     </div>
                 </div>
             </section>
         </div>
 
-        {{-- RIGHT COLUMN (sticky summary) --}}
+        {{-- RIGHT COLUMN (sticky sidebar) --}}
         <div class="lg:col-span-1">
-            <div class="sticky top-6 space-y-6">
+            <div class="sticky top-6 space-y-5">
+                {{-- Bloc 1: Résumé --}}
                 <section class="app-shell-panel p-6">
-                    <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{{ __('Résumé') }}</h3>
+                    <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Résumé') }}</h3>
                     <div class="space-y-3 text-sm">
                         <div class="flex items-baseline justify-between gap-3">
-                            <span class="shrink-0 text-slate-500">{{ __('Référence') }}</span>
+                            <span class="shrink-0 text-slate-700">{{ __('Référence') }}</span>
                             <span class="truncate text-right font-medium text-ink">{{ $reference }}</span>
                         </div>
                         @if ($this->selectedClient)
                             <div class="flex items-baseline justify-between gap-3">
-                                <span class="shrink-0 text-slate-500">{{ __('Client') }}</span>
+                                <span class="shrink-0 text-slate-700">{{ __('Client') }}</span>
                                 <span class="truncate text-right font-medium text-ink">{{ $this->selectedClient->name }}</span>
                             </div>
                         @endif
                         <div class="flex items-baseline justify-between gap-3">
-                            <span class="shrink-0 text-slate-500">{{ __('Émission') }}</span>
+                            <span class="shrink-0 text-slate-700">{{ __('Émission') }}</span>
                             <span class="whitespace-nowrap text-ink">{{ $issuedAt ? Carbon::parse($issuedAt)->locale('fr_FR')->translatedFormat('d M Y') : '—' }}</span>
                         </div>
                         <div class="flex items-baseline justify-between gap-3">
-                            <span class="shrink-0 text-slate-500">{{ __('Échéance') }}</span>
+                            <span class="shrink-0 text-slate-700">{{ __('Échéance') }}</span>
                             <span class="whitespace-nowrap text-ink">{{ $this->formattedDueDate ?: '—' }}</span>
                         </div>
                     </div>
+                </section>
 
-                    <hr class="my-4 border-slate-100">
-
+                {{-- Bloc 2: Total (scoreboard) --}}
+                <section class="app-shell-panel p-6">
+                    <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Total') }}</h3>
                     @php $totals = $this->computedTotals; @endphp
-                    <div class="space-y-2 text-sm">
+                    <div class="space-y-2.5 text-sm">
                         <div class="flex items-baseline justify-between gap-3">
-                            <span class="shrink-0 text-slate-500">{{ __('Sous-total HT') }}</span>
+                            <span class="shrink-0 text-slate-700">{{ __('Sous-total HT') }}</span>
                             <span class="whitespace-nowrap font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
                         </div>
                         @if ($totals['discount_amount'] > 0)
                             <div class="flex items-baseline justify-between gap-3">
-                                <span class="shrink-0 text-slate-500">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                <span class="shrink-0 text-slate-700">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
                                 <span class="whitespace-nowrap tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
                             </div>
                         @endif
                         @if ($totals['tax_amount'] > 0)
                             <div class="flex items-baseline justify-between gap-3">
-                                <span class="shrink-0 text-slate-500">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
+                                <span class="shrink-0 text-slate-700">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
                                 <span class="whitespace-nowrap tabular-nums text-ink">{{ CurrencyService::format($totals['tax_amount'], $currency) }}</span>
                             </div>
                         @endif
-                        <hr class="border-slate-100">
-                        <div class="flex items-baseline justify-between gap-3">
-                            <span class="shrink-0 font-semibold text-ink">{{ __('Total TTC') }}</span>
-                            <span class="whitespace-nowrap text-lg font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
+                        <hr class="border-slate-200">
+                        <div class="flex items-baseline justify-between gap-3 pt-1">
+                            <span class="shrink-0 text-base font-semibold text-ink">{{ __('Total TTC') }}</span>
+                            <span class="whitespace-nowrap text-xl font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
                         </div>
                     </div>
-                    @if ($this->formattedDueDate)
-                        <div class="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-center text-sm text-slate-600">{{ __('Échéance : :date', ['date' => $this->formattedDueDate]) }}</div>
-                    @endif
                 </section>
 
-                <section class="app-shell-panel space-y-3 p-6">
-                    <button type="button" wire:click="saveDraft" class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                {{-- Bloc 3: Suivi Fayeku --}}
+                <section class="app-shell-panel p-5">
+                    <h3 class="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Suivi') }}</h3>
+                    <div class="space-y-2.5 text-sm">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-slate-600">{{ __('Relances Fayeku') }}</span>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-teal">
+                                <span class="size-1.5 rounded-full bg-teal"></span>
+                                {{ __('Activées') }}
+                            </span>
+                        </div>
+                        @if ($this->selectedClient)
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-slate-600">{{ __('Contact') }}</span>
+                                <span class="truncate text-right text-xs text-ink">{{ $this->selectedClient->email ?? $this->selectedClient->phone ?? '—' }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </section>
+
+                {{-- Bloc 4: Actions --}}
+                <section class="app-shell-panel space-y-3 p-5">
+                    <button type="button" class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
+                        <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                        {{ __('Aperçu PDF') }}
+                    </button>
+                    <button type="button" wire:click="saveDraft" class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
                         <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
                         {{ __('Enregistrer brouillon') }}
                     </button>
@@ -1023,14 +1110,15 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     </button>
                 </section>
 
+                {{-- Mobile fixed bottom bar --}}
                 <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-6 py-4 lg:hidden">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-500">{{ __('Total TTC') }}</p>
+                            <p class="text-xs text-slate-600">{{ __('Total TTC') }}</p>
                             <p class="text-lg font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button type="button" wire:click="saveDraft" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700">{{ __('Brouillon') }}</button>
+                            <button type="button" wire:click="saveDraft" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800">{{ __('Brouillon') }}</button>
                             <button type="button" wire:click="openSendModal" class="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white">{{ __('Envoyer') }}</button>
                         </div>
                     </div>
@@ -1047,21 +1135,21 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
                         <div>
                             <h2 class="text-lg font-semibold text-ink">{{ __('Nouveau client') }}</h2>
-                            <p class="mt-1 text-sm text-slate-500">{{ __('Créez un client sans quitter votre facture.') }}</p>
+                            <p class="mt-1 text-sm text-slate-700">{{ __('Créez un client sans quitter votre facture.') }}</p>
                         </div>
-                        <button type="button" wire:click="$set('showClientModal', false)" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                        <button type="button" wire:click="$set('showClientModal', false)" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-700">
                             <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
                     <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
                         <div class="grid gap-5 md:grid-cols-2">
                             <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Nom du client') }} <span class="text-rose-500">*</span></label>
-                                <input wire:model="clientName" type="text" required autofocus class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Nom du client') }} <span class="text-rose-500">*</span></label>
+                                <input wire:model="clientName" type="text" required autofocus class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 @error('clientName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Secteur') }}</label>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Secteur') }}</label>
                                 <select wire:model="clientSector" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
                                     <option value="">{{ __('Choisir un secteur…') }}</option>
                                     <option>Agriculture, Élevage &amp; Pêche</option>
@@ -1089,38 +1177,38 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 </select>
                             </div>
                             <div x-data="{ country: '{{ $clientPhoneCountry }}', digits: '', get maxLen() { return this.country === 'SN' ? 9 : 10 }, get placeholder() { return this.country === 'SN' ? 'XX XXX XX XX' : 'XX XX XX XX XX' }, format(d) { const s = d.slice(0, this.maxLen); if (this.country === 'SN') { if (s.length <= 2) return s; if (s.length <= 5) return s.slice(0,2)+' '+s.slice(2); if (s.length <= 7) return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5); return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5,7)+' '+s.slice(7); } const g = []; for (let i=0; i<s.length; i+=2) g.push(s.slice(i,i+2)); return g.join(' '); }, onInput(e) { this.digits = e.target.value.replace(/\D/g, ''); e.target.value = this.format(this.digits); this.sync(); }, changeCountry() { this.digits = ''; this.$refs.phoneInput.value = ''; this.sync(); }, sync() { const prefix = this.country === 'CI' ? '225' : '221'; $wire.clientPhone = this.digits ? '+'+prefix+this.digits : ''; $wire.clientPhoneCountry = this.country; } }">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Téléphone / WhatsApp') }}</label>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Téléphone / WhatsApp') }}</label>
                                 <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
                                     <div class="relative shrink-0">
                                         <select x-model="country" @change="changeCountry()" class="h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-9 text-sm font-medium text-ink outline-none focus:ring-0">
                                             <option value="SN">SEN (+221)</option>
                                             <option value="CI">CIV (+225)</option>
                                         </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
                                             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" /></svg>
                                         </div>
                                     </div>
                                     <div class="my-3 w-px shrink-0 bg-slate-200"></div>
-                                    <input x-ref="phoneInput" type="tel" inputmode="numeric" :placeholder="placeholder" @input="onInput($event)" class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-400 outline-none focus:ring-0" />
+                                    <input x-ref="phoneInput" type="tel" inputmode="numeric" :placeholder="placeholder" @input="onInput($event)" class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-500 outline-none focus:ring-0" />
                                 </div>
                             </div>
                             <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Email') }}</label>
-                                <input wire:model="clientEmail" type="email" placeholder="contact@client.sn" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Email') }}</label>
+                                <input wire:model="clientEmail" type="email" placeholder="contact@client.sn" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 @error('clientEmail') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Identifiant fiscal') }}</label>
-                                <input wire:model="clientTaxId" type="text" placeholder="NINEA / RCCM / NCC" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Identifiant fiscal') }}</label>
+                                <input wire:model="clientTaxId" type="text" placeholder="NINEA / RCCM / NCC" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                             </div>
                             <div class="md:col-span-2">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Adresse') }}</label>
-                                <input wire:model="clientAddress" type="text" placeholder="{{ __('Rue, quartier, ville…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Adresse') }}</label>
+                                <input wire:model="clientAddress" type="text" placeholder="{{ __('Rue, quartier, ville…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                        <button type="button" wire:click="$set('showClientModal', false)" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
+                        <button type="button" wire:click="$set('showClientModal', false)" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
                         <button type="submit" class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong">{{ __('Créer le client') }}</button>
                     </div>
                 </form>
@@ -1135,42 +1223,63 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
                     <div>
                         <h2 class="text-lg font-semibold text-ink">{{ __('Envoyer la facture') }}</h2>
-                        <p class="mt-1 text-sm text-slate-500">{{ $reference }} &middot; {{ CurrencyService::format($this->computedTotals['total'], $currency) }}</p>
+                        <p class="mt-1 text-sm text-slate-700">{{ $reference }} &middot; {{ CurrencyService::format($this->computedTotals['total'], $currency) }}</p>
                     </div>
-                    <button type="button" wire:click="$set('showSendModal', false)" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                    <button type="button" wire:click="$set('showSendModal', false)" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-700">
                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
                 <div class="space-y-5 px-7 py-6">
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">{{ __("Canal d'envoi") }}</label>
+                        <label class="mb-2 block text-sm font-medium text-slate-800">{{ __("Canal d'envoi") }}</label>
                         <div class="flex gap-3">
                             @foreach ([['email', 'Email'], ['whatsapp', 'WhatsApp'], ['pdf', __('Télécharger PDF')]] as [$val, $label])
-                                <button type="button" wire:click="$set('sendChannel', '{{ $val }}')" class="flex-1 rounded-xl border px-3 py-2.5 text-center text-sm font-medium transition {{ $sendChannel === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ $label }}</button>
+                                <button type="button" wire:click="$set('sendChannel', '{{ $val }}')" class="flex-1 rounded-xl border px-3 py-2.5 text-center text-sm font-medium transition {{ $sendChannel === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30' }}">{{ $label }}</button>
                             @endforeach
                         </div>
                     </div>
                     @if ($sendChannel !== 'pdf')
                         <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Destinataire') }}</label>
-                            <input wire:model="sendRecipient" type="text" placeholder="{{ $sendChannel === 'email' ? 'email@client.sn' : '+221 XX XXX XX XX' }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                            <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Destinataire') }}</label>
+                            <input wire:model="sendRecipient" type="text" placeholder="{{ $sendChannel === 'email' ? 'email@client.sn' : '+221 XX XXX XX XX' }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                         </div>
                     @endif
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Message') }}</label>
-                        <textarea wire:model="sendMessage" rows="4" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Message') }}</label>
+                        <textarea wire:model="sendMessage" rows="4" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                     </div>
-                    <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                         <svg class="mr-1 inline size-4 text-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                         {{ __("Cette facture sera suivie par Fayeku après l'échéance.") }}
                     </div>
                 </div>
                 <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                    <button type="button" wire:click="$set('showSendModal', false)" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
+                    <button type="button" wire:click="$set('showSendModal', false)" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
                     <button type="button" wire:click="send" class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong">
                         <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
                         {{ __('Envoyer maintenant') }}
                     </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Cancel confirmation modal --}}
+    @if ($showCancelModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-500/75 p-4" wire:click.self="$set('showCancelModal', false)" x-data @keydown.escape.window="$wire.set('showCancelModal', false)">
+            <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-2xl transition-all sm:p-8">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-amber-100 sm:mx-0 sm:size-10">
+                        <svg class="size-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-base font-semibold text-ink">{{ __('Quitter sans enregistrer ?') }}</h3>
+                        <p class="mt-2 text-sm text-slate-600">{{ __('Vous avez des modifications non enregistrées. Si vous quittez maintenant, vos changements seront perdus.') }}</p>
+                    </div>
+                </div>
+                <div class="mt-6 sm:flex sm:flex-row-reverse sm:gap-3">
+                    <button type="button" wire:click="cancel" class="inline-flex w-full justify-center rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-500 sm:w-auto">{{ __('Quitter') }}</button>
+                    <button type="button" wire:click="$set('showCancelModal', false)" class="mt-3 inline-flex w-full justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 sm:mt-0 sm:w-auto">{{ __('Continuer l\'édition') }}</button>
                 </div>
             </div>
         </div>
