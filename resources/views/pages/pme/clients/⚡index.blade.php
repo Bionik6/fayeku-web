@@ -32,6 +32,8 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
     public string $clientPhone = '';
 
+    public string $clientPhoneCountry = 'SN';
+
     public string $clientEmail = '';
 
     public string $clientTaxId = '';
@@ -229,7 +231,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
             return '+'.$digits;
         }
 
-        $prefix = match ($this->company?->country_code) {
+        $prefix = match ($this->clientPhoneCountry) {
             'CI' => '225',
             default => '221',
         };
@@ -253,6 +255,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
         $this->clientName = '';
         $this->clientSector = '';
         $this->clientPhone = '';
+        $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
         $this->clientEmail = '';
         $this->clientTaxId = '';
         $this->clientAddress = '';
@@ -286,7 +289,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                     wire:click="openCreateClientModal"
                     class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
                 >
-                    <flux:icon name="plus" class="size-4" />
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     {{ __('Nouveau client') }}
                 </button>
             </div>
@@ -541,37 +544,75 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                         </span>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <flux:dropdown position="bottom" align="end">
+                                        <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
+                                                @click="open = !open"
+                                                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
                                             >
                                                 {{ __('Actions') }}
-                                                <flux:icon name="chevron-down" class="size-3.5" />
+                                                <svg class="size-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
+                                                </svg>
                                             </button>
 
-                                            <flux:menu>
-                                                <flux:menu.item :href="route('pme.clients.show', $row['id'])" wire:navigate>
-                                                    <flux:icon name="eye" class="size-4 text-slate-400" />
+                                            <div
+                                                x-show="open"
+                                                x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                class="absolute right-0 z-20 mt-1 w-48 origin-top-right rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                                            >
+                                                <a
+                                                    href="{{ route('pme.clients.show', $row['id']) }}"
+                                                    wire:navigate
+                                                    @click="open = false"
+                                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
+                                                >
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
                                                     {{ __('Voir client') }}
-                                                </flux:menu.item>
-
-                                                <flux:menu.item :href="route('pme.invoices.index', ['q' => $row['name']])" wire:navigate>
-                                                    <flux:icon name="document-text" class="size-4 text-slate-400" />
+                                                </a>
+                                                <a
+                                                    href="{{ route('pme.invoices.index', ['q' => $row['name']]) }}"
+                                                    wire:navigate
+                                                    @click="open = false"
+                                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
+                                                >
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                    </svg>
                                                     {{ __('Nouvelle facture') }}
-                                                </flux:menu.item>
-
-                                                <flux:menu.item :href="route('pme.clients.show', ['client' => $row['id'], 'focus' => 'relances'])" wire:navigate>
-                                                    <flux:icon name="bell" class="size-4 text-slate-400" />
+                                                </a>
+                                                <a
+                                                    href="{{ route('pme.clients.show', ['client' => $row['id'], 'focus' => 'relances']) }}"
+                                                    wire:navigate
+                                                    @click="open = false"
+                                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
+                                                >
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                                    </svg>
                                                     {{ __('Relancer') }}
-                                                </flux:menu.item>
-
-                                                <flux:menu.item :href="route('pme.clients.show', ['client' => $row['id'], 'focus' => 'impayes'])" wire:navigate>
-                                                    <flux:icon name="exclamation-circle" class="size-4 text-slate-400" />
+                                                </a>
+                                                <a
+                                                    href="{{ route('pme.clients.show', ['client' => $row['id'], 'focus' => 'impayes']) }}"
+                                                    wire:navigate
+                                                    @click="open = false"
+                                                    class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
+                                                >
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                                    </svg>
                                                     {{ __('Voir impayés') }}
-                                                </flux:menu.item>
-                                            </flux:menu>
-                                        </flux:dropdown>
+                                                </a>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -589,43 +630,207 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
         </section>
     @endif
 
-    <flux:modal wire:model="showCreateClientModal" class="max-w-2xl">
-        <form wire:submit="saveClient" class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ __('Nouveau client') }}</flux:heading>
-                <flux:subheading>
-                    {{ __('Ajoutez les informations de contact et les données business utiles à la facturation et au recouvrement.') }}
-                </flux:subheading>
-            </div>
+    @if ($showCreateClientModal)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            wire:click.self="$set('showCreateClientModal', false)"
+            x-data
+            @keydown.escape.window="$wire.set('showCreateClientModal', false)"
+        >
+            <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <form wire:submit="saveClient">
+                    {{-- Header --}}
+                    <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
+                        <div>
+                            <h2 class="text-lg font-semibold text-ink">{{ __('Nouveau client') }}</h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                {{ __('Ajoutez les informations de contact et les données business utiles à la facturation et au recouvrement.') }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="$set('showCreateClientModal', false)"
+                            class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        >
+                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
-                <flux:input wire:model="clientName" :label="__('Nom du client')" type="text" required autofocus />
-                <flux:input wire:model="clientSector" :label="__('Secteur')" type="text" placeholder="Télécom, Santé, Distribution..." />
-                <flux:input wire:model="clientPhone" :label="__('Téléphone / WhatsApp')" type="tel" placeholder="+221 77 123 45 67" />
-                <flux:input wire:model="clientEmail" :label="__('Email')" type="email" placeholder="contact@client.sn" />
-                <flux:input wire:model="clientTaxId" :label="__('Identifiant fiscal')" type="text" placeholder="NINEA / RCCM / NCC" />
-                <div class="md:col-span-2">
-                    <flux:textarea wire:model="clientAddress" :label="__('Adresse')" rows="3" />
-                </div>
-            </div>
+                    {{-- Body --}}
+                    <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            {{-- Nom du client --}}
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">
+                                    {{ __('Nom du client') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    wire:model="clientName"
+                                    type="text"
+                                    required
+                                    autofocus
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                                @error('clientName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
 
-            <div class="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                {{ __('Les coordonnées client serviront aussi aux relances WhatsApp, SMS et email selon le canal choisi.') }}
-            </div>
+                            {{-- Secteur --}}
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Secteur') }}</label>
+                                <select
+                                    wire:model="clientSector"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                >
+                                    <option value="">{{ __('Choisir un secteur…') }}</option>
+                                    <option>Agriculture, Élevage &amp; Pêche</option>
+                                    <option>Agroalimentaire &amp; Transformation</option>
+                                    <option>Commerce de gros</option>
+                                    <option>Commerce de détail &amp; Distribution</option>
+                                    <option>Bâtiment &amp; Travaux Publics</option>
+                                    <option>Transport &amp; Logistique</option>
+                                    <option>Télécommunications</option>
+                                    <option>Technologies de l'information &amp; Communication</option>
+                                    <option>Industrie manufacturière</option>
+                                    <option>Énergie, Mines &amp; Pétrole</option>
+                                    <option>Santé &amp; Pharmacie</option>
+                                    <option>Éducation &amp; Formation</option>
+                                    <option>Immobilier &amp; Foncier</option>
+                                    <option>Finance, Banque &amp; Assurance</option>
+                                    <option>Hôtellerie &amp; Restauration</option>
+                                    <option>Tourisme &amp; Loisirs</option>
+                                    <option>Artisanat &amp; Arts</option>
+                                    <option>Médias &amp; Communication</option>
+                                    <option>Textile, Habillement &amp; Cuir</option>
+                                    <option>Services aux entreprises &amp; Conseil</option>
+                                    <option>Environnement &amp; Eau</option>
+                                    <option value="Autre">{{ __('Autre') }}</option>
+                                </select>
+                            </div>
 
-            <div class="flex items-center justify-end gap-3">
-                <button
-                    type="button"
-                    wire:click="$set('showCreateClientModal', false)"
-                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
-                >
-                    {{ __('Annuler') }}
-                </button>
-                <flux:button variant="primary" type="submit">
-                    {{ __('Créer le client') }}
-                </flux:button>
+                            {{-- Téléphone / WhatsApp --}}
+                            <div
+                                x-data="{
+                                    country: '{{ $clientPhoneCountry }}',
+                                    digits: '',
+                                    get maxLen() { return this.country === 'SN' ? 9 : 10 },
+                                    get placeholder() { return this.country === 'SN' ? 'XX XXX XX XX' : 'XX XX XX XX XX' },
+                                    format(d) {
+                                        const s = d.slice(0, this.maxLen);
+                                        if (this.country === 'SN') {
+                                            if (s.length <= 2) return s;
+                                            if (s.length <= 5) return s.slice(0,2)+' '+s.slice(2);
+                                            if (s.length <= 7) return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5);
+                                            return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5,7)+' '+s.slice(7);
+                                        }
+                                        const g = []; for (let i=0; i<s.length; i+=2) g.push(s.slice(i,i+2)); return g.join(' ');
+                                    },
+                                    onInput(e) {
+                                        this.digits = e.target.value.replace(/\D/g, '');
+                                        e.target.value = this.format(this.digits);
+                                        this.sync();
+                                    },
+                                    changeCountry() {
+                                        this.digits = '';
+                                        this.$refs.phoneInput.value = '';
+                                        this.sync();
+                                    },
+                                    sync() {
+                                        const prefix = this.country === 'CI' ? '225' : '221';
+                                        $wire.clientPhone = this.digits ? '+'+prefix+this.digits : '';
+                                        $wire.clientPhoneCountry = this.country;
+                                    }
+                                }"
+                            >
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Téléphone / WhatsApp') }}</label>
+                                <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+                                    <div class="relative shrink-0">
+                                        <select
+                                            x-model="country"
+                                            @change="changeCountry()"
+                                            class="h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-9 text-sm font-medium text-ink outline-none focus:ring-0"
+                                        >
+                                            <option value="SN">SEN (+221)</option>
+                                            <option value="CI">CIV (+225)</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="my-3 w-px shrink-0 bg-slate-200"></div>
+                                    <input
+                                        x-ref="phoneInput"
+                                        type="tel"
+                                        inputmode="numeric"
+                                        :placeholder="placeholder"
+                                        @input="onInput($event)"
+                                        class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-400 outline-none focus:ring-0"
+                                    />
+                                </div>
+                            </div>
+
+                            {{-- Email --}}
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Email') }}</label>
+                                <input
+                                    wire:model="clientEmail"
+                                    type="email"
+                                    placeholder="contact@client.sn"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                                @error('clientEmail') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            {{-- Identifiant fiscal --}}
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Identifiant fiscal') }}</label>
+                                <input
+                                    wire:model="clientTaxId"
+                                    type="text"
+                                    placeholder="NINEA / RCCM / NCC"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                            </div>
+
+                            {{-- Adresse --}}
+                            <div class="md:col-span-2">
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Adresse') }}</label>
+                                <input
+                                    wire:model="clientAddress"
+                                    type="text"
+                                    placeholder="{{ __('Rue, quartier, ville…') }}"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="mt-5 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            {{ __('Les coordonnées client serviront aussi aux relances WhatsApp, SMS et email selon le canal choisi.') }}
+                        </div>
+                    </div>
+
+                    {{-- Footer --}}
+                    <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
+                        <button
+                            type="button"
+                            wire:click="$set('showCreateClientModal', false)"
+                            class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                        >
+                            {{ __('Annuler') }}
+                        </button>
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                        >
+                            {{ __('Créer le client') }}
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
-    </flux:modal>
+        </div>
+    @endif
 
 </div>

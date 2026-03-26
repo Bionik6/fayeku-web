@@ -383,7 +383,9 @@ document.addEventListener("livewire:navigated", () => {
 
 document.addEventListener("livewire:navigated", initializePage);
 
-// Re-format phone fields after every Livewire network round-trip (e.g. country
-// selector change triggering a re-render).  We skip fields the user is typing
-// in to avoid interrupting their input.
-document.addEventListener("livewire:commit", reFormatPhoneFields);
+// After every Livewire network round-trip: bind any newly rendered phone fields
+// (e.g. a modal just became visible) and re-format existing ones.
+document.addEventListener("livewire:commit", () => {
+    bindPhoneFields();
+    reFormatPhoneFields();
+});

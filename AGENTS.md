@@ -46,7 +46,8 @@ Every item below is a confirmed decision. Do not suggest alternatives unless ask
 |---|---|---|
 | Framework | Laravel | v13 |
 | PHP | PHP | 8.5 |
-| Frontend | TALL stack | Tailwind CSS v4, Alpine.js v3, Livewire v4, Flux UI v2 |
+| Frontend | TALL stack | Tailwind CSS v4, Alpine.js v3, Livewire v4 |
+| UI components | Tailwind UI (`templates/tailwind-plus/`) | — |
 | Authentication backend | Laravel Fortify | v1 |
 | Database | PostgreSQL | 16 |
 | Primary key type | **ULID** (not UUID, not auto-increment) | — |
@@ -88,6 +89,14 @@ tailwindcss          v4
 
 > Do not change any dependency version without explicit approval.
 
+### UI development rules
+
+- **Do NOT use Flux UI (`<flux:*>`) components for new UI development.** Flux may remain in legacy code but must not be added to new or modified views.
+- **All new UI must be built with Tailwind CSS utility classes**, using `templates/tailwind-plus/` as the component reference library.
+- Modals, drawers, forms, tables, buttons, and badges must follow patterns from `templates/tailwind-plus/application-ui/`.
+- Buttons follow the primary/secondary color convention: primary = `bg-primary text-white hover:bg-primary-strong`, secondary = `border border-slate-200 bg-white text-slate-700 hover:border-primary/30 hover:text-primary`.
+- Use inline SVG icons (Heroicons) instead of `<flux:icon>`.
+
 ### Queue notes
 
 Run `php artisan queue:table` and `php artisan queue:failed-table` to generate the
@@ -118,7 +127,6 @@ writing code. Never guess what a framework feature does — search first.
 
 | Domain | Skill to activate | When |
 |---|---|---|
-| Flux UI components | `fluxui-development` | Any `<flux:*>` component, forms, modals, tables, badges |
 | Livewire | `livewire-development` | Any `wire:` directive, Livewire component, reactivity issue |
 | Pest tests | `pest-testing` | Writing, editing, fixing, or refactoring any test |
 | Tailwind CSS | `tailwindcss-development` | Any Tailwind class, responsive layout, dark mode |
