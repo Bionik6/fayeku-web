@@ -860,3 +860,103 @@ test('les filtres type et statut restent visibles quand une période spécifique
         ->assertSeeHtml('wire:click="setTypeFilter(\'invoice\')"')
         ->assertSeeHtml('wire:click="setStatusFilter(\'paid\')"');
 });
+
+test('une ligne facture ouvre la modale de détail', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $invoice = makeInvoice($company, [
+        'reference' => 'FAC-MODAL',
+        'status' => InvoiceStatus::Sent->value,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id)
+        ->assertSee('FAC-MODAL')
+        ->assertSee('Détail des prestations')
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+});
+
+test('openEditInvoiceModal pre-remplit le formulaire de facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'Dakar Pharma']);
+    $invoice = makeInvoice($company, [
+        'client_id' => $client->id,
+        'reference' => 'FAC-EDIT',
+        'issued_at' => now()->startOfMonth(),
+        'due_at' => now()->startOfMonth()->addDays(30),
+        'notes' => 'Note initiale',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openEditInvoiceModal', $invoice->id)
+        ->assertSet('showEditInvoiceModal', true)
+        ->assertSet('invoiceReference', 'FAC-EDIT')
+        ->assertSet('invoiceClientId', $client->id)
+        ->assertSet('invoiceNotes', 'Note initiale');
+});
+
+test('saveInvoiceUpdates modifie une facture existante', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $oldClient = Client::factory()->create(['company_id' => $company->id, 'name' => 'Ancien client']);
+    $newClient = Client::factory()->create(['company_id' => $company->id, 'name' => 'Nouveau client']);
+
+    $invoice = makeInvoice($company, [
+        'client_id' => $oldClient->id,
+        'reference' => 'FAC-BEFORE',
+        'issued_at' => now()->subDays(10),
+        'due_at' => now()->addDays(20),
+        'notes' => 'Avant',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openEditInvoiceModal', $invoice->id)
+        ->set('invoiceReference', 'FAC-AFTER')
+        ->set('invoiceClientId', $newClient->id)
+        ->set('invoiceIssuedAt', now()->subDays(5)->format('Y-m-d'))
+        ->set('invoiceDueAt', now()->addDays(10)->format('Y-m-d'))
+        ->set('invoiceNotes', 'Apres modification')
+        ->call('saveInvoiceUpdates')
+        ->assertSee('La facture a été mise à jour.');
+
+    $invoice->refresh();
+
+    expect($invoice->reference)->toBe('FAC-AFTER')
+        ->and($invoice->client_id)->toBe($newClient->id)
+        ->and($invoice->notes)->toBe('Apres modification');
+});
+
+test('deleteInvoice supprime une facture de la PME courante', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $invoice = makeInvoice($company, [
+        'reference' => 'FAC-DELETE',
+        'status' => InvoiceStatus::Sent->value,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('deleteInvoice', $invoice->id)
+        ->assertSee('La facture a été supprimée.');
+
+    expect(Invoice::query()->find($invoice->id))->toBeNull()
+        ->and(Invoice::withTrashed()->find($invoice->id))->not->toBeNull();
+});
+
+test('deleteInvoice n affecte pas les factures d une autre PME', function () {
+    ['user' => $user] = createSmeWithCompany();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = makeInvoice($otherCompany, ['reference' => 'FAC-OTHER-DELETE']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('deleteInvoice', $otherInvoice->id);
+})->throws(ModelNotFoundException::class);
