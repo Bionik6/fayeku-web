@@ -253,7 +253,7 @@ class ClientService
                 'reference' => $invoice->reference ?? '—',
                 'amount' => (int) $invoice->amount_paid,
                 'paid_at_label' => $invoice->paid_at
-                    ? $invoice->paid_at->locale('fr_FR')->translatedFormat('j M. Y · H:i')
+                    ? $invoice->paid_at->locale('fr_FR')->translatedFormat('j F Y · H:i')
                     : 'Paiement enregistré',
                 'status' => $this->invoiceStatusLabel($invoice->status),
             ])
@@ -261,22 +261,26 @@ class ClientService
 
         $timeline = collect()
             ->merge($invoices->map(fn (Invoice $invoice) => [
+                'invoice_id' => $invoice->id,
                 'date' => $invoice->issued_at,
                 'title' => 'Facture envoyée',
-                'body' => ($invoice->reference ?? '—').' · '.number_format($invoice->total, 0, ',', ' ').' F',
+                'body' => ($invoice->reference ?? '—').' · '.number_format($invoice->total, 0, ',', ' ').' FCFA',
             ]))
             ->merge($invoices->filter(fn (Invoice $invoice) => $invoice->paid_at)->map(fn (Invoice $invoice) => [
+                'invoice_id' => $invoice->id,
                 'date' => $invoice->paid_at,
                 'title' => 'Paiement reçu',
-                'body' => ($invoice->reference ?? '—').' · '.number_format((int) $invoice->amount_paid, 0, ',', ' ').' F',
+                'body' => ($invoice->reference ?? '—').' · '.number_format((int) $invoice->amount_paid, 0, ',', ' ').' FCFA',
             ]))
             ->merge($quotes->map(fn ($quote) => [
+                'invoice_id' => null,
                 'date' => $quote->issued_at,
                 'title' => 'Devis envoyé',
-                'body' => ($quote->reference ?? '—').' · '.number_format($quote->total, 0, ',', ' ').' F',
+                'body' => ($quote->reference ?? '—').' · '.number_format($quote->total, 0, ',', ' ').' FCFA',
             ]))
             ->merge($invoices->flatMap(fn (Invoice $invoice) => $invoice->reminders->filter(fn ($reminder) => $reminder->sent_at)->map(
                 fn ($reminder) => [
+                    'invoice_id' => $invoice->id,
                     'date' => $reminder->sent_at,
                     'title' => 'Relance envoyée',
                     'body' => ($invoice->reference ?? '—').' · '.$this->channelLabel($reminder->channel),
@@ -287,9 +291,10 @@ class ClientService
             ->take(12)
             ->values()
             ->map(fn (array $event) => [
+                'invoice_id' => $event['invoice_id'],
                 'title' => $event['title'],
                 'body' => $event['body'],
-                'date_label' => $event['date']->locale('fr_FR')->translatedFormat('j M. Y · H:i'),
+                'date_label' => $event['date']->locale('fr_FR')->translatedFormat('j F Y · H:i'),
             ])
             ->all();
 
@@ -314,6 +319,7 @@ class ClientService
                 'total' => (int) $invoice->total,
                 'remaining' => max(0, (int) $invoice->total - (int) $invoice->amount_paid),
                 'status' => $this->invoiceStatusLabel($invoice->status),
+                'status_tone' => $this->invoiceStatusTone($invoice->status),
                 'reminders_count' => $invoice->reminders->count(),
             ])->all(),
             'quotes' => $quotes->map(fn ($quote) => [
@@ -620,6 +626,17 @@ class ClientService
             InvoiceStatus::Paid => 'Payée',
             InvoiceStatus::Overdue => 'En retard',
             InvoiceStatus::Cancelled => 'Annulée',
+        };
+    }
+
+    private function invoiceStatusTone(InvoiceStatus $status): string
+    {
+        return match ($status) {
+            InvoiceStatus::Paid => 'emerald',
+            InvoiceStatus::PartiallyPaid, InvoiceStatus::Overdue, InvoiceStatus::CertificationFailed => 'amber',
+            InvoiceStatus::Cancelled => 'rose',
+            InvoiceStatus::Draft => 'slate',
+            default => 'sky',
         };
     }
 

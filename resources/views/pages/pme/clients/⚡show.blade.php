@@ -8,11 +8,30 @@ use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Clients\Services\ClientService;
+use Modules\PME\Invoicing\Models\Invoice;
 
 new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public Client $client;
 
     public ?Company $company = null;
+
+    public bool $showEditClientModal = false;
+
+    public string $clientName = '';
+
+    public string $clientSector = '';
+
+    public string $clientPhone = '';
+
+    public string $clientPhoneCountry = 'SN';
+
+    public string $clientEmail = '';
+
+    public string $clientTaxId = '';
+
+    public string $clientAddress = '';
+
+    public ?string $selectedInvoiceId = null;
 
     #[Url(as: 'focus')]
     public string $focus = '';
@@ -34,11 +53,133 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         $this->client = $client;
     }
 
+    public function openEditClientModal(): void
+    {
+        abort_unless(auth()->user()->can('update', $this->client), 403);
+
+        $this->resetValidation();
+        $this->fillClientForm();
+        $this->showEditClientModal = true;
+    }
+
+    public function saveClientUpdates(): void
+    {
+        abort_unless(auth()->user()->can('update', $this->client), 403);
+
+        $validated = $this->validate([
+            'clientName' => ['required', 'string', 'max:255'],
+            'clientSector' => ['nullable', 'string', 'max:100'],
+            'clientPhone' => ['nullable', 'string', 'max:30'],
+            'clientEmail' => ['nullable', 'email', 'max:255'],
+            'clientTaxId' => ['nullable', 'string', 'max:100'],
+            'clientAddress' => ['nullable', 'string', 'max:500'],
+        ], [
+            'clientName.required' => __('Le nom du client est requis.'),
+            'clientEmail.email' => __('L’adresse email doit être valide.'),
+        ]);
+
+        $this->client->update([
+            'name' => trim($validated['clientName']),
+            'sector' => $this->emptyToNull($validated['clientSector'] ?? ''),
+            'phone' => $this->normalizePhone($validated['clientPhone'] ?? ''),
+            'email' => $this->emptyToNull($validated['clientEmail'] ?? ''),
+            'tax_id' => $this->emptyToNull($validated['clientTaxId'] ?? ''),
+            'address' => $this->emptyToNull($validated['clientAddress'] ?? ''),
+        ]);
+
+        $this->client->refresh();
+        $this->detailCache = null;
+        $this->showEditClientModal = false;
+
+        session()->flash('client-updated', __('Les informations client ont été mises à jour.'));
+    }
+
+    public function formatFcfa(?int $amount): string
+    {
+        return number_format((int) $amount, 0, ',', ' ').' FCFA';
+    }
+
+    public function viewInvoice(string $id): void
+    {
+        abort_unless(
+            $this->client->invoices()->whereKey($id)->exists(),
+            404
+        );
+
+        $this->selectedInvoiceId = $id;
+    }
+
+    public function closeInvoice(): void
+    {
+        $this->selectedInvoiceId = null;
+    }
+
     /** @return array<string, mixed> */
     #[Computed]
     public function detail(): array
     {
         return $this->detailCache ??= app(ClientService::class)->detail($this->client);
+    }
+
+    #[Computed]
+    public function selectedInvoice(): ?Invoice
+    {
+        if (! $this->selectedInvoiceId) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->with(['client', 'lines'])
+            ->where('company_id', $this->client->company_id)
+            ->where('client_id', $this->client->id)
+            ->whereKey($this->selectedInvoiceId)
+            ->first();
+    }
+
+    private function fillClientForm(): void
+    {
+        $this->clientName = $this->client->name;
+        $this->clientSector = $this->client->sector ?? '';
+        $this->clientPhone = $this->client->phone ?? '';
+        $this->clientPhoneCountry = $this->phoneCountry($this->client->phone);
+        $this->clientEmail = $this->client->email ?? '';
+        $this->clientTaxId = $this->client->tax_id ?? '';
+        $this->clientAddress = $this->client->address ?? '';
+    }
+
+    private function phoneCountry(?string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone);
+
+        return str_starts_with($digits, '225') ? 'CI' : 'SN';
+    }
+
+    private function normalizePhone(string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', $phone);
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($phone, '+')) {
+            return '+'.$digits;
+        }
+
+        $prefix = $this->clientPhoneCountry === 'CI' ? '225' : '221';
+
+        if (str_starts_with($digits, $prefix)) {
+            return '+'.$digits;
+        }
+
+        return '+'.$prefix.$digits;
+    }
+
+    private function emptyToNull(string $value): ?string
+    {
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }; ?>
 
@@ -50,6 +191,12 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         </section>
     @endif
 
+    @if (session('client-updated'))
+        <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+            {{ session('client-updated') }}
+        </section>
+    @endif
+
     <section class="app-shell-panel overflow-hidden">
         <div class="flex flex-col gap-5 p-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -57,9 +204,11 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                     {{ __('← Retour aux clients') }}
                 </a>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
-                        {{ $this->detail['contact']['sector'] }}
-                    </span>
+                    @if ($this->detail['contact']['sector'] !== '—')
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                            {{ $this->detail['contact']['sector'] }}
+                        </span>
+                    @endif
                     <span @class([
                         'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
                         'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
@@ -116,7 +265,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Total facturé') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-ink">
                 @if ($this->detail['row']['total_revenue'] > 0)
-                    {{ number_format($this->detail['row']['total_revenue'], 0, ',', ' ') }} F
+                    {{ $this->formatFcfa($this->detail['row']['total_revenue']) }}
                 @else
                     —
                 @endif
@@ -135,7 +284,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Total encaissé') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-emerald-700">
                 @if ($this->detail['row']['total_collected'] > 0)
-                    {{ number_format($this->detail['row']['total_collected'], 0, ',', ' ') }} F
+                    {{ $this->formatFcfa($this->detail['row']['total_collected']) }}
                 @else
                     —
                 @endif
@@ -154,9 +303,9 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Solde en cours') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-rose-600">
                 @if ($this->detail['row']['outstanding_amount'] > 0)
-                    {{ number_format($this->detail['row']['outstanding_amount'], 0, ',', ' ') }} F
+                    {{ $this->formatFcfa($this->detail['row']['outstanding_amount']) }}
                 @else
-                    0 F
+                    {{ __('0 FCFA') }}
                 @endif
             </p>
         </article>
@@ -188,16 +337,28 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                     <h3 class="text-lg font-semibold text-ink">{{ __('Informations client') }}</h3>
                     <p class="mt-1 text-sm text-slate-500">{{ __('Coordonnées utiles pour la facturation et le recouvrement.') }}</p>
                 </div>
-                @if ($this->detail['contact']['phone'] !== '—')
-                    <a
-                        href="https://wa.me/{{ ltrim(preg_replace('/\D+/', '', $this->detail['contact']['phone']), '0') }}"
-                        target="_blank"
-                        rel="noreferrer"
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    <button
+                        type="button"
+                        wire:click="openEditClientModal"
                         class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
                     >
-                        {{ __('WhatsApp') }}
-                    </a>
-                @endif
+                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                        </svg>
+                        {{ __('Éditer') }}
+                    </button>
+                    @if ($this->detail['contact']['phone'] !== '—')
+                        <a
+                            href="https://wa.me/{{ ltrim(preg_replace('/\D+/', '', $this->detail['contact']['phone']), '0') }}"
+                            target="_blank"
+                            rel="noreferrer"
+                            class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                        >
+                            {{ __('WhatsApp') }}
+                        </a>
+                    @endif
+                </div>
             </div>
 
             <div class="mt-6 grid gap-4 md:grid-cols-2">
@@ -209,10 +370,12 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Email') }}</p>
                     <p class="mt-2 text-sm font-semibold text-ink break-all">{{ $this->detail['contact']['email'] }}</p>
                 </div>
-                <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Secteur') }}</p>
-                    <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['sector'] }}</p>
-                </div>
+                @if ($this->detail['contact']['sector'] !== '—')
+                    <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Secteur') }}</p>
+                        <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['sector'] }}</p>
+                    </div>
+                @endif
                 <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                     <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Identifiant fiscal') }}</p>
                     <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['tax_id'] }}</p>
@@ -231,10 +394,9 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                 <div class="mt-5 flex items-end justify-between gap-4">
                     <div>
                         <p class="text-4xl font-semibold tracking-tight text-ink">{{ $this->detail['row']['payment_score'] }}</p>
-                        <p class="mt-2 text-sm font-semibold text-slate-700">{{ $this->detail['row']['payment_label'] }}</p>
                     </div>
                     <span @class([
-                        'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold',
+                        'inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold',
                         'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
                         'bg-teal-50 text-teal-700' => $this->detail['row']['payment_tone'] === 'teal',
                         'bg-amber-50 text-amber-700' => $this->detail['row']['payment_tone'] === 'amber',
@@ -253,7 +415,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                 <p class="mt-2 text-sm text-slate-600">
                     @if ($this->detail['exposure']['total_outstanding'] > 0)
                         {{ __('Ce client représente') }} {{ $this->detail['exposure']['share'] }}% {{ __('de vos montants en attente, soit') }}
-                        {{ number_format($this->detail['exposure']['total_outstanding'], 0, ',', ' ') }} F.
+                        {{ $this->formatFcfa($this->detail['exposure']['total_outstanding']) }}.
                     @else
                         {{ __('Aucune exposition en attente pour le moment.') }}
                     @endif
@@ -287,19 +449,34 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($this->detail['invoices'] as $invoice)
-                            <tr wire:key="client-invoice-{{ $invoice['id'] }}" class="transition hover:bg-slate-50/70">
+                            <tr
+                                wire:key="client-invoice-{{ $invoice['id'] }}"
+                                wire:click="viewInvoice('{{ $invoice['id'] }}')"
+                                class="cursor-pointer transition hover:bg-slate-50/70 focus-within:bg-slate-50/70"
+                            >
                                 <td class="px-6 py-4 font-semibold text-ink">{{ $invoice['reference'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['issued_at_label'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['due_at_label'] }}</td>
-                                <td class="px-4 py-4 font-semibold text-ink">{{ number_format($invoice['total'], 0, ',', ' ') }} F</td>
+                                <td class="px-4 py-4 font-semibold text-ink">{{ $this->formatFcfa($invoice['total']) }}</td>
                                 <td class="px-4 py-4">
                                     @if ($invoice['remaining'] > 0)
-                                        <span class="font-semibold text-rose-600">{{ number_format($invoice['remaining'], 0, ',', ' ') }} F</span>
+                                        <span class="font-semibold text-rose-600">{{ $this->formatFcfa($invoice['remaining']) }}</span>
                                     @else
-                                        <span class="text-slate-400">0 F</span>
+                                        <span class="text-slate-400">{{ __('0 FCFA') }}</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-4 text-slate-600">{{ $invoice['status'] }}</td>
+                                <td class="px-4 py-4">
+                                    <span @class([
+                                        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+                                        'bg-emerald-50 text-emerald-700 ring-emerald-200' => $invoice['status_tone'] === 'emerald',
+                                        'bg-amber-50 text-amber-700 ring-amber-200' => $invoice['status_tone'] === 'amber',
+                                        'bg-rose-50 text-rose-700 ring-rose-200' => $invoice['status_tone'] === 'rose',
+                                        'bg-slate-100 text-slate-700 ring-slate-200' => $invoice['status_tone'] === 'slate',
+                                        'bg-sky-50 text-sky-700 ring-sky-200' => $invoice['status_tone'] === 'sky',
+                                    ])>
+                                        {{ $invoice['status'] }}
+                                    </span>
+                                </td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['reminders_count'] }}</td>
                             </tr>
                         @endforeach
@@ -329,7 +506,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                                 <p class="mt-1 text-xs text-slate-500">{{ $quote['issued_at_label'] }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-semibold text-ink">{{ number_format($quote['total'], 0, ',', ' ') }} F</p>
+                                <p class="font-semibold text-ink">{{ $this->formatFcfa($quote['total']) }}</p>
                                 <p class="mt-1 text-xs text-slate-500">{{ $quote['status'] }}</p>
                             </div>
                         </div>
@@ -351,13 +528,17 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             @if (count($this->detail['payments']) > 0)
                 <div class="divide-y divide-slate-100">
                     @foreach ($this->detail['payments'] as $payment)
-                        <div wire:key="client-payment-{{ $payment['id'] }}" class="flex items-center justify-between gap-4 px-6 py-4">
+                        <div
+                            wire:key="client-payment-{{ $payment['id'] }}"
+                            wire:click="viewInvoice('{{ $payment['id'] }}')"
+                            class="flex cursor-pointer items-center justify-between gap-4 px-6 py-4 transition hover:bg-slate-50/70"
+                        >
                             <div>
                                 <p class="font-semibold text-ink">{{ $payment['reference'] }}</p>
                                 <p class="mt-1 text-xs text-slate-500">{{ $payment['paid_at_label'] }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-semibold text-emerald-700">{{ number_format($payment['amount'], 0, ',', ' ') }} F</p>
+                                <p class="font-semibold text-emerald-700">{{ $this->formatFcfa($payment['amount']) }}</p>
                                 <p class="mt-1 text-xs text-slate-500">{{ $payment['status'] }}</p>
                             </div>
                         </div>
@@ -420,7 +601,16 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         @if (count($this->detail['timeline']) > 0)
             <div class="divide-y divide-slate-100">
                 @foreach ($this->detail['timeline'] as $index => $event)
-                    <div wire:key="client-timeline-{{ $index }}" class="flex gap-4 px-6 py-4">
+                    <div
+                        wire:key="client-timeline-{{ $index }}"
+                        @class([
+                            'flex gap-4 px-6 py-4',
+                            'cursor-pointer transition hover:bg-slate-50/70' => filled($event['invoice_id']),
+                        ])
+                        @if (filled($event['invoice_id']))
+                            wire:click="viewInvoice('{{ $event['invoice_id'] }}')"
+                        @endif
+                    >
                         <div class="mt-1 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-primary">
                             <flux:icon name="sparkles" class="size-4" />
                         </div>
@@ -438,5 +628,204 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             </div>
         @endif
     </section>
+
+    @if ($showEditClientModal)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            wire:click.self="$set('showEditClientModal', false)"
+            x-data
+            @keydown.escape.window="$wire.set('showEditClientModal', false)"
+        >
+            <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <form wire:submit="saveClientUpdates">
+                    <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
+                        <div>
+                            <h2 class="text-lg font-semibold text-ink">{{ __('Modifier le client') }}</h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                {{ __('Mettez à jour les coordonnées utiles à la facturation et au recouvrement.') }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="$set('showEditClientModal', false)"
+                            class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        >
+                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">
+                                    {{ __('Nom du client') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    wire:model="clientName"
+                                    type="text"
+                                    required
+                                    autofocus
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                                @error('clientName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Secteur') }}</label>
+                                <select
+                                    wire:model="clientSector"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                >
+                                    <option value="">{{ __('Choisir un secteur…') }}</option>
+                                    <option>Agriculture, Élevage &amp; Pêche</option>
+                                    <option>Agroalimentaire &amp; Transformation</option>
+                                    <option>Commerce de gros</option>
+                                    <option>Commerce de détail &amp; Distribution</option>
+                                    <option>Bâtiment &amp; Travaux Publics</option>
+                                    <option>Transport &amp; Logistique</option>
+                                    <option>Télécommunications</option>
+                                    <option>Technologies de l'information &amp; Communication</option>
+                                    <option>Industrie manufacturière</option>
+                                    <option>Énergie, Mines &amp; Pétrole</option>
+                                    <option>Santé &amp; Pharmacie</option>
+                                    <option>Éducation &amp; Formation</option>
+                                    <option>Immobilier &amp; Foncier</option>
+                                    <option>Finance, Banque &amp; Assurance</option>
+                                    <option>Hôtellerie &amp; Restauration</option>
+                                    <option>Tourisme &amp; Loisirs</option>
+                                    <option>Artisanat &amp; Arts</option>
+                                    <option>Médias &amp; Communication</option>
+                                    <option>Textile, Habillement &amp; Cuir</option>
+                                    <option>Services aux entreprises &amp; Conseil</option>
+                                    <option>Environnement &amp; Eau</option>
+                                    <option value="Autre">{{ __('Autre') }}</option>
+                                </select>
+                            </div>
+
+                            <div
+                                x-data="{
+                                    country: @js($clientPhoneCountry),
+                                    digits: @js(preg_replace('/^(221|225)/', '', preg_replace('/\\D+/', '', $clientPhone))),
+                                    get maxLen() { return this.country === 'SN' ? 9 : 10 },
+                                    get placeholder() { return this.country === 'SN' ? 'XX XXX XX XX' : 'XX XX XX XX XX' },
+                                    format(d) {
+                                        const s = d.slice(0, this.maxLen);
+                                        if (this.country === 'SN') {
+                                            if (s.length <= 2) return s;
+                                            if (s.length <= 5) return s.slice(0,2)+' '+s.slice(2);
+                                            if (s.length <= 7) return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5);
+                                            return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5,7)+' '+s.slice(7);
+                                        }
+                                        const g = []; for (let i = 0; i < s.length; i += 2) g.push(s.slice(i, i + 2)); return g.join(' ');
+                                    },
+                                    onInput(e) {
+                                        this.digits = e.target.value.replace(/\\D/g, '');
+                                        e.target.value = this.format(this.digits);
+                                        this.sync();
+                                    },
+                                    changeCountry() {
+                                        this.digits = '';
+                                        this.$refs.phoneInput.value = '';
+                                        this.sync();
+                                    },
+                                    sync() {
+                                        const prefix = this.country === 'CI' ? '225' : '221';
+                                        $wire.clientPhone = this.digits ? '+' + prefix + this.digits : '';
+                                        $wire.clientPhoneCountry = this.country;
+                                    }
+                                }"
+                                x-init="$refs.phoneInput.value = format(digits); sync()"
+                            >
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Téléphone / WhatsApp') }}</label>
+                                <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+                                    <div class="relative shrink-0">
+                                        <select
+                                            x-model="country"
+                                            @change="changeCountry()"
+                                            class="h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-9 text-sm font-medium text-ink outline-none focus:ring-0"
+                                        >
+                                            <option value="SN">SEN (+221)</option>
+                                            <option value="CI">CIV (+225)</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="my-3 w-px shrink-0 bg-slate-200"></div>
+                                    <input
+                                        x-ref="phoneInput"
+                                        type="tel"
+                                        inputmode="numeric"
+                                        :placeholder="placeholder"
+                                        @input="onInput($event)"
+                                        class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-400 outline-none focus:ring-0"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Email') }}</label>
+                                <input
+                                    wire:model="clientEmail"
+                                    type="email"
+                                    placeholder="contact@client.sn"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                                @error('clientEmail') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Identifiant fiscal') }}</label>
+                                <input
+                                    wire:model="clientTaxId"
+                                    type="text"
+                                    placeholder="NINEA / RCCM / NCC"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Adresse') }}</label>
+                                <input
+                                    wire:model="clientAddress"
+                                    type="text"
+                                    placeholder="{{ __('Rue, quartier, ville…') }}"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="mt-5 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            {{ __('Les coordonnées client serviront aussi aux relances WhatsApp, SMS et email selon le canal choisi.') }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
+                        <button
+                            type="button"
+                            wire:click="$set('showEditClientModal', false)"
+                            class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                        >
+                            {{ __('Annuler') }}
+                        </button>
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                        >
+                            {{ __('Enregistrer') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    @if ($this->selectedInvoice)
+        <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
+    @endif
 
 </div>

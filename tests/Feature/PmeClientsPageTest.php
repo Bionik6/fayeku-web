@@ -363,3 +363,122 @@ test('la fiche client gere les etats vides sans erreurs', function () {
         ->assertSee('Aucun paiement enregistré pour ce client.')
         ->assertSee('Aucune relance n’a encore été envoyée à ce client.');
 });
+
+test('la fiche client permet de modifier les informations et de supprimer le secteur vide', function () {
+    ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
+
+    $client = makePortfolioClient($company, [
+        'name' => 'Dakar Pharma',
+        'sector' => 'Santé',
+        'phone' => '+221771112233',
+        'email' => 'finance@dakarpharma.sn',
+        'tax_id' => 'SN999999',
+        'address' => 'Dakar',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.clients.show', ['client' => $client])
+        ->call('openEditClientModal')
+        ->set('clientName', 'Dakar Pharma Groupe')
+        ->set('clientSector', '')
+        ->set('clientPhoneCountry', 'CI')
+        ->set('clientPhone', '07 08 09 10 11')
+        ->set('clientEmail', 'compta@dakarpharma.ci')
+        ->set('clientTaxId', 'CI123456')
+        ->set('clientAddress', 'Abidjan Plateau')
+        ->call('saveClientUpdates')
+        ->assertSee('Les informations client ont été mises à jour.')
+        ->assertDontSee('Secteur');
+
+    $client->refresh();
+
+    expect($client->name)->toBe('Dakar Pharma Groupe')
+        ->and($client->sector)->toBeNull()
+        ->and($client->phone)->toBe('+2250708091011')
+        ->and($client->email)->toBe('compta@dakarpharma.ci')
+        ->and($client->tax_id)->toBe('CI123456')
+        ->and($client->address)->toBe('Abidjan Plateau');
+});
+
+test('la fiche client ouvre la modale de facture depuis une ligne du tableau', function () {
+    ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
+
+    $client = makePortfolioClient($company, ['name' => 'Dakar Pharma']);
+    $invoice = makePortfolioInvoice($client, [
+        'reference' => 'FAC-404',
+        'status' => InvoiceStatus::Overdue->value,
+        'total' => 350_000,
+        'amount_paid' => 0,
+        'issued_at' => now()->subDays(12),
+        'due_at' => now()->subDays(2),
+        'paid_at' => null,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.clients.show', ['client' => $client])
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id)
+        ->assertSee('FAC-404')
+        ->assertSee('Détail des prestations')
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+});
+
+test('la fiche client ouvre la modale de facture depuis le widget paiements', function () {
+    ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
+
+    $client = makePortfolioClient($company, ['name' => 'Dakar Pharma']);
+    $invoice = makePortfolioInvoice($client, [
+        'reference' => 'FAC-505',
+        'status' => InvoiceStatus::Paid->value,
+        'total' => 420_000,
+        'amount_paid' => 420_000,
+        'issued_at' => now()->subDays(20),
+        'due_at' => now()->subDays(5),
+        'paid_at' => now()->subDays(1),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.clients.show', ['client' => $client])
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id)
+        ->assertSee('FAC-505')
+        ->assertSee('Détail des prestations')
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+});
+
+test('la fiche client ouvre la modale de facture depuis la chronologie des interactions', function () {
+    ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
+
+    $client = makePortfolioClient($company, ['name' => 'Dakar Pharma']);
+    $invoice = makePortfolioInvoice($client, [
+        'reference' => 'FAC-606',
+        'status' => InvoiceStatus::Paid->value,
+        'total' => 275_000,
+        'amount_paid' => 275_000,
+        'issued_at' => now()->subDays(10),
+        'due_at' => now()->subDays(2),
+        'paid_at' => now()->subDay(),
+    ]);
+
+    makePortfolioReminder($invoice, [
+        'sent_at' => now()->subDays(2),
+        'message_body' => 'Rappel envoyé pour FAC-606.',
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.clients.show', ['client' => $client]);
+
+    $timeline = collect($component->get('detail')['timeline']);
+
+    expect($timeline->contains(fn (array $event) => $event['invoice_id'] === $invoice->id))->toBeTrue();
+
+    $component
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id)
+        ->assertSee('FAC-606')
+        ->assertSee('Détail des prestations')
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+});
