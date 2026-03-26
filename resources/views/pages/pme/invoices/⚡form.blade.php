@@ -748,23 +748,23 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <div class="space-y-4">
                     @foreach ($lines as $index => $line)
                         <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-4">
-                            <div class="flex items-start gap-3">
+                            <div class="flex flex-wrap items-start gap-3">
                                 {{-- Désignation --}}
-                                <div class="w-[45%] min-w-0">
+                                <div class="w-full min-w-0 md:flex-1">
                                     <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Désignation') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                     @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Quantité --}}
-                                <div class="w-[8%] shrink-0">
+                                <div class="w-16 shrink-0 md:w-20">
                                     <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Qté') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 </div>
 
                                 {{-- Prix unitaire --}}
                                 <div
-                                    class="w-[20%] shrink-0"
+                                    class="w-28 shrink-0 md:w-36"
                                     x-data="{
                                         raw: {{ (int) ($line['unit_price'] ?? 0) }},
                                         formatted: '',
@@ -811,7 +811,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 </div>
 
                                 {{-- Total ligne --}}
-                                <div class="flex-1 min-w-0"
+                                <div class="w-32 shrink-0 md:w-40"
                                      x-data="{
                                          get c() { return $wire.currencyJs; },
                                          get total() {
@@ -961,23 +961,23 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <section class="app-shell-panel p-6">
                     <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{{ __('Résumé') }}</h3>
                     <div class="space-y-3 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">{{ __('Référence') }}</span>
-                            <span class="font-medium text-ink">{{ $reference }}</span>
+                        <div class="flex items-baseline justify-between gap-3">
+                            <span class="shrink-0 text-slate-500">{{ __('Référence') }}</span>
+                            <span class="truncate text-right font-medium text-ink">{{ $reference }}</span>
                         </div>
                         @if ($this->selectedClient)
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">{{ __('Client') }}</span>
-                                <span class="font-medium text-ink">{{ $this->selectedClient->name }}</span>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="shrink-0 text-slate-500">{{ __('Client') }}</span>
+                                <span class="truncate text-right font-medium text-ink">{{ $this->selectedClient->name }}</span>
                             </div>
                         @endif
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">{{ __('Émission') }}</span>
-                            <span class="text-ink">{{ $issuedAt ? Carbon::parse($issuedAt)->locale('fr_FR')->translatedFormat('d M Y') : '—' }}</span>
+                        <div class="flex items-baseline justify-between gap-3">
+                            <span class="shrink-0 text-slate-500">{{ __('Émission') }}</span>
+                            <span class="whitespace-nowrap text-ink">{{ $issuedAt ? Carbon::parse($issuedAt)->locale('fr_FR')->translatedFormat('d M Y') : '—' }}</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">{{ __('Échéance') }}</span>
-                            <span class="text-ink">{{ $this->formattedDueDate ?: '—' }}</span>
+                        <div class="flex items-baseline justify-between gap-3">
+                            <span class="shrink-0 text-slate-500">{{ __('Échéance') }}</span>
+                            <span class="whitespace-nowrap text-ink">{{ $this->formattedDueDate ?: '—' }}</span>
                         </div>
                     </div>
 
@@ -985,26 +985,26 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
                     @php $totals = $this->computedTotals; @endphp
                     <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">{{ __('Sous-total HT') }}</span>
-                            <span class="font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
+                        <div class="flex items-baseline justify-between gap-3">
+                            <span class="shrink-0 text-slate-500">{{ __('Sous-total HT') }}</span>
+                            <span class="whitespace-nowrap font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
                         </div>
                         @if ($totals['discount_amount'] > 0)
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
-                                <span class="tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="shrink-0 text-slate-500">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                <span class="whitespace-nowrap tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
                             </div>
                         @endif
                         @if ($totals['tax_amount'] > 0)
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
-                                <span class="tabular-nums text-ink">{{ CurrencyService::format($totals['tax_amount'], $currency) }}</span>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="shrink-0 text-slate-500">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
+                                <span class="whitespace-nowrap tabular-nums text-ink">{{ CurrencyService::format($totals['tax_amount'], $currency) }}</span>
                             </div>
                         @endif
                         <hr class="border-slate-100">
-                        <div class="flex justify-between">
-                            <span class="font-semibold text-ink">{{ __('Total TTC') }}</span>
-                            <span class="text-lg font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
+                        <div class="flex items-baseline justify-between gap-3">
+                            <span class="shrink-0 font-semibold text-ink">{{ __('Total TTC') }}</span>
+                            <span class="whitespace-nowrap text-lg font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
                         </div>
                     </div>
                     @if ($this->formattedDueDate)
