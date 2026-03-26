@@ -27,7 +27,6 @@ class InvoiceLineFactory extends Factory
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
             'tax_rate' => 0,
-            'discount' => 0,
             'total' => $quantity * $unitPrice,
         ];
     }
@@ -36,14 +35,6 @@ class InvoiceLineFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'tax_rate' => $rate,
-        ]);
-    }
-
-    public function withDiscount(int $percent = 10): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'discount' => $percent,
-            'total' => (int) round($attributes['quantity'] * $attributes['unit_price'] * (100 - $percent) / 100),
         ]);
     }
 }

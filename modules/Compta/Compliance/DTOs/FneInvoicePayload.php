@@ -23,7 +23,7 @@ class FneInvoicePayload
                 'description' => $l->description,
                 'quantity' => $l->quantity,
                 'amount' => $l->unit_price,
-                'discount' => $l->discount ?? 0,
+                'discount' => 0,
                 'measurementUnit' => 'pcs',
             ])->toArray(),
         ];

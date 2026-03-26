@@ -374,7 +374,6 @@ class PmeDashboardSeeder extends Seeder
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
                 'tax_rate' => 18,
-                'discount' => 0,
                 'total' => $quantity * $unitPrice,
             ]);
         }
@@ -465,7 +464,6 @@ class PmeDashboardSeeder extends Seeder
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
                 'tax_rate' => 18,
-                'discount' => 0,
                 'total' => $quantity * $unitPrice,
             ]);
         }

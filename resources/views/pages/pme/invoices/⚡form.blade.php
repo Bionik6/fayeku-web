@@ -33,6 +33,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public int $taxRate = 18;
 
+    public int $discount = 0;
+
     public int $customTaxRate = 0;
 
     public string $taxMode = '18';
@@ -108,6 +110,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             $this->issuedAt = $invoice->issued_at?->format('Y-m-d') ?? '';
             $this->dueAt = $invoice->due_at?->format('Y-m-d') ?? '';
             $this->currency = $invoice->currency ?? 'XOF';
+            $this->discount = $invoice->discount ?? 0;
             $this->notes = $invoice->notes ?? '';
             $this->paymentTerms = $invoice->payment_terms ?? '';
             $this->paymentInstructions = $invoice->payment_instructions ?? '';
@@ -130,7 +133,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 'description' => $line->description,
                 'quantity' => $line->quantity,
                 'unit_price' => $line->unit_price,
-                'discount' => $line->discount,
             ])->toArray();
         } else {
             abort_unless(auth()->user()->can('create', Invoice::class), 403);
@@ -230,7 +232,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function computedTotals(): array
     {
-        return app(InvoiceService::class)->calculateInvoiceTotals($this->lines, $this->taxRate);
+        return app(InvoiceService::class)->calculateInvoiceTotals($this->lines, $this->taxRate, $this->discount);
     }
 
     #[Computed]
@@ -441,6 +443,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'dueAt' => ['required', 'date', 'after_or_equal:issuedAt'],
             'currency' => ['required', 'string', 'in:'.implode(',', CurrencyService::codes())],
             'taxRate' => ['required', 'integer', 'min:0', 'max:100'],
+            'discount' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'paymentTerms' => ['nullable', 'string', 'max:1000'],
             'paymentInstructions' => ['nullable', 'string', 'max:1000'],
@@ -448,7 +451,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'lines.*.description' => ['required', 'string', 'max:500'],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
             'lines.*.unit_price' => ['required', 'integer', 'min:0'],
-            'lines.*.discount' => ['nullable', 'integer', 'min:0', 'max:100'],
         ], [
             'clientId.required' => __('Veuillez sélectionner un client.'),
             'reference.required' => __('La référence est requise.'),
@@ -474,6 +476,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'issued_at' => $this->issuedAt,
             'due_at' => $this->dueAt,
             'tax_rate' => $this->taxRate,
+            'discount' => $this->discount,
             'notes' => $this->emptyToNull($this->notes),
             'payment_terms' => $this->emptyToNull($this->paymentTerms),
             'payment_instructions' => $this->emptyToNull($this->paymentInstructions),
@@ -487,7 +490,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'description' => $line['description'],
             'quantity' => (int) $line['quantity'],
             'unit_price' => (int) $line['unit_price'],
-            'discount' => (int) ($line['discount'] ?? 0),
         ])->toArray();
     }
 
@@ -498,7 +500,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'description' => '',
             'quantity' => 1,
             'unit_price' => 0,
-            'discount' => 0,
         ];
     }
 
@@ -749,21 +750,21 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-4">
                             <div class="flex items-start gap-3">
                                 {{-- Désignation --}}
-                                <div class="flex-1 min-w-0">
+                                <div class="w-[45%] min-w-0">
                                     <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Désignation') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                     @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Quantité --}}
-                                <div class="w-20 shrink-0">
+                                <div class="w-[8%] shrink-0">
                                     <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Qté') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 </div>
 
                                 {{-- Prix unitaire --}}
                                 <div
-                                    class="w-40 shrink-0"
+                                    class="w-[20%] shrink-0"
                                     x-data="{
                                         raw: {{ (int) ($line['unit_price'] ?? 0) }},
                                         formatted: '',
@@ -809,37 +810,27 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                     />
                                 </div>
 
-                                {{-- Remise (%) --}}
-                                <div class="w-16 shrink-0">
-                                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Rem.%') }}</label>
-                                    <input wire:model.blur="lines.{{ $index }}.discount" type="number" min="0" max="100" placeholder="0" class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                </div>
-
                                 {{-- Total ligne --}}
-                                <div class="w-32 shrink-0">
+                                <div class="flex-1 min-w-0"
+                                     x-data="{
+                                         get c() { return $wire.currencyJs; },
+                                         get total() {
+                                             let qty = parseInt($wire.lines[{{ $index }}]?.quantity) || 0;
+                                             let price = parseInt($wire.lines[{{ $index }}]?.unit_price) || 0;
+                                             return qty * price;
+                                         },
+                                         get display() {
+                                             let t = this.total;
+                                             if (this.c.decimals > 0) {
+                                                 let v = (t / Math.pow(10, this.c.decimals)).toFixed(this.c.decimals);
+                                                 return v + ' ' + this.c.label;
+                                             }
+                                             return t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.c.thousandsSep) + ' ' + this.c.label;
+                                         }
+                                     }"
+                                >
                                     <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Total') }}</label>
-                                    <p class="py-2.5 text-right text-sm font-semibold tabular-nums text-ink"
-                                       x-data="{
-                                           get c() { return $wire.currencyJs; },
-                                           get total() {
-                                               let qty = parseInt($wire.lines[{{ $index }}]?.quantity) || 0;
-                                               let price = parseInt($wire.lines[{{ $index }}]?.unit_price) || 0;
-                                               let discount = parseInt($wire.lines[{{ $index }}]?.discount) || 0;
-                                               let sub = qty * price;
-                                               if (discount > 0) sub = Math.round(sub * (100 - discount) / 100);
-                                               return sub;
-                                           },
-                                           get display() {
-                                               let t = this.total;
-                                               if (this.c.decimals > 0) {
-                                                   let v = (t / Math.pow(10, this.c.decimals)).toFixed(this.c.decimals);
-                                                   return v + ' ' + this.c.label;
-                                               }
-                                               return t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.c.thousandsSep) + ' ' + this.c.label;
-                                           }
-                                       }"
-                                       x-text="display"
-                                    ></p>
+                                    <input type="text" readonly :value="display" tabindex="-1" class="w-full cursor-default rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-right text-sm font-semibold tabular-nums text-ink focus:outline-none" />
                                 </div>
 
                                 {{-- Delete button (inline, with tooltip) --}}
@@ -872,32 +863,50 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 </div>
             </section>
 
-            {{-- Totals & TVA block (after lines) --}}
+            {{-- Remise, TVA & Totals block --}}
             <section class="app-shell-panel p-6">
-                <div class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                    {{-- TVA selector --}}
-                    <div class="md:w-1/2">
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">{{ __('TVA') }}</label>
-                        <div class="flex gap-2">
-                            <button type="button" wire:click="$set('taxMode', '0')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === '0' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ __('Sans TVA') }}</button>
-                            <button type="button" wire:click="$set('taxMode', '18')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === '18' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">18%</button>
-                            <button type="button" wire:click="$set('taxMode', 'custom')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === 'custom' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ __('Autre') }}</button>
-                        </div>
-                        @if ($taxMode === 'custom')
-                            <div class="mt-3 flex items-center gap-2">
-                                <input wire:model.live="customTaxRate" type="number" min="0" max="100" class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                @php $totals = $this->computedTotals; @endphp
+                <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                    {{-- Left: Remise + TVA controls --}}
+                    <div class="space-y-5 md:w-1/2">
+                        {{-- Remise globale --}}
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">{{ __('Remise globale') }}</label>
+                            <div class="flex items-center gap-2">
+                                <input wire:model.live="discount" type="number" min="0" max="100" placeholder="0" class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 <span class="text-sm text-slate-500">%</span>
                             </div>
-                        @endif
+                        </div>
+
+                        {{-- TVA --}}
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">{{ __('TVA') }}</label>
+                            <div class="flex gap-2">
+                                <button type="button" wire:click="$set('taxMode', '0')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === '0' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ __('Sans TVA') }}</button>
+                                <button type="button" wire:click="$set('taxMode', '18')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === '18' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">18%</button>
+                                <button type="button" wire:click="$set('taxMode', 'custom')" class="rounded-xl border px-4 py-2 text-sm font-medium transition {{ $taxMode === 'custom' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600 hover:border-primary/30' }}">{{ __('Autre') }}</button>
+                            </div>
+                            @if ($taxMode === 'custom')
+                                <div class="mt-3 flex items-center gap-2">
+                                    <input wire:model.live="customTaxRate" type="number" min="0" max="100" class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                    <span class="text-sm text-slate-500">%</span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
-                    {{-- Totals display --}}
-                    @php $totals = $this->computedTotals; @endphp
+                    {{-- Right: Totals display --}}
                     <div class="space-y-2 text-sm md:w-1/2 md:text-right">
                         <div class="flex justify-between md:justify-end md:gap-8">
                             <span class="text-slate-500">{{ __('Sous-total HT') }}</span>
                             <span class="font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
                         </div>
+                        @if ($totals['discount_amount'] > 0)
+                            <div class="flex justify-between md:justify-end md:gap-8">
+                                <span class="text-slate-500">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                <span class="tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
+                            </div>
+                        @endif
                         @if ($totals['tax_amount'] > 0)
                             <div class="flex justify-between md:justify-end md:gap-8">
                                 <span class="text-slate-500">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
@@ -980,6 +989,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             <span class="text-slate-500">{{ __('Sous-total HT') }}</span>
                             <span class="font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
                         </div>
+                        @if ($totals['discount_amount'] > 0)
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                <span class="tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
+                            </div>
+                        @endif
                         @if ($totals['tax_amount'] > 0)
                             <div class="flex justify-between">
                                 <span class="text-slate-500">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>

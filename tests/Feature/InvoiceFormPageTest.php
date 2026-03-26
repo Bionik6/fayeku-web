@@ -38,7 +38,6 @@ function createDraftInvoice(Company $company): Invoice
         'quantity' => 2,
         'unit_price' => 50_000,
         'tax_rate' => 18,
-        'discount' => 0,
         'total' => 100_000,
     ]);
 

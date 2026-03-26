@@ -491,7 +491,6 @@ class DashboardDemoSeeder extends Seeder
                 'quantity' => $qty,
                 'unit_price' => $unitPrice,
                 'tax_rate' => $taxRate,
-                'discount' => 0,
                 'total' => $lineTotal,
             ]);
         }

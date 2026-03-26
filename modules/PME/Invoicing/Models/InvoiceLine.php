@@ -20,14 +20,13 @@ class InvoiceLine extends Model
 
     protected $fillable = [
         'invoice_id', 'description', 'quantity',
-        'unit_price', 'tax_rate', 'discount', 'total',
+        'unit_price', 'tax_rate', 'total',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'integer',
         'tax_rate' => 'integer',
-        'discount' => 'integer',
         'total' => 'integer',
     ];
 

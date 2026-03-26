@@ -30,31 +30,26 @@ class InvoiceService
     }
 
     /**
-     * Calculate a single line's total (HT after discount).
+     * Calculate a single line's total (qty × unit_price).
      *
-     * @param  array{quantity: int, unit_price: int, discount: int}  $line
-     * @return int Total HT after discount
+     * @param  array{quantity: int, unit_price: int}  $line
      */
     public function calculateLineTotal(array $line): int
     {
-        $subtotal = (int) $line['quantity'] * (int) $line['unit_price'];
-        $discount = (int) ($line['discount'] ?? 0);
-
-        if ($discount > 0) {
-            $subtotal = (int) round($subtotal * (100 - $discount) / 100);
-        }
-
-        return $subtotal;
+        return (int) $line['quantity'] * (int) $line['unit_price'];
     }
 
     /**
-     * Calculate invoice-level totals from lines + global tax rate.
+     * Calculate invoice-level totals from lines + global discount + global tax rate.
      *
-     * @param  array<int, array{quantity: int, unit_price: int, discount: int}>  $lines
+     * Order: subtotal → discount → discountedSubtotal → TVA → total
+     *
+     * @param  array<int, array{quantity: int, unit_price: int}>  $lines
      * @param  int  $taxRate  Global tax rate percentage (e.g. 18)
-     * @return array{subtotal: int, tax_amount: int, total: int}
+     * @param  int  $discount  Global discount percentage (e.g. 10)
+     * @return array{subtotal: int, discount_amount: int, discounted_subtotal: int, tax_amount: int, total: int}
      */
-    public function calculateInvoiceTotals(array $lines, int $taxRate = 0): array
+    public function calculateInvoiceTotals(array $lines, int $taxRate = 0, int $discount = 0): array
     {
         $subtotal = 0;
 
@@ -62,12 +57,16 @@ class InvoiceService
             $subtotal += $this->calculateLineTotal($line);
         }
 
-        $taxAmount = $taxRate > 0 ? (int) round($subtotal * $taxRate / 100) : 0;
+        $discountAmount = $discount > 0 ? (int) round($subtotal * $discount / 100) : 0;
+        $discountedSubtotal = $subtotal - $discountAmount;
+        $taxAmount = $taxRate > 0 ? (int) round($discountedSubtotal * $taxRate / 100) : 0;
 
         return [
             'subtotal' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'discounted_subtotal' => $discountedSubtotal,
             'tax_amount' => $taxAmount,
-            'total' => $subtotal + $taxAmount,
+            'total' => $discountedSubtotal + $taxAmount,
         ];
     }
 
@@ -80,9 +79,10 @@ class InvoiceService
     public function create(Company $company, array $data, array $lines): Invoice
     {
         $taxRate = (int) ($data['tax_rate'] ?? 0);
+        $discount = (int) ($data['discount'] ?? 0);
 
-        return DB::transaction(function () use ($company, $data, $lines, $taxRate) {
-            $totals = $this->calculateInvoiceTotals($lines, $taxRate);
+        return DB::transaction(function () use ($company, $data, $lines, $taxRate, $discount) {
+            $totals = $this->calculateInvoiceTotals($lines, $taxRate, $discount);
 
             $invoice = Invoice::query()->create([
                 'company_id' => $company->id,
@@ -95,6 +95,7 @@ class InvoiceService
                 'subtotal' => $totals['subtotal'],
                 'tax_amount' => $totals['tax_amount'],
                 'total' => $totals['total'],
+                'discount' => $discount,
                 'amount_paid' => 0,
                 'notes' => $data['notes'] ?? null,
                 'payment_terms' => $data['payment_terms'] ?? null,
@@ -118,9 +119,10 @@ class InvoiceService
     public function update(Invoice $invoice, array $data, array $lines): Invoice
     {
         $taxRate = (int) ($data['tax_rate'] ?? 0);
+        $discount = (int) ($data['discount'] ?? 0);
 
-        return DB::transaction(function () use ($invoice, $data, $lines, $taxRate) {
-            $totals = $this->calculateInvoiceTotals($lines, $taxRate);
+        return DB::transaction(function () use ($invoice, $data, $lines, $taxRate, $discount) {
+            $totals = $this->calculateInvoiceTotals($lines, $taxRate, $discount);
 
             $invoice->update([
                 'client_id' => $data['client_id'],
@@ -130,6 +132,7 @@ class InvoiceService
                 'subtotal' => $totals['subtotal'],
                 'tax_amount' => $totals['tax_amount'],
                 'total' => $totals['total'],
+                'discount' => $discount,
                 'notes' => $data['notes'] ?? null,
                 'payment_terms' => $data['payment_terms'] ?? null,
                 'payment_instructions' => $data['payment_instructions'] ?? null,
@@ -176,7 +179,6 @@ class InvoiceService
                 'quantity' => (int) $line['quantity'],
                 'unit_price' => (int) $line['unit_price'],
                 'tax_rate' => $taxRate,
-                'discount' => (int) ($line['discount'] ?? 0),
                 'total' => $this->calculateLineTotal($line),
             ]);
         }

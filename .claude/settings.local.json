@@ -20,7 +20,8 @@
       "Bash(python3 -c \":*)",
       "Bash(pip3 install:*)",
       "Bash(find /Volumes/Data/Business/Fayeku/Developments/fayeku-web -type f \\\\\\(-name *InvoiceForm* -o -name *form* \\\\\\) -path *Livewire* -o -path *livewire*)",
-      "Bash(find /Volumes/Data/Business/Fayeku/Developments/fayeku-web -type f -path *Pages* -name *Invoices* -o -path *Pages* -name *form*)"
+      "Bash(find /Volumes/Data/Business/Fayeku/Developments/fayeku-web -type f -path *Pages* -name *Invoices* -o -path *Pages* -name *form*)",
+      "Bash(grep -n \"discount\\\\|public $\\\\|protected $\\\\|buildData\\\\|calculateLine\\\\|validateData\\\\|validation\" \"/Volumes/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/pme/invoices/⚡form.blade.php\")"
     ]
   },
   "enableAllProjectMcpServers": true,

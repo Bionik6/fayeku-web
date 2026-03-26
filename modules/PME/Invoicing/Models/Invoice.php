@@ -28,7 +28,7 @@ class Invoice extends Model
     protected $fillable = [
         'company_id', 'client_id', 'reference', 'currency', 'status',
         'issued_at', 'due_at', 'paid_at',
-        'subtotal', 'tax_amount', 'total', 'amount_paid',
+        'subtotal', 'tax_amount', 'total', 'discount', 'amount_paid',
         'notes', 'payment_terms', 'payment_instructions',
         'certification_authority', 'certification_data',
     ];
@@ -40,6 +40,7 @@ class Invoice extends Model
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
+        'discount' => 'integer',
         'amount_paid' => 'integer',
         'status' => InvoiceStatus::class,
         'certification_authority' => CertificationAuthority::class,
