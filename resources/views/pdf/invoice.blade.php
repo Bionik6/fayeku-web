@@ -45,7 +45,6 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 28px;
-            font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
         }
         .meta-table td {
             padding: 2px 0;
@@ -58,8 +57,7 @@
         }
         .meta-value {
             font-size: 9.5pt;
-            font-weight: 600;
-            font-family: 'DejaVu Sans', sans-serif !important;
+            font-weight: bold;
         }
 
         /* Parties */
