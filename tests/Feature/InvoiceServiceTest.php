@@ -143,8 +143,6 @@ test('create stores invoice with lines in transaction', function () {
         'issued_at' => now()->format('Y-m-d'),
         'due_at' => now()->addDays(30)->format('Y-m-d'),
         'notes' => null,
-        'payment_terms' => null,
-        'payment_instructions' => null,
     ], [
         ['description' => 'Service A', 'quantity' => 2, 'unit_price' => 50_000],
         ['description' => 'Service B', 'quantity' => 1, 'unit_price' => 30_000],

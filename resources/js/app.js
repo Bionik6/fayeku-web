@@ -1,5 +1,8 @@
 import flatpickr from "flatpickr";
 import { French } from "flatpickr/dist/l10n/fr.js";
+import intlTelInput from "intl-tel-input";
+
+window.intlTelInput = intlTelInput;
 
 flatpickr.localize(French);
 

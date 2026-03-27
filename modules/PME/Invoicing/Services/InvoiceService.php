@@ -98,8 +98,9 @@ class InvoiceService
                 'discount' => $discount,
                 'amount_paid' => 0,
                 'notes' => $data['notes'] ?? null,
-                'payment_terms' => $data['payment_terms'] ?? null,
-                'payment_instructions' => $data['payment_instructions'] ?? null,
+                'payment_method' => $data['payment_method'] ?? null,
+                'payment_details' => $data['payment_details'] ?? null,
+                'reminder_schedule' => $data['reminder_schedule'] ?? null,
             ]);
 
             $this->createLines($invoice, $lines, $taxRate);
@@ -134,8 +135,9 @@ class InvoiceService
                 'total' => $totals['total'],
                 'discount' => $discount,
                 'notes' => $data['notes'] ?? null,
-                'payment_terms' => $data['payment_terms'] ?? null,
-                'payment_instructions' => $data['payment_instructions'] ?? null,
+                'payment_method' => $data['payment_method'] ?? null,
+                'payment_details' => $data['payment_details'] ?? null,
+                'reminder_schedule' => $data['reminder_schedule'] ?? null,
             ]);
 
             $invoice->lines()->delete();

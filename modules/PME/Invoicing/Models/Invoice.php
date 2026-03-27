@@ -30,6 +30,7 @@ class Invoice extends Model
         'issued_at', 'due_at', 'paid_at',
         'subtotal', 'tax_amount', 'total', 'discount', 'amount_paid',
         'notes', 'payment_terms', 'payment_instructions',
+        'payment_method', 'payment_details', 'reminder_schedule',
         'certification_authority', 'certification_data',
     ];
 
@@ -43,6 +44,7 @@ class Invoice extends Model
         'discount' => 'integer',
         'amount_paid' => 'integer',
         'status' => InvoiceStatus::class,
+        'reminder_schedule' => 'array',
         'certification_authority' => CertificationAuthority::class,
         'certification_data' => 'array',
     ];

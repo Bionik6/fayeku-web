@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 @import 'flatpickr/dist/flatpickr.min.css' layer(base);
+@import 'intl-tel-input/build/css/intlTelInput.css' layer(base);
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -398,4 +399,42 @@ select:focus[data-flux-control] {
 
 .flatpickr-day.today {
     border-color: var(--color-accent) !important;
+}
+
+/* intl-tel-input Fayeku overrides */
+.iti--fayeku {
+    display: flex;
+    width: 100%;
+}
+
+.iti--fayeku .iti__tel-input {
+    width: 100%;
+}
+
+.iti--fayeku .iti__country-container {
+    position: relative;
+}
+
+.iti--fayeku .iti__dropdown-content {
+    border-radius: 1rem;
+    border: 1px solid var(--color-slate-200);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.iti--fayeku .iti__search-input {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--color-slate-200);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.iti--fayeku .iti__country {
+    padding: 0.5rem 0.75rem;
+}
+
+.iti--fayeku .iti__country:hover,
+.iti--fayeku .iti__country--highlight {
+    background-color: var(--color-slate-50);
 }

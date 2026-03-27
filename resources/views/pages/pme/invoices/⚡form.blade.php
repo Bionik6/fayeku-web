@@ -41,9 +41,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public string $notes = '';
 
-    public string $paymentTerms = '';
+    public string $paymentMethod = '';
 
-    public string $paymentInstructions = '';
+    public string $paymentDetails = '';
+
+    /** @var array<int, string> */
+    public array $reminderSchedule = ['-7', '-2', '0', '+7'];
 
     public string $dueDatePreset = '30';
 
@@ -114,8 +117,9 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             $this->currency = $invoice->currency ?? 'XOF';
             $this->discount = $invoice->discount ?? 0;
             $this->notes = $invoice->notes ?? '';
-            $this->paymentTerms = $invoice->payment_terms ?? '';
-            $this->paymentInstructions = $invoice->payment_instructions ?? '';
+            $this->paymentMethod = $invoice->payment_method ?? '';
+            $this->paymentDetails = $invoice->payment_details ?? '';
+            $this->reminderSchedule = $invoice->reminder_schedule ?? ['-7', '-2', '0', '+7'];
             $this->dueDatePreset = 'custom';
 
             $firstLine = $invoice->lines->first();
@@ -264,7 +268,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             }
         }
 
-        if ($this->notes !== '' || $this->paymentTerms !== '' || $this->paymentInstructions !== '') {
+        if ($this->notes !== '') {
             return true;
         }
 
@@ -297,10 +301,10 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         };
     }
 
-    public function updatedCustomTaxRate(int $value): void
+    public function updatedCustomTaxRate(?int $value): void
     {
         if ($this->taxMode === 'custom') {
-            $this->taxRate = max(0, min(100, $value));
+            $this->taxRate = max(0, min(100, $value ?? 0));
         }
     }
 
@@ -361,6 +365,18 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         unset($this->lines[$index]);
         $this->lines = array_values($this->lines);
+    }
+
+    public function toggleReminder(string $value): void
+    {
+        if (in_array($value, $this->reminderSchedule)) {
+            $this->reminderSchedule = array_values(array_filter(
+                $this->reminderSchedule,
+                fn (string $v) => $v !== $value,
+            ));
+        } else {
+            $this->reminderSchedule[] = $value;
+        }
     }
 
     /**
@@ -483,8 +499,10 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'taxRate' => ['required', 'integer', 'min:0', 'max:100'],
             'discount' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'paymentTerms' => ['nullable', 'string', 'max:1000'],
-            'paymentInstructions' => ['nullable', 'string', 'max:1000'],
+            'paymentMethod' => ['nullable', 'string', 'in:wave,orange_money,cash,bank_transfer'],
+            'paymentDetails' => ['nullable', 'string', 'max:1000'],
+            'reminderSchedule' => ['nullable', 'array'],
+            'reminderSchedule.*' => ['string', 'in:-7,-2,0,+7,+15,+30'],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.description' => ['required', 'string', 'max:500'],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
@@ -516,8 +534,9 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'tax_rate' => $this->taxRate,
             'discount' => $this->discount,
             'notes' => $this->emptyToNull($this->notes),
-            'payment_terms' => $this->emptyToNull($this->paymentTerms),
-            'payment_instructions' => $this->emptyToNull($this->paymentInstructions),
+            'payment_method' => $this->emptyToNull($this->paymentMethod),
+            'payment_details' => $this->emptyToNull($this->paymentDetails),
+            'reminder_schedule' => $this->reminderSchedule,
         ];
     }
 
@@ -876,7 +895,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                      }"
                                 >
                                     <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Total') }}</label>
-                                    <p class="px-1 py-2.5 text-right text-sm font-bold tabular-nums text-ink" x-text="display"></p>
+                                    <input type="text" disabled :value="display" tabindex="-1" class="w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-right text-sm font-bold tabular-nums text-ink" />
                                 </div>
 
                                 {{-- Delete button (inline, with tooltip) --}}
@@ -984,34 +1003,97 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 </div>
             </section>
 
+            {{-- Paiement --}}
+            <section class="app-shell-panel p-6">
+                <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Paiement') }}</h3>
+                <p class="mb-5 text-xs text-slate-500">{{ __('Sélectionnez le moyen de paiement accepté pour cette facture.') }}</p>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Moyen de paiement') }}</label>
+                        <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                            @foreach ([
+                                ['wave', 'Wave'],
+                                ['orange_money', 'Orange Money'],
+                                ['cash', __('Espèces')],
+                                ['bank_transfer', __('Virement bancaire')],
+                            ] as [$val, $label])
+                                <button
+                                    type="button"
+                                    wire:click="$set('paymentMethod', '{{ $val }}')"
+                                    class="rounded-xl border px-3 py-3 text-center text-sm font-medium transition {{ $paymentMethod === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30 hover:bg-slate-50' }}"
+                                >
+                                    {{ $label }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if ($paymentMethod === 'bank_transfer')
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('RIB / Coordonnées bancaires') }}</label>
+                            <textarea wire:model.blur="paymentDetails" rows="3" placeholder="{{ __('Ex : Banque, Code banque, N° de compte, Clé RIB…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
+                        </div>
+                    @endif
+
+                    @if ($paymentMethod === 'wave' || $paymentMethod === 'orange_money')
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Numéro de réception') }}</label>
+                            <input wire:model.blur="paymentDetails" type="text" placeholder="{{ __('Ex : +221 77 123 45 67') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                        </div>
+                    @endif
+                </div>
+            </section>
+
+            {{-- Relances --}}
+            <section class="app-shell-panel p-6">
+                <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Relances') }}</h3>
+                <p class="mb-5 text-xs text-slate-500">{{ __('Configurez les relances automatiques envoyées au client autour de l\'échéance.') }}</p>
+
+                <div class="space-y-4">
+                    <div class="flex flex-wrap gap-2.5">
+                        @foreach ([
+                            ['-7', __('J-7')],
+                            ['-2', __('J-2')],
+                            ['0', __('Jour J')],
+                            ['+7', __('J+7')],
+                            ['+15', __('J+15')],
+                            ['+30', __('J+30')],
+                        ] as [$val, $label])
+                            <button
+                                type="button"
+                                wire:click="toggleReminder('{{ $val }}')"
+                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ in_array($val, $reminderSchedule) ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30 hover:bg-slate-50' }}"
+                            >
+                                {{ $label }}
+                            </button>
+                        @endforeach
+                    </div>
+
+                    @if (count($reminderSchedule) > 0)
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            <svg class="mr-1.5 inline size-4 text-teal" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                            {{ __(':count relance(s) configurée(s) autour de l\'échéance.', ['count' => count($reminderSchedule)]) }}
+                        </div>
+                    @else
+                        <div class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                            <svg class="mr-1.5 inline size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                            {{ __('Aucune relance configurée. Le client ne sera pas relancé automatiquement.') }}
+                        </div>
+                    @endif
+                </div>
+            </section>
+
             {{-- Notes & conditions --}}
             <section class="app-shell-panel p-6" x-data="{ open: false }">
                 <button type="button" @click="open = !open" class="flex w-full items-center justify-between">
-                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Notes & conditions') }}</h3>
+                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Notes') }}</h3>
                     <svg class="size-5 text-slate-500 transition" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                 </button>
-                <div x-show="open" x-collapse class="mt-4 space-y-5">
+                <div x-show="open" x-collapse class="mt-4">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Notes (visible sur la facture)') }}</label>
                         <textarea wire:model.blur="notes" rows="2" placeholder="{{ __('Ex : Merci pour votre confiance…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Conditions de paiement') }}</label>
-                        <div class="mb-2 flex flex-wrap gap-2">
-                            @foreach ([__('Paiement à réception'), __('Paiement à 30 jours'), __('50% à la commande, 50% à la livraison')] as $template)
-                                <button type="button" wire:click="$set('paymentTerms', '{{ $template }}')" class="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ $template }}</button>
-                            @endforeach
-                        </div>
-                        <textarea wire:model.blur="paymentTerms" rows="2" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Instructions de règlement') }}</label>
-                        <div class="mb-2 flex flex-wrap gap-2">
-                            @foreach ([__('Virement bancaire'), __('Mobile Money'), __('Espèces')] as $template)
-                                <button type="button" wire:click="$set('paymentInstructions', '{{ $template }}')" class="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700 transition hover:border-primary/30 hover:text-primary">{{ $template }}</button>
-                            @endforeach
-                        </div>
-                        <textarea wire:model.blur="paymentInstructions" rows="2" placeholder="{{ __('Ex : Virement au compte BCEAO n° …') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                     </div>
                 </div>
             </section>
@@ -1078,12 +1160,22 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <section class="app-shell-panel p-5">
                     <h3 class="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Suivi') }}</h3>
                     <div class="space-y-2.5 text-sm">
+                        @if ($paymentMethod)
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-slate-600">{{ __('Paiement') }}</span>
+                                <span class="text-xs font-medium text-ink">{{ match($paymentMethod) { 'wave' => 'Wave', 'orange_money' => 'Orange Money', 'cash' => __('Espèces'), 'bank_transfer' => __('Virement'), default => '—' } }}</span>
+                            </div>
+                        @endif
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-slate-600">{{ __('Relances Fayeku') }}</span>
-                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-teal">
-                                <span class="size-1.5 rounded-full bg-teal"></span>
-                                {{ __('Activées') }}
-                            </span>
+                            @if (count($reminderSchedule) > 0)
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-teal">
+                                    <span class="size-1.5 rounded-full bg-teal"></span>
+                                    {{ __(':count activée(s)', ['count' => count($reminderSchedule)]) }}
+                                </span>
+                            @else
+                                <span class="text-xs font-medium text-slate-500">{{ __('Désactivées') }}</span>
+                            @endif
                         </div>
                         @if ($this->selectedClient)
                             <div class="flex items-center justify-between gap-3">
@@ -1176,21 +1268,38 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                     <option value="Autre">{{ __('Autre') }}</option>
                                 </select>
                             </div>
-                            <div x-data="{ country: '{{ $clientPhoneCountry }}', digits: '', get maxLen() { return this.country === 'SN' ? 9 : 10 }, get placeholder() { return this.country === 'SN' ? 'XX XXX XX XX' : 'XX XX XX XX XX' }, format(d) { const s = d.slice(0, this.maxLen); if (this.country === 'SN') { if (s.length <= 2) return s; if (s.length <= 5) return s.slice(0,2)+' '+s.slice(2); if (s.length <= 7) return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5); return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5,7)+' '+s.slice(7); } const g = []; for (let i=0; i<s.length; i+=2) g.push(s.slice(i,i+2)); return g.join(' '); }, onInput(e) { this.digits = e.target.value.replace(/\D/g, ''); e.target.value = this.format(this.digits); this.sync(); }, changeCountry() { this.digits = ''; this.$refs.phoneInput.value = ''; this.sync(); }, sync() { const prefix = this.country === 'CI' ? '225' : '221'; $wire.clientPhone = this.digits ? '+'+prefix+this.digits : ''; $wire.clientPhoneCountry = this.country; } }">
+                            <div
+                                wire:ignore
+                                x-data="{
+                                    iti: null,
+                                    init() {
+                                        this.iti = window.intlTelInput(this.$refs.phoneInput, {
+                                            initialCountry: '{{ strtolower($clientPhoneCountry) }}',
+                                            preferredCountries: ['sn', 'ci', 'fr', 'ml', 'bf', 'gn', 'tg', 'bj', 'ne', 'cm'],
+                                            separateDialCode: true,
+                                            utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@26/build/js/utils.js',
+                                            containerClass: 'iti--fayeku w-full',
+                                        });
+                                        this.$refs.phoneInput.addEventListener('countrychange', () => {
+                                            const data = this.iti.getSelectedCountryData();
+                                            $wire.clientPhoneCountry = data.iso2.toUpperCase();
+                                        });
+                                    },
+                                    syncPhone() {
+                                        const number = this.iti.getNumber();
+                                        $wire.clientPhone = number || '';
+                                    },
+                                    destroy() { if (this.iti) this.iti.destroy(); }
+                                }"
+                            >
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Téléphone / WhatsApp') }}</label>
-                                <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                    <div class="relative shrink-0">
-                                        <select x-model="country" @change="changeCountry()" class="h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-9 text-sm font-medium text-ink outline-none focus:ring-0">
-                                            <option value="SN">SEN (+221)</option>
-                                            <option value="CI">CIV (+225)</option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
-                                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" /></svg>
-                                        </div>
-                                    </div>
-                                    <div class="my-3 w-px shrink-0 bg-slate-200"></div>
-                                    <input x-ref="phoneInput" type="tel" inputmode="numeric" :placeholder="placeholder" @input="onInput($event)" class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-500 outline-none focus:ring-0" />
-                                </div>
+                                <input
+                                    x-ref="phoneInput"
+                                    type="tel"
+                                    @input="syncPhone()"
+                                    @blur="syncPhone()"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                />
                             </div>
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Email') }}</label>

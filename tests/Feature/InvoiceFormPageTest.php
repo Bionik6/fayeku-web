@@ -343,3 +343,259 @@ test('le preset 7 jours calcule correctement la date d\'échéance', function ()
 
     expect($component->get('dueAt'))->toBe($expected);
 });
+
+// ─── Custom tax rate null handling ──────────────────────────────────────────
+
+test('le taux de TVA personnalisé accepte null quand le champ est vidé', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', null)
+        ->assertSet('taxRate', 0)
+        ->assertHasNoErrors();
+});
+
+test('le taux de TVA personnalisé applique la valeur saisie', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', 10)
+        ->assertSet('taxRate', 10);
+});
+
+test('le taux de TVA personnalisé est limité entre 0 et 100', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', 150)
+        ->assertSet('taxRate', 100);
+});
+
+// ─── Payment method ─────────────────────────────────────────────────────────
+
+test('on peut sélectionner un moyen de paiement', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('paymentMethod', 'wave')
+        ->assertSet('paymentMethod', 'wave');
+});
+
+test('on peut sauvegarder une facture avec un moyen de paiement', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->set('paymentMethod', 'bank_transfer')
+        ->set('paymentDetails', 'BCEAO 12345678')
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->payment_method)->toBe('bank_transfer')
+        ->and($invoice->payment_details)->toBe('BCEAO 12345678');
+});
+
+test('la validation refuse un moyen de paiement invalide', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->set('paymentMethod', 'bitcoin')
+        ->call('saveDraft')
+        ->assertHasErrors(['paymentMethod']);
+});
+
+test('le moyen de paiement est optionnel', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->set('paymentMethod', '')
+        ->call('saveDraft')
+        ->assertHasNoErrors(['paymentMethod']);
+});
+
+test('la page d\'édition charge le moyen de paiement existant', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+    $invoice->update(['payment_method' => 'orange_money', 'payment_details' => '+221 77 000 00 00']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('paymentMethod', 'orange_money')
+        ->assertSet('paymentDetails', '+221 77 000 00 00');
+});
+
+// ─── Reminder schedule ──────────────────────────────────────────────────────
+
+test('les relances ont des valeurs par défaut', function () {
+    ['user' => $user] = createSmeUser();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form');
+
+    expect($component->get('reminderSchedule'))->toBe(['-7', '-2', '0', '+7']);
+});
+
+test('on peut activer une relance', function () {
+    ['user' => $user] = createSmeUser();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('toggleReminder', '+15');
+
+    expect($component->get('reminderSchedule'))->toContain('+15');
+});
+
+test('on peut désactiver une relance', function () {
+    ['user' => $user] = createSmeUser();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('toggleReminder', '-7');
+
+    expect($component->get('reminderSchedule'))->not->toContain('-7');
+});
+
+test('on peut désactiver toutes les relances', function () {
+    ['user' => $user] = createSmeUser();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('toggleReminder', '-7')
+        ->call('toggleReminder', '-2')
+        ->call('toggleReminder', '0')
+        ->call('toggleReminder', '+7');
+
+    expect($component->get('reminderSchedule'))->toBeEmpty();
+});
+
+test('les relances sont sauvegardées avec la facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->call('toggleReminder', '+15')
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->reminder_schedule)->toContain('+15')
+        ->and($invoice->reminder_schedule)->toContain('-7');
+});
+
+test('la page d\'édition charge les relances existantes', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+    $invoice->update(['reminder_schedule' => ['-2', '0', '+30']]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('reminderSchedule', ['-2', '0', '+30']);
+});
+
+test('la validation refuse une valeur de relance invalide', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->set('reminderSchedule', ['+99'])
+        ->call('saveDraft')
+        ->assertHasErrors(['reminderSchedule.0']);
+});
+
+// ─── Cancel confirmation ────────────────────────────────────────────────────
+
+test('annuler redirige directement si le formulaire est vide', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('confirmCancel')
+        ->assertRedirect(route('pme.invoices.index'));
+});
+
+test('annuler affiche la modale si le formulaire contient des données', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('selectClient', $client->id)
+        ->call('confirmCancel')
+        ->assertSet('showCancelModal', true);
+});
+
+test('annuler affiche la modale si une ligne a une description', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('lines.0.description', 'Ciment')
+        ->call('confirmCancel')
+        ->assertSet('showCancelModal', true);
+});
+
+test('annuler affiche la modale si une ligne a un prix unitaire', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('lines.0.unit_price', 5_000)
+        ->call('confirmCancel')
+        ->assertSet('showCancelModal', true);
+});
+
+test('annuler affiche la modale si des notes sont saisies', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('notes', 'Merci pour votre confiance')
+        ->call('confirmCancel')
+        ->assertSet('showCancelModal', true);
+});
+
+test('confirmer l\'annulation redirige vers la liste', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('cancel')
+        ->assertRedirect(route('pme.invoices.index'));
+});
