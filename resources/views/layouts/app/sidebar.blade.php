@@ -346,6 +346,7 @@
             </div>
         </flux:modal>
 
+        @livewireScripts
         @fluxScripts
     </body>
 </html>

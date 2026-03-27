@@ -25,6 +25,7 @@
             </main>
         </div>
 
+        @livewireScripts
         @fluxScripts
     </body>
 </html>
