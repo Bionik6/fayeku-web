@@ -710,16 +710,24 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 @if ($clientId && $this->selectedClient)
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
                         <p class="font-semibold text-ink">{{ $this->selectedClient->name }}</p>
-                        <div class="mt-1 flex flex-wrap gap-3 text-sm text-slate-700">
+                        <div class="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-slate-700">
                             @if ($this->selectedClient->email) <span>{{ $this->selectedClient->email }}</span> @endif
+                            @if ($this->selectedClient->email && $this->selectedClient->phone) <span class="text-slate-400">⋅</span> @endif
                             @if ($this->selectedClient->phone) <span>{{ $this->selectedClient->phone }}</span> @endif
                         </div>
                         @php $ctx = $this->clientContext; @endphp
                         @if ($ctx['average_days'] > 0 || $ctx['outstanding'] > 0 || $ctx['last_invoice_date'])
-                            <div class="mt-3 flex flex-wrap gap-4 text-xs text-slate-700">
-                                @if ($ctx['average_days'] > 0) <span>{{ __('Délai moyen :days jours', ['days' => $ctx['average_days']]) }}</span> @endif
-                                @if ($ctx['outstanding'] > 0) <span class="text-amber-600">{{ __('Impayé : :amount', ['amount' => CurrencyService::format($ctx['outstanding'], $currency)]) }}</span> @endif
-                                @if ($ctx['last_invoice_date']) <span>{{ __('Dernière facture : :date', ['date' => $ctx['last_invoice_date']]) }}</span> @endif
+                            @php
+                                $metaItems = [];
+                                if ($ctx['average_days'] > 0) { $metaItems[] = ['text' => __('Délai moyen :days jours', ['days' => $ctx['average_days']]), 'class' => 'text-slate-700']; }
+                                if ($ctx['outstanding'] > 0) { $metaItems[] = ['text' => __('Impayé : :amount', ['amount' => CurrencyService::format($ctx['outstanding'], $currency)]), 'class' => 'text-amber-600']; }
+                                if ($ctx['last_invoice_date']) { $metaItems[] = ['text' => __('Dernière facture : :date', ['date' => $ctx['last_invoice_date']]), 'class' => 'text-slate-700']; }
+                            @endphp
+                            <div class="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-slate-700">
+                                @foreach ($metaItems as $i => $item)
+                                    @if ($i > 0) <span class="text-slate-400">⋅</span> @endif
+                                    <span class="{{ $item['class'] }}">{{ $item['text'] }}</span>
+                                @endforeach
                             </div>
                         @endif
                         <div class="mt-4 flex items-center gap-3 border-t border-slate-200 pt-4">
