@@ -863,7 +863,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Prix unitaire --}}
                                 <div
-                                    class="w-28 shrink-0 md:w-36"
+                                    class="w-24 shrink-0 md:w-32"
                                     x-data="{
                                         raw: {{ min((int) ($line['unit_price'] ?? 0), CurrencyService::maxAmount($this->currency)) }},
                                         formatted: '',
@@ -912,7 +912,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 </div>
 
                                 {{-- Total ligne --}}
-                                <div class="w-32 shrink-0 md:w-40"
+                                <div class="w-28 shrink-0 md:w-36"
                                      x-data="{
                                          get c() { return $wire.currencyJs; },
                                          get total() {
@@ -924,14 +924,14 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                              let t = this.total;
                                              if (this.c.decimals > 0) {
                                                  let v = (t / Math.pow(10, this.c.decimals)).toFixed(this.c.decimals);
-                                                 return v + ' ' + this.c.label;
+                                                 return v;
                                              }
-                                             return t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.c.thousandsSep) + ' ' + this.c.label;
+                                             return t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.c.thousandsSep);
                                          }
                                      }"
                                 >
-                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Total') }}</label>
-                                    <input type="text" disabled :value="display" tabindex="-1" class="w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-right text-sm font-bold tabular-nums text-ink" />
+                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Total') }} (<span x-text="$wire.currencyJs.label"></span>)</label>
+                                    <input type="text" disabled :value="display" tabindex="-1" class="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-right text-sm font-bold tabular-nums text-ink" />
                                 </div>
 
                                 {{-- Delete button (inline, with tooltip) --}}
