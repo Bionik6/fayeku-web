@@ -139,6 +139,8 @@ new #[Title('Export groupé')] class extends Component {
         $this->selectedClientIds = [];
         unset($this->exportInvoiceCount);
         unset($this->selectedClientsCount);
+
+        $this->modal('export-groupe')->show();
     }
 
     public function updatedExportPeriod(): void
@@ -328,16 +330,14 @@ new #[Title('Export groupé')] class extends Component {
             </div>
 
             <div class="flex shrink-0 items-center gap-3">
-                <flux:modal.trigger name="export-groupe">
-                    <button
-                        type="button"
-                        wire:click="mountExportModal"
-                        class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
-                    >
-                        <x-app.icon name="export" class="size-4" />
-                        {{ __('Lancer un export') }}
-                    </button>
-                </flux:modal.trigger>
+                <button
+                    type="button"
+                    wire:click="mountExportModal"
+                    class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
+                >
+                    <x-app.icon name="export" class="size-4" />
+                    {{ __('Lancer un export') }}
+                </button>
             </div>
         </div>
     </section>

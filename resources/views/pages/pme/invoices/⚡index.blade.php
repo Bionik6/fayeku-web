@@ -534,11 +534,14 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             </div>
 
             <div class="flex shrink-0 flex-wrap items-center gap-2">
-                <button type="button"
-                    class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong">
+                <a
+                    href="{{ route('pme.invoices.create') }}"
+                    wire:navigate
+                    class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                >
                     <flux:icon name="plus" class="size-4" />
                     {{ __('Nouvelle facture') }}
-                </button>
+                </a>
                 <button type="button"
                     class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
                     {{ __('Nouveau devis') }}

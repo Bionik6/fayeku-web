@@ -174,7 +174,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
             <div class="flex shrink-0 flex-wrap items-center gap-2">
                 <a
-                    href="{{ route('pme.invoices.index') }}"
+                    href="{{ route('pme.invoices.create') }}"
                     wire:navigate
                     class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
                 >
