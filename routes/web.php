@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MarketingPageController;
 use Illuminate\Support\Facades\Route;
+use Modules\PME\Invoicing\Http\Controllers\InvoicePdfController;
 
 Route::get('/', [MarketingPageController::class, 'home'])->name('home');
 Route::get('/pricing', [MarketingPageController::class, 'pricing'])->name('marketing.pricing');
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('invoices/create', 'pages::pme.invoices.form')->name('pme.invoices.create');
     Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
     Route::livewire('invoices', 'pages::pme.invoices.index')->name('pme.invoices.index');
+    Route::get('invoices/{invoice}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
     Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');
     Route::livewire('clients/{client}', 'pages::pme.clients.show')->name('pme.clients.show');
     Route::livewire('collections', 'pages::pme.collection.index')->name('pme.collection.index');

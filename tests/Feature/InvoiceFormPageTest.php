@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
+use Modules\PME\Invoicing\Mail\InvoiceMail;
 use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Models\InvoiceLine;
 use Modules\Shared\Models\User;
@@ -312,6 +314,7 @@ test('envoyer une facture change son statut en Sent', function () {
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->set('sendChannel', 'whatsapp')
         ->call('send')
         ->assertRedirect(route('pme.invoices.index'));
 
@@ -598,4 +601,83 @@ test('confirmer l\'annulation redirige vers la liste', function () {
         ->test('pages::pme.invoices.form')
         ->call('cancel')
         ->assertRedirect(route('pme.invoices.index'));
+});
+
+// ─── PDF & Envoi ─────────────────────────────────────────────────────────────
+
+test('previewPdf sauvegarde le brouillon et dispatch l\'event open-pdf', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Test PDF')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->call('previewPdf')
+        ->assertDispatched('open-pdf');
+});
+
+test('envoyer par email envoie un mail avec PDF en pièce jointe', function () {
+    Mail::fake();
+
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->set('sendChannel', 'email')
+        ->set('sendRecipient', 'client@example.com')
+        ->set('sendMessage', 'Voici votre facture.')
+        ->call('send')
+        ->assertRedirect(route('pme.invoices.index'));
+
+    Mail::assertQueued(InvoiceMail::class, fn ($mail) => $mail->hasTo('client@example.com'));
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
+});
+
+test('envoyer par email échoue avec un email invalide', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->set('sendChannel', 'email')
+        ->set('sendRecipient', 'pas-un-email')
+        ->call('send')
+        ->assertHasErrors('sendRecipient');
+});
+
+test('envoyer par whatsapp marque la facture comme envoyée sans envoyer d\'email', function () {
+    Mail::fake();
+
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->set('sendChannel', 'whatsapp')
+        ->set('sendRecipient', '+221771234567')
+        ->call('send')
+        ->assertRedirect(route('pme.invoices.index'));
+
+    Mail::assertNothingQueued();
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
+});
+
+test('envoyer en PDF ne marque pas la facture comme envoyée', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->set('sendChannel', 'pdf')
+        ->call('send')
+        ->assertDispatched('open-pdf')
+        ->assertNoRedirect();
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Draft);
 });

@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -8,6 +9,7 @@ use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
+use Modules\PME\Invoicing\Mail\InvoiceMail;
 use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Services\CurrencyService;
 use Modules\PME\Invoicing\Services\InvoiceService;
@@ -33,7 +35,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public int $taxRate = 18;
 
-    public int $discount = 0;
+    public ?int $discount = 0;
 
     public int $customTaxRate = 0;
 
@@ -238,7 +240,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function computedTotals(): array
     {
-        return app(InvoiceService::class)->calculateInvoiceTotals($this->lines, $this->taxRate, $this->discount);
+        return app(InvoiceService::class)->calculateInvoiceTotals($this->lines, $this->taxRate, $this->discount ?? 0);
     }
 
     #[Computed]
@@ -272,7 +274,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             return true;
         }
 
-        return $this->discount > 0;
+        return ($this->discount ?? 0) > 0;
     }
 
     public function confirmCancel(): void
@@ -440,9 +442,40 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $this->showSendModal = true;
     }
 
+    public function previewPdf(): void
+    {
+        $this->saveDraft();
+
+        if ($this->invoice) {
+            $this->dispatch('open-pdf', url: route('pme.invoices.pdf', $this->invoice));
+        }
+    }
+
     public function send(): void
     {
         $this->saveDraft();
+
+        if ($this->sendChannel === 'pdf') {
+            $this->showSendModal = false;
+            $this->dispatch('open-pdf', url: route('pme.invoices.pdf', $this->invoice));
+
+            return;
+        }
+
+        if ($this->sendChannel === 'email') {
+            $this->validate([
+                'sendRecipient' => ['required', 'email'],
+            ], [
+                'sendRecipient.required' => __('L\'adresse email du destinataire est requise.'),
+                'sendRecipient.email' => __('L\'adresse email doit être valide.'),
+            ]);
+
+            $this->invoice->loadMissing(['company', 'client', 'lines']);
+
+            Mail::to($this->sendRecipient)->send(
+                new InvoiceMail($this->invoice, $this->sendMessage)
+            );
+        }
 
         $service = app(InvoiceService::class);
         $service->markAsSent($this->invoice);
@@ -532,7 +565,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'issued_at' => $this->issuedAt,
             'due_at' => $this->dueAt,
             'tax_rate' => $this->taxRate,
-            'discount' => $this->discount,
+            'discount' => $this->discount ?? 0,
             'notes' => $this->emptyToNull($this->notes),
             'payment_method' => $this->emptyToNull($this->paymentMethod),
             'payment_details' => $this->emptyToNull($this->paymentDetails),
@@ -603,7 +636,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     }
 }; ?>
 
-<div class="flex h-full w-full flex-1 flex-col gap-6 pb-24 lg:pb-6">
+<div class="flex h-full w-full flex-1 flex-col gap-6 pb-24 lg:pb-6" x-on:open-pdf.window="window.open($event.detail.url, '_blank')">
     {{-- Flash messages --}}
     @if (session('success'))
         <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
@@ -642,7 +675,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             </div>
             <div class="flex items-center gap-3">
                 <button type="button" wire:click="confirmCancel" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
-                <button type="button" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
+                <button type="button" wire:click="previewPdf" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
                     <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
                     {{ __('Aperçu PDF') }}
                 </button>
@@ -1188,7 +1221,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
                 {{-- Bloc 4: Actions --}}
                 <section class="app-shell-panel space-y-3 p-5">
-                    <button type="button" class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
+                    <button type="button" wire:click="previewPdf" class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
                         <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
                         {{ __('Aperçu PDF') }}
                     </button>
