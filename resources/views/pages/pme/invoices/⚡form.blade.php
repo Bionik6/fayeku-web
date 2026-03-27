@@ -709,7 +709,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Client') }}</h3>
                 @if ($clientId && $this->selectedClient)
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                        <p class="font-semibold text-ink">{{ $this->selectedClient->name }}</p>
+                        <div class="flex items-start justify-between">
+                            <p class="font-semibold text-ink">{{ $this->selectedClient->name }}</p>
+                            <button type="button" wire:click="clearClient" class="ml-3 shrink-0 rounded-full border border-slate-200 bg-white p-2 text-slate-600 transition hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500" title="{{ __('Retirer') }}">
+                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
                         <div class="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-slate-700">
                             @if ($this->selectedClient->email) <span>{{ $this->selectedClient->email }}</span> @endif
                             @if ($this->selectedClient->email && $this->selectedClient->phone) <span class="text-slate-400">⋅</span> @endif
@@ -730,16 +735,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 @endforeach
                             </div>
                         @endif
-                        <div class="mt-4 flex items-center gap-3 border-t border-slate-200 pt-4">
-                            <button type="button" wire:click="clearClient" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-primary transition hover:border-primary/30 hover:bg-primary/5">
-                                <svg class="mr-1.5 size-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" /></svg>
-                                {{ __('Changer') }}
-                            </button>
-                            <button type="button" wire:click="clearClient" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600">
-                                <svg class="mr-1.5 size-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                                {{ __('Retirer') }}
-                            </button>
-                        </div>
                     </div>
                 @else
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
