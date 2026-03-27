@@ -856,14 +856,14 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 </div>
 
                                 {{-- Quantité --}}
-                                <div class="w-16 shrink-0 md:w-20">
+                                <div class="w-full md:w-20 md:shrink-0">
                                     <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Qté') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                 </div>
 
                                 {{-- Prix unitaire --}}
                                 <div
-                                    class="w-24 shrink-0 md:w-32"
+                                    class="w-full md:w-32 md:shrink-0"
                                     x-data="{
                                         raw: {{ min((int) ($line['unit_price'] ?? 0), CurrencyService::maxAmount($this->currency)) }},
                                         formatted: '',
@@ -912,7 +912,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 </div>
 
                                 {{-- Total ligne --}}
-                                <div class="w-28 shrink-0 md:w-36"
+                                <div class="w-full md:w-36 md:shrink-0"
                                      x-data="{
                                          get c() { return $wire.currencyJs; },
                                          get total() {
@@ -936,7 +936,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Delete button (inline, with tooltip) --}}
                                 @if (count($lines) > 1)
-                                    <div class="relative mt-6 shrink-0" x-data="{ show: false }">
+                                    <div class="relative mt-2 md:mt-6 shrink-0" x-data="{ show: false }">
                                         <button
                                             type="button"
                                             wire:click="removeLine({{ $index }})"
