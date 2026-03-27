@@ -849,7 +849,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-5">
                             <div class="flex flex-wrap items-start gap-3">
                                 {{-- Désignation --}}
-                                <div class="w-full min-w-0 md:flex-1">
+                                <div class="w-full min-w-0">
                                     <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Désignation') }}</label>
                                     <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                     @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
