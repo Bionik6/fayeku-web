@@ -61,6 +61,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public bool $showSendModal = false;
 
+
     public string $clientName = '';
 
     public string $clientSector = '';
@@ -847,110 +848,104 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <div class="space-y-5">
                     @foreach ($lines as $index => $line)
                         <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-5">
-                            <div class="flex flex-wrap items-start gap-3">
-                                {{-- Désignation --}}
-                                <div class="w-full min-w-0">
-                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Désignation') }}</label>
-                                    <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                    @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                            <div class="space-y-4">
+                                {{-- Row 1: Désignation (full width) + delete button --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }} <span class="text-rose-500">*</span></label>
+                                        <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                        @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    @if (count($lines) > 1)
+                                        <button
+                                            type="button"
+                                            wire:click="removeLine({{ $index }})"
+                                            class="mt-7 shrink-0 rounded-xl border border-transparent p-2 text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                                        >
+                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                        </button>
+                                    @endif
                                 </div>
 
-                                {{-- Quantité --}}
-                                <div class="w-full md:w-20 md:shrink-0">
-                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Qté') }}</label>
-                                    <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                </div>
+                                {{-- Row 2: Qté / P.U. / Total (3 columns on md, stacked on mobile) --}}
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    {{-- Quantité --}}
+                                    <div>
+                                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Quantité') }}</label>
+                                        <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                        @error("lines.{$index}.quantity") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                    </div>
 
-                                {{-- Prix unitaire --}}
-                                <div
-                                    class="w-full md:w-32 md:shrink-0"
-                                    x-data="{
-                                        raw: {{ min((int) ($line['unit_price'] ?? 0), CurrencyService::maxAmount($this->currency)) }},
-                                        formatted: '',
-                                        get noDecimals() { return $wire.currencyJs.decimals === 0; },
-                                        get maxRaw() { return $wire.currencyJs.maxAmount; },
-                                        formatNoDecimal(v) {
-                                            return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
-                                        },
-                                        clamp(v) { return Math.min(Math.max(v, 0), this.maxRaw); },
-                                        onInput(e) {
-                                            if (this.noDecimals) {
-                                                this.raw = this.clamp(parseInt(e.target.value.replace(/\D/g, '')) || 0);
-                                                this.formatted = this.formatNoDecimal(this.raw);
-                                                e.target.value = this.formatted;
-                                            } else {
-                                                let v = e.target.value.replace(/[^\d.]/g, '');
-                                                this.raw = this.clamp(Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals)));
-                                            }
-                                            $wire.set('lines.{{ $index }}.unit_price', this.raw);
-                                        },
-                                        init() {
-                                            if (this.noDecimals) {
-                                                this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
-                                            } else {
-                                                this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
-                                            }
-                                            this.$watch('$wire.currencyJs', () => {
+                                    {{-- Prix unitaire --}}
+                                    <div
+                                        x-data="{
+                                            raw: {{ min((int) ($line['unit_price'] ?? 0), CurrencyService::maxAmount($this->currency)) }},
+                                            formatted: '',
+                                            get noDecimals() { return $wire.currencyJs.decimals === 0; },
+                                            get maxRaw() { return $wire.currencyJs.maxAmount; },
+                                            formatNoDecimal(v) {
+                                                return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
+                                            },
+                                            clamp(v) { return Math.min(Math.max(v, 0), this.maxRaw); },
+                                            onInput(e) {
+                                                if (this.noDecimals) {
+                                                    this.raw = this.clamp(parseInt(e.target.value.replace(/\D/g, '')) || 0);
+                                                    this.formatted = this.formatNoDecimal(this.raw);
+                                                    e.target.value = this.formatted;
+                                                } else {
+                                                    let v = e.target.value.replace(/[^\d.]/g, '');
+                                                    this.raw = this.clamp(Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals)));
+                                                }
+                                                $wire.set('lines.{{ $index }}.unit_price', this.raw);
+                                            },
+                                            init() {
                                                 if (this.noDecimals) {
                                                     this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
                                                 } else {
                                                     this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
                                                 }
-                                            });
-                                        }
-                                    }"
-                                >
-                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('P.U.') }} (<span x-text="$wire.currencyJs.label"></span>)</label>
-                                    <input
-                                        type="text"
-                                        :inputmode="noDecimals ? 'numeric' : 'decimal'"
-                                        :value="formatted"
-                                        @input="onInput($event)"
-                                        placeholder="0"
-                                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                    />
-                                </div>
-
-                                {{-- Total ligne --}}
-                                <div class="w-full md:w-36 md:shrink-0"
-                                     x-data="{
-                                         get c() { return $wire.currencyJs; },
-                                         get total() {
-                                             let qty = parseInt($wire.lines[{{ $index }}]?.quantity) || 0;
-                                             let price = parseInt($wire.lines[{{ $index }}]?.unit_price) || 0;
-                                             return qty * price;
-                                         },
-                                         get display() {
-                                             let t = this.total;
-                                             if (this.c.decimals > 0) {
-                                                 let v = (t / Math.pow(10, this.c.decimals)).toFixed(this.c.decimals);
-                                                 return v;
-                                             }
-                                             return t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.c.thousandsSep);
-                                         }
-                                     }"
-                                >
-                                    <label class="mb-1 block text-xs font-medium text-slate-700">{{ __('Total') }} (<span x-text="$wire.currencyJs.label"></span>)</label>
-                                    <input type="text" disabled :value="display" tabindex="-1" class="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-right text-sm font-bold tabular-nums text-ink" />
-                                </div>
-
-                                {{-- Delete button (inline, with tooltip) --}}
-                                @if (count($lines) > 1)
-                                    <div class="relative mt-2 md:mt-6 shrink-0" x-data="{ show: false }">
-                                        <button
-                                            type="button"
-                                            wire:click="removeLine({{ $index }})"
-                                            @mouseenter="show = true"
-                                            @mouseleave="show = false"
-                                            class="rounded-xl border border-transparent p-2 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                                        >
-                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                                        </button>
-                                        <div x-show="show" x-transition class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-medium text-white shadow-lg">
-                                            {{ __('Supprimer') }}
-                                        </div>
+                                                this.$watch('$wire.currencyJs', () => {
+                                                    if (this.noDecimals) {
+                                                        this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                                    } else {
+                                                        this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
+                                                    }
+                                                });
+                                            }
+                                        }"
+                                    >
+                                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Prix unitaire') }} (<span x-text="$wire.currencyJs.label"></span>)</label>
+                                        <input
+                                            type="text"
+                                            :inputmode="noDecimals ? 'numeric' : 'decimal'"
+                                            :value="formatted"
+                                            @input="onInput($event)"
+                                            placeholder="0"
+                                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                        />
                                     </div>
-                                @endif
+
+                                    {{-- Total --}}
+                                    <div x-data="{
+                                             get c() { return $wire.currencyJs; },
+                                             get total() {
+                                                 let qty = parseInt($wire.lines[{{ $index }}]?.quantity) || 0;
+                                                 let price = parseInt($wire.lines[{{ $index }}]?.unit_price) || 0;
+                                                 return qty * price;
+                                             },
+                                             get display() {
+                                                 let t = this.total;
+                                                 if (this.c.decimals > 0) {
+                                                     return (t / Math.pow(10, this.c.decimals)).toFixed(this.c.decimals);
+                                                 }
+                                                 return t.toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.c.thousandsSep);
+                                             }
+                                         }"
+                                    >
+                                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Total') }}</label>
+                                        <input type="text" disabled :value="display + ' ' + $wire.currencyJs.label" tabindex="-1" class="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-right text-sm font-bold tabular-nums text-ink" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endforeach
