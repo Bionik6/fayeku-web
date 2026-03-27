@@ -172,6 +172,66 @@ test('la validation exige une quantité minimum de 1', function () {
         ->assertHasErrors(['lines.0.quantity']);
 });
 
+test('le prix unitaire ne peut pas dépasser le maximum pour XOF (999 999 999)', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('currency', 'XOF')
+        ->set('lines.0.description', 'Test')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 1_000_000_000)
+        ->call('saveDraft')
+        ->assertHasErrors(['lines.0.unit_price']);
+});
+
+test('le prix unitaire au maximum pour XOF (999 999 999) est accepté', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('currency', 'XOF')
+        ->set('lines.0.description', 'Test')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 999_999_999)
+        ->call('saveDraft')
+        ->assertHasNoErrors(['lines.0.unit_price']);
+});
+
+test('le prix unitaire ne peut pas dépasser le maximum pour EUR (99 999 999 999 centimes)', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('currency', 'EUR')
+        ->set('lines.0.description', 'Test')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000_000_000)
+        ->call('saveDraft')
+        ->assertHasErrors(['lines.0.unit_price']);
+});
+
+test('le prix unitaire au maximum pour EUR (99 999 999 999 centimes) est accepté', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('currency', 'EUR')
+        ->set('lines.0.description', 'Test')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 99_999_999_999)
+        ->call('saveDraft')
+        ->assertHasNoErrors(['lines.0.unit_price']);
+});
+
 test('la date d\'échéance ne peut pas être antérieure à la date d\'émission', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
     $client = Client::factory()->create(['company_id' => $company->id]);

@@ -133,9 +133,23 @@ class CurrencyService
     }
 
     /**
+     * Maximum allowed amount in the smallest unit for a currency.
+     *
+     * 9-digit cap on the "human" amount:
+     *   - XOF/JPY (0 decimals): 999 999 999
+     *   - USD/EUR  (2 decimals): 999 999 999.99 → 99 999 999 999 cents
+     */
+    public static function maxAmount(string $code): int
+    {
+        $decimals = self::decimals($code);
+
+        return (int) (999_999_999 * (10 ** $decimals) + (10 ** $decimals) - 1);
+    }
+
+    /**
      * Get the formatting config for JavaScript (Alpine.js).
      *
-     * @return array{decimals: int, dec_sep: string, thousands_sep: string, label: string}
+     * @return array{decimals: int, dec_sep: string, thousands_sep: string, label: string, maxAmount: int}
      */
     public static function jsConfig(string $code): array
     {
@@ -146,6 +160,7 @@ class CurrencyService
             'decSep' => $config['dec_sep'],
             'thousandsSep' => $config['thousands_sep'],
             'label' => $config['label'],
+            'maxAmount' => self::maxAmount($code),
         ];
     }
 }

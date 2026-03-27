@@ -254,6 +254,34 @@ test('every currency has a label, name, decimals, dec_sep, thousands_sep', funct
 
 // ─── jsConfig ────────────────────────────────────────────────────────────────
 
+// ─── maxAmount ──────────────────────────────────────────────────────────────
+
+test('maxAmount for XOF (0 decimals) is 999 999 999', function () {
+    expect(CurrencyService::maxAmount('XOF'))->toBe(999_999_999);
+});
+
+test('maxAmount for JPY (0 decimals) is 999 999 999', function () {
+    expect(CurrencyService::maxAmount('JPY'))->toBe(999_999_999);
+});
+
+test('maxAmount for USD (2 decimals) is 99 999 999 999 (999 999 999.99 in cents)', function () {
+    expect(CurrencyService::maxAmount('USD'))->toBe(99_999_999_999);
+});
+
+test('maxAmount for EUR (2 decimals) is 99 999 999 999', function () {
+    expect(CurrencyService::maxAmount('EUR'))->toBe(99_999_999_999);
+});
+
+test('maxAmount for GBP (2 decimals) is 99 999 999 999', function () {
+    expect(CurrencyService::maxAmount('GBP'))->toBe(99_999_999_999);
+});
+
+test('maxAmount for unknown currency defaults to 2 decimals', function () {
+    expect(CurrencyService::maxAmount('ZZZ'))->toBe(99_999_999_999);
+});
+
+// ─── jsConfig ────────────────────────────────────────────────────────────────
+
 test('jsConfig returns correct shape for XOF', function () {
     $config = CurrencyService::jsConfig('XOF');
 
@@ -262,6 +290,7 @@ test('jsConfig returns correct shape for XOF', function () {
         'decSep' => '',
         'thousandsSep' => ' ',
         'label' => 'FCFA',
+        'maxAmount' => 999_999_999,
     ]);
 });
 
@@ -273,6 +302,7 @@ test('jsConfig returns correct shape for USD', function () {
         'decSep' => '.',
         'thousandsSep' => ',',
         'label' => 'USD',
+        'maxAmount' => 99_999_999_999,
     ]);
 });
 
@@ -284,5 +314,6 @@ test('jsConfig returns correct shape for EUR', function () {
         'decSep' => ',',
         'thousandsSep' => ' ',
         'label' => 'EUR',
+        'maxAmount' => 99_999_999_999,
     ]);
 });

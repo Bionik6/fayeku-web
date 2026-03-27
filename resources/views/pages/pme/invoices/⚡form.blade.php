@@ -539,7 +539,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.description' => ['required', 'string', 'max:500'],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
-            'lines.*.unit_price' => ['required', 'integer', 'min:0'],
+            'lines.*.unit_price' => ['required', 'integer', 'min:0', 'max:'.CurrencyService::maxAmount($this->currency)],
         ], [
             'clientId.required' => __('Veuillez sélectionner un client.'),
             'reference.required' => __('La référence est requise.'),
@@ -552,6 +552,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'lines.*.quantity.required' => __('La quantité est requise.'),
             'lines.*.quantity.min' => __('La quantité doit être au moins 1.'),
             'lines.*.unit_price.required' => __('Le prix unitaire est requis.'),
+            'lines.*.unit_price.max' => __('Le prix unitaire ne peut pas dépasser 999 999 999.'),
         ]);
     }
 
@@ -864,20 +865,22 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 <div
                                     class="w-28 shrink-0 md:w-36"
                                     x-data="{
-                                        raw: {{ (int) ($line['unit_price'] ?? 0) }},
+                                        raw: {{ min((int) ($line['unit_price'] ?? 0), CurrencyService::maxAmount($this->currency)) }},
                                         formatted: '',
                                         get noDecimals() { return $wire.currencyJs.decimals === 0; },
+                                        get maxRaw() { return $wire.currencyJs.maxAmount; },
                                         formatNoDecimal(v) {
                                             return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
                                         },
+                                        clamp(v) { return Math.min(Math.max(v, 0), this.maxRaw); },
                                         onInput(e) {
                                             if (this.noDecimals) {
-                                                this.raw = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                                                this.raw = this.clamp(parseInt(e.target.value.replace(/\D/g, '')) || 0);
                                                 this.formatted = this.formatNoDecimal(this.raw);
                                                 e.target.value = this.formatted;
                                             } else {
                                                 let v = e.target.value.replace(/[^\d.]/g, '');
-                                                this.raw = Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals));
+                                                this.raw = this.clamp(Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals)));
                                             }
                                             $wire.set('lines.{{ $index }}.unit_price', this.raw);
                                         },
