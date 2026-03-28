@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -83,6 +84,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     public string $sendMessage = '';
 
     public ?string $lastSavedAt = null;
+
+    public int $alertDismissSeconds = 5;
 
     /** @var array{decimals: int, decSep: string, thousandsSep: string, label: string} */
     public array $currencyJs = [];
@@ -398,7 +401,13 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public function saveDraft(): void
     {
-        $this->validateForm();
+        try {
+            $this->validateForm();
+        } catch (ValidationException $e) {
+            $this->dispatch('validation-errors', messages: $e->validator->errors()->all());
+
+            throw $e;
+        }
 
         $service = app(InvoiceService::class);
 
@@ -651,6 +660,74 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             {{ session('error') }}
         </section>
     @endif
+
+    {{-- Validation error alert (fixed bottom-right) --}}
+    <div
+        x-data="{
+            show: false,
+            messages: [],
+            timeout: null,
+            duration: $wire.alertDismissSeconds * 1000,
+            dismiss() { this.show = false; clearTimeout(this.timeout) },
+        }"
+        x-on:validation-errors.window="
+            messages = $event.detail.messages;
+            show = true;
+            clearTimeout(timeout);
+            $el.querySelector('[data-progress]').style.animation = 'none';
+            $el.querySelector('[data-progress]').offsetHeight;
+            $el.querySelector('[data-progress]').style.animation = `shrink ${duration}ms linear forwards`;
+            timeout = setTimeout(() => show = false, duration);
+        "
+        x-show="show"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-2"
+        x-cloak
+        class="fixed bottom-4 right-4 z-50 w-full max-w-md overflow-hidden rounded-lg bg-red-600 shadow-lg"
+    >
+        <div class="p-4">
+            <div class="flex">
+                <div class="shrink-0">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 text-white">
+                        <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" fill-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3 flex-1">
+                    <h3 class="text-sm font-semibold text-white" x-text="`${messages.length} ${messages.length > 1 ? '{{ __('erreurs empêchent') }}' : '{{ __('erreur empêche') }}'} {{ __('la sauvegarde') }}`"></h3>
+                    <div class="mt-2 text-sm text-red-100">
+                        <ul role="list" class="list-disc space-y-1 pl-5">
+                            <template x-for="msg in messages" :key="msg">
+                                <li x-text="msg"></li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button @click="dismiss" type="button" class="-m-1.5 inline-flex rounded-md p-1.5 text-red-200 hover:text-white hover:bg-red-500">
+                        <span class="sr-only">{{ __('Fermer') }}</span>
+                        <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{-- Progress bar --}}
+        <div class="h-1 w-full bg-red-700/50">
+            <div data-progress class="h-full bg-white/60 origin-left" style="animation: none;"></div>
+        </div>
+
+        <style>
+            @keyframes shrink {
+                from { transform: scaleX(1); }
+                to { transform: scaleX(0); }
+            }
+        </style>
+    </div>
 
     {{-- Header --}}
     <section class="app-shell-panel overflow-hidden">

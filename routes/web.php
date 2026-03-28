@@ -15,6 +15,7 @@ Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defa
 Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defaults('page', 'confidentialite')->name('marketing.privacy');
 
 Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix('compta')->group(function () {
+    Route::redirect('/', '/compta/dashboard');
     Route::livewire('dashboard', 'pages::dashboard.index')->name('dashboard');
     Route::livewire('alertes', 'pages::alerts.index')->name('alerts.index');
     Route::livewire('clients', 'pages::clients.index')->name('clients.index');
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix
 });
 
 Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
+    Route::redirect('/', '/pme/dashboard');
     Route::livewire('dashboard', 'pages::pme.dashboard.index')->name('pme.dashboard');
     Route::livewire('invoices/create', 'pages::pme.invoices.form')->name('pme.invoices.create');
     Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
