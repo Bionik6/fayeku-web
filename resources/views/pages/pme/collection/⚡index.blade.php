@@ -983,11 +983,13 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                     <div class="flex items-center gap-4">
                         <div class="flex-1">
                             <label class="text-sm font-semibold text-slate-600">{{ __('Ton du message') }}</label>
-                            <select wire:model.live="previewTone" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm">
-                                <option value="cordial">{{ __('Cordial') }}</option>
-                                <option value="ferme">{{ __('Ferme') }}</option>
-                                <option value="urgent">{{ __('Urgent') }}</option>
-                            </select>
+                            <x-select-native>
+                                <select wire:model.live="previewTone" class="col-start-1 row-start-1 mt-1 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 pr-8 text-sm">
+                                    <option value="cordial">{{ __('Cordial') }}</option>
+                                    <option value="ferme">{{ __('Ferme') }}</option>
+                                    <option value="urgent">{{ __('Urgent') }}</option>
+                                </select>
+                            </x-select-native>
                         </div>
                         <div class="flex flex-col items-start gap-1 pt-3">
                             <label class="text-sm font-semibold text-slate-600">{{ __('Joindre PDF') }}</label>
@@ -1226,11 +1228,13 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                     {{-- Ton par défaut --}}
                     <div>
                         <p class="text-sm font-semibold text-ink">{{ __('Ton par défaut') }}</p>
-                        <select wire:model="configTone" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm">
-                            <option value="cordial">{{ __('Cordial — Poli et professionnel') }}</option>
-                            <option value="ferme">{{ __('Ferme — Direct et clair') }}</option>
-                            <option value="urgent">{{ __('Urgent — Insistant et prioritaire') }}</option>
-                        </select>
+                        <x-select-native>
+                            <select wire:model="configTone" class="col-start-1 row-start-1 mt-2 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pr-8 text-sm">
+                                <option value="cordial">{{ __('Cordial — Poli et professionnel') }}</option>
+                                <option value="ferme">{{ __('Ferme — Direct et clair') }}</option>
+                                <option value="urgent">{{ __('Urgent — Insistant et prioritaire') }}</option>
+                            </select>
+                        </x-select-native>
                     </div>
 
                     {{-- Horaires d'envoi --}}

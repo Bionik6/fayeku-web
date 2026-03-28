@@ -380,12 +380,14 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
 
                     <label class="auth-label">
                         <span>{{ __('Catégorie') }}</span>
-                        <select wire:model="category" class="auth-select">
-                            <option value="">{{ __('Choisir une catégorie') }}</option>
-                            @foreach (['Compte & accès', 'Clients', 'Factures', 'Devis', 'Recouvrement', 'Trésorerie', 'Paramètres', 'Autre'] as $cat)
-                                <option value="{{ $cat }}">{{ $cat }}</option>
-                            @endforeach
-                        </select>
+                        <x-select-native>
+                            <select wire:model="category" class="auth-select">
+                                <option value="">{{ __('Choisir une catégorie') }}</option>
+                                @foreach (['Compte & accès', 'Clients', 'Factures', 'Devis', 'Recouvrement', 'Trésorerie', 'Paramètres', 'Autre'] as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
+                            </select>
+                        </x-select-native>
                         @error('category')
                             <p class="auth-error">{{ $message }}</p>
                         @enderror

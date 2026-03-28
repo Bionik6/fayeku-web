@@ -444,15 +444,17 @@ new #[Title('Clients')] class extends Component {
                 />
             </div>
 
-            <select
-                wire:model.live="filterPlan"
-                class="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 sm:w-48"
-            >
-                <option value="">{{ __('Toutes les offres') }}</option>
-                @foreach ($this->availablePlans as $slug => $label)
-                    <option value="{{ $slug }}">{{ $label }}</option>
-                @endforeach
-            </select>
+            <x-select-native>
+                <select
+                    wire:model.live="filterPlan"
+                    class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 sm:w-48"
+                >
+                    <option value="">{{ __('Toutes les offres') }}</option>
+                    @foreach ($this->availablePlans as $slug => $label)
+                        <option value="{{ $slug }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </x-select-native>
         </div>
     </section>
 

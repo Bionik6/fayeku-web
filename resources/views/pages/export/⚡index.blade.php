@@ -518,21 +518,23 @@ new #[Title('Export groupé')] class extends Component {
             {{-- Période --}}
             <div class="mt-6">
                 <label class="text-sm font-medium text-slate-700">{{ __('Période') }}</label>
-                <select
-                    wire:model.live="exportPeriod"
-                    class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                >
-                    @foreach (['Mois', 'Trimestre', 'Semestre', 'Année'] as $groupType)
-                        @php $grouped = collect($this->exportPeriods)->where('type', $groupType); @endphp
-                        @if ($grouped->isNotEmpty())
-                            <optgroup label="{{ $groupType }}">
-                                @foreach ($grouped as $period)
-                                    <option value="{{ $period['value'] }}">{{ $period['label'] }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
-                    @endforeach
-                </select>
+                <x-select-native>
+                    <select
+                        wire:model.live="exportPeriod"
+                        class="col-start-1 row-start-1 appearance-none mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                    >
+                        @foreach (['Mois', 'Trimestre', 'Semestre', 'Année'] as $groupType)
+                            @php $grouped = collect($this->exportPeriods)->where('type', $groupType); @endphp
+                            @if ($grouped->isNotEmpty())
+                                <optgroup label="{{ $groupType }}">
+                                    @foreach ($grouped as $period)
+                                        <option value="{{ $period['value'] }}">{{ $period['label'] }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
+                    </select>
+                </x-select-native>
             </div>
 
             {{-- Format --}}

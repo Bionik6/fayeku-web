@@ -269,8 +269,9 @@ new #[Title('Invitations')] class extends Component {
             <div class="flex shrink-0 items-center gap-3">
                 <button
                     type="button"
-                    x-on:click="navigator.clipboard.writeText('{{ route('marketing.accountants.join') }}').then(() => $dispatch('toast', { type: 'success', title: '{{ __('Lien d\'invitation copié !') }}' }))"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+                    x-data="{ link: '{{ route('marketing.accountants.join', ['ref' => $this->firm?->id]) }}' }"
+                    x-on:click="navigator.clipboard.writeText(link).then(() => $dispatch('toast', { type: 'success', title: 'Lien copié dans le presse-papiers !' }))"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
                 >
                     <flux:icon name="link" class="size-4" />
                     {{ __('Copier mon lien') }}
@@ -279,7 +280,7 @@ new #[Title('Invitations')] class extends Component {
                     <button
                         type="button"
                         wire:click="resetInviteForm"
-                        class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
+                        class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-primary/20 bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
                     >
                         <flux:icon name="plus" class="size-4" />
                         {{ __('Inviter une PME') }}

@@ -67,10 +67,12 @@
 
             <label class="auth-label">
                 <span>{{ __('Type de profil') }} *</span>
-                <select name="profile_type" class="auth-select" required>
-                    <option value="sme" @selected(old('profile_type', 'sme') === 'sme')>{{ __('PME') }}</option>
-                    <option value="accountant_firm" @selected(old('profile_type') === 'accountant_firm')>{{ __('Cabinet d\'expertise comptable') }}</option>
-                </select>
+                <x-select-native>
+                    <select name="profile_type" class="auth-select" required>
+                        <option value="sme" @selected(old('profile_type', 'sme') === 'sme')>{{ __('PME') }}</option>
+                        <option value="accountant_firm" @selected(old('profile_type') === 'accountant_firm')>{{ __('Cabinet d\'expertise comptable') }}</option>
+                    </select>
+                </x-select-native>
                 <x-auth-field-error name="profile_type" />
             </label>
 

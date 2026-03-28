@@ -686,15 +686,17 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                     class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 />
             </div>
-            <select
-                wire:model.live="period"
-                class="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm text-slate-700 focus:border-primary/50 focus:outline-none"
-            >
-                <option value="">{{ __('Toutes les périodes') }}</option>
-                @foreach ($this->availablePeriods as $value => $label)
-                    <option value="{{ $value }}">{{ $label }}</option>
-                @endforeach
-            </select>
+            <x-select-native>
+                <select
+                    wire:model.live="period"
+                    class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pr-8 text-sm text-slate-700 focus:border-primary/50 focus:outline-none"
+                >
+                    <option value="">{{ __('Toutes les périodes') }}</option>
+                    @foreach ($this->availablePeriods as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </x-select-native>
         </div>
 
     </section>
@@ -965,15 +967,17 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Client') }}</label>
-                                <select
-                                    wire:model="invoiceClientId"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                >
-                                    <option value="">{{ __('Choisir un client…') }}</option>
-                                    @foreach ($this->clients as $client)
-                                        <option value="{{ $client['id'] }}">{{ $client['name'] }}</option>
-                                    @endforeach
-                                </select>
+                                <x-select-native>
+                                    <select
+                                        wire:model="invoiceClientId"
+                                        class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    >
+                                        <option value="">{{ __('Choisir un client…') }}</option>
+                                        @foreach ($this->clients as $client)
+                                            <option value="{{ $client['id'] }}">{{ $client['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </x-select-native>
                                 @error('invoiceClientId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                             </div>
 

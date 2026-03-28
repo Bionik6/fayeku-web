@@ -281,10 +281,12 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                 </label>
                                 <label class="auth-label">
                                     <span>{{ __('Pays') }}</span>
-                                    <select wire:model="firmCountry" class="auth-select">
-                                        <option value="SN">{{ __('Sénégal') }}</option>
-                                        <option value="CI">{{ __('Côte d\'Ivoire') }}</option>
-                                    </select>
+                                    <x-select-native>
+                                        <select wire:model="firmCountry" class="auth-select">
+                                            <option value="SN">{{ __('Sénégal') }}</option>
+                                            <option value="CI">{{ __('Côte d\'Ivoire') }}</option>
+                                        </select>
+                                    </x-select-native>
                                     @error('firmCountry') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                             </div>

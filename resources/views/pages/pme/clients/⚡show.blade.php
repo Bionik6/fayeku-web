@@ -666,34 +666,36 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Secteur') }}</label>
-                                <select
-                                    wire:model="clientSector"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                >
-                                    <option value="">{{ __('Choisir un secteur…') }}</option>
-                                    <option>Agriculture, Élevage &amp; Pêche</option>
-                                    <option>Agroalimentaire &amp; Transformation</option>
-                                    <option>Commerce de gros</option>
-                                    <option>Commerce de détail &amp; Distribution</option>
-                                    <option>Bâtiment &amp; Travaux Publics</option>
-                                    <option>Transport &amp; Logistique</option>
-                                    <option>Télécommunications</option>
-                                    <option>Technologies de l'information &amp; Communication</option>
-                                    <option>Industrie manufacturière</option>
-                                    <option>Énergie, Mines &amp; Pétrole</option>
-                                    <option>Santé &amp; Pharmacie</option>
-                                    <option>Éducation &amp; Formation</option>
-                                    <option>Immobilier &amp; Foncier</option>
-                                    <option>Finance, Banque &amp; Assurance</option>
-                                    <option>Hôtellerie &amp; Restauration</option>
-                                    <option>Tourisme &amp; Loisirs</option>
-                                    <option>Artisanat &amp; Arts</option>
-                                    <option>Médias &amp; Communication</option>
-                                    <option>Textile, Habillement &amp; Cuir</option>
-                                    <option>Services aux entreprises &amp; Conseil</option>
-                                    <option>Environnement &amp; Eau</option>
-                                    <option value="Autre">{{ __('Autre') }}</option>
-                                </select>
+                                <x-select-native>
+                                    <select
+                                        wire:model="clientSector"
+                                        class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    >
+                                        <option value="">{{ __('Choisir un secteur…') }}</option>
+                                        <option>Agriculture, Élevage &amp; Pêche</option>
+                                        <option>Agroalimentaire &amp; Transformation</option>
+                                        <option>Commerce de gros</option>
+                                        <option>Commerce de détail &amp; Distribution</option>
+                                        <option>Bâtiment &amp; Travaux Publics</option>
+                                        <option>Transport &amp; Logistique</option>
+                                        <option>Télécommunications</option>
+                                        <option>Technologies de l'information &amp; Communication</option>
+                                        <option>Industrie manufacturière</option>
+                                        <option>Énergie, Mines &amp; Pétrole</option>
+                                        <option>Santé &amp; Pharmacie</option>
+                                        <option>Éducation &amp; Formation</option>
+                                        <option>Immobilier &amp; Foncier</option>
+                                        <option>Finance, Banque &amp; Assurance</option>
+                                        <option>Hôtellerie &amp; Restauration</option>
+                                        <option>Tourisme &amp; Loisirs</option>
+                                        <option>Artisanat &amp; Arts</option>
+                                        <option>Médias &amp; Communication</option>
+                                        <option>Textile, Habillement &amp; Cuir</option>
+                                        <option>Services aux entreprises &amp; Conseil</option>
+                                        <option>Environnement &amp; Eau</option>
+                                        <option value="Autre">{{ __('Autre') }}</option>
+                                    </select>
+                                </x-select-native>
                             </div>
 
                             <div
@@ -733,14 +735,16 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Téléphone / WhatsApp') }}</label>
                                 <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
                                     <div class="relative shrink-0">
-                                        <select
-                                            x-model="country"
-                                            @change="changeCountry()"
-                                            class="h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-9 text-sm font-medium text-ink outline-none focus:ring-0"
-                                        >
-                                            <option value="SN">SEN (+221)</option>
-                                            <option value="CI">CIV (+225)</option>
-                                        </select>
+                                        <x-select-native>
+                                            <select
+                                                x-model="country"
+                                                @change="changeCountry()"
+                                                class="col-start-1 row-start-1 h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-8 text-sm font-medium text-ink outline-none focus:ring-0"
+                                            >
+                                                <option value="SN">SEN (+221)</option>
+                                                <option value="CI">CIV (+225)</option>
+                                            </select>
+                                        </x-select-native>
                                         <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
                                             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />

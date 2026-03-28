@@ -575,24 +575,28 @@ new #[Title('Clients')] class extends Component {
 
             <div class="flex items-center gap-2">
                 {{-- Par page --}}
-                <select
-                    wire:model.live="perPage"
-                    class="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                >
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
+                <x-select-native>
+                    <select
+                        wire:model.live="perPage"
+                        class="col-start-1 row-start-1 appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    >
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </x-select-native>
 
                 {{-- Sélecteur de mois --}}
-                <select
-                    wire:model.live="selectedPeriod"
-                    class="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                >
-                    @foreach ($this->availableMonths as $m)
-                        <option value="{{ $m['value'] }}">{{ $m['label'] }}</option>
-                    @endforeach
-                </select>
+                <x-select-native>
+                    <select
+                        wire:model.live="selectedPeriod"
+                        class="col-start-1 row-start-1 appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    >
+                        @foreach ($this->availableMonths as $m)
+                            <option value="{{ $m['value'] }}">{{ $m['label'] }}</option>
+                        @endforeach
+                    </select>
+                </x-select-native>
             </div>
         </div>
 
@@ -727,21 +731,23 @@ new #[Title('Clients')] class extends Component {
             {{-- Période --}}
             <div class="mt-6">
                 <label class="text-sm font-medium text-slate-700">{{ __('Période') }}</label>
-                <select
-                    wire:model.live="exportPeriod"
-                    class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                >
-                    @foreach (['Mois', 'Trimestre', 'Semestre', 'Année'] as $groupType)
-                        @php $grouped = collect($this->exportPeriods)->where('type', $groupType); @endphp
-                        @if ($grouped->isNotEmpty())
-                            <optgroup label="{{ $groupType }}">
-                                @foreach ($grouped as $period)
-                                    <option value="{{ $period['value'] }}">{{ $period['label'] }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
-                    @endforeach
-                </select>
+                <x-select-native>
+                    <select
+                        wire:model.live="exportPeriod"
+                        class="col-start-1 row-start-1 appearance-none mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                    >
+                        @foreach (['Mois', 'Trimestre', 'Semestre', 'Année'] as $groupType)
+                            @php $grouped = collect($this->exportPeriods)->where('type', $groupType); @endphp
+                            @if ($grouped->isNotEmpty())
+                                <optgroup label="{{ $groupType }}">
+                                    @foreach ($grouped as $period)
+                                        <option value="{{ $period['value'] }}">{{ $period['label'] }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
+                    </select>
+                </x-select-native>
             </div>
 
             {{-- Format --}}

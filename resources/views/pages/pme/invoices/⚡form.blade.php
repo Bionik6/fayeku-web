@@ -766,11 +766,13 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Devise') }}</label>
-                        <select wire:model.live="currency" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
-                            @foreach (CurrencyService::currencies() as $code => $config)
-                                <option value="{{ $code }}">{{ $config['name'] }}</option>
-                            @endforeach
-                        </select>
+                        <x-select-native>
+                            <select wire:model.live="currency" class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
+                                @foreach (CurrencyService::currencies() as $code => $config)
+                                    <option value="{{ $code }}">{{ $config['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </x-select-native>
                     </div>
 
                     {{-- Date émission (flatpickr) --}}
@@ -1272,31 +1274,33 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Secteur') }}</label>
-                                <select wire:model="clientSector" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
-                                    <option value="">{{ __('Choisir un secteur…') }}</option>
-                                    <option>Agriculture, Élevage &amp; Pêche</option>
-                                    <option>Agroalimentaire &amp; Transformation</option>
-                                    <option>Commerce de gros</option>
-                                    <option>Commerce de détail &amp; Distribution</option>
-                                    <option>Bâtiment &amp; Travaux Publics</option>
-                                    <option>Transport &amp; Logistique</option>
-                                    <option>Télécommunications</option>
-                                    <option>Technologies de l'information &amp; Communication</option>
-                                    <option>Industrie manufacturière</option>
-                                    <option>Énergie, Mines &amp; Pétrole</option>
-                                    <option>Santé &amp; Pharmacie</option>
-                                    <option>Éducation &amp; Formation</option>
-                                    <option>Immobilier &amp; Foncier</option>
-                                    <option>Finance, Banque &amp; Assurance</option>
-                                    <option>Hôtellerie &amp; Restauration</option>
-                                    <option>Tourisme &amp; Loisirs</option>
-                                    <option>Artisanat &amp; Arts</option>
-                                    <option>Médias &amp; Communication</option>
-                                    <option>Textile, Habillement &amp; Cuir</option>
-                                    <option>Services aux entreprises &amp; Conseil</option>
-                                    <option>Environnement &amp; Eau</option>
-                                    <option value="Autre">{{ __('Autre') }}</option>
-                                </select>
+                                <x-select-native>
+                                    <select wire:model="clientSector" class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
+                                        <option value="">{{ __('Choisir un secteur…') }}</option>
+                                        <option>Agriculture, Élevage &amp; Pêche</option>
+                                        <option>Agroalimentaire &amp; Transformation</option>
+                                        <option>Commerce de gros</option>
+                                        <option>Commerce de détail &amp; Distribution</option>
+                                        <option>Bâtiment &amp; Travaux Publics</option>
+                                        <option>Transport &amp; Logistique</option>
+                                        <option>Télécommunications</option>
+                                        <option>Technologies de l'information &amp; Communication</option>
+                                        <option>Industrie manufacturière</option>
+                                        <option>Énergie, Mines &amp; Pétrole</option>
+                                        <option>Santé &amp; Pharmacie</option>
+                                        <option>Éducation &amp; Formation</option>
+                                        <option>Immobilier &amp; Foncier</option>
+                                        <option>Finance, Banque &amp; Assurance</option>
+                                        <option>Hôtellerie &amp; Restauration</option>
+                                        <option>Tourisme &amp; Loisirs</option>
+                                        <option>Artisanat &amp; Arts</option>
+                                        <option>Médias &amp; Communication</option>
+                                        <option>Textile, Habillement &amp; Cuir</option>
+                                        <option>Services aux entreprises &amp; Conseil</option>
+                                        <option>Environnement &amp; Eau</option>
+                                        <option value="Autre">{{ __('Autre') }}</option>
+                                    </select>
+                                </x-select-native>
                             </div>
                             <div
                                 wire:ignore

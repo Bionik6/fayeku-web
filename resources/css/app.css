@@ -307,6 +307,10 @@ select:focus[data-flux-control] {
         @apply w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base text-ink outline-hidden transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/15;
     }
 
+    .auth-select {
+        @apply col-start-1 row-start-1 appearance-none pr-8;
+    }
+
     .auth-textarea {
         @apply rounded-3xl;
     }
