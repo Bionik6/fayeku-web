@@ -387,7 +387,7 @@ test('la fiche client permet de modifier les informations et de supprimer le sec
         ->set('clientTaxId', 'CI123456')
         ->set('clientAddress', 'Abidjan Plateau')
         ->call('saveClientUpdates')
-        ->assertSee('Les informations client ont été mises à jour.')
+        ->assertDispatched('toast', type: 'success', title: 'Les informations client ont été mises à jour.')
         ->assertDontSee('Secteur');
 
     $client->refresh();

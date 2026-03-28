@@ -91,7 +91,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         $this->detailCache = null;
         $this->showEditClientModal = false;
 
-        session()->flash('client-updated', __('Les informations client ont été mises à jour.'));
+        $this->dispatch('toast', type: 'success', title: __('Les informations client ont été mises à jour.'));
     }
 
     public function formatFcfa(?int $amount): string
@@ -186,15 +186,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
     @if (session('client-saved'))
-        <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            {{ session('client-saved') }} {{ __('est prêt pour la facturation et le suivi.') }}
-        </section>
-    @endif
-
-    @if (session('client-updated'))
-        <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            {{ session('client-updated') }}
-        </section>
+        <div x-init="$dispatch('toast', { type: 'success', title: '{{ session('client-saved') }} {{ __('est prêt pour la facturation et le suivi.') }}' })"></div>
     @endif
 
     <section class="app-shell-panel overflow-hidden">

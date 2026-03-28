@@ -265,9 +265,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
     @if (session('client-saved'))
-        <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            {{ session('client-saved') }} {{ __('a été ajouté à votre portefeuille.') }}
-        </section>
+        <div x-init="$dispatch('toast', { type: 'success', title: '{{ session('client-saved') }} {{ __('a été ajouté à votre portefeuille.') }}' })"></div>
     @endif
 
     <section class="app-shell-panel overflow-hidden">

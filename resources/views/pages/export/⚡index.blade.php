@@ -223,7 +223,7 @@ new #[Title('Export groupé')] class extends Component {
         $this->modal('export-groupe')->close();
 
         // TODO: Implement actual file generation via ExportService
-        session()->flash('export-success', __('Export généré avec succès.'));
+        $this->dispatch('toast', type: 'success', title: __('Export généré avec succès.'));
     }
 
     public function exportClient(string $companyId): void
@@ -342,12 +342,6 @@ new #[Title('Export groupé')] class extends Component {
         </div>
     </section>
 
-    {{-- ─── Flash message ──────────────────────────────────────────────── --}}
-    @if (session()->has('export-success'))
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-700">
-            {{ session('export-success') }}
-        </div>
-    @endif
 
     {{-- ─── Historique des exports ─────────────────────────────────────── --}}
     <section class="app-shell-panel">

@@ -924,7 +924,7 @@ test('saveInvoiceUpdates modifie une facture existante', function () {
         ->set('invoiceDueAt', now()->addDays(10)->format('Y-m-d'))
         ->set('invoiceNotes', 'Apres modification')
         ->call('saveInvoiceUpdates')
-        ->assertSee('La facture a été mise à jour.');
+        ->assertDispatched('toast', type: 'success', title: 'La facture a été mise à jour.');
 
     $invoice->refresh();
 
@@ -945,7 +945,7 @@ test('deleteInvoice supprime une facture de la PME courante', function () {
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
         ->call('deleteInvoice', $invoice->id)
-        ->assertSee('La facture a été supprimée.');
+        ->assertDispatched('toast', type: 'success', title: 'La facture a été supprimée.');
 
     expect(Invoice::query()->find($invoice->id))->toBeNull()
         ->and(Invoice::withTrashed()->find($invoice->id))->not->toBeNull();

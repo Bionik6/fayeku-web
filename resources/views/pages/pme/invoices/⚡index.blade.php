@@ -184,7 +184,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         $this->refreshKpis();
         unset($this->rows, $this->typeCounts, $this->statusCounts, $this->selectedInvoice, $this->clients);
 
-        session()->flash('invoice-updated', __('La facture a été mise à jour.'));
+        $this->dispatch('toast', type: 'success', title: __('La facture a été mise à jour.'));
     }
 
     public function deleteInvoice(string $invoiceId): void
@@ -210,7 +210,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         $this->refreshKpis();
         unset($this->rows, $this->typeCounts, $this->statusCounts, $this->selectedInvoice);
 
-        session()->flash('invoice-deleted', __('La facture a été supprimée.'));
+        $this->dispatch('toast', type: 'success', title: __('La facture a été supprimée.'));
     }
 
     private function refreshKpis(): void
@@ -505,17 +505,10 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
-    @if (session('invoice-updated'))
-        <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            {{ session('invoice-updated') }}
-        </section>
+    @if (session('success'))
+        <div x-init="$dispatch('toast', { type: 'success', title: '{{ session('success') }}' })"></div>
     @endif
 
-    @if (session('invoice-deleted'))
-        <section class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            {{ session('invoice-deleted') }}
-        </section>
-    @endif
 
     {{-- Bloc A — En-tête --}}
     <section class="app-shell-panel overflow-hidden">

@@ -235,5 +235,5 @@ test('l\'envoi d\'une relance dispatche un message quand le service n\'est pas p
     Livewire::actingAs($user)
         ->test('pages::pme.collection.index')
         ->call('sendReminder', $invoice->id)
-        ->assertDispatched('notify');
+        ->assertDispatched('toast');
 });

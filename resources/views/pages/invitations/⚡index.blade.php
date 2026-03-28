@@ -195,7 +195,7 @@ new #[Title('Invitations')] class extends Component {
         // Invalidate computed caches
         unset($this->invitations, $this->totalSent, $this->pendingCount, $this->priorityItems);
 
-        session()->flash('message', __('Invitation envoyée avec succès.'));
+        $this->dispatch('toast', type: 'success', title: __('Invitation envoyée avec succès.'));
     }
 
     public function remindInvitation(string $id): void
@@ -211,7 +211,7 @@ new #[Title('Invitations')] class extends Component {
 
         unset($this->invitations);
 
-        session()->flash('message', __('Relance envoyée avec succès.'));
+        $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
     }
 
     public function resendInvitation(string $id): void
@@ -230,7 +230,7 @@ new #[Title('Invitations')] class extends Component {
 
         unset($this->invitations, $this->pendingCount, $this->priorityItems);
 
-        session()->flash('message', __('Invitation renvoyée avec succès.'));
+        $this->dispatch('toast', type: 'success', title: __('Invitation renvoyée avec succès.'));
     }
 
     public function setFilter(string $filter): void
@@ -256,12 +256,6 @@ new #[Title('Invitations')] class extends Component {
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
-    {{-- ─── Flash message ──────────────────────────────────────────────── --}}
-    @if (session()->has('message'))
-        <div class="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-            {{ session('message') }}
-        </div>
-    @endif
 
     {{-- ─── En-tête ──────────────────────────────────────────────────────── --}}
     <section class="app-shell-panel overflow-hidden">
@@ -275,7 +269,7 @@ new #[Title('Invitations')] class extends Component {
             <div class="flex shrink-0 items-center gap-3">
                 <button
                     type="button"
-                    wire:click="$dispatch('copy-partner-link')"
+                    x-on:click="navigator.clipboard.writeText('{{ route('marketing.accountants.join') }}').then(() => $dispatch('toast', { type: 'success', title: '{{ __('Lien d\'invitation copié !') }}' }))"
                     class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
                 >
                     <flux:icon name="link" class="size-4" />

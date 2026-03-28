@@ -275,7 +275,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
 
         $this->syncReminderRules();
         $this->showConfigModal = false;
-        $this->dispatch('notify', message: __('Configuration sauvegardée.'));
+        $this->dispatch('toast', type: 'success', title: __('Configuration sauvegardée.'));
     }
 
     public function openPreview(string $invoiceId): void
@@ -330,9 +330,9 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
             app(\Modules\PME\Collection\Services\ReminderService::class)
                 ->send($invoice, $this->company, $channel);
 
-            $this->dispatch('notify', message: __('Relance envoyée avec succès.'));
+            $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
         } catch (\RuntimeException $e) {
-            $this->dispatch('notify', message: __('Service d\'envoi bientôt disponible. Votre relance sera envoyée prochainement.'), type: 'info');
+            $this->dispatch('toast', type: 'warning', title: __('Service d\'envoi bientôt disponible. Votre relance sera envoyée prochainement.'));
         }
 
         $this->refreshKpis();
