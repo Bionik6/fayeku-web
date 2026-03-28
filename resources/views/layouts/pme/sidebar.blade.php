@@ -313,6 +313,8 @@
             </div>
         </flux:modal>
 
+        <x-toast-notifications />
+
         @livewireScripts
         @fluxScripts
     </body>
