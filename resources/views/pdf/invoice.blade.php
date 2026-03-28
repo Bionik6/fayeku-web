@@ -163,7 +163,7 @@
             border-top: 1.5px solid #024D4D;
             padding-top: 10px;
             font-weight: bold;
-            font-size: 12pt;
+            font-size: 13pt;
             color: #024D4D;
         }
 
