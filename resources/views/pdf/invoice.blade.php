@@ -90,6 +90,7 @@
         }
         .info-detail strong {
             color: #1e293b;
+            font-size: 9pt;
         }
 
         /* ── Items table ── */
@@ -245,8 +246,8 @@
             </td>
             <td class="info-party party-from">
                 <div class="info-label">{{ __('Émetteur') }}</div>
+                <div class="info-value">{{ $invoice->company->name }}</div>
                 <div class="info-detail">
-                    <strong>{{ $invoice->company->name }}</strong><br>
                     @if ($invoice->company->address)
                         {{ $invoice->company->address }}
                         @if ($invoice->company->city), {{ $invoice->company->city }} @endif
@@ -258,8 +259,8 @@
             </td>
             <td class="info-party">
                 <div class="info-label">{{ __('Destinataire') }}</div>
+                <div class="info-value">{{ $invoice->client->name }}</div>
                 <div class="info-detail">
-                    <strong>{{ $invoice->client->name }}</strong><br>
                     @if ($invoice->client->address) {{ $invoice->client->address }}<br> @endif
                     @if ($invoice->client->phone) {{ $invoice->client->phone }}<br> @endif
                     @if ($invoice->client->email) {{ $invoice->client->email }} @endif
