@@ -656,7 +656,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         {{ $isEditing ? __('Modifier la facture') : __('Nouvelle facture') }}
                     </h2>
                     @if ($isEditing && $invoice)
-                        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ $reference }}</span>
+                        <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">{{ $reference }}</span>
                     @endif
                 </div>
                 <div class="mt-1 flex items-center gap-3 text-sm text-slate-700">
@@ -666,7 +666,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-amber-400"></span>{{ __('Brouillon') }}</span>
                     @endif
                     @if ($lastSavedAt)
-                        <span class="text-xs text-slate-600">{{ __('Sauvegardé à :time', ['time' => $lastSavedAt]) }}</span>
+                        <span class="text-sm text-slate-600">{{ __('Sauvegardé à :time', ['time' => $lastSavedAt]) }}</span>
                     @endif
                 </div>
             </div>
@@ -712,7 +712,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         </div>
                         <div class="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-slate-700">
                             @if ($this->selectedClient->email) <span>{{ $this->selectedClient->email }}</span> @endif
-                            @if ($this->selectedClient->email && $this->selectedClient->phone) <span class="text-slate-400">⋅</span> @endif
+                            @if ($this->selectedClient->email && $this->selectedClient->phone) <span class="text-slate-500">⋅</span> @endif
                             @if ($this->selectedClient->phone) <span>{{ $this->selectedClient->phone }}</span> @endif
                         </div>
                         @php $ctx = $this->clientContext; @endphp
@@ -725,7 +725,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             @endphp
                             <div class="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-slate-700">
                                 @foreach ($metaItems as $i => $item)
-                                    @if ($i > 0) <span class="text-slate-400">⋅</span> @endif
+                                    @if ($i > 0) <span class="text-slate-500">⋅</span> @endif
                                     <span class="{{ $item['class'] }}">{{ $item['text'] }}</span>
                                 @endforeach
                             </div>
@@ -734,14 +734,14 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 @else
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                         <input wire:model.live.debounce.300ms="clientSearch" @focus="open = true" type="text" placeholder="{{ __('Rechercher un client…') }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                        @error('clientId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        @error('clientId') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                         @if (count($this->clients) > 0)
                             <div x-show="open" x-transition class="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 bg-white py-2 shadow-lg">
                                 @foreach ($this->clients as $c)
                                     <button type="button" wire:click="selectClient('{{ $c['id'] }}')" @click="open = false" class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-slate-50">
                                         <div>
                                             <p class="font-medium text-ink">{{ $c['name'] }}</p>
-                                            <p class="text-xs text-slate-600">{{ $c['email'] ?? $c['phone'] ?? $c['sector'] ?? '' }}</p>
+                                            <p class="text-sm text-slate-600">{{ $c['email'] ?? $c['phone'] ?? $c['sector'] ?? '' }}</p>
                                         </div>
                                     </button>
                                 @endforeach
@@ -762,7 +762,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Référence') }} <span class="text-rose-500">*</span></label>
                         <input wire:model.blur="reference" type="text" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                        @error('reference') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        @error('reference') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Devise') }}</label>
@@ -796,7 +796,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     >
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __("Date d'émission") }} <span class="text-rose-500">*</span></label>
                         <input x-ref="input" type="text" readonly class="w-full cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                        @error('issuedAt') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        @error('issuedAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Échéance --}}
@@ -804,7 +804,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Échéance') }} <span class="text-rose-500">*</span></label>
                         <div class="mb-2 flex flex-wrap gap-2.5">
                             @foreach ([['0', __('À réception')], ['7', '7j'], ['15', '15j'], ['30', '30j'], ['custom', __('Autre date')]] as [$val, $label])
-                                <button type="button" wire:click="$set('dueDatePreset', '{{ $val }}')" class="rounded-full border px-3 py-1 text-xs font-medium transition {{ $dueDatePreset === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30 hover:text-primary' }}">{{ $label }}</button>
+                                <button type="button" wire:click="$set('dueDatePreset', '{{ $val }}')" class="rounded-full border px-3 py-1 text-sm font-medium transition {{ $dueDatePreset === $val ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30 hover:text-primary' }}">{{ $label }}</button>
                             @endforeach
                         </div>
                         <div
@@ -835,7 +835,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         >
                             <input x-ref="dueInput" type="text" readonly class="w-full cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                         </div>
-                        @error('dueAt') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        @error('dueAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
                 </div>
@@ -844,7 +844,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             {{-- Invoice lines --}}
             <section class="app-shell-panel p-6">
                 <h3 class="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Lignes de facture') }}</h3>
-                @error('lines') <p class="mb-3 text-xs text-rose-600">{{ $message }}</p> @enderror
+                @error('lines') <p class="mb-3 text-sm text-rose-600">{{ $message }}</p> @enderror
 
                 <div class="space-y-5">
                     @foreach ($lines as $index => $line)
@@ -855,13 +855,13 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                     <div class="min-w-0 flex-1">
                                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }} <span class="text-rose-500">*</span></label>
                                         <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                        @error("lines.{$index}.description") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                        @error("lines.{$index}.description") <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                                     </div>
                                     @if (count($lines) > 1)
                                         <button
                                             type="button"
                                             wire:click="removeLine({{ $index }})"
-                                            class="mt-7 shrink-0 rounded-xl border border-transparent p-2 text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                                            class="mt-7 shrink-0 rounded-xl border border-transparent p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
                                         >
                                             <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                                         </button>
@@ -874,7 +874,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                     <div>
                                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Quantité') }}</label>
                                         <input wire:model.blur="lines.{{ $index }}.quantity" type="number" min="1" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                        @error("lines.{$index}.quantity") <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                        @error("lines.{$index}.quantity") <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     {{-- Prix unitaire --}}
@@ -963,23 +963,23 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             {{-- Montants et taxes --}}
             <section class="app-shell-panel p-6">
                 <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Montants et taxes') }}</h3>
-                <p class="mb-5 text-xs text-slate-600">{{ __('Ajustez la remise et la TVA. Le total se met à jour automatiquement.') }}</p>
+                <p class="mb-5 text-sm text-slate-600">{{ __('Ajustez la remise et la TVA. Le total se met à jour automatiquement.') }}</p>
 
                 @php $totals = $this->computedTotals; @endphp
 
                 <div class="flex flex-col gap-8 md:flex-row md:items-start">
                     {{-- Left: Ajustements --}}
                     <div class="space-y-6 md:w-[55%]">
-                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-600">{{ __('Ajustements') }}</p>
+                        <p class="text-sm font-semibold uppercase tracking-widest text-slate-600">{{ __('Ajustements') }}</p>
 
                         {{-- Remise globale --}}
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Remise globale') }}</label>
                             <div class="flex items-center gap-0.5">
-                                <span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 px-3 py-2.5 text-xs font-semibold text-slate-700">%</span>
+                                <span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 px-3 py-2.5 text-sm font-semibold text-slate-700">%</span>
                                 <input wire:model.live="discount" type="number" min="0" max="100" placeholder="0" class="w-20 rounded-r-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                             </div>
-                            <p class="mt-1.5 text-xs text-slate-600">{{ __('Appliquée sur le sous-total HT') }}</p>
+                            <p class="mt-1.5 text-sm text-slate-600">{{ __('Appliquée sur le sous-total HT') }}</p>
                         </div>
 
                         {{-- TVA --}}
@@ -992,12 +992,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                             @if ($taxMode === 'custom')
                                 <div class="mt-3 flex items-center gap-2">
-                                    <label class="text-xs font-medium text-slate-700">{{ __('Taux personnalisé') }}</label>
+                                    <label class="text-sm font-medium text-slate-700">{{ __('Taux personnalisé') }}</label>
                                     <input wire:model.live="customTaxRate" type="number" min="0" max="100" class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                                     <span class="text-sm text-slate-700">%</span>
                                 </div>
                             @endif
-                            <p class="mt-1.5 text-xs text-slate-600">{{ __('La TVA est calculée après application de la remise.') }}</p>
+                            <p class="mt-1.5 text-sm text-slate-600">{{ __('La TVA est calculée après application de la remise.') }}</p>
                         </div>
                     </div>
 
@@ -1006,7 +1006,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
                     {{-- Right: Récapitulatif --}}
                     <div class="md:w-[45%]">
-                        <p class="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-600">{{ __('Récapitulatif') }}</p>
+                        <p class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-600">{{ __('Récapitulatif') }}</p>
 
                         <div class="space-y-3 text-sm">
                             <div class="flex items-baseline justify-between gap-3">
@@ -1038,7 +1038,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             {{-- Paiement --}}
             <section class="app-shell-panel p-6">
                 <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Paiement') }}</h3>
-                <p class="mb-5 text-xs text-slate-500">{{ __('Sélectionnez le moyen de paiement accepté pour cette facture.') }}</p>
+                <p class="mb-5 text-sm text-slate-500">{{ __('Sélectionnez le moyen de paiement accepté pour cette facture.') }}</p>
 
                 <div class="space-y-5">
                     <div>
@@ -1080,7 +1080,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             {{-- Relances --}}
             <section class="app-shell-panel p-6">
                 <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Relances') }}</h3>
-                <p class="mb-5 text-xs text-slate-500">{{ __('Configurez les relances automatiques envoyées au client autour de l\'échéance.') }}</p>
+                <p class="mb-5 text-sm text-slate-500">{{ __('Configurez les relances automatiques envoyées au client autour de l\'échéance.') }}</p>
 
                 <div class="space-y-4">
                     <div class="flex flex-wrap gap-2.5">
@@ -1195,24 +1195,24 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         @if ($paymentMethod)
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-slate-600">{{ __('Paiement') }}</span>
-                                <span class="text-xs font-medium text-ink">{{ match($paymentMethod) { 'wave' => 'Wave', 'orange_money' => 'Orange Money', 'cash' => __('Espèces'), 'bank_transfer' => __('Virement'), default => '—' } }}</span>
+                                <span class="text-sm font-medium text-ink">{{ match($paymentMethod) { 'wave' => 'Wave', 'orange_money' => 'Orange Money', 'cash' => __('Espèces'), 'bank_transfer' => __('Virement'), default => '—' } }}</span>
                             </div>
                         @endif
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-slate-600">{{ __('Relances Fayeku') }}</span>
                             @if (count($reminderSchedule) > 0)
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-teal">
+                                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-teal">
                                     <span class="size-1.5 rounded-full bg-teal"></span>
                                     {{ __(':count activée(s)', ['count' => count($reminderSchedule)]) }}
                                 </span>
                             @else
-                                <span class="text-xs font-medium text-slate-500">{{ __('Désactivées') }}</span>
+                                <span class="text-sm font-medium text-slate-500">{{ __('Désactivées') }}</span>
                             @endif
                         </div>
                         @if ($this->selectedClient)
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-slate-600">{{ __('Contact') }}</span>
-                                <span class="truncate text-right text-xs text-ink">{{ $this->selectedClient->email ?? $this->selectedClient->phone ?? '—' }}</span>
+                                <span class="truncate text-right text-sm text-ink">{{ $this->selectedClient->email ?? $this->selectedClient->phone ?? '—' }}</span>
                             </div>
                         @endif
                     </div>
@@ -1238,7 +1238,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-6 py-4 lg:hidden">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-600">{{ __('Total TTC') }}</p>
+                            <p class="text-sm text-slate-600">{{ __('Total TTC') }}</p>
                             <p class="text-lg font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</p>
                         </div>
                         <div class="flex gap-2">
@@ -1270,7 +1270,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Nom du client') }} <span class="text-rose-500">*</span></label>
                                 <input wire:model="clientName" type="text" required autofocus class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                @error('clientName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('clientName') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Secteur') }}</label>
@@ -1338,7 +1338,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Email') }}</label>
                                 <input wire:model="clientEmail" type="email" placeholder="contact@client.sn" class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                @error('clientEmail') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('clientEmail') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Identifiant fiscal') }}</label>

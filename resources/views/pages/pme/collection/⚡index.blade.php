@@ -694,7 +694,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                             'bg-primary/10' => $isAuto,
                             'bg-slate-100' => ! $isAuto,
                         ])>
-                            <flux:icon name="bolt" @class(['size-5', 'text-primary' => $isAuto, 'text-slate-400' => ! $isAuto]) />
+                            <flux:icon name="bolt" @class(['size-5', 'text-primary' => $isAuto, 'text-slate-500' => ! $isAuto]) />
                         </div>
                         <div>
                             <p class="font-semibold text-ink">{{ __('Automatique') }}</p>
@@ -726,7 +726,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                             'bg-primary/10' => ! $isAuto,
                             'bg-slate-100' => $isAuto,
                         ])>
-                            <flux:icon name="hand-raised" @class(['size-5', 'text-primary' => ! $isAuto, 'text-slate-400' => $isAuto]) />
+                            <flux:icon name="hand-raised" @class(['size-5', 'text-primary' => ! $isAuto, 'text-slate-500' => $isAuto]) />
                         </div>
                         <div>
                             <p class="font-semibold text-ink">{{ __('Manuel') }}</p>
@@ -839,7 +839,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
         {{-- Recherche --}}
         <div class="mt-3 flex flex-wrap gap-3">
             <div class="relative flex-1 min-w-48">
-                <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                 <input
                     wire:model.live.debounce.300ms="search"
                     type="search"
@@ -904,11 +904,11 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                                         </button>
                                         <flux:menu>
                                             <flux:menu.item wire:click="openPreview('{{ $row['id'] }}')">
-                                                <flux:icon name="chat-bubble-left-right" class="size-4 text-slate-400" />
+                                                <flux:icon name="chat-bubble-left-right" class="size-4 text-slate-500" />
                                                 {{ __('Aperçu WhatsApp') }}
                                             </flux:menu.item>
                                             <flux:menu.item wire:click="openTimeline('{{ $row['id'] }}')">
-                                                <flux:icon name="clock" class="size-4 text-slate-400" />
+                                                <flux:icon name="clock" class="size-4 text-slate-500" />
                                                 {{ __('Historique') }}
                                             </flux:menu.item>
                                             <flux:menu.separator />
@@ -952,7 +952,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                         <p class="mt-0.5 text-sm text-slate-600">{{ $this->previewInvoice->reference }} · {{ $this->previewInvoice->client?->name }}</p>
                     </div>
                     <button wire:click="closePreview" class="rounded-xl p-2 transition hover:bg-slate-100">
-                        <flux:icon name="x-mark" class="size-5 text-slate-400" />
+                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
                     </button>
                 </div>
 
@@ -1042,7 +1042,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                         <p class="mt-0.5 text-sm text-slate-600">{{ $this->timelineInvoice->reference }} · {{ $this->timelineInvoice->client?->name }}</p>
                     </div>
                     <button wire:click="closeTimeline" class="rounded-xl p-2 transition hover:bg-slate-100">
-                        <flux:icon name="x-mark" class="size-5 text-slate-400" />
+                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
                     </button>
                 </div>
 
@@ -1128,7 +1128,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                 <div class="flex items-center justify-between border-b border-slate-100 px-8 py-5">
                     <h2 class="text-lg font-semibold text-ink">{{ __('Configurer les relances') }}</h2>
                     <button wire:click="$set('showConfigModal', false)" class="rounded-xl p-2 transition hover:bg-slate-100">
-                        <flux:icon name="x-mark" class="size-5 text-slate-400" />
+                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
                     </button>
                 </div>
 
@@ -1163,7 +1163,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                                     'border-slate-200' => $configMode !== 'auto',
                                 ])
                             >
-                                <flux:icon name="bolt" @class(['size-5', 'text-primary' => $configMode === 'auto', 'text-slate-400' => $configMode !== 'auto']) />
+                                <flux:icon name="bolt" @class(['size-5', 'text-primary' => $configMode === 'auto', 'text-slate-500' => $configMode !== 'auto']) />
                                 <p class="mt-2 text-sm font-semibold text-ink">{{ __('Automatique') }}</p>
                                 <p class="mt-0.5 text-sm text-slate-600">{{ __('Envoi selon le calendrier') }}</p>
                             </button>
@@ -1175,7 +1175,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
                                     'border-slate-200' => $configMode !== 'manual',
                                 ])
                             >
-                                <flux:icon name="hand-raised" @class(['size-5', 'text-primary' => $configMode === 'manual', 'text-slate-400' => $configMode !== 'manual']) />
+                                <flux:icon name="hand-raised" @class(['size-5', 'text-primary' => $configMode === 'manual', 'text-slate-500' => $configMode !== 'manual']) />
                                 <p class="mt-2 text-sm font-semibold text-ink">{{ __('Manuel') }}</p>
                                 <p class="mt-0.5 text-sm text-slate-600">{{ __('Validation avant envoi') }}</p>
                             </button>

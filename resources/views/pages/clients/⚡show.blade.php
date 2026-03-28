@@ -400,7 +400,7 @@ new #[Title('Clients')] class extends Component {
                     <h2 class="text-2xl font-semibold tracking-tight text-ink">{{ $company->name }}</h2>
                     <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                         <span @class([
-                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
+                            'inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold',
                             'bg-teal-100 text-teal-700'    => strtolower($company->plan ?? '') === 'essentiel',
                             'bg-violet-100 text-violet-700' => strtolower($company->plan ?? '') === 'basique',
                             'bg-amber-100 text-amber-700'   => strtolower($company->plan ?? '') === 'premium',
@@ -439,7 +439,7 @@ new #[Title('Clients')] class extends Component {
 
                     <flux:menu>
                         <flux:menu.item href="#factures-client">
-                            <x-app.icon name="invoice" class="size-4 text-slate-400" />
+                            <x-app.icon name="invoice" class="size-4 text-slate-500" />
                             {{ __('Voir l’historique') }}
                         </flux:menu.item>
 
@@ -482,7 +482,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-slate-100">
                     <flux:icon name="document-chart-bar" class="size-5 text-slate-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-600">
                     {{ ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('M Y')) }}
                 </span>
             </div>
@@ -498,7 +498,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="banknotes" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ __('Cumul') }}
                 </span>
             </div>
@@ -521,19 +521,19 @@ new #[Title('Clients')] class extends Component {
                         'size-5',
                         'text-rose-500'   => $this->statusValue === 'critique',
                         'text-amber-500'  => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
-                        'text-slate-400'  => $this->stats['pending_amount'] === 0,
+                        'text-slate-500'  => $this->stats['pending_amount'] === 0,
                     ]) />
                 </div>
                 @if ($this->stats['pending_count'] > 0)
                     <span @class([
-                        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
+                        'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold',
                         'bg-rose-50 text-rose-700'   => $this->statusValue === 'critique',
                         'bg-amber-50 text-amber-700' => $this->statusValue !== 'critique',
                     ])>
                         {{ $this->stats['pending_count'] }} {{ $this->stats['pending_count'] > 1 ? __('factures') : __('facture') }}
                     </span>
                 @else
-                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                         À jour
                     </span>
                 @endif
@@ -559,7 +559,7 @@ new #[Title('Clients')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Délai moyen de paiement · Taux de recouvrement') }}</p>
             <p class="mt-1 text-2xl font-bold tracking-tight text-amber-500">
                 {{ $this->stats['avg_days'] }} j
-                <span class="text-slate-400">·</span>
+                <span class="text-slate-500">·</span>
                 {{ $this->stats['recovery_rate'] }}%
             </p>
         </section>
@@ -605,16 +605,16 @@ new #[Title('Clients')] class extends Component {
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-y border-slate-100 bg-slate-50/80">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Référence') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client final') }}</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('Montant HT') }}</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('TVA') }}</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Émise le') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Échéance') }}</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500">{{ __('Retard') }}</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500">{{ __('Relances') }}</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Statut') }}</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client final') }}</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant HT') }}</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('TVA') }}</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Émise le') }}</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Échéance') }}</th>
+                        <th class="px-4 py-3 text-center text-sm font-semibold text-slate-500">{{ __('Retard') }}</th>
+                        <th class="px-4 py-3 text-center text-sm font-semibold text-slate-500">{{ __('Relances') }}</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -652,7 +652,7 @@ new #[Title('Clients')] class extends Component {
                             wire:click="viewInvoice('{{ $invoice->id }}')"
                             class="cursor-pointer transition hover:bg-slate-50/80"
                         >
-                            <td class="px-6 py-4 font-mono text-xs font-semibold text-ink">
+                            <td class="px-6 py-4 font-mono text-sm font-semibold text-ink">
                                 {{ $invoice->reference }}
                             </td>
                             <td class="px-4 py-4 text-slate-700">
@@ -678,21 +678,21 @@ new #[Title('Clients')] class extends Component {
                             </td>
                             <td class="px-4 py-4 text-center text-slate-600">
                                 @if ($invoice->reminders_count === 0)
-                                    <span class="text-slate-400">0</span>
+                                    <span class="text-slate-500">0</span>
                                 @else
                                     {{ $invoice->reminders_count }}
                                     {{ $invoice->reminders_count === 1 ? __('envoyée') : __('envoyées') }}
                                 @endif
                             </td>
                             <td class="px-4 py-4">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusConfig['class'] }}">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold {{ $statusConfig['class'] }}">
                                     {{ $statusConfig['label'] }}
                                 </span>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-6 py-10 text-center text-sm text-slate-400">
+                            <td colspan="10" class="px-6 py-10 text-center text-sm text-slate-500">
                                 {{ __('Aucune facture ce mois.') }}
                             </td>
                         </tr>
@@ -791,7 +791,7 @@ new #[Title('Clients')] class extends Component {
                     @class([
                         'w-full rounded-2xl py-3.5 text-base font-semibold transition',
                         'bg-primary text-white shadow-sm hover:bg-primary/90' => $this->exportInvoiceCount > 0,
-                        'cursor-not-allowed bg-slate-100 text-slate-400' => $this->exportInvoiceCount === 0,
+                        'cursor-not-allowed bg-slate-100 text-slate-500' => $this->exportInvoiceCount === 0,
                     ])
                     @if ($this->exportInvoiceCount === 0) disabled @endif
                 >

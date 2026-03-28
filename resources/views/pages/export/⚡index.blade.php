@@ -347,18 +347,18 @@ new #[Title('Export groupé')] class extends Component {
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
             <h2 class="text-lg font-bold text-ink">{{ __('Historique des exports') }}</h2>
-            <p class="mt-1 text-sm text-slate-400">{{ __('Retrouvez les derniers exports générés pour votre cabinet.') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Retrouvez les derniers exports générés pour votre cabinet.') }}</p>
         </div>
 
         @if ($this->exportHistories->isEmpty())
             <div class="px-6 pb-6">
-                <p class="text-sm text-slate-400">{{ __('Aucun export réalisé pour le moment.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Aucun export réalisé pour le moment.') }}</p>
             </div>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
                             <th class="px-6 py-3">{{ __('Date') }}</th>
                             <th class="px-6 py-3">{{ __('Période') }}</th>
                             <th class="px-6 py-3">{{ __('Format') }}</th>
@@ -376,7 +376,7 @@ new #[Title('Export groupé')] class extends Component {
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $history->period }}</td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
-                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-600">
                                         {{ match($history->format) {
                                             ExportFormat::Sage100 => 'Sage 100',
                                             ExportFormat::Ebp => 'EBP',
@@ -388,14 +388,14 @@ new #[Title('Export groupé')] class extends Component {
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $history->clients_count }}</td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $history->user?->full_name ?? '—' }}</td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
-                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                                         {{ __('Terminé') }}
                                     </span>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-right">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-ink shadow-sm transition hover:bg-slate-50"
+                                        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-slate-50"
                                     >
                                         <x-app.icon name="download" class="size-3.5" />
                                         {{ __('Télécharger') }}
@@ -414,7 +414,7 @@ new #[Title('Export groupé')] class extends Component {
         <div class="flex items-center justify-between px-6 pt-6 pb-4">
             <div>
                 <h2 class="text-lg font-bold text-ink">{{ __('Export par client') }}</h2>
-                <p class="mt-1 text-sm text-slate-400">{{ __('Exportez les écritures comptables d’un client spécifique.') }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Exportez les écritures comptables d’un client spécifique.') }}</p>
             </div>
 
             <div class="relative">
@@ -424,7 +424,7 @@ new #[Title('Export groupé')] class extends Component {
                     placeholder="{{ __('Rechercher une entreprise...') }}"
                     class="w-64 rounded-xl border border-slate-200 bg-white px-4 py-2 pl-10 text-sm text-ink placeholder-slate-400 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
-                <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
             </div>
@@ -432,13 +432,13 @@ new #[Title('Export groupé')] class extends Component {
 
         @if ($this->clients->isEmpty())
             <div class="px-6 pb-6">
-                <p class="text-sm text-slate-400">{{ __('Aucun client trouvé.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Aucun client trouvé.') }}</p>
             </div>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
                             <th class="px-6 py-3">{{ __('Client') }}</th>
                             <th class="px-6 py-3 text-right"></th>
                         </tr>
@@ -448,12 +448,12 @@ new #[Title('Export groupé')] class extends Component {
                             <tr class="transition hover:bg-slate-50/50">
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
-                                        <div class="flex size-9 items-center justify-center rounded-xl bg-mist text-xs font-bold text-primary">
+                                        <div class="flex size-9 items-center justify-center rounded-xl bg-mist text-sm font-bold text-primary">
                                             {{ mb_substr($client->name, 0, 2) }}
                                         </div>
                                         <div>
                                             <p class="font-medium text-ink">{{ $client->name }}</p>
-                                            <p class="text-xs text-slate-400">
+                                            <p class="text-sm text-slate-500">
                                                 {{ ucfirst($client->plan ?? 'Offre non définie') }} · {{ $this->currentPeriodLabel() }}
                                             </p>
                                         </div>
@@ -463,7 +463,7 @@ new #[Title('Export groupé')] class extends Component {
                                     <button
                                         type="button"
                                         wire:click="exportClient('{{ $client->id }}')"
-                                        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-ink shadow-sm transition hover:bg-slate-50"
+                                        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-slate-50"
                                     >
                                         <x-app.icon name="export" class="size-3.5" />
                                         {{ __('Exporter') }}
@@ -481,13 +481,13 @@ new #[Title('Export groupé')] class extends Component {
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
             <h2 class="text-lg font-bold text-ink">{{ __('Plan de comptes (Sage 100)') }}</h2>
-            <p class="mt-1 text-sm text-slate-400">{{ __('Comptes utilisés pour générer les écritures du fichier exporté.') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Comptes utilisés pour générer les écritures du fichier exporté.') }}</p>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead>
-                    <tr class="border-t border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
                         <th class="px-6 py-3">{{ __('Code') }}</th>
                         <th class="px-6 py-3">{{ __('Libellé') }}</th>
                     </tr>
@@ -496,7 +496,7 @@ new #[Title('Export groupé')] class extends Component {
                     @foreach ($this->planDeComptes() as $account)
                         <tr class="transition hover:bg-slate-50/50">
                             <td class="whitespace-nowrap px-6 py-3.5">
-                                <span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-700">
+                                <span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-sm font-semibold text-slate-700">
                                     {{ $account['code'] }}
                                 </span>
                             </td>
@@ -589,13 +589,13 @@ new #[Title('Export groupé')] class extends Component {
                 @if ($clientSelection === 'manual')
                     <div class="mt-3">
                         <div class="mb-2 flex items-center justify-between">
-                            <span class="text-xs text-slate-400">
+                            <span class="text-sm text-slate-500">
                                 {{ $this->selectedClientsLabel() }}
                             </span>
                             <button
                                 type="button"
                                 wire:click="toggleAllClients"
-                                class="text-xs font-medium text-primary hover:underline"
+                                class="text-sm font-medium text-primary hover:underline"
                             >
                                 {{ count($selectedClientIds) === $this->clients->count() ? __('Tout désélectionner') : __('Tout sélectionner') }}
                             </button>
@@ -646,7 +646,7 @@ new #[Title('Export groupé')] class extends Component {
                     @class([
                         'w-full rounded-2xl py-3.5 text-base font-semibold transition',
                         'bg-primary text-white shadow-sm hover:bg-primary/90' => $this->exportInvoiceCount > 0,
-                        'cursor-not-allowed bg-slate-100 text-slate-400' => $this->exportInvoiceCount === 0,
+                        'cursor-not-allowed bg-slate-100 text-slate-500' => $this->exportInvoiceCount === 0,
                     ])
                     @if ($this->exportInvoiceCount === 0) disabled @endif
                 >

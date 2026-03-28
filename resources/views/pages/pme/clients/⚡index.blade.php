@@ -300,7 +300,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="users" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Actifs') }}
                 </span>
             </div>
@@ -313,7 +313,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-primary/8">
                     <flux:icon name="banknotes" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ $this->currentPeriodLabel }}
                 </span>
             </div>
@@ -332,7 +332,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="sparkles" class="size-5 text-emerald-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ $this->summary['best_payer']['score_label'] ?? __('À définir') }}
                 </span>
             </div>
@@ -350,7 +350,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="shield-exclamation" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     {{ $this->summary['watch_client']['score_label'] ?? __('Stable') }}
                 </span>
             </div>
@@ -375,14 +375,14 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
         <div class="flex flex-col gap-4">
             <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
                 <div class="relative flex-1">
-                    <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                    <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
                     <input
                         wire:model.live.debounce.300ms="search"
                         type="text"
                         placeholder="{{ __('Rechercher un client, un secteur, un contact...') }}"
-                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                     />
                 </div>
 
@@ -431,7 +431,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                     >
                         {{ $tab['label'] }}
                         <span @class([
-                            'rounded-full px-2 py-0.5 text-xs font-bold',
+                            'rounded-full px-2 py-0.5 text-sm font-bold',
                             'bg-white/20 text-white' => $segment === $value,
                             'bg-slate-100 text-slate-500' => $segment !== $value,
                         ])>{{ $tab['count'] }}</span>
@@ -476,13 +476,13 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                     <table class="w-full min-w-[1040px] text-sm">
                         <thead>
                             <tr class="border-b border-slate-100 bg-slate-50/80">
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client') }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('CA') }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Factures ce mois') }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Impayés en cours') }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Délai moyen') }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Score paiement') }}</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Actions') }}</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('CA') }}</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Factures ce mois') }}</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Impayés en cours') }}</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Délai moyen') }}</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Score paiement') }}</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -490,7 +490,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                 <tr wire:key="pme-client-row-{{ $row['id'] }}" class="align-top transition hover:bg-slate-50/70">
                                     <td class="px-6 py-4">
                                         <div class="flex items-start gap-3">
-                                            <span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-mist text-xs font-bold text-primary">
+                                            <span class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-mist text-sm font-bold text-primary">
                                                 {{ $row['initials'] }}
                                             </span>
                                             <div class="min-w-0">
@@ -501,8 +501,8 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                 >
                                                     {{ $row['name'] }}
                                                 </a>
-                                                <p class="mt-1 text-xs text-slate-500">{{ $row['last_interaction_label'] }}</p>
-                                                <p class="mt-1 text-xs text-slate-400">{{ $row['last_interaction_detail'] }}</p>
+                                                <p class="mt-1 text-sm text-slate-500">{{ $row['last_interaction_label'] }}</p>
+                                                <p class="mt-1 text-sm text-slate-500">{{ $row['last_interaction_detail'] }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -510,7 +510,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                         @if ($row['period_revenue'] > 0)
                                             {{ number_format($row['period_revenue'], 0, ',', ' ') }} F
                                         @else
-                                            <span class="text-slate-400">—</span>
+                                            <span class="text-slate-500">—</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-4 text-slate-600">{{ $row['invoice_count_this_month'] }}</td>
@@ -519,23 +519,23 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                             <div class="font-semibold text-rose-600">
                                                 {{ number_format($row['outstanding_amount'], 0, ',', ' ') }} F
                                             </div>
-                                            <div class="mt-1 text-xs text-slate-500">
+                                            <div class="mt-1 text-sm text-slate-500">
                                                 {{ $row['outstanding_count'] }} {{ $row['outstanding_count'] > 1 ? __('factures ouvertes') : __('facture ouverte') }}
                                             </div>
                                         @else
-                                            <span class="text-slate-400">0 F</span>
+                                            <span class="text-slate-500">0 F</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-4">
                                         @if ($row['average_payment_days'] > 0)
                                             <span class="font-semibold text-ink">{{ $row['average_payment_days'] }}j</span>
                                         @else
-                                            <span class="text-slate-400">—</span>
+                                            <span class="text-slate-500">—</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-4">
                                         <span @class([
-                                            'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset',
+                                            'inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset',
                                             'bg-emerald-50 text-emerald-700 ring-emerald-600/20' => $row['payment_tone'] === 'emerald',
                                             'bg-teal-50 text-teal-700 ring-teal-600/20' => $row['payment_tone'] === 'teal',
                                             'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['payment_tone'] === 'amber',
@@ -553,7 +553,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                 class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
                                             >
                                                 {{ __('Actions') }}
-                                                <svg class="size-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <svg class="size-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                     <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
                                                 </svg>
                                             </button>
@@ -574,7 +574,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                     @click="open = false"
                                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
                                                 >
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <svg class="size-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                     </svg>
@@ -586,7 +586,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                     @click="open = false"
                                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
                                                 >
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <svg class="size-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                     </svg>
                                                     {{ __('Nouvelle facture') }}
@@ -597,7 +597,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                     @click="open = false"
                                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
                                                 >
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <svg class="size-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                                                     </svg>
                                                     {{ __('Relancer') }}
@@ -608,7 +608,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                     @click="open = false"
                                                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-ink"
                                                 >
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <svg class="size-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                                                     </svg>
                                                     {{ __('Voir impayés') }}
@@ -673,9 +673,9 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     type="text"
                                     required
                                     autofocus
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
-                                @error('clientName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('clientName') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
                             {{-- Secteur --}}
@@ -760,7 +760,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                                 <option value="CI">CIV (+225)</option>
                                             </select>
                                         </x-select-native>
-                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
                                             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
                                             </svg>
@@ -773,7 +773,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                         inputmode="numeric"
                                         :placeholder="placeholder"
                                         @input="onInput($event)"
-                                        class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-400 outline-none focus:ring-0"
+                                        class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-500 outline-none focus:ring-0"
                                     />
                                 </div>
                             </div>
@@ -785,9 +785,9 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     wire:model="clientEmail"
                                     type="email"
                                     placeholder="contact@client.sn"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
-                                @error('clientEmail') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('clientEmail') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
                             {{-- Identifiant fiscal --}}
@@ -797,7 +797,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     wire:model="clientTaxId"
                                     type="text"
                                     placeholder="NINEA / RCCM / NCC"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
                             </div>
 
@@ -808,7 +808,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     wire:model="clientAddress"
                                     type="text"
                                     placeholder="{{ __('Rue, quartier, ville…') }}"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
                             </div>
                         </div>

@@ -280,7 +280,7 @@ new #[Title('Dashboard')] class extends Component {
                         {{ $tierLabel }}
                         @if ($tierValue !== 'partner') ★ @endif
                     </span>
-                    <p class="text-xs text-slate-500">
+                    <p class="text-sm text-slate-500">
                         {{ $tierRangeLabel }}
                         @if (! $isPlatinum)
                             · Prochain: {{ $nextTierLabel }} à {{ $nextThreshold }}
@@ -300,12 +300,12 @@ new #[Title('Dashboard')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="user-group" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     Portefeuille
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Clients suivis') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Portefeuille actif') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Portefeuille actif') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">{{ $activeClientsCount }}</p>
         </article>
 
@@ -315,12 +315,12 @@ new #[Title('Dashboard')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     À jour
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Clients à jour') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Aucun retard en cours') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Aucun retard en cours') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-accent">{{ $upToDateCount }}</p>
         </article>
 
@@ -330,12 +330,12 @@ new #[Title('Dashboard')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="eye" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     À surveiller
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Dossiers à relancer') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Clients à surveiller') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Clients à surveiller') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $watchCount }}</p>
         </article>
 
@@ -345,12 +345,12 @@ new #[Title('Dashboard')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     &gt; 60j
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Impayés critiques') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Plus de 60 jours') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Plus de 60 jours') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-rose-500">{{ $criticalCount }}</p>
         </article>
 
@@ -360,7 +360,7 @@ new #[Title('Dashboard')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-primary/8">
                     <flux:icon name="banknotes" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-600">
                     {{ $currentMonth }}
                 </span>
             </div>
@@ -368,7 +368,7 @@ new #[Title('Dashboard')] class extends Component {
             <p class="mt-1 text-2xl font-semibold tracking-tight text-primary">
                 {{ number_format($commissionAmount, 0, ',', ' ') }} FCFA
             </p>
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="mt-1 text-sm text-slate-500">
                 {{ $currentMonth }}
                 @if ($nextPaymentDate)
                     · {{ __('Versement prévu le') }} {{ $nextPaymentDate }}
@@ -415,7 +415,7 @@ new #[Title('Dashboard')] class extends Component {
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="truncate font-semibold text-ink">{{ $alertTitle }}</p>
                                 <span @class([
-                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
                                     'bg-rose-50 text-rose-700 ring-rose-600/20' => $alert['type'] === 'critical',
                                     'bg-amber-50 text-amber-700 ring-amber-600/20' => $alert['type'] === 'watch',
                                     'bg-green-50 text-green-700 ring-green-600/20' => $alert['type'] === 'new',
@@ -443,19 +443,19 @@ new #[Title('Dashboard')] class extends Component {
                                 <flux:menu>
                                     @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
                                         <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                            <x-app.icon name="invoice" class="size-4 text-slate-400" />
+                                            <x-app.icon name="invoice" class="size-4 text-slate-500" />
                                             {{ __('Voir la facture') }}
                                         </flux:menu.item>
                                     @endif
 
                                     @if ($alert['company_id'] ?? null)
                                         <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                            <x-app.icon name="user" class="size-4 text-slate-400" />
+                                            <x-app.icon name="user" class="size-4 text-slate-500" />
                                             {{ __('Voir le dossier') }}
                                         </flux:menu.item>
 
                                         <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                            <flux:icon name="phone" class="size-4 text-slate-400" />
+                                            <flux:icon name="phone" class="size-4 text-slate-500" />
                                             {{ __('Contacter le client') }}
                                         </flux:menu.item>
                                     @endif
@@ -463,7 +463,7 @@ new #[Title('Dashboard')] class extends Component {
                                     <flux:menu.separator />
 
                                     <flux:menu.item wire:click="dismiss('{{ $alert['alert_key'] }}')">
-                                        <x-app.icon name="check" class="size-4 text-slate-400" />
+                                        <x-app.icon name="check" class="size-4 text-slate-500" />
                                         {{ __('Marquer comme traité') }}
                                     </flux:menu.item>
                                 </flux:menu>
@@ -474,7 +474,7 @@ new #[Title('Dashboard')] class extends Component {
             </div>
 
         @else
-            <p class="mt-4 text-sm text-slate-400">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
+            <p class="mt-4 text-sm text-slate-500">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
         @endif
     </section>
 
@@ -491,10 +491,10 @@ new #[Title('Dashboard')] class extends Component {
                     'rounded-2xl border border-slate-200 bg-slate-50 p-4',
                     'ring-2 ring-slate-300' => $tierValue === 'partner',
                 ])>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-700">Partner</p>
+                    <p class="text-sm font-semibold uppercase tracking-wider text-slate-700">Partner</p>
                     <p class="mt-1 text-base font-bold text-ink">1–4 clients actifs</p>
                     @if ($tierValue === 'partner')
-                        <span class="mt-2 inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white">{{ __('Niveau actuel') }}</span>
+                        <span class="mt-2 inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-sm font-semibold text-white">{{ __('Niveau actuel') }}</span>
                     @endif
                     <ul class="mt-3 space-y-1 text-sm text-slate-600">
                         <li>{{ __('Commission de 15 %') }}</li>
@@ -505,10 +505,10 @@ new #[Title('Dashboard')] class extends Component {
                     'rounded-2xl border border-amber-200 bg-amber-50 p-4',
                     'ring-2 ring-amber-300' => $tierValue === 'gold',
                 ])>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Gold</p>
+                    <p class="text-sm font-semibold uppercase tracking-wider text-amber-700">Gold</p>
                     <p class="mt-1 text-base font-bold text-ink">5–14 clients actifs</p>
                     @if ($tierValue === 'gold')
-                        <span class="mt-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-semibold text-amber-950">{{ __('Niveau actuel') }}</span>
+                        <span class="mt-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-sm font-semibold text-amber-950">{{ __('Niveau actuel') }}</span>
                     @endif
                     <ul class="mt-3 space-y-1 text-sm text-slate-600">
                         <li class="font-medium text-amber-700">{{ __('Commission récurrente de 15 %') }}</li>
@@ -519,10 +519,10 @@ new #[Title('Dashboard')] class extends Component {
                     'rounded-2xl border border-sky-200 bg-sky-50 p-4',
                     'ring-2 ring-sky-300' => $tierValue === 'platinum',
                 ])>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-sky-800">Platinum</p>
+                    <p class="text-sm font-semibold uppercase tracking-wider text-sky-800">Platinum</p>
                     <p class="mt-1 text-base font-bold text-ink">15+ clients actifs</p>
                     @if ($tierValue === 'platinum')
-                        <span class="mt-2 inline-flex items-center rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold text-accent">{{ __('Niveau actuel') }}</span>
+                        <span class="mt-2 inline-flex items-center rounded-full bg-ink px-2.5 py-0.5 text-sm font-semibold text-accent">{{ __('Niveau actuel') }}</span>
                     @endif
                     <ul class="mt-3 space-y-1 text-sm text-slate-600">
                         <li>{{ __('Tous les avantages Gold') }}</li>
@@ -569,13 +569,13 @@ new #[Title('Dashboard')] class extends Component {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-y border-slate-100 bg-slate-50/80">
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Offre') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Dernière facture') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Impayés') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Montant en attente') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Taux de recouvrement') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Statut') }}</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Offre') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Dernière facture') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Impayés') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Montant en attente') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Taux de recouvrement') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -587,7 +587,7 @@ new #[Title('Dashboard')] class extends Component {
                             >
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <span class="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-xs font-bold text-primary">
+                                        <span class="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-sm font-bold text-primary">
                                             {{ $row['initials'] }}
                                         </span>
                                         <span class="font-semibold text-ink">{{ $row['name'] }}</span>
@@ -595,7 +595,7 @@ new #[Title('Dashboard')] class extends Component {
                                 </td>
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
                                         'bg-teal-100 text-teal-700'     => strtolower($row['plan']) === 'essentiel',
                                         'bg-violet-100 text-violet-700' => strtolower($row['plan']) === 'basique',
                                         'bg-amber-100 text-amber-700'   => strtolower($row['plan']) === 'premium',
@@ -613,14 +613,14 @@ new #[Title('Dashboard')] class extends Component {
                                             'text-amber-500' => $row['status'] === 'attente',
                                         ])>{{ $row['unpaid_count'] }}</span>
                                     @else
-                                        <span class="text-slate-400">0</span>
+                                        <span class="text-slate-500">0</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 font-semibold text-ink">
                                     @if ($row['pending_amount'] > 0)
                                         {{ number_format($row['pending_amount'], 0, ',', ' ') }} F
                                     @else
-                                        <span class="text-slate-400">—</span>
+                                        <span class="text-slate-500">—</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4">
@@ -633,7 +633,7 @@ new #[Title('Dashboard')] class extends Component {
                                 </td>
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
                                         'bg-rose-50 text-rose-700 ring-rose-600/20'    => $row['status'] === 'critique',
                                         'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'attente',
                                         'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'a_jour',
@@ -656,7 +656,7 @@ new #[Title('Dashboard')] class extends Component {
             </div>
         @else
             <div class="px-6 pb-6">
-                <p class="text-sm text-slate-400">{{ __('Aucun client dans votre portefeuille pour le moment.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Aucun client dans votre portefeuille pour le moment.') }}</p>
             </div>
         @endif
     </section>

@@ -191,7 +191,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <a
                     href="{{ route('pme.treasury.index') }}"
                     wire:navigate
-                    class="text-sm font-semibold text-slate-400 transition hover:text-primary"
+                    class="text-sm font-semibold text-slate-500 transition hover:text-primary"
                 >
                     {{ __('Voir l\'analyse') }} →
                 </a>
@@ -208,12 +208,12 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="document-text" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Ce mois') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('CA facturé') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ $currentMonth }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ $currentMonth }}</p>
             <p class="mt-1 text-3xl font-semibold tracking-tight text-ink">
                 @if ($invoicedAmount > 0)
                     {{ number_format($invoicedAmount, 0, ',', ' ') }} FCFA
@@ -229,12 +229,12 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ __('Encaissé') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Montant encaissé') }}</p>
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="mt-1 text-sm text-slate-500">
                 @if ($invoicedAmount > 0)
                     {{ $collectedPct }}% {{ __('de recouvrement') }}
                 @else
@@ -256,12 +256,12 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('En attente') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('À encaisser') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Factures en attente') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Factures en attente') }}</p>
             <p class="mt-1 text-3xl font-semibold tracking-tight text-amber-500">
                 @if ($pendingAmount > 0)
                     {{ number_format($pendingAmount, 0, ',', ' ') }} FCFA
@@ -277,12 +277,12 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     &gt; 30j
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('En retard') }}</p>
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="mt-1 text-sm text-slate-500">
                 @if ($overdueCount > 0)
                     {{ $overdueCount }} {{ $overdueCount > 1 ? __('factures critiques') : __('facture critique') }}
                 @else
@@ -333,7 +333,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                         @endif
                     </div>
 
-                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500">
                         <span class="flex items-center gap-1.5">
                             <span class="size-2 rounded-full bg-accent"></span>
                             {{ __('Encaissé') }} {{ $collectedPct }}%
@@ -350,13 +350,13 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
                     <div class="mt-5 grid grid-cols-2 gap-4 border-t border-slate-100 pt-5">
                         <div>
-                            <p class="text-xs text-slate-400">{{ __('Entrées prévues (30j)') }}</p>
+                            <p class="text-sm text-slate-500">{{ __('Entrées prévues (30j)') }}</p>
                             <p class="mt-0.5 text-lg font-semibold text-accent">
                                 +{{ number_format($pendingAmount, 0, ',', ' ') }} FCFA
                             </p>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-400">{{ __('Délai moyen paiement') }}</p>
+                            <p class="text-sm text-slate-500">{{ __('Délai moyen paiement') }}</p>
                             <p class="mt-0.5 text-lg font-semibold text-ink">
                                 @if ($avgPaymentDays > 0)
                                     {{ $avgPaymentDays }} {{ __('jours') }}
@@ -368,7 +368,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                     </div>
                 </div>
             @else
-                <p class="mt-4 text-sm text-slate-400">{{ __('Aucune donnée de trésorerie pour le moment.') }}</p>
+                <p class="mt-4 text-sm text-slate-500">{{ __('Aucune donnée de trésorerie pour le moment.') }}</p>
             @endif
         </div>
 
@@ -398,11 +398,11 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                         <div wire:key="activity-{{ $inv['id'] }}" class="flex items-center gap-3 py-3">
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-sm font-semibold text-ink">{{ $inv['reference'] }}</p>
-                                <p class="truncate text-xs text-slate-400">{{ $inv['client'] }} · {{ $inv['date_label'] }}</p>
+                                <p class="truncate text-sm text-slate-500">{{ $inv['client'] }} · {{ $inv['date_label'] }}</p>
                             </div>
                             <div class="flex shrink-0 flex-col items-end gap-1">
                                 <p class="text-sm font-semibold text-ink">{{ number_format($inv['total'], 0, ',', ' ') }} FCFA</p>
-                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
                                     {{ $statusConfig['label'] }}
                                 </span>
                             </div>
@@ -410,7 +410,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                     @endforeach
                 </div>
             @else
-                <p class="mt-4 text-sm text-slate-400">{{ __('Aucune activité récente.') }}</p>
+                <p class="mt-4 text-sm text-slate-500">{{ __('Aucune activité récente.') }}</p>
             @endif
         </div>
 
@@ -431,13 +431,13 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-y border-slate-100 bg-slate-50/80">
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Facture') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Émise le') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Retard') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Dernière relance') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Statut') }}</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Facture') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Émise le') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Retard') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Dernière relance') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -460,7 +460,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                 <td class="px-4 py-4 text-slate-500">{{ $row['last_reminder_label'] }}</td>
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
                                         'bg-rose-50 text-rose-700 ring-rose-600/20'    => $row['is_critical'],
                                         'bg-amber-50 text-amber-700 ring-amber-600/20' => ! $row['is_critical'],
                                     ])>

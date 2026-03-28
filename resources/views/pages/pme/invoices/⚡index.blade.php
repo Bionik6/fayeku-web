@@ -551,12 +551,12 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="document-text" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Ce mois') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Factures émises') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ $currentMonth }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ $currentMonth }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">{{ $invoiceCount }}</p>
         </article>
 
@@ -565,12 +565,12 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="document-duplicate" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('En attente') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Devis en attente') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Réponse attendue') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Réponse attendue') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $pendingQuoteCount }}</p>
         </article>
 
@@ -579,12 +579,12 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <div class="flex size-10 items-center justify-center rounded-xl bg-primary/8">
                     <flux:icon name="banknotes" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     HT
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Montant facturé') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('HT ce mois') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('HT ce mois') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-primary">
                 @if ($invoicedAmount > 0)
                     {{ number_format($invoicedAmount, 0, ',', ' ') }} FCFA
@@ -599,12 +599,12 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     {{ __('Action requise') }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('En retard ou en attente') }}</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Factures à traiter') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Factures à traiter') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-rose-500">{{ $actionRequiredCount }}</p>
         </article>
 
@@ -630,7 +630,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 >
                     {{ __($tab['label']) }}
                     <span @class([
-                        'inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold min-w-[1.25rem]',
+                        'inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-sm font-bold min-w-[1.25rem]',
                         'bg-white/20 text-white'    => $typeFilter === $key,
                         'bg-slate-100 text-slate-500' => $typeFilter !== $key,
                     ])>{{ $tab['count'] }}</span>
@@ -658,7 +658,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                     <button
                         wire:click="setStatusFilter('{{ $key }}')"
                         @class([
-                            'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition',
+                            'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-semibold transition',
                             'bg-ink text-white shadow-sm'                                                  => $statusFilter === $key,
                             'bg-slate-100 text-slate-600 hover:bg-slate-200'                               => $statusFilter !== $key,
                         ])
@@ -678,7 +678,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         {{-- Recherche + Période --}}
         <div class="mt-3 flex flex-wrap gap-3">
             <div class="relative flex-1 min-w-48">
-                <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                 <input
                     wire:model.live.debounce.300ms="search"
                     type="search"
@@ -714,13 +714,13 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/80">
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Type') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Référence') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Client') }}</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Date émission') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Échéance') }}</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">{{ __('Statut') }}</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Type') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Date émission') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Échéance') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -754,7 +754,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                 {{-- Type --}}
                                 <td class="px-6 py-4">
                                     <span @class([
-                                        'inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold',
+                                        'inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-semibold',
                                         'bg-teal-50 text-teal-700'     => $row['type'] === 'invoice',
                                         'bg-violet-50 text-violet-700' => $row['type'] === 'quote',
                                     ])>
@@ -795,13 +795,13 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                             <span class="text-slate-500">{{ $row['due_at']->locale('fr_FR')->translatedFormat('j M. Y') }}</span>
                                         @endif
                                     @else
-                                        <span class="text-slate-400">—</span>
+                                        <span class="text-slate-500">—</span>
                                     @endif
                                 </td>
 
                                 {{-- Statut --}}
                                 <td class="px-4 py-4">
-                                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
+                                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
                                         {{ $statusConfig['label'] }}
                                     </span>
                                 </td>
@@ -817,11 +817,11 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                         <flux:menu>
                                             @if ($row['type'] === 'invoice')
                                                 <flux:menu.item wire:click="viewInvoice('{{ $row['id'] }}')">
-                                                    <flux:icon name="eye" class="size-4 text-slate-400" />
+                                                    <flux:icon name="eye" class="size-4 text-slate-500" />
                                                     {{ __('Voir le document') }}
                                                 </flux:menu.item>
                                                 <flux:menu.item wire:click="openEditInvoiceModal('{{ $row['id'] }}')">
-                                                    <flux:icon name="pencil-square" class="size-4 text-slate-400" />
+                                                    <flux:icon name="pencil-square" class="size-4 text-slate-500" />
                                                     {{ __('Éditer la facture') }}
                                                 </flux:menu.item>
                                                 <flux:menu.item
@@ -834,7 +834,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                                 </flux:menu.item>
                                             @else
                                                 <flux:menu.item disabled>
-                                                    <flux:icon name="eye" class="size-4 text-slate-400" />
+                                                    <flux:icon name="eye" class="size-4 text-slate-500" />
                                                     {{ __('Voir le document') }}
                                                 </flux:menu.item>
                                             @endif
@@ -845,7 +845,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
                                             @if ($row['type'] === 'quote')
                                                 <flux:menu.item :href="route('pme.invoices.index')" wire:navigate>
-                                                    <flux:icon name="document-text" class="size-4 text-slate-400" />
+                                                    <flux:icon name="document-text" class="size-4 text-slate-500" />
                                                     {{ __('Voir les devis') }}
                                                 </flux:menu.item>
                                             @endif
@@ -856,7 +856,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
                                             @if ($row['type'] === 'invoice' && in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
                                                 <flux:menu.item :href="route('pme.collection.index')" wire:navigate>
-                                                    <flux:icon name="bell" class="size-4 text-slate-400" />
+                                                    <flux:icon name="bell" class="size-4 text-slate-500" />
                                                     {{ __('Relancer le client') }}
                                                 </flux:menu.item>
                                             @endif
@@ -865,7 +865,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                                 <flux:menu.separator />
                                                 <flux:menu.item wire:click="markAsPaid('{{ $row['id'] }}')"
                                                     wire:confirm="{{ __('Marquer cette facture comme payée ?') }}">
-                                                    <flux:icon name="check-circle" class="size-4 text-slate-400" />
+                                                    <flux:icon name="check-circle" class="size-4 text-slate-500" />
                                                     {{ __('Marquer comme payée') }}
                                                 </flux:menu.item>
                                             @endif
@@ -873,7 +873,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                             @if ($row['type'] === 'quote' && $row['status_value'] === 'accepted')
                                                 <flux:menu.separator />
                                                 <flux:menu.item disabled>
-                                                    <flux:icon name="document-arrow-up" class="size-4 text-slate-400" />
+                                                    <flux:icon name="document-arrow-up" class="size-4 text-slate-500" />
                                                     {{ __('Convertir en facture') }}
                                                 </flux:menu.item>
                                             @endif
@@ -908,10 +908,10 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             {{-- État vide — filtre sans résultat --}}
             <div class="flex flex-col items-center justify-center p-12 text-center">
                 <div class="flex size-12 items-center justify-center rounded-2xl bg-slate-100">
-                    <flux:icon name="magnifying-glass" class="size-5 text-slate-400" />
+                    <flux:icon name="magnifying-glass" class="size-5 text-slate-500" />
                 </div>
                 <p class="mt-4 font-semibold text-ink">{{ __('Aucun document ne correspond') }}</p>
-                <p class="mt-1 text-sm text-slate-400">{{ __('Essayez de modifier vos filtres ou votre recherche.') }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Essayez de modifier vos filtres ou votre recherche.') }}</p>
                 <button
                     wire:click="$set('search', '')"
                     x-on:click="$wire.typeFilter = 'all'; $wire.statusFilter = 'all'; $wire.period = ''"
@@ -960,9 +960,9 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                 <input
                                     wire:model="invoiceReference"
                                     type="text"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
-                                @error('invoiceReference') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('invoiceReference') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
@@ -978,7 +978,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                         @endforeach
                                     </select>
                                 </x-select-native>
-                                @error('invoiceClientId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('invoiceClientId') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
@@ -988,7 +988,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                     type="date"
                                     class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
-                                @error('invoiceIssuedAt') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('invoiceIssuedAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
@@ -998,7 +998,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                     type="date"
                                     class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
-                                @error('invoiceDueAt') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('invoiceDueAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
                             <div class="md:col-span-2">
@@ -1006,9 +1006,9 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                 <textarea
                                     wire:model="invoiceNotes"
                                     rows="4"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 ></textarea>
-                                @error('invoiceNotes') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('invoiceNotes') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
                         </div>
                     </div>

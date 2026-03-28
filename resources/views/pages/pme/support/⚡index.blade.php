@@ -74,7 +74,7 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
     {{-- Barre de recherche --}}
     <section>
         <div class="relative">
-            <flux:icon name="magnifying-glass" class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
+            <flux:icon name="magnifying-glass" class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500" />
             <input
                 wire:model="search"
                 type="search"
@@ -216,9 +216,9 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
                         >
                             <span class="font-medium text-ink">{{ $faq['q'] }}</span>
                             @if ($openFaq === $i)
-                                <flux:icon name="chevron-up" class="size-4 shrink-0 text-slate-400" />
+                                <flux:icon name="chevron-up" class="size-4 shrink-0 text-slate-500" />
                             @else
-                                <flux:icon name="chevron-down" class="size-4 shrink-0 text-slate-400" />
+                                <flux:icon name="chevron-down" class="size-4 shrink-0 text-slate-500" />
                             @endif
                         </button>
                         @if ($openFaq === $i)
@@ -311,7 +311,7 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
                                 <p class="mt-0.5 text-sm text-slate-500">{{ $guide['desc'] }}</p>
                             </div>
                             @if ($openGuide === $i)
-                                <flux:icon name="chevron-up" class="size-4 shrink-0 text-slate-400" />
+                                <flux:icon name="chevron-up" class="size-4 shrink-0 text-slate-500" />
                             @else
                                 <flux:icon name="chevron-right" class="size-4 shrink-0 text-slate-300" />
                             @endif
@@ -321,7 +321,7 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
                                 <ol class="space-y-2.5">
                                     @foreach ($guide['steps'] as $step => $text)
                                         <li class="flex items-start gap-3">
-                                            <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+                                            <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-500">
                                                 {{ $step + 1 }}
                                             </span>
                                             <p class="text-sm leading-relaxed text-slate-600">{{ $text }}</p>
@@ -407,13 +407,13 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
                     @enderror
                 </label>
 
-                <div class="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-sm text-slate-400">
+                <div class="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-sm text-slate-500">
                     <flux:icon name="paper-clip" class="size-4 shrink-0" />
                     {{ __('Pièce jointe — disponible prochainement') }}
                 </div>
 
                 <div class="flex items-center justify-between border-t border-slate-100 pt-5">
-                    <p class="text-xs text-slate-400">{{ __('Notre équipe vous répond généralement sous 24 à 48 heures ouvrées.') }}</p>
+                    <p class="text-sm text-slate-500">{{ __('Notre équipe vous répond généralement sous 24 à 48 heures ouvrées.') }}</p>
                     <button
                         type="submit"
                         class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(2,77,77,0.18)] transition hover:bg-primary/90"
@@ -437,14 +437,14 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
                 @foreach ([__('Fayeku PME'), __('Facturation'), __('Recouvrement automatique'), __('Notifications')] as $service)
                     <div class="flex items-center justify-between rounded-2xl bg-slate-50/60 px-4 py-3">
                         <span class="text-sm font-medium text-slate-700">{{ $service }}</span>
-                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
                             <span class="size-2 rounded-full bg-emerald-500"></span>
                             {{ __('Opérationnel') }}
                         </span>
                     </div>
                 @endforeach
             </div>
-            <p class="mt-4 text-xs text-slate-400">
+            <p class="mt-4 text-sm text-slate-500">
                 {{ __('Dernière vérification :') }} {{ now()->locale('fr_FR')->translatedFormat('j F Y à H:i') }}
             </p>
         </div>
@@ -457,10 +457,10 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
             @if (empty($requests))
                 <div class="mt-6 flex flex-col items-center justify-center py-8 text-center">
                     <div class="flex size-12 items-center justify-center rounded-2xl bg-slate-100">
-                        <flux:icon name="inbox" class="size-5 text-slate-400" />
+                        <flux:icon name="inbox" class="size-5 text-slate-500" />
                     </div>
                     <p class="mt-3 text-sm font-medium text-slate-500">{{ __('Aucune demande pour le moment.') }}</p>
-                    <p class="mt-1 text-xs text-slate-400">{{ __('Vos demandes de support apparaîtront ici une fois envoyées.') }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('Vos demandes de support apparaîtront ici une fois envoyées.') }}</p>
                 </div>
             @else
                 <div class="mt-5 divide-y divide-slate-100">
@@ -468,9 +468,9 @@ new #[Title('Aide & Support')] #[Layout('layouts::pme')] class extends Component
                         <div class="flex items-start gap-4 py-3.5">
                             <div class="min-w-0 flex-1">
                                 <p class="truncate font-medium text-ink">{{ $request['subject'] }}</p>
-                                <p class="mt-0.5 text-xs text-slate-400">{{ $request['category'] }} · {{ $request['date'] }}</p>
+                                <p class="mt-0.5 text-sm text-slate-500">{{ $request['category'] }} · {{ $request['date'] }}</p>
                             </div>
-                            <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                            <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
                                 <span class="size-1.5 rounded-full bg-amber-500"></span>
                                 {{ $request['status'] }}
                             </span>

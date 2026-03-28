@@ -196,7 +196,7 @@ new #[Title('Paramètres')] class extends Component {
 
     {{-- ─── Header ──────────────────────────────────────────────────────── --}}
     <section class="app-shell-panel px-8 py-7">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{{ __('Paramètres') }}</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary">{{ __('Paramètres') }}</p>
         <h1 class="mt-1 text-2xl font-bold tracking-tight text-ink">{{ __('Paramètres') }}</h1>
         <p class="mt-1 text-sm text-slate-500">{{ __('Gérez les informations de votre cabinet et la sécurité de votre compte.') }}</p>
     </section>
@@ -294,7 +294,7 @@ new #[Title('Paramètres')] class extends Component {
                             {{-- Informations légales --}}
                             <div>
                                 <h3 class="text-sm font-semibold text-ink">{{ __('Informations légales') }}</h3>
-                                <p class="mt-1 text-xs text-slate-500">{{ __('Identifiants fiscaux et registre du commerce.') }}</p>
+                                <p class="mt-1 text-sm text-slate-500">{{ __('Identifiants fiscaux et registre du commerce.') }}</p>
                                 <div class="mt-4 grid gap-6 sm:grid-cols-2">
                                     <label class="auth-label">
                                         <span>{{ __('NINEA') }}</span>

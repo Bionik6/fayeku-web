@@ -197,7 +197,7 @@ new #[Title('Alertes')] class extends Component {
 
     {{-- ─── Filtres ────────────────────────────────────────────────────── --}}
     <section class="app-shell-panel p-5">
-        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Filtrer les alertes') }}</p>
+        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les alertes') }}</p>
         <div class="flex flex-wrap gap-2">
 
             {{-- Filtres par criticité --}}
@@ -217,7 +217,7 @@ new #[Title('Alertes')] class extends Component {
                 >
                     {{ $tab['label'] }}
                     <span @class([
-                        'rounded-full px-1.5 py-px text-xs font-bold',
+                        'rounded-full px-1.5 py-px text-sm font-bold',
                         $tab['badgeActive']   => ! $showDismissed && $filter === $key,
                         $tab['badgeInactive'] => $showDismissed || $filter !== $key,
                     ])>{{ $tab['count'] }}</span>
@@ -230,14 +230,14 @@ new #[Title('Alertes')] class extends Component {
                 @class([
                     'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
                     'bg-slate-500 text-white'                                                                      => $showDismissed,
-                    'bg-white border border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600' => ! $showDismissed,
+                    'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-600' => ! $showDismissed,
                 ])
             >
                 <flux:icon name="archive-box" class="size-3.5" />
                 {{ __('Archivées') }}
                 @if ($this->counts['dismissed'] > 0)
                     <span @class([
-                        'rounded-full px-1.5 py-px text-xs font-bold',
+                        'rounded-full px-1.5 py-px text-sm font-bold',
                         'bg-white/20 text-white'      => $showDismissed,
                         'bg-slate-100 text-slate-500' => ! $showDismissed,
                     ])>{{ $this->counts['dismissed'] }}</span>
@@ -274,13 +274,13 @@ new #[Title('Alertes')] class extends Component {
 
                         {{-- Badge statut --}}
                         @if ($alert['dismissed'] ?? false)
-                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500 ring-1 ring-inset ring-slate-400/20">
+                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-500 ring-1 ring-inset ring-slate-400/20">
                                 <span class="size-1.5 rounded-full bg-slate-400"></span>
                                 Archivée
                             </span>
                         @else
                             <span @class([
-                                'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
+                                'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold ring-1 ring-inset',
                                 'bg-rose-50 text-rose-700 ring-rose-600/20'    => $alert['type'] === 'critical',
                                 'bg-amber-50 text-amber-700 ring-amber-600/20' => $alert['type'] === 'watch',
                                 'bg-green-50 text-green-700 ring-green-600/20' => $alert['type'] === 'new',
@@ -304,14 +304,14 @@ new #[Title('Alertes')] class extends Component {
                             <flux:menu>
                                 @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
                                     <flux:menu.item wire:click="viewInvoice('{{ $alert['invoice_id'] }}')">
-                                        <x-app.icon name="invoice" class="size-4 text-slate-400" />
+                                        <x-app.icon name="invoice" class="size-4 text-slate-500" />
                                         {{ __('Voir la facture') }}
                                     </flux:menu.item>
                                 @endif
 
                                 @if ($alert['company_id'] ?? null)
                                     <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                        <x-app.icon name="user" class="size-4 text-slate-400" />
+                                        <x-app.icon name="user" class="size-4 text-slate-500" />
                                         {{ __('Voir le dossier') }}
                                     </flux:menu.item>
                                 @endif
@@ -320,12 +320,12 @@ new #[Title('Alertes')] class extends Component {
 
                                 @if ($alert['dismissed'] ?? false)
                                     <flux:menu.item wire:click="undismiss('{{ $alert['alert_key'] }}')">
-                                        <x-app.icon name="restore" class="size-4 text-slate-400" />
+                                        <x-app.icon name="restore" class="size-4 text-slate-500" />
                                         {{ __('Restaurer') }}
                                     </flux:menu.item>
                                 @else
                                     <flux:menu.item wire:click="dismiss('{{ $alert['alert_key'] }}')">
-                                        <x-app.icon name="check" class="size-4 text-slate-400" />
+                                        <x-app.icon name="check" class="size-4 text-slate-500" />
                                         {{ __('Marquer comme traité') }}
                                     </flux:menu.item>
                                 @endif
@@ -338,7 +338,7 @@ new #[Title('Alertes')] class extends Component {
         @else
             <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
                 <div class="flex size-14 items-center justify-center rounded-2xl bg-emerald-50">
-                    <flux:icon name="{{ $showDismissed ? 'archive-box' : 'check-circle' }}" class="size-7 {{ $showDismissed ? 'text-slate-400' : 'text-emerald-600' }}" />
+                    <flux:icon name="{{ $showDismissed ? 'archive-box' : 'check-circle' }}" class="size-7 {{ $showDismissed ? 'text-slate-500' : 'text-emerald-600' }}" />
                 </div>
                 <p class="mt-4 font-semibold text-ink">
                     @if ($showDismissed) {{ __('Aucune alerte archivée') }}
@@ -348,7 +348,7 @@ new #[Title('Alertes')] class extends Component {
                     @else {{ __('Aucune nouvelle inscription cette semaine') }}
                     @endif
                 </p>
-                <p class="mt-1 text-sm text-slate-400">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
             </div>
         @endif
     </section>

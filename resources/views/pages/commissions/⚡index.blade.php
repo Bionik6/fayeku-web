@@ -191,10 +191,10 @@ new #[Title('Commissions')] class extends Component {
                 'rounded-2xl border bg-slate-50 border-slate-200 p-5',
                 'ring-2 ring-slate-300' => $tierValue === 'partner',
             ])>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-700">Partner</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-slate-700">Partner</p>
                 <p class="mt-1 text-lg font-bold text-ink">1–4 clients actifs</p>
                 @if ($tierValue === 'partner')
-                    <span class="mt-2 inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white">{{ __('Niveau actuel') }}</span>
+                    <span class="mt-2 inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-sm font-semibold text-white">{{ __('Niveau actuel') }}</span>
                 @endif
                 <ul class="mt-3 space-y-1 text-sm text-slate-600">
                     <li>Commission de 15 % sur les abonnements éligibles</li>
@@ -207,10 +207,10 @@ new #[Title('Commissions')] class extends Component {
                 'rounded-2xl border bg-amber-50 border-amber-200 p-5',
                 'ring-2 ring-amber-300' => $tierValue === 'gold',
             ])>
-                <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Gold ★</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-amber-700">Gold ★</p>
                 <p class="mt-1 text-lg font-bold text-ink">5–14 clients actifs</p>
                 @if ($tierValue === 'gold')
-                    <span class="mt-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-semibold text-amber-950">{{ __('Niveau actuel') }}</span>
+                    <span class="mt-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-sm font-semibold text-amber-950">{{ __('Niveau actuel') }}</span>
                 @endif
                 <ul class="mt-3 space-y-1 text-sm text-slate-600">
                     <li class="font-medium text-amber-700">Commission récurrente de 15 %</li>
@@ -225,10 +225,10 @@ new #[Title('Commissions')] class extends Component {
                 'rounded-2xl border bg-sky-50 border-sky-200 p-5',
                 'ring-2 ring-sky-300' => $tierValue === 'platinum',
             ])>
-                <p class="text-xs font-semibold uppercase tracking-wider text-sky-800">Platinum</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-sky-800">Platinum</p>
                 <p class="mt-1 text-lg font-bold text-ink">15+ clients actifs</p>
                 @if ($tierValue === 'platinum')
-                    <span class="mt-2 inline-flex items-center rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold text-accent">{{ __('Niveau actuel') }}</span>
+                    <span class="mt-2 inline-flex items-center rounded-full bg-ink px-2.5 py-0.5 text-sm font-semibold text-accent">{{ __('Niveau actuel') }}</span>
                 @endif
                 <ul class="mt-3 space-y-1 text-sm text-slate-600">
                     <li>Tous les avantages Gold</li>
@@ -277,7 +277,7 @@ new #[Title('Commissions')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="banknotes" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ $currentMonth }}
                 </span>
             </div>
@@ -285,7 +285,7 @@ new #[Title('Commissions')] class extends Component {
             <p class="mt-1 text-4xl font-semibold tracking-tight text-accent">
                 {{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
             </p>
-            <p class="mt-1 text-xs text-slate-400">Versement prévu le {{ $this->nextPaymentDate }} via Wave</p>
+            <p class="mt-1 text-sm text-slate-500">Versement prévu le {{ $this->nextPaymentDate }} via Wave</p>
         </article>
 
         {{-- Clients référés actifs --}}
@@ -294,7 +294,7 @@ new #[Title('Commissions')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="user-group" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Portefeuille') }}
                 </span>
             </div>
@@ -308,7 +308,7 @@ new #[Title('Commissions')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="chart-bar" class="size-5 text-amber-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ now()->year }}
                 </span>
             </div>
@@ -316,7 +316,7 @@ new #[Title('Commissions')] class extends Component {
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">
                 {{ number_format($this->yearTotal, 0, ',', ' ') }} FCFA
             </p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Depuis janvier') }} {{ now()->year }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Depuis janvier') }} {{ now()->year }}</p>
         </article>
 
         {{-- Estimation du mois prochain --}}
@@ -325,7 +325,7 @@ new #[Title('Commissions')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-sky-50">
                     <flux:icon name="arrow-trending-up" class="size-5 text-sky-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+                <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700">
                     {{ __('Prévision') }}
                 </span>
             </div>
@@ -333,7 +333,7 @@ new #[Title('Commissions')] class extends Component {
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">
                 ~{{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
             </p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Projection basée sur les clients actifs actuels') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Projection basée sur les clients actifs actuels') }}</p>
         </article>
     </section>
 
@@ -344,7 +344,7 @@ new #[Title('Commissions')] class extends Component {
                 <h3 class="text-lg font-bold text-ink">
                     {{ __('Commissions du mois') }} · {{ $currentMonth }}
                 </h3>
-                <p class="mt-0.5 text-xs text-slate-400">{{ __('Chaque ligne correspond à un client référé éligible à commission.') }}</p>
+                <p class="mt-0.5 text-sm text-slate-500">{{ __('Chaque ligne correspond à un client référé éligible à commission.') }}</p>
             </div>
             @if ($this->monthTotal > 0)
                 <span class="text-sm font-bold text-accent">
@@ -355,7 +355,7 @@ new #[Title('Commissions')] class extends Component {
 
         @if ($this->monthCommissions->isEmpty())
             <div class="px-6 pb-6">
-                <p class="text-sm text-slate-400">{{ __('Aucune commission ce mois-ci.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Aucune commission ce mois-ci.') }}</p>
             </div>
         @else
             @php
@@ -368,7 +368,7 @@ new #[Title('Commissions')] class extends Component {
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
                             <th class="px-6 py-3">{{ __('Client PME') }}</th>
                             <th class="px-6 py-3">{{ __('Offre') }}</th>
                             <th class="px-6 py-3">{{ __('Abonnement') }}</th>
@@ -392,7 +392,7 @@ new #[Title('Commissions')] class extends Component {
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-xs font-semibold',
+                                        'rounded-full px-2.5 py-1 text-sm font-semibold',
                                         'bg-emerald-50 text-emerald-700' => strtolower($planSlug) === 'essentiel',
                                         'bg-slate-100 text-slate-600' => strtolower($planSlug) !== 'essentiel',
                                     ])>
@@ -415,7 +415,7 @@ new #[Title('Commissions')] class extends Component {
                                         };
                                     @endphp
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-xs font-semibold',
+                                        'rounded-full px-2.5 py-1 text-sm font-semibold',
                                         'bg-emerald-50 text-emerald-700' => $commission->status === 'paid',
                                         'bg-amber-50 text-amber-700' => $commission->status === 'pending',
                                         'bg-slate-100 text-slate-600' => ! in_array($commission->status, ['paid', 'pending']),
@@ -460,19 +460,19 @@ new #[Title('Commissions')] class extends Component {
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
             <h3 class="text-lg font-bold text-ink">{{ __('Historique des versements') }}</h3>
-            <p class="mt-0.5 text-xs text-slate-400">{{ __('Retrouvez ici tous les paiements de commissions effectués sur votre compte.') }}</p>
+            <p class="mt-0.5 text-sm text-slate-500">{{ __('Retrouvez ici tous les paiements de commissions effectués sur votre compte.') }}</p>
         </div>
 
         @if ($this->payments->isEmpty())
             <div class="px-6 pb-6">
-                <p class="text-sm text-slate-400">{{ __('Aucun versement enregistré pour le moment.') }}</p>
-                <p class="mt-1 text-xs text-slate-400">{{ __('Vos prochaines commissions validées apparaîtront ici après paiement.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Aucun versement enregistré pour le moment.') }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Vos prochaines commissions validées apparaîtront ici après paiement.') }}</p>
             </div>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
                             <th class="px-6 py-3">{{ __('Mois') }}</th>
                             <th class="px-6 py-3">{{ __('Clients actifs') }}</th>
                             <th class="px-6 py-3">{{ __('Montant versé') }}</th>
@@ -497,11 +497,11 @@ new #[Title('Commissions')] class extends Component {
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     @if ($payment->status === 'paid')
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                                             {{ ucfirst($payment->payment_method ?? 'Wave') }} ✓
                                         </span>
                                     @else
-                                        <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                                        <span class="rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                                             {{ __('À venir') }}
                                         </span>
                                     @endif

@@ -363,7 +363,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="banknotes" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Portefeuille') }}
                 </span>
             </div>
@@ -376,7 +376,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('Critiques') }}
                 </span>
             </div>
@@ -389,7 +389,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="chart-bar" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ $currentMonth }}
                 </span>
             </div>
@@ -401,7 +401,7 @@ new #[Title('Clients')] class extends Component {
     {{-- Onglets statut + filtres --}}
     <section class="app-shell-panel p-5">
         {{-- Onglets de filtre --}}
-        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{{ __('Filtrer les clients') }}</p>
+        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les clients') }}</p>
         <div class="flex flex-wrap items-center gap-2">
             @foreach ([
                 'all'      => ['label' => 'Tous',       'dot' => null,        'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
@@ -422,7 +422,7 @@ new #[Title('Clients')] class extends Component {
                     @endif
                     {{ $tab['label'] }}
                     <span @class([
-                        'rounded-full px-1.5 py-px text-xs font-bold',
+                        'rounded-full px-1.5 py-px text-sm font-bold',
                         'bg-white/20 text-white'       => $filterStatus === $key,
                         $tab['badgeInactive']           => $filterStatus !== $key,
                     ])>{{ $this->statusCounts[$key] }}</span>
@@ -433,14 +433,14 @@ new #[Title('Clients')] class extends Component {
         {{-- Recherche + filtre plan --}}
         <div class="mt-4 flex flex-col gap-3 sm:flex-row">
             <div class="relative flex-1">
-                <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
                 <input
                     wire:model.live.debounce.300ms="search"
                     type="text"
                     placeholder="{{ __('Rechercher une entreprise...') }}"
-                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                 />
             </div>
 
@@ -467,7 +467,7 @@ new #[Title('Clients')] class extends Component {
                         <tr class="border-b border-slate-100 bg-slate-50/80">
                             {{-- Client --}}
                             <th class="px-6 py-3 text-left">
-                                <button wire:click="sort('name')" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-primary">
+                                <button wire:click="sort('name')" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary">
                                     {{ __('Client') }}
                                     @if ($sortBy === 'name')
                                         @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
@@ -479,7 +479,7 @@ new #[Title('Clients')] class extends Component {
                             </th>
                             {{-- Offre --}}
                             <th class="px-4 py-3 text-left">
-                                <button wire:click="sort('plan')" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-primary">
+                                <button wire:click="sort('plan')" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary">
                                     {{ __('Offre') }}
                                     @if ($sortBy === 'plan')
                                         @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
@@ -491,7 +491,7 @@ new #[Title('Clients')] class extends Component {
                             </th>
                             {{-- Dernière facture --}}
                             <th class="px-4 py-3 text-left">
-                                <button wire:click="sort('last_invoice')" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-primary">
+                                <button wire:click="sort('last_invoice')" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary">
                                     {{ __('Dernière facture') }}
                                     @if ($sortBy === 'last_invoice')
                                         @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
@@ -502,12 +502,12 @@ new #[Title('Clients')] class extends Component {
                                 </button>
                             </th>
                             {{-- Impayés --}}
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">
                                 {{ __('Impayés') }}
                             </th>
                             {{-- Montant en attente --}}
                             <th class="px-4 py-3 text-left">
-                                <button wire:click="sort('pending_amount')" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-primary">
+                                <button wire:click="sort('pending_amount')" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary">
                                     {{ __('Montant en attente') }}
                                     @if ($sortBy === 'pending_amount')
                                         @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
@@ -519,7 +519,7 @@ new #[Title('Clients')] class extends Component {
                             </th>
                             {{-- Taux de recouvrement --}}
                             <th class="px-4 py-3 text-left">
-                                <button wire:click="sort('recovery_rate')" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-primary">
+                                <button wire:click="sort('recovery_rate')" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary">
                                     {{ __('Taux de recouvrement') }}
                                     @if ($sortBy === 'recovery_rate')
                                         @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
@@ -531,7 +531,7 @@ new #[Title('Clients')] class extends Component {
                             </th>
                             {{-- Statut --}}
                             <th class="px-4 py-3 text-left">
-                                <button wire:click="sort('status')" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-primary">
+                                <button wire:click="sort('status')" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary">
                                     {{ __('Statut') }}
                                     @if ($sortBy === 'status')
                                         @if ($sortDirection === 'asc') <flux:icon.chevron-up class="size-3.5 text-primary" />
@@ -556,7 +556,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Client --}}
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <span class="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-xs font-bold text-primary">
+                                        <span class="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-sm font-bold text-primary">
                                             {{ $row['initials'] }}
                                         </span>
                                         <span class="font-semibold text-ink">{{ $row['name'] }}</span>
@@ -565,7 +565,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Offre --}}
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
                                         'bg-teal-100 text-teal-700' => $row['plan_slug'] === 'essentiel',
                                         'bg-violet-100 text-violet-700' => $row['plan_slug'] === 'basique',
                                         'bg-amber-100 text-amber-700' => $row['plan_slug'] === 'premium',
@@ -587,7 +587,7 @@ new #[Title('Clients')] class extends Component {
                                             {{ $row['unpaid_count'] }} {{ $row['unpaid_count'] > 1 ? 'factures' : 'facture' }}
                                         </span>
                                     @else
-                                        <span class="text-slate-400">0</span>
+                                        <span class="text-slate-500">0</span>
                                     @endif
                                 </td>
                                 {{-- Montant en attente --}}
@@ -595,7 +595,7 @@ new #[Title('Clients')] class extends Component {
                                     @if ($row['pending_amount'] > 0)
                                         {{ number_format($row['pending_amount'], 0, ',', ' ') }} F
                                     @else
-                                        <span class="text-slate-400">—</span>
+                                        <span class="text-slate-500">—</span>
                                     @endif
                                 </td>
                                 {{-- Taux recouvrement --}}
@@ -610,7 +610,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Statut --}}
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
                                         'bg-rose-50 text-rose-700 ring-rose-600/20'   => $row['status'] === 'critique',
                                         'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'attente',
                                         'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'a_jour',
@@ -628,7 +628,7 @@ new #[Title('Clients')] class extends Component {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-10 text-center text-sm text-slate-400">
+                                <td colspan="7" class="px-6 py-10 text-center text-sm text-slate-500">
                                     {{ __('Aucun client ne correspond à ces filtres.') }}
                                 </td>
                             </tr>
@@ -640,11 +640,11 @@ new #[Title('Clients')] class extends Component {
 
 @elseif ($this->statusCounts['all'] > 0)
             <div class="px-6 py-10 text-center">
-                <p class="text-sm text-slate-400">{{ __('Aucun client ne correspond à ces filtres.') }}</p>
+                <p class="text-sm text-slate-500">{{ __('Aucun client ne correspond à ces filtres.') }}</p>
             </div>
         @else
             <div class="px-6 py-10 text-center">
-                <p class="text-sm text-slate-400">
+                <p class="text-sm text-slate-500">
                     @if ($firm)
                         {{ __('Aucun client dans votre portefeuille pour le moment.') }}
                     @else
@@ -672,7 +672,7 @@ new #[Title('Clients')] class extends Component {
                     class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 @error('inviteCompanyName')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -687,7 +687,7 @@ new #[Title('Clients')] class extends Component {
                     class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 @error('inviteContactName')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -702,7 +702,7 @@ new #[Title('Clients')] class extends Component {
                     class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 @error('invitePhone')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -718,7 +718,7 @@ new #[Title('Clients')] class extends Component {
                         <input type="radio" wire:model.live="invitePlan" value="basique" class="sr-only" />
                         <div>
                             <p class="text-sm font-semibold text-ink">{{ __('Basique') }}</p>
-                            <p class="text-xs text-slate-500">10 000 FCFA / mois</p>
+                            <p class="text-sm text-slate-500">10 000 FCFA / mois</p>
                         </div>
                     </label>
                     <label @class([
@@ -732,7 +732,7 @@ new #[Title('Clients')] class extends Component {
                                 <p class="text-sm font-semibold text-ink">{{ __('Essentiel') }}</p>
                                 <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">{{ __('Recommandé') }}</span>
                             </div>
-                            <p class="text-xs text-slate-500">20 000 FCFA / mois · 2 mois offerts</p>
+                            <p class="text-sm text-slate-500">20 000 FCFA / mois · 2 mois offerts</p>
                         </div>
                     </label>
                 </div>
@@ -740,7 +740,7 @@ new #[Title('Clients')] class extends Component {
 
             {{-- Aperçu message --}}
             <div class="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ __('Aperçu message WhatsApp') }}</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">{{ __('Aperçu message WhatsApp') }}</p>
                 <p class="mt-2 text-sm text-slate-600 italic">
                     "{{ __('Bonjour') }} {{ $inviteContactName ?: '[Contact]' }}, {{ $firm?->name ?? __('votre cabinet') }} {{ __('vous invite à rejoindre Fayeku pour simplifier votre facturation.') }}
                     @if ($invitePlan === 'essentiel')
@@ -761,7 +761,7 @@ new #[Title('Clients')] class extends Component {
             </div>
 
             @if ($firm)
-                <p class="mt-3 text-center text-xs text-slate-400">
+                <p class="mt-3 text-center text-sm text-slate-500">
                     {{ __('Votre lien') }} : <span class="font-medium text-primary">fayeku.sn/invite/{{ Str::slug($firm->name) }}</span>
                 </p>
             @endif

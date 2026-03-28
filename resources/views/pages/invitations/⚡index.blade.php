@@ -299,7 +299,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="paper-airplane" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Depuis jan.') }} {{ now()->year }}
                 </span>
             </div>
@@ -313,7 +313,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ $this->pendingCount }} PME
                 </span>
             </div>
@@ -327,7 +327,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ ucfirst(now()->locale('fr_FR')->translatedFormat('M Y')) }}
                 </span>
             </div>
@@ -341,13 +341,13 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-sky-50">
                     <flux:icon name="chart-bar" class="size-5 text-sky-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+                <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700">
                     %
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Taux de conversion') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">{{ $this->conversionRate }}%</p>
-            <p class="mt-1 text-xs text-slate-400">{{ __('Invitations devenues clients actifs') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Invitations devenues clients actifs') }}</p>
         </article>
     </section>
 
@@ -367,7 +367,7 @@ new #[Title('Invitations')] class extends Component {
                             'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' => $statusFilter !== 'not_opened',
                         ])
                     >
-                        <span class="flex size-6 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700">{{ $priority['not_opened'] }}</span>
+                        <span class="flex size-6 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">{{ $priority['not_opened'] }}</span>
                         {{ __('invitations non ouvertes') }}
                     </button>
                 @endif
@@ -381,7 +381,7 @@ new #[Title('Invitations')] class extends Component {
                             'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' => $statusFilter !== 'registering',
                         ])
                     >
-                        <span class="flex size-6 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">{{ $priority['incomplete'] }}</span>
+                        <span class="flex size-6 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">{{ $priority['incomplete'] }}</span>
                         {{ __('inscriptions incomplètes') }}
                     </button>
                 @endif
@@ -395,7 +395,7 @@ new #[Title('Invitations')] class extends Component {
                             'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' => $statusFilter !== 'pending_validation',
                         ])
                     >
-                        <span class="flex size-6 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">{{ $priority['pending_validation'] }}</span>
+                        <span class="flex size-6 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700">{{ $priority['pending_validation'] }}</span>
                         {{ __('activations en attente') }}
                     </button>
                 @endif
@@ -407,18 +407,18 @@ new #[Title('Invitations')] class extends Component {
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-2">
             <h3 class="text-lg font-bold text-ink">{{ __('Suivi des invitations') }}</h3>
-            <p class="mt-0.5 text-xs text-slate-400">{{ __('Consultez l\'état de chaque invitation envoyée à vos clients PME.') }}</p>
+            <p class="mt-0.5 text-sm text-slate-500">{{ __('Consultez l\'état de chaque invitation envoyée à vos clients PME.') }}</p>
         </div>
 
         {{-- Search + filters --}}
         <div class="flex flex-col gap-3 px-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="relative max-w-xs flex-1">
-                <flux:icon name="magnifying-glass" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <flux:icon name="magnifying-glass" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                 <input
                     type="text"
                     wire:model.live.debounce.300ms="search"
                     placeholder="{{ __('Rechercher une entreprise ou un contact') }}"
-                    class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-ink shadow-sm placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                    class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-ink shadow-sm placeholder:text-slate-500 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
             </div>
             <div class="flex flex-wrap gap-1.5">
@@ -436,7 +436,7 @@ new #[Title('Invitations')] class extends Component {
                         wire:click="setFilter('{{ $value }}')"
                         wire:key="filter-{{ $value }}"
                         @class([
-                            'rounded-full px-3 py-1.5 text-xs font-medium transition',
+                            'rounded-full px-3 py-1.5 text-sm font-medium transition',
                             'bg-primary text-white' => $statusFilter === $value,
                             'bg-slate-100 text-slate-600 hover:bg-slate-200' => $statusFilter !== $value,
                         ])
@@ -454,7 +454,7 @@ new #[Title('Invitations')] class extends Component {
                         <flux:icon name="paper-airplane" class="size-6 text-primary" />
                     </div>
                     <p class="mt-4 text-sm font-medium text-ink">{{ __('Aucune invitation envoyée') }}</p>
-                    <p class="mt-1 text-xs text-slate-400">{{ __('Invitez vos premiers clients PME pour commencer à développer vos commissions partenaires.') }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('Invitez vos premiers clients PME pour commencer à développer vos commissions partenaires.') }}</p>
                     <flux:modal.trigger name="invite-pme">
                         <button
                             type="button"
@@ -467,14 +467,14 @@ new #[Title('Invitations')] class extends Component {
                     </flux:modal.trigger>
                 @else
                     <p class="text-sm font-medium text-ink">{{ __('Aucune invitation trouvée') }}</p>
-                    <p class="mt-1 text-xs text-slate-400">{{ __('Essayez de modifier vos filtres ou lancez une nouvelle invitation.') }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('Essayez de modifier vos filtres ou lancez une nouvelle invitation.') }}</p>
                 @endif
             </div>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
                             <th class="px-6 py-3">{{ __('Entreprise') }}</th>
                             <th class="px-6 py-3">{{ __('Contact') }}</th>
                             <th class="px-6 py-3">{{ __('Canal') }}</th>
@@ -504,7 +504,7 @@ new #[Title('Invitations')] class extends Component {
                                 <td class="px-6 py-3.5">
                                     <div class="text-sm text-ink">{{ $invitation->invitee_name ?? '—' }}</div>
                                     @if ($invitation->invitee_phone)
-                                        <div class="text-xs text-slate-400">{{ $invitation->invitee_phone }}</div>
+                                        <div class="text-sm text-slate-500">{{ $invitation->invitee_phone }}</div>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
@@ -515,7 +515,7 @@ new #[Title('Invitations')] class extends Component {
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-xs font-semibold',
+                                        'rounded-full px-2.5 py-1 text-sm font-semibold',
                                         'bg-slate-100 text-slate-600' => $displayStatus === 'not_opened',
                                         'bg-sky-50 text-sky-700' => $displayStatus === 'opened',
                                         'bg-amber-50 text-amber-700' => $displayStatus === 'registering',
@@ -545,7 +545,7 @@ new #[Title('Invitations')] class extends Component {
                                         <button
                                             type="button"
                                             wire:click="remindInvitation('{{ $invitation->id }}')"
-                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
                                         >
                                             {{ __('Relancer') }}
                                         </button>
@@ -553,7 +553,7 @@ new #[Title('Invitations')] class extends Component {
                                         <button
                                             type="button"
                                             wire:click="resendInvitation('{{ $invitation->id }}')"
-                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
                                         >
                                             {{ __('Renvoyer') }}
                                         </button>
@@ -561,12 +561,12 @@ new #[Title('Invitations')] class extends Component {
                                         <a
                                             href="{{ route('clients.show', $invitation->sme_company_id) }}"
                                             wire:navigate
-                                            class="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                                            class="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
                                         >
                                             {{ __('Voir le client') }}
                                         </a>
                                     @elseif (in_array($displayStatus, ['registering', 'pending_validation']))
-                                        <span class="text-xs text-slate-400">{{ __('Attendre') }}</span>
+                                        <span class="text-sm text-slate-500">{{ __('Attendre') }}</span>
                                     @endif
                                 </td>
                             </tr>
@@ -594,7 +594,7 @@ new #[Title('Invitations')] class extends Component {
                     class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 @error('inviteCompanyName')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -609,7 +609,7 @@ new #[Title('Invitations')] class extends Component {
                     class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 @error('inviteContactName')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -624,7 +624,7 @@ new #[Title('Invitations')] class extends Component {
                     class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 @error('invitePhone')
-                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -640,7 +640,7 @@ new #[Title('Invitations')] class extends Component {
                         <input type="radio" wire:model.live="invitePlan" value="basique" class="sr-only" />
                         <div>
                             <p class="text-sm font-semibold text-ink">{{ __('Basique') }}</p>
-                            <p class="text-xs text-slate-500">10 000 FCFA / mois</p>
+                            <p class="text-sm text-slate-500">10 000 FCFA / mois</p>
                         </div>
                     </label>
                     <label @class([
@@ -654,7 +654,7 @@ new #[Title('Invitations')] class extends Component {
                                 <p class="text-sm font-semibold text-ink">{{ __('Essentiel') }}</p>
                                 <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">{{ __('Recommandé') }}</span>
                             </div>
-                            <p class="text-xs text-slate-500">20 000 FCFA / mois · 2 mois offerts</p>
+                            <p class="text-sm text-slate-500">20 000 FCFA / mois · 2 mois offerts</p>
                         </div>
                     </label>
                 </div>
@@ -662,7 +662,7 @@ new #[Title('Invitations')] class extends Component {
 
             {{-- Aperçu message --}}
             <div class="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ __('Aperçu message WhatsApp') }}</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">{{ __('Aperçu message WhatsApp') }}</p>
                 <p class="mt-2 text-sm text-slate-600 italic">
                     "{{ __('Bonjour') }} {{ $inviteContactName ?: '[Contact]' }}, {{ $firm?->name ?? __('votre cabinet') }} {{ __('vous invite à rejoindre Fayeku pour simplifier votre facturation.') }}
                     @if ($invitePlan === 'essentiel')
@@ -683,7 +683,7 @@ new #[Title('Invitations')] class extends Component {
             </div>
 
             @if ($firm)
-                <p class="mt-3 text-center text-xs text-slate-400">
+                <p class="mt-3 text-center text-sm text-slate-500">
                     {{ __('Votre lien') }} : <span class="font-medium text-primary">fayeku.sn/invite/{{ Str::slug($firm->name) }}</span>
                 </p>
             @endif
