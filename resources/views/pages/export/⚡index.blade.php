@@ -358,7 +358,7 @@ new #[Title('Export groupé')] class extends Component {
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        <tr class="border-t border-slate-100 text-sm font-semibold text-slate-500">
                             <th class="px-6 py-3">{{ __('Date') }}</th>
                             <th class="px-6 py-3">{{ __('Période') }}</th>
                             <th class="px-6 py-3">{{ __('Format') }}</th>
@@ -438,7 +438,7 @@ new #[Title('Export groupé')] class extends Component {
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        <tr class="border-t border-slate-100 text-sm font-semibold text-slate-500">
                             <th class="px-6 py-3">{{ __('Client') }}</th>
                             <th class="px-6 py-3 text-right"></th>
                         </tr>
@@ -487,7 +487,7 @@ new #[Title('Export groupé')] class extends Component {
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead>
-                    <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                    <tr class="border-t border-slate-100 text-sm font-semibold text-slate-500">
                         <th class="px-6 py-3">{{ __('Code') }}</th>
                         <th class="px-6 py-3">{{ __('Libellé') }}</th>
                     </tr>

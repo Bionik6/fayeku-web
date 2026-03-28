@@ -474,7 +474,7 @@ new #[Title('Invitations')] class extends Component {
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        <tr class="border-t border-slate-100 text-sm font-semibold text-slate-500">
                             <th class="px-6 py-3">{{ __('Entreprise') }}</th>
                             <th class="px-6 py-3">{{ __('Contact') }}</th>
                             <th class="px-6 py-3">{{ __('Canal') }}</th>
@@ -662,7 +662,7 @@ new #[Title('Invitations')] class extends Component {
 
             {{-- Aperçu message --}}
             <div class="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">{{ __('Aperçu message WhatsApp') }}</p>
+                <p class="text-sm font-semibold text-slate-500">{{ __('Aperçu message WhatsApp') }}</p>
                 <p class="mt-2 text-sm text-slate-600 italic">
                     "{{ __('Bonjour') }} {{ $inviteContactName ?: '[Contact]' }}, {{ $firm?->name ?? __('votre cabinet') }} {{ __('vous invite à rejoindre Fayeku pour simplifier votre facturation.') }}
                     @if ($invitePlan === 'essentiel')

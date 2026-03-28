@@ -191,7 +191,7 @@ new #[Title('Commissions')] class extends Component {
                 'rounded-2xl border bg-slate-50 border-slate-200 p-5',
                 'ring-2 ring-slate-300' => $tierValue === 'partner',
             ])>
-                <p class="text-sm font-semibold uppercase tracking-wider text-slate-700">Partner</p>
+                <p class="text-sm font-semibold text-slate-700">Partner</p>
                 <p class="mt-1 text-lg font-bold text-ink">1–4 clients actifs</p>
                 @if ($tierValue === 'partner')
                     <span class="mt-2 inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-sm font-semibold text-white">{{ __('Niveau actuel') }}</span>
@@ -207,7 +207,7 @@ new #[Title('Commissions')] class extends Component {
                 'rounded-2xl border bg-amber-50 border-amber-200 p-5',
                 'ring-2 ring-amber-300' => $tierValue === 'gold',
             ])>
-                <p class="text-sm font-semibold uppercase tracking-wider text-amber-700">Gold ★</p>
+                <p class="text-sm font-semibold text-amber-700">Gold ★</p>
                 <p class="mt-1 text-lg font-bold text-ink">5–14 clients actifs</p>
                 @if ($tierValue === 'gold')
                     <span class="mt-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-sm font-semibold text-amber-950">{{ __('Niveau actuel') }}</span>
@@ -225,7 +225,7 @@ new #[Title('Commissions')] class extends Component {
                 'rounded-2xl border bg-sky-50 border-sky-200 p-5',
                 'ring-2 ring-sky-300' => $tierValue === 'platinum',
             ])>
-                <p class="text-sm font-semibold uppercase tracking-wider text-sky-800">Platinum</p>
+                <p class="text-sm font-semibold text-sky-800">Platinum</p>
                 <p class="mt-1 text-lg font-bold text-ink">15+ clients actifs</p>
                 @if ($tierValue === 'platinum')
                     <span class="mt-2 inline-flex items-center rounded-full bg-ink px-2.5 py-0.5 text-sm font-semibold text-accent">{{ __('Niveau actuel') }}</span>
@@ -368,7 +368,7 @@ new #[Title('Commissions')] class extends Component {
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        <tr class="border-t border-slate-100 text-sm font-semibold text-slate-500">
                             <th class="px-6 py-3">{{ __('Client PME') }}</th>
                             <th class="px-6 py-3">{{ __('Offre') }}</th>
                             <th class="px-6 py-3">{{ __('Abonnement') }}</th>
@@ -472,7 +472,7 @@ new #[Title('Commissions')] class extends Component {
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-t border-slate-100 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        <tr class="border-t border-slate-100 text-sm font-semibold text-slate-500">
                             <th class="px-6 py-3">{{ __('Mois') }}</th>
                             <th class="px-6 py-3">{{ __('Clients actifs') }}</th>
                             <th class="px-6 py-3">{{ __('Montant versé') }}</th>
