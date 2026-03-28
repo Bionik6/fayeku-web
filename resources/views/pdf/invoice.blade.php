@@ -60,7 +60,12 @@
         .info-block td {
             vertical-align: top;
             padding: 16px 20px;
-            width: 33.33%;
+        }
+        .info-block td.info-dates {
+            width: 28%;
+        }
+        .info-block td.info-party {
+            width: 36%;
         }
         .info-block td.party-from {
             border-left: 1px solid #d8ede4;
@@ -82,6 +87,9 @@
             color: #475569;
             line-height: 1.7;
             margin-top: 2px;
+        }
+        .info-detail strong {
+            color: #1e293b;
         }
 
         /* ── Items table ── */
@@ -228,14 +236,14 @@
     <div class="info-block-wrapper">
     <table class="info-block">
         <tr>
-            <td>
+            <td class="info-dates">
                 <div class="info-label">{{ __('Date d\'émission') }}</div>
-                <div class="info-value">{{ $invoice->issued_at->locale('fr_FR')->translatedFormat('d F Y') }}</div>
+                <div class="info-value">{{ $invoice->issued_at->locale('fr_FR')->translatedFormat('d') }} {{ ucfirst($invoice->issued_at->locale('fr_FR')->translatedFormat('F')) }} {{ $invoice->issued_at->translatedFormat('Y') }}</div>
                 <div style="height: 10px;"></div>
                 <div class="info-label">{{ __('Échéance') }}</div>
-                <div class="info-value">{{ $invoice->due_at->locale('fr_FR')->translatedFormat('d F Y') }}</div>
+                <div class="info-value">{{ $invoice->due_at->locale('fr_FR')->translatedFormat('d') }} {{ ucfirst($invoice->due_at->locale('fr_FR')->translatedFormat('F')) }} {{ $invoice->due_at->translatedFormat('Y') }}</div>
             </td>
-            <td class="party-from">
+            <td class="info-party party-from">
                 <div class="info-label">{{ __('Émetteur') }}</div>
                 <div class="info-detail">
                     <strong>{{ $invoice->company->name }}</strong><br>
@@ -248,7 +256,7 @@
                     @if ($invoice->company->email) {{ $invoice->company->email }} @endif
                 </div>
             </td>
-            <td>
+            <td class="info-party">
                 <div class="info-label">{{ __('Destinataire') }}</div>
                 <div class="info-detail">
                     <strong>{{ $invoice->client->name }}</strong><br>
