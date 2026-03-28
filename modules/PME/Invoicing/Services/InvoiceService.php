@@ -2,6 +2,7 @@
 
 namespace Modules\PME\Invoicing\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Auth\Models\Company;
@@ -11,6 +12,28 @@ use Modules\PME\Invoicing\Models\Invoice;
 
 class InvoiceService
 {
+    /**
+     * @return Collection<int, Invoice>
+     */
+    public function openReceivables(Company $company): Collection
+    {
+        return Invoice::query()
+            ->where('company_id', $company->id)
+            ->whereIn('status', [
+                InvoiceStatus::Sent,
+                InvoiceStatus::Certified,
+                InvoiceStatus::CertificationFailed,
+                InvoiceStatus::PartiallyPaid,
+                InvoiceStatus::Overdue,
+            ])
+            ->with([
+                'client',
+                'reminders' => fn ($query) => $query->orderByDesc('sent_at'),
+            ])
+            ->orderByRaw('COALESCE(due_at, issued_at) asc')
+            ->get();
+    }
+
     /**
      * Generate a unique reference in the format FYK-FAC-XXXXXX.
      */

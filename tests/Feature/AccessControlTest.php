@@ -38,6 +38,7 @@ test('accountant user is redirected to compta dashboard from pme routes', functi
     'pme.clients.index',
     'pme.collection.index',
     'pme.treasury.index',
+    'pme.treasury.export',
     'pme.support.index',
     'pme.settings.index',
 ]);
@@ -83,6 +84,7 @@ test('unauthenticated user is redirected to login from pme routes', function (st
     'pme.clients.index',
     'pme.collection.index',
     'pme.treasury.index',
+    'pme.treasury.export',
     'pme.support.index',
     'pme.settings.index',
 ]);

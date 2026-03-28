@@ -3,6 +3,7 @@
 namespace Modules\Shared\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Modules\Auth\Models\Company;
 use Modules\Shared\Enums\QuotaType;
@@ -24,6 +25,11 @@ class QuotaService
     public function consume(Company $company, string|QuotaType $type, int $amount = 1): void
     {
         $t = $type instanceof QuotaType ? $type->value : $type;
+
+        if (! Schema::hasTable('quota_usage')) {
+            return;
+        }
+
         $period = $this->isMonthly($t) ? now()->startOfMonth()->toDateString() : null;
 
         DB::table('quota_usage')->upsert(
@@ -54,11 +60,15 @@ class QuotaService
 
     private function planLimit(Company $company, string $t): int
     {
+        if (! Schema::hasTable('plan_definitions')) {
+            return $this->defaultPlanLimit($company, $t);
+        }
+
         $plan = DB::table('plan_definitions')
             ->where('slug', $company->subscription?->plan_slug)
             ->first();
         if (! $plan) {
-            return 0;
+            return $this->defaultPlanLimit($company, $t);
         }
 
         return match ($t) {
@@ -72,6 +82,17 @@ class QuotaService
 
     private function currentUsage(Company $company, string $t): int
     {
+        if (! Schema::hasTable('quota_usage')) {
+            return $t === QuotaType::Reminders->value && Schema::hasTable('reminders') && Schema::hasTable('invoices')
+                ? (int) DB::table('reminders')
+                    ->join('invoices', 'invoices.id', '=', 'reminders.invoice_id')
+                    ->where('invoices.company_id', $company->id)
+                    ->whereMonth('reminders.created_at', now()->month)
+                    ->whereYear('reminders.created_at', now()->year)
+                    ->count()
+                : 0;
+        }
+
         $period = $this->isMonthly($t) ? now()->startOfMonth()->toDateString() : null;
         $q = DB::table('quota_usage')
             ->where('company_id', $company->id)->where('quota_type', $t);
@@ -82,6 +103,10 @@ class QuotaService
 
     private function addonCredits(Company $company, string $t): int
     {
+        if (! Schema::hasTable('addon_purchases')) {
+            return 0;
+        }
+
         return (int) DB::table('addon_purchases')
             ->where('company_id', $company->id)->where('addon_type', $t)
             ->where('credits_remaining', '>', 0)
@@ -92,5 +117,26 @@ class QuotaService
     private function isMonthly(string $t): bool
     {
         return $t === QuotaType::Reminders->value;
+    }
+
+    private function defaultPlanLimit(Company $company, string $t): int
+    {
+        $plan = strtolower($company->subscription?->plan_slug ?? $company->plan ?? 'basique');
+
+        return match ($t) {
+            QuotaType::Reminders->value => match ($plan) {
+                'basique' => 20,
+                'essentiel', 'entreprise' => -1,
+                default => 0,
+            },
+            QuotaType::Users->value => match ($plan) {
+                'basique' => 2,
+                'essentiel', 'entreprise' => -1,
+                default => 0,
+            },
+            QuotaType::Clients->value => -1,
+            QuotaType::StorageMb->value => 0,
+            default => 0,
+        };
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\MarketingPageController;
 use Illuminate\Support\Facades\Route;
 use Modules\PME\Invoicing\Http\Controllers\InvoicePdfController;
+use Modules\PME\Treasury\Http\Controllers\TreasuryExportController;
 
 Route::get('/', [MarketingPageController::class, 'home'])->name('home');
 Route::get('/pricing', [MarketingPageController::class, 'pricing'])->name('marketing.pricing');
@@ -37,6 +38,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('clients/{client}', 'pages::pme.clients.show')->name('pme.clients.show');
     Route::livewire('collections', 'pages::pme.collection.index')->name('pme.collection.index');
     Route::livewire('treasury', 'pages::pme.treasury.index')->name('pme.treasury.index');
+    Route::get('treasury/export', TreasuryExportController::class)->name('pme.treasury.export');
     Route::livewire('support', 'pages::pme.support.index')->name('pme.support.index');
 });
 
