@@ -10,7 +10,8 @@ use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Partnership\Models\CommissionPayment;
 use Modules\Compta\Portfolio\Services\PortfolioService;
 
-new #[Title('Commissions')] class extends Component {
+new #[Title('Commissions')] class extends Component
+{
     public ?Company $firm = null;
 
     public int $activeClientsCount = 0;
@@ -260,7 +261,7 @@ new #[Title('Commissions')] class extends Component {
                         'h-full rounded-full transition-all duration-500',
                         'bg-primary' => $tierValue === 'partner',
                         'bg-amber-400' => $tierValue === 'gold',
-                        'bg-gradient-to-r from-amber-400 to-primary' => $tierValue === 'platinum',
+                        'bg-gradient-to-r from-sky-300 via-teal-300 to-primary' => $tierValue === 'platinum',
                     ])
                     style="width: {{ $tierProgress }}%"
                 ></div>

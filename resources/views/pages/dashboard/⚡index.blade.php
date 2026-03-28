@@ -13,7 +13,8 @@ use Modules\Compta\Portfolio\Services\PortfolioService;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
-new #[Title('Dashboard')] class extends Component {
+new #[Title('Dashboard')] class extends Component
+{
     public ?Company $firm = null;
 
     public string $heroSummary = '';
@@ -236,15 +237,15 @@ new #[Title('Dashboard')] class extends Component {
             $initials = $nameParts->map(fn ($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
 
             $portfolio[] = [
-                'id'                 => $company->id,
-                'name'               => $company->name,
-                'initials'           => $initials,
-                'plan'               => ucfirst($company->subscription?->plan_slug ?? $company->plan ?? '—'),
+                'id' => $company->id,
+                'name' => $company->name,
+                'initials' => $initials,
+                'plan' => ucfirst($company->subscription?->plan_slug ?? $company->plan ?? '—'),
                 'last_invoice_label' => $lastInvoiceLabel,
-                'unpaid_count'       => $unpaidInvoices->count(),
-                'pending_amount'     => $pendingAmount,
-                'recovery_rate'      => $recoveryRate,
-                'status'             => $status,
+                'unpaid_count' => $unpaidInvoices->count(),
+                'pending_amount' => $pendingAmount,
+                'recovery_rate' => $recoveryRate,
+                'status' => $status,
             ];
         }
 
@@ -548,7 +549,7 @@ new #[Title('Dashboard')] class extends Component {
                             'h-full rounded-full transition-all duration-500',
                             'bg-primary' => $tierValue === 'partner',
                             'bg-amber-400' => $tierValue === 'gold',
-                            'bg-gradient-to-r from-amber-400 to-primary' => $tierValue === 'platinum',
+                            'bg-gradient-to-r from-sky-300 via-teal-300 to-primary' => $tierValue === 'platinum',
                         ])
                         style="width: {{ $tierProgress }}%"
                     ></div>
