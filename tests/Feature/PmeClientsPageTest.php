@@ -279,14 +279,14 @@ test('un utilisateur ne peut pas voir la fiche d un client qui appartient a une 
         ->assertForbidden();
 });
 
-test('un utilisateur cabinet ne peut pas voir une fiche client PME', function () {
+test('un utilisateur cabinet est redirigé vers son dashboard', function () {
     ['company' => $company] = createSmePortfolioOwner();
     $client = makePortfolioClient($company);
     $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user)
         ->get(route('pme.clients.show', $client))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 });
 
 test('la fiche client affiche les totaux, les relances, les devis et la chronologie', function () {

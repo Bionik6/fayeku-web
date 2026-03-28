@@ -15,6 +15,13 @@ return new class extends Migration
             $table->string('plan')->default('basique');
             $table->char('country_code', 3);
             $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->string('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('ninea')->nullable();
+            $table->string('rccm')->nullable();
+            $table->string('logo_path')->nullable();
+            $table->json('reminder_settings')->nullable();
             $table->timestamps();
         });
     }

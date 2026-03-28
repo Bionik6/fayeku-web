@@ -5,129 +5,42 @@ use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
 
-// ─── Compta routes : accès réservé aux comptables ─────────────────────────────
+// ─── Compta routes : un SME est redirigé vers son dashboard ─────────────────
 
-test('sme user gets 403 on compta dashboard', function () {
+test('sme user is redirected to pme dashboard from compta routes', function (string $routeName) {
     $user = User::factory()->create(['profile_type' => 'sme']);
 
     $this->actingAs($user)
-        ->get(route('dashboard'))
-        ->assertForbidden();
-});
+        ->get(route($routeName))
+        ->assertRedirect(route('pme.dashboard'));
+})->with([
+    'dashboard',
+    'clients.index',
+    'alerts.index',
+    'export.index',
+    'commissions.index',
+    'invitations.index',
+    'support.index',
+    'settings.index',
+]);
 
-test('sme user gets 403 on compta clients', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
+// ─── PME routes : un comptable est redirigé vers son dashboard ──────────────
 
-    $this->actingAs($user)
-        ->get(route('clients.index'))
-        ->assertForbidden();
-});
-
-test('sme user gets 403 on compta alerts', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-
-    $this->actingAs($user)
-        ->get(route('alerts.index'))
-        ->assertForbidden();
-});
-
-test('sme user gets 403 on compta exports', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-
-    $this->actingAs($user)
-        ->get(route('export.index'))
-        ->assertForbidden();
-});
-
-test('sme user gets 403 on compta commissions', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-
-    $this->actingAs($user)
-        ->get(route('commissions.index'))
-        ->assertForbidden();
-});
-
-test('sme user gets 403 on compta invitations', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-
-    $this->actingAs($user)
-        ->get(route('invitations.index'))
-        ->assertForbidden();
-});
-
-test('sme user gets 403 on compta support', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-
-    $this->actingAs($user)
-        ->get(route('support.index'))
-        ->assertForbidden();
-});
-
-test('sme user gets 403 on compta settings', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-
-    $this->actingAs($user)
-        ->get(route('settings.index'))
-        ->assertForbidden();
-});
-
-// ─── PME routes : accès réservé aux PMEs ─────────────────────────────────────
-
-test('accountant user gets 403 on pme dashboard', function () {
+test('accountant user is redirected to compta dashboard from pme routes', function (string $routeName) {
     $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user)
-        ->get(route('pme.dashboard'))
-        ->assertForbidden();
-});
-
-test('accountant user gets 403 on pme invoices', function () {
-    $user = User::factory()->accountantFirm()->create();
-
-    $this->actingAs($user)
-        ->get(route('pme.invoices.index'))
-        ->assertForbidden();
-});
-
-test('accountant user gets 403 on pme clients', function () {
-    $user = User::factory()->accountantFirm()->create();
-
-    $this->actingAs($user)
-        ->get(route('pme.clients.index'))
-        ->assertForbidden();
-});
-
-test('accountant user gets 403 on pme collection', function () {
-    $user = User::factory()->accountantFirm()->create();
-
-    $this->actingAs($user)
-        ->get(route('pme.collection.index'))
-        ->assertForbidden();
-});
-
-test('accountant user gets 403 on pme treasury', function () {
-    $user = User::factory()->accountantFirm()->create();
-
-    $this->actingAs($user)
-        ->get(route('pme.treasury.index'))
-        ->assertForbidden();
-});
-
-test('accountant user gets 403 on pme support', function () {
-    $user = User::factory()->accountantFirm()->create();
-
-    $this->actingAs($user)
-        ->get(route('pme.support.index'))
-        ->assertForbidden();
-});
-
-test('accountant user gets 403 on pme settings', function () {
-    $user = User::factory()->accountantFirm()->create();
-
-    $this->actingAs($user)
-        ->get(route('pme.settings.index'))
-        ->assertForbidden();
-});
+        ->get(route($routeName))
+        ->assertRedirect(route('dashboard'));
+})->with([
+    'pme.dashboard',
+    'pme.invoices.index',
+    'pme.clients.index',
+    'pme.collection.index',
+    'pme.treasury.index',
+    'pme.support.index',
+    'pme.settings.index',
+]);
 
 // ─── Chaque type accède à ses propres routes ─────────────────────────────────
 

@@ -53,12 +53,12 @@ test('sme user can visit the pme dashboard', function () {
         ->assertOk();
 });
 
-test('accountant user cannot access pme routes', function () {
+test('accountant user is redirected to compta dashboard from pme routes', function () {
     $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user)
         ->get(route('pme.dashboard'))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 });
 
 test('sme user cannot access compta routes', function () {

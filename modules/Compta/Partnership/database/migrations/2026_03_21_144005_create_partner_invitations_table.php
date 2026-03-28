@@ -21,10 +21,15 @@ return new class extends Migration
             $table->string('token')->unique();
             $table->string('invitee_phone')->nullable();
             $table->string('invitee_name')->nullable();
+            $table->string('invitee_company_name')->nullable();
             $table->string('recommended_plan')->nullable();
+            $table->string('channel')->default('whatsapp');
             $table->string('status')->default('pending');
             $table->datetime('expires_at')->nullable();
             $table->datetime('accepted_at')->nullable();
+            $table->datetime('link_opened_at')->nullable();
+            $table->datetime('last_reminder_at')->nullable();
+            $table->unsignedInteger('reminder_count')->default(0);
             $table->string('sme_company_id')->nullable();
             $table->timestamps();
 

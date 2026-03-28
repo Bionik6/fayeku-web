@@ -10,10 +10,23 @@ class EnsureProfileType
 {
     public function handle(Request $request, Closure $next, string $type): Response
     {
-        if (auth()->check() && auth()->user()->profile_type !== $type) {
-            abort(403, 'Access denied for this profile type.');
+        if (! auth()->check()) {
+            return redirect('/');
+        }
+
+        if (auth()->user()->profile_type !== $type) {
+            return redirect($this->dashboardUrl(auth()->user()->profile_type));
         }
 
         return $next($request);
+    }
+
+    private function dashboardUrl(string $profileType): string
+    {
+        return match ($profileType) {
+            'sme' => route('pme.dashboard'),
+            'accountant_firm' => route('dashboard'),
+            default => '/',
+        };
     }
 }

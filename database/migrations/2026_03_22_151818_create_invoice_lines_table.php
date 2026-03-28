@@ -22,7 +22,6 @@ return new class extends Migration
             $table->integer('quantity')->default(1);
             $table->integer('unit_price')->default(0);
             $table->integer('tax_rate')->default(0);  // en % (ex: 18 = 18 %)
-            $table->integer('discount')->default(0);  // en %
             $table->integer('total')->default(0);     // HT après remise
             $table->timestamps();
 

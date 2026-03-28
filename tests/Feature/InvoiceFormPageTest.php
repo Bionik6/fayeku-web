@@ -61,12 +61,12 @@ test('un utilisateur SME peut accéder à la page de création de facture', func
         ->assertOk();
 });
 
-test('un utilisateur cabinet comptable ne peut pas créer de facture', function () {
+test('un utilisateur cabinet comptable est redirigé vers son dashboard', function () {
     $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user)
         ->get(route('pme.invoices.create'))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 });
 
 test('un utilisateur ne peut pas éditer la facture d\'une autre entreprise', function () {

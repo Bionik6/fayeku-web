@@ -93,12 +93,12 @@ test('un utilisateur SME peut accéder à la page factures', function () {
         ->assertOk();
 });
 
-test('un utilisateur cabinet comptable ne peut pas accéder à la page factures PME', function () {
+test('un utilisateur cabinet comptable est redirigé vers son dashboard', function () {
     $user = User::factory()->accountantFirm()->create();
 
     $this->actingAs($user)
         ->get(route('pme.invoices.index'))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 });
 
 test('la page se rend sans erreur pour un SME sans PME associée', function () {
