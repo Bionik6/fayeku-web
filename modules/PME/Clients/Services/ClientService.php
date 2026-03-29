@@ -38,9 +38,7 @@ class ClientService
 
     public function companyForUser(User $user): ?Company
     {
-        return $user->companies()
-            ->where('type', 'sme')
-            ->first();
+        return $user->smeCompany();
     }
 
     /** @return array<int, array<string, mixed>> */

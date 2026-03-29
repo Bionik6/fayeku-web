@@ -60,7 +60,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function company(): ?Company
     {
-        return Auth::user()->companies()->where('type', 'sme')->first();
+        return Auth::user()->smeCompany();
     }
 
     public function setSection(string $section): void

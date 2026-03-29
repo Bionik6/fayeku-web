@@ -95,7 +95,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public function mount(?Invoice $invoice = null): void
     {
-        $this->company = auth()->user()->companies()->where('type', 'sme')->first();
+        $this->company = auth()->user()->smeCompany();
 
         abort_unless($this->company, 403);
 

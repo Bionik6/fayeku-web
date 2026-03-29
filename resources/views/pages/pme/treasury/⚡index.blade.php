@@ -23,7 +23,7 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
 
     public function mount(): void
     {
-        $this->company = auth()->user()->companies()->where('type', 'sme')->first();
+        $this->company = auth()->user()->smeCompany();
         $this->setPeriod($this->period);
     }
 

@@ -42,7 +42,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
     public function mount(): void
     {
         $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
-        $this->company = auth()->user()->companies()->where('type', 'sme')->first();
+        $this->company = auth()->user()->smeCompany();
 
         if (! $this->company) {
             return;

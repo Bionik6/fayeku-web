@@ -11,7 +11,7 @@
     <body class="min-h-screen bg-page text-ink antialiased">
         @php
             $user = auth()->user();
-            $smeCompany = $user->companies()->where('type', 'sme')->first();
+            $smeCompany = $user->smeCompany();
 
             $primaryNavigation = [
                 [

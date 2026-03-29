@@ -57,4 +57,21 @@ class User extends Authenticatable
             'company_user', 'user_id', 'company_id'
         )->withPivot('role')->withTimestamps();
     }
+
+    private bool $smeCompanyLoaded = false;
+
+    private ?Company $smeCompanyCache = null;
+
+    /**
+     * Return the user's SME company, cached on the instance (1 query per object lifecycle).
+     */
+    public function smeCompany(): ?Company
+    {
+        if (! $this->smeCompanyLoaded) {
+            $this->smeCompanyCache = $this->companies()->where('type', 'sme')->first();
+            $this->smeCompanyLoaded = true;
+        }
+
+        return $this->smeCompanyCache;
+    }
 }

@@ -57,7 +57,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
     public function mount(): void
     {
         $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
-        $this->company = auth()->user()->companies()->where('type', 'sme')->first();
+        $this->company = auth()->user()->smeCompany();
 
         if (! $this->company) {
             return;
