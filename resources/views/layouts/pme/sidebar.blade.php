@@ -43,7 +43,7 @@
                     'navigate' => true,
                 ],
                 [
-                    'label' => __('Recouvrement et relance'),
+                    'label' => __('Recouvrement'),
                     'icon' => 'bell',
                     'href' => route('pme.collection.index'),
                     'current' => request()->routeIs('pme.collection.*'),
@@ -100,9 +100,9 @@
                 request()->routeIs('pme.collection.*') => [
                     'segments' => [
                         __('Tableau de bord'),
-                        __('Recouvrement et relance'),
+                        __('Recouvrement'),
                     ],
-                    'title' => __('Recouvrement et relance'),
+                    'title' => __('Recouvrement'),
                 ],
                 request()->routeIs('pme.treasury.*') => [
                     'segments' => [

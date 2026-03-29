@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
+use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Collection\Models\ReminderRule;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -236,4 +237,191 @@ test('l\'envoi d\'une relance dispatche un message quand le service n\'est pas p
         ->test('pages::pme.collection.index')
         ->call('sendReminder', $invoice->id)
         ->assertDispatched('toast');
+});
+
+// ─── Age filter ─────────────────────────────────────────────────────────────
+
+test('le filtre critique n\'affiche que les factures > 60 jours', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    createOverdueInvoice($company, daysOverdue: 70, total: 200_000);
+    createOverdueInvoice($company, daysOverdue: 10, total: 100_000);
+
+    $rows = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->set('ageFilter', 'critical')
+        ->get('invoiceRows');
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]['days_overdue'])->toBeGreaterThan(60);
+});
+
+test('le filtre en retard affiche les factures entre 30 et 60 jours', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    createOverdueInvoice($company, daysOverdue: 70);
+    createOverdueInvoice($company, daysOverdue: 45);
+    createOverdueInvoice($company, daysOverdue: 10);
+
+    $rows = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->set('ageFilter', 'late')
+        ->get('invoiceRows');
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]['days_overdue'])->toBeGreaterThanOrEqual(30)
+        ->and($rows[0]['days_overdue'])->toBeLessThanOrEqual(60);
+});
+
+test('le filtre en attente affiche les factures < 30 jours', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    createOverdueInvoice($company, daysOverdue: 70);
+    createOverdueInvoice($company, daysOverdue: 10);
+
+    $rows = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->set('ageFilter', 'pending')
+        ->get('invoiceRows');
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]['days_overdue'])->toBeLessThan(30);
+});
+
+// ─── Computed counts & totals ───────────────────────────────────────────────
+
+test('les compteurs reflètent les catégories de retard', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    createOverdueInvoice($company, daysOverdue: 70, total: 200_000);
+    createOverdueInvoice($company, daysOverdue: 45, total: 150_000);
+    createOverdueInvoice($company, daysOverdue: 10, total: 100_000);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index');
+
+    $counts = $component->get('counts');
+
+    expect($counts['critical'])->toBe(1)
+        ->and($counts['late'])->toBe(1)
+        ->and($counts['pending'])->toBe(1)
+        ->and($counts['all'])->toBe(3);
+});
+
+test('le montant total en attente additionne les soldes restants', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    createOverdueInvoice($company, daysOverdue: 10, total: 200_000);
+    createOverdueInvoice($company, daysOverdue: 15, total: 100_000);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index');
+
+    expect($component->get('totalPendingAmount'))->toBe(300_000)
+        ->and($component->get('totalPendingCount'))->toBe(2);
+});
+
+// ─── Exclusions ─────────────────────────────────────────────────────────────
+
+test('les factures payées ne sont pas dans les lignes', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Invoice::factory()->forCompany($company)->withClient($client)->create([
+        'status' => InvoiceStatus::Paid,
+        'due_at' => now()->subDays(10),
+    ]);
+
+    createOverdueInvoice($company, daysOverdue: 5);
+
+    $rows = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->get('invoiceRows');
+
+    expect($rows)->toHaveCount(1);
+});
+
+test('les factures dont l\'échéance est future sont exclues', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Invoice::factory()->forCompany($company)->withClient($client)->create([
+        'status' => InvoiceStatus::Sent,
+        'due_at' => now()->addDays(10),
+    ]);
+
+    $rows = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->get('invoiceRows');
+
+    expect($rows)->toHaveCount(0);
+});
+
+// ─── Close actions ──────────────────────────────────────────────────────────
+
+test('closePreview remet le previewInvoiceId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSet('previewInvoiceId', $invoice->id)
+        ->call('closePreview')
+        ->assertSet('previewInvoiceId', null);
+});
+
+test('closeTimeline remet le timelineInvoiceId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('openTimeline', $invoice->id)
+        ->assertSet('timelineInvoiceId', $invoice->id)
+        ->call('closeTimeline')
+        ->assertSet('timelineInvoiceId', null);
+});
+
+// ─── Reminders this month ───────────────────────────────────────────────────
+
+test('remindersThisMonth ne compte que les relances du mois courant', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company, daysOverdue: 10);
+
+    $reminderData = [
+        'invoice_id' => $invoice->id,
+        'channel' => 'whatsapp',
+        'status' => 'sent',
+        'sent_at' => now(),
+    ];
+
+    // 2 relances ce mois
+    Reminder::unguarded(fn () => Reminder::create([...$reminderData, 'created_at' => now()]));
+    Reminder::unguarded(fn () => Reminder::create([...$reminderData, 'created_at' => now()]));
+
+    // 1 relance du mois dernier
+    Reminder::unguarded(fn () => Reminder::create([...$reminderData, 'created_at' => now()->subMonthWithoutOverflow()]));
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index');
+
+    expect($component->get('remindersThisMonth'))->toBe(2);
+});
+
+// ─── N+1 prevention ────────────────────────────────────────────────────────
+
+test('overdueInvoices eager-load les relations client et reminders', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    createOverdueInvoice($company, daysOverdue: 10);
+
+    $invoices = Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->get('overdueInvoices');
+
+    expect($invoices)->toHaveCount(1)
+        ->and($invoices->first()->relationLoaded('client'))->toBeTrue()
+        ->and($invoices->first()->relationLoaded('reminders'))->toBeTrue();
 });

@@ -259,6 +259,31 @@ select:focus[data-flux-control] {
         }
     }
 
+    .app-tooltip-wrapper {
+        position: relative;
+    }
+
+    .app-tooltip {
+        position: absolute;
+        bottom: calc(100% + 0.375rem);
+        right: 0;
+        background: #0f172a;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.375rem 0.625rem;
+        border-radius: 0.5rem;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 50;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .app-tooltip-wrapper:hover .app-tooltip {
+        opacity: 1;
+    }
+
     .app-shell-stat-card {
         @apply rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.06)] p-5;
     }

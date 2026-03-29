@@ -14,7 +14,7 @@ use Modules\PME\Collection\Models\ReminderRule;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
-new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends Component {
+new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     #[Url(as: 'q')]
     public string $search = '';
 
@@ -91,30 +91,35 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
      *  COMPUTED
      * ===================================================== */
 
+    /**
+     * Single base query — all overdue invoices with eager-loaded relations.
+     */
     #[Computed]
-    public function invoiceRows(): array
+    public function overdueInvoices(): \Illuminate\Database\Eloquent\Collection
     {
         if (! $this->company) {
-            return [];
+            return new \Illuminate\Database\Eloquent\Collection;
         }
 
-        $overdueStatuses = [
-            InvoiceStatus::Overdue,
-            InvoiceStatus::Sent,
-            InvoiceStatus::Certified,
-            InvoiceStatus::CertificationFailed,
-            InvoiceStatus::PartiallyPaid,
-        ];
-
-        $invoices = Invoice::query()
+        return Invoice::query()
             ->where('company_id', $this->company->id)
-            ->whereIn('status', $overdueStatuses)
+            ->whereIn('status', [
+                InvoiceStatus::Overdue,
+                InvoiceStatus::Sent,
+                InvoiceStatus::Certified,
+                InvoiceStatus::CertificationFailed,
+                InvoiceStatus::PartiallyPaid,
+            ])
             ->whereNotNull('due_at')
             ->where('due_at', '<', now())
             ->with(['client', 'reminders'])
             ->get();
+    }
 
-        $rows = $invoices->map(function (Invoice $inv) {
+    #[Computed]
+    public function invoiceRows(): array
+    {
+        $rows = $this->overdueInvoices->map(function (Invoice $inv) {
             $daysOverdue = (int) now()->diffInDays($inv->due_at, false);
             $remaining = $inv->total - $inv->amount_paid;
             $lastReminder = $inv->reminders->sortByDesc('created_at')->first();
@@ -172,52 +177,51 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
     #[Computed]
     public function previewInvoice(): ?Invoice
     {
-        if (! $this->previewInvoiceId || ! $this->company) {
+        if (! $this->previewInvoiceId) {
             return null;
         }
 
-        return Invoice::query()
-            ->with(['client', 'reminders'])
-            ->where('company_id', $this->company->id)
-            ->whereKey($this->previewInvoiceId)
-            ->first();
+        return $this->overdueInvoices->firstWhere('id', $this->previewInvoiceId);
     }
 
     #[Computed]
     public function timelineInvoice(): ?Invoice
     {
-        if (! $this->timelineInvoiceId || ! $this->company) {
+        if (! $this->timelineInvoiceId) {
             return null;
         }
 
-        return Invoice::query()
-            ->with(['client', 'reminders' => fn ($q) => $q->orderBy('created_at')])
-            ->where('company_id', $this->company->id)
-            ->whereKey($this->timelineInvoiceId)
-            ->first();
+        $invoice = $this->overdueInvoices->firstWhere('id', $this->timelineInvoiceId);
+
+        // Sort reminders by date for the timeline view
+        $invoice?->setRelation('reminders', $invoice->reminders->sortBy('created_at')->values());
+
+        return $invoice;
     }
 
     #[Computed]
     public function counts(): array
     {
+        $mapped = $this->mappedOverdueRows();
+
         return [
             'all' => count($this->invoiceRows),
-            'critical' => collect($this->allUnfilteredRows())->filter(fn ($r) => $r['days_overdue'] > 60)->count(),
-            'late' => collect($this->allUnfilteredRows())->filter(fn ($r) => $r['days_overdue'] >= 30 && $r['days_overdue'] <= 60)->count(),
-            'pending' => collect($this->allUnfilteredRows())->filter(fn ($r) => $r['days_overdue'] < 30)->count(),
+            'critical' => $mapped->filter(fn ($r) => $r['days_overdue'] > 60)->count(),
+            'late' => $mapped->filter(fn ($r) => $r['days_overdue'] >= 30 && $r['days_overdue'] <= 60)->count(),
+            'pending' => $mapped->filter(fn ($r) => $r['days_overdue'] < 30)->count(),
         ];
     }
 
     #[Computed]
     public function totalPendingAmount(): int
     {
-        return collect($this->allUnfilteredRows())->sum('remaining');
+        return $this->mappedOverdueRows()->sum('remaining');
     }
 
     #[Computed]
     public function totalPendingCount(): int
     {
-        return count($this->allUnfilteredRows());
+        return $this->overdueInvoices->count();
     }
 
     /* =====================================================
@@ -281,10 +285,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
     public function openPreview(string $invoiceId): void
     {
         abort_unless($this->company, 403);
-
-        Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($invoiceId);
+        abort_unless($this->overdueInvoices->contains('id', $invoiceId), 404);
 
         $this->previewInvoiceId = $invoiceId;
         $this->previewTone = $this->company->getReminderSetting('default_tone', 'cordial');
@@ -300,10 +301,7 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
     public function openTimeline(string $invoiceId): void
     {
         abort_unless($this->company, 403);
-
-        Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($invoiceId);
+        abort_unless($this->overdueInvoices->contains('id', $invoiceId), 404);
 
         $this->timelineInvoiceId = $invoiceId;
         $this->previewInvoiceId = null;
@@ -361,53 +359,37 @@ new #[Title('Recouvrement et relance')] #[Layout('layouts::pme')] class extends 
             return;
         }
 
-        $rows = $this->allUnfilteredRows();
-        $collection = collect($rows);
+        $rows = $this->mappedOverdueRows();
 
-        $this->criticalCount = $collection->filter(fn ($r) => $r['days_overdue'] > 60)->count();
-        $this->criticalAmount = $collection->filter(fn ($r) => $r['days_overdue'] > 60)->sum('remaining');
-        $this->lateCount = $collection->filter(fn ($r) => $r['days_overdue'] >= 30 && $r['days_overdue'] <= 60)->count();
-        $this->lateAmount = $collection->filter(fn ($r) => $r['days_overdue'] >= 30 && $r['days_overdue'] <= 60)->sum('remaining');
-        $this->pendingCount = $collection->filter(fn ($r) => $r['days_overdue'] < 30)->count();
-        $this->pendingAmount = $collection->filter(fn ($r) => $r['days_overdue'] < 30)->sum('remaining');
+        $this->criticalCount = $rows->filter(fn ($r) => $r['days_overdue'] > 60)->count();
+        $this->criticalAmount = $rows->filter(fn ($r) => $r['days_overdue'] > 60)->sum('remaining');
+        $this->lateCount = $rows->filter(fn ($r) => $r['days_overdue'] >= 30 && $r['days_overdue'] <= 60)->count();
+        $this->lateAmount = $rows->filter(fn ($r) => $r['days_overdue'] >= 30 && $r['days_overdue'] <= 60)->sum('remaining');
+        $this->pendingCount = $rows->filter(fn ($r) => $r['days_overdue'] < 30)->count();
+        $this->pendingAmount = $rows->filter(fn ($r) => $r['days_overdue'] < 30)->sum('remaining');
 
         $this->remindersThisMonth = Reminder::query()
-            ->whereHas('invoice', fn ($q) => $q->where('company_id', $this->company->id))
+            ->whereIn('invoice_id', Invoice::query()
+                ->where('company_id', $this->company->id)
+                ->select('id'))
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->count();
     }
 
-    private function allUnfilteredRows(): array
+    /**
+     * Lightweight mapping of overdue invoices for KPI/filter calculations.
+     *
+     * @return \Illuminate\Support\Collection<int, array{remaining: int, days_overdue: int}>
+     */
+    private function mappedOverdueRows(): \Illuminate\Support\Collection
     {
-        if (! $this->company) {
-            return [];
-        }
-
-        $overdueStatuses = [
-            InvoiceStatus::Overdue,
-            InvoiceStatus::Sent,
-            InvoiceStatus::Certified,
-            InvoiceStatus::CertificationFailed,
-            InvoiceStatus::PartiallyPaid,
-        ];
-
-        return Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->whereIn('status', $overdueStatuses)
-            ->whereNotNull('due_at')
-            ->where('due_at', '<', now())
-            ->with(['client', 'reminders'])
-            ->get()
-            ->map(function (Invoice $inv) {
-                $daysOverdue = (int) abs(now()->diffInDays($inv->due_at, false));
-
-                return [
-                    'remaining' => $inv->total - $inv->amount_paid,
-                    'days_overdue' => $daysOverdue,
-                ];
-            })
-            ->all();
+        return $this->overdueInvoices->map(function (Invoice $inv) {
+            return [
+                'remaining' => $inv->total - $inv->amount_paid,
+                'days_overdue' => (int) abs(now()->diffInDays($inv->due_at, false)),
+            ];
+        });
     }
 
     private function loadConfigFromCompany(): void

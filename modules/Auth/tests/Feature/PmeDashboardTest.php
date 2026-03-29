@@ -81,7 +81,7 @@ test('pme dashboard sidebar renders pme navigation', function () {
         'Devis',
         'Factures',
         'Clients',
-        'Recouvrement et relance',
+        'Recouvrement',
         'Trésorerie',
         'Paramètres',
         'Aide & Support',
