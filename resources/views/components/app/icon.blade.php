@@ -18,6 +18,8 @@
         'menu'         => 'resources/icons/menu-bar-01.svg',
         'close'        => 'resources/icons/building-x-mark.svg',
         'invoice'      => 'resources/icons/file-01.svg',
+        'invoice-bill' => 'resources/icons/receipt-04.svg',
+        'quote'        => 'resources/icons/memo-pad.svg',
         'user'         => 'resources/icons/user-01.svg',
         'check'        => 'resources/icons/check.svg',
         'restore'      => 'resources/icons/arrow-circle-left.svg',

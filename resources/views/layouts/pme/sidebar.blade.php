@@ -23,14 +23,14 @@
                 ],
                 [
                     'label' => __('Devis'),
-                    'icon' => 'invoice',
+                    'icon' => 'quote',
                     'href' => route('pme.quotes.index'),
                     'current' => request()->routeIs('pme.quotes.*'),
                     'navigate' => true,
                 ],
                 [
                     'label' => __('Factures'),
-                    'icon' => 'invoice',
+                    'icon' => 'invoice-bill',
                     'href' => route('pme.invoices.index'),
                     'current' => request()->routeIs('pme.invoices.*'),
                     'navigate' => true,
