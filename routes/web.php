@@ -3,6 +3,7 @@
 use App\Http\Controllers\MarketingPageController;
 use Illuminate\Support\Facades\Route;
 use Modules\PME\Invoicing\Http\Controllers\InvoicePdfController;
+use Modules\PME\Invoicing\Http\Controllers\QuotePdfController;
 use Modules\PME\Treasury\Http\Controllers\TreasuryExportController;
 
 Route::get('/', [MarketingPageController::class, 'home'])->name('home');
@@ -34,6 +35,10 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
     Route::livewire('invoices', 'pages::pme.invoices.index')->name('pme.invoices.index');
     Route::get('invoices/{invoice}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
+    Route::livewire('quotes/create', 'pages::pme.quotes.form')->name('pme.quotes.create');
+    Route::livewire('quotes/{quote}/edit', 'pages::pme.quotes.form')->name('pme.quotes.edit');
+    Route::livewire('quotes', 'pages::pme.quotes.index')->name('pme.quotes.index');
+    Route::get('quotes/{quote}/pdf', QuotePdfController::class)->name('pme.quotes.pdf');
     Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');
     Route::livewire('clients/{client}', 'pages::pme.clients.show')->name('pme.clients.show');
     Route::livewire('collections', 'pages::pme.collection.index')->name('pme.collection.index');

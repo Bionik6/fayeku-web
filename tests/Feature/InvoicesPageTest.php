@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -7,9 +8,7 @@ use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Enums\QuoteStatus;
 use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\Quote;
 use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
@@ -53,28 +52,6 @@ function makeInvoice(Company $company, array $overrides = []): Invoice
         'tax_amount' => 18_000,
         'total' => 118_000,
         'amount_paid' => 118_000,
-    ], $overrides)));
-}
-
-/**
- * Crée un devis pour une PME.
- *
- * @param  array<string, mixed>  $overrides
- */
-function makeQuote(Company $company, array $overrides = []): Quote
-{
-    $client = Client::factory()->create(['company_id' => $company->id]);
-
-    return Quote::unguarded(fn () => Quote::create(array_merge([
-        'company_id' => $company->id,
-        'client_id' => $client->id,
-        'reference' => 'DEV-'.fake()->unique()->numerify('###'),
-        'status' => QuoteStatus::Sent->value,
-        'issued_at' => now(),
-        'valid_until' => now()->addDays(30),
-        'subtotal' => 100_000,
-        'tax_amount' => 18_000,
-        'total' => 118_000,
     ], $overrides)));
 }
 
@@ -135,17 +112,18 @@ test('invoiceCount exclut les brouillons et les annulées', function () {
         ->assertSet('invoiceCount', 1);
 });
 
-test('pendingQuoteCount compte uniquement les devis envoyés sans réponse', function () {
+test('unpaidCount compte les factures Sent, Overdue et PartiallyPaid', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
-    makeQuote($company, ['status' => QuoteStatus::Sent->value]);
-    makeQuote($company, ['status' => QuoteStatus::Sent->value]);
-    makeQuote($company, ['status' => QuoteStatus::Accepted->value]); // non compté
-    makeQuote($company, ['status' => QuoteStatus::Declined->value]); // non compté
+    makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+    makeInvoice($company, ['status' => InvoiceStatus::Overdue->value, 'due_at' => now()->subDays(10), 'amount_paid' => 0]);
+    makeInvoice($company, ['status' => InvoiceStatus::PartiallyPaid->value, 'amount_paid' => 50_000]);
+    makeInvoice($company, ['status' => InvoiceStatus::Paid->value]); // non compté
+    makeInvoice($company, ['status' => InvoiceStatus::Draft->value, 'amount_paid' => 0]); // non compté
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->assertSet('pendingQuoteCount', 2);
+        ->assertSet('unpaidCount', 3);
 });
 
 test('invoicedAmount additionne les subtotals HT des factures de ce mois', function () {
@@ -187,19 +165,6 @@ test('rows() retourne les factures de la bonne PME seulement', function () {
 
     expect(collect($rows)->pluck('reference'))->toContain('FAC-MINE');
     expect(collect($rows)->pluck('reference'))->not->toContain('FAC-OTHER');
-});
-
-test('rows() retourne également les devis de la PME', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company, ['reference' => 'FAC-001']);
-    makeQuote($company, ['reference' => 'DEV-001']);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $rows = $component->get('rows');
-
-    $types = collect($rows)->pluck('type')->unique()->values()->sort()->values()->toArray();
-    expect($types)->toEqual(['invoice', 'quote']);
 });
 
 test('rows() exclut les factures annulées', function () {
@@ -253,7 +218,7 @@ test('rows() mappe correctement le nom du client', function () {
     expect($row['client_name'])->toBe('Sonatel SA');
 });
 
-test('rows() retourne un tableau vide si la PME n\'a aucun document', function () {
+test('rows() retourne un tableau vide si la PME n\'a aucune facture', function () {
     ['user' => $user] = createSmeWithCompany();
 
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
@@ -261,18 +226,17 @@ test('rows() retourne un tableau vide si la PME n\'a aucun document', function (
     expect($component->get('rows'))->toBeArray()->toBeEmpty();
 });
 
-test('la page ne recharge les documents qu\'une seule fois par rendu', function () {
+test('la page ne recharge les factures qu\'une seule fois par rendu', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     makeInvoice($company, ['reference' => 'FAC-ONLY']);
-    makeQuote($company, ['reference' => 'DEV-ONLY']);
 
     DB::flushQueryLog();
     DB::enableQueryLog();
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->assertSee('Factures & Devis');
+        ->assertSee('Factures');
 
     $queries = collect(DB::getQueryLog())
         ->pluck('query')
@@ -281,66 +245,7 @@ test('la page ne recharge les documents qu\'une seule fois par rendu', function 
     $invoiceSelects = $queries->filter(fn (string $query) => str_starts_with($query, 'select * from "invoices"')
         && str_contains($query, '"status" not in'));
 
-    $quoteSelects = $queries->filter(fn (string $query) => str_starts_with($query, 'select * from "quotes"'));
-
     expect($invoiceSelects)->toHaveCount(1);
-    expect($quoteSelects)->toHaveCount(1);
-});
-
-// ─── Filtre type ──────────────────────────────────────────────────────────────
-
-test('setTypeFilter(invoice) ne retourne que les factures', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company);
-    makeInvoice($company);
-    makeQuote($company);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setTypeFilter', 'invoice');
-
-    $types = collect($component->get('rows'))->pluck('type')->unique()->toArray();
-    expect($types)->toEqual(['invoice']);
-    expect($component->get('rows'))->toHaveCount(2);
-});
-
-test('setTypeFilter(quote) ne retourne que les devis', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company);
-    makeQuote($company);
-    makeQuote($company);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setTypeFilter', 'quote');
-
-    $types = collect($component->get('rows'))->pluck('type')->unique()->toArray();
-    expect($types)->toEqual(['quote']);
-    expect($component->get('rows'))->toHaveCount(2);
-});
-
-test('setTypeFilter(all) retourne factures et devis', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company);
-    makeQuote($company);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setTypeFilter', 'all');
-
-    expect($component->get('rows'))->toHaveCount(2);
-});
-
-test('setTypeFilter réinitialise le filtre statut à all', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setStatusFilter', 'paid');
-    $component->call('setTypeFilter', 'invoice');
-
-    expect($component->get('statusFilter'))->toBe('all');
 });
 
 // ─── Filtre statut ────────────────────────────────────────────────────────────
@@ -372,50 +277,17 @@ test('setStatusFilter(overdue) ne retourne que les factures en retard', function
     expect($component->get('rows'))->toHaveCount(2);
 });
 
-test('setStatusFilter(accepted) ne retourne que les devis acceptés', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeQuote($company, ['status' => QuoteStatus::Accepted->value]);
-    makeQuote($company, ['status' => QuoteStatus::Sent->value]);
-    makeQuote($company, ['status' => QuoteStatus::Declined->value]);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setStatusFilter', 'accepted');
-
-    expect($component->get('rows'))->toHaveCount(1);
-    expect($component->get('rows')[0]['status_value'])->toBe('accepted');
-});
-
-test('setStatusFilter(all) retourne tous les documents', function () {
+test('setStatusFilter(all) retourne toutes les factures', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     makeInvoice($company, ['status' => InvoiceStatus::Paid->value]);
     makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
-    makeQuote($company, ['status' => QuoteStatus::Sent->value]);
+    makeInvoice($company, ['status' => InvoiceStatus::Draft->value, 'amount_paid' => 0]);
 
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
     $component->call('setStatusFilter', 'all');
 
     expect($component->get('rows'))->toHaveCount(3);
-});
-
-// ─── Filtre combiné type + statut ─────────────────────────────────────────────
-
-test('le filtre type invoice + statut sent ne retourne que les factures envoyées', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
-    makeInvoice($company, ['status' => InvoiceStatus::Paid->value]);
-    makeQuote($company, ['status' => QuoteStatus::Sent->value]); // devis sent → exclu par filtre type
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setTypeFilter', 'invoice');
-    $component->call('setStatusFilter', 'sent');
-
-    $rows = $component->get('rows');
-    expect($rows)->toHaveCount(1);
-    expect($rows[0]['type'])->toBe('invoice');
-    expect($rows[0]['status_value'])->toBe('sent');
 });
 
 // ─── Recherche ────────────────────────────────────────────────────────────────
@@ -425,7 +297,7 @@ test('la recherche filtre par référence (correspondance partielle)', function 
 
     makeInvoice($company, ['reference' => 'FAC-094']);
     makeInvoice($company, ['reference' => 'FAC-095']);
-    makeInvoice($company, ['reference' => 'DEV-001']);
+    makeInvoice($company, ['reference' => 'FAC-200']);
 
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
     $component->set('search', 'FAC-09');
@@ -433,7 +305,7 @@ test('la recherche filtre par référence (correspondance partielle)', function 
     $refs = collect($component->get('rows'))->pluck('reference')->toArray();
     expect($refs)->toContain('FAC-094');
     expect($refs)->toContain('FAC-095');
-    expect($refs)->not->toContain('DEV-001');
+    expect($refs)->not->toContain('FAC-200');
 });
 
 test('la recherche filtre par nom de client (correspondance partielle)', function () {
@@ -487,23 +359,23 @@ test('une recherche sans résultat retourne un tableau vide', function () {
 
 // ─── Filtre période ───────────────────────────────────────────────────────────
 
-test('le filtre période retourne uniquement les documents du mois sélectionné', function () {
+test('le filtre période retourne uniquement les factures du mois sélectionné', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
-    makeInvoice($company, ['reference' => 'FAC-MARS', 'issued_at' => now()->setMonth(3)->setYear(2026)]);
-    makeInvoice($company, ['reference' => 'FAC-FEV', 'issued_at' => now()->setMonth(2)->setYear(2026)]);
-    makeQuote($company, ['reference' => 'DEV-MARS', 'issued_at' => now()->setMonth(3)->setYear(2026)]);
+    makeInvoice($company, ['reference' => 'FAC-MARS', 'issued_at' => Carbon::create(2026, 3, 10)]);
+    makeInvoice($company, ['reference' => 'FAC-FEV', 'issued_at' => Carbon::create(2026, 2, 15)]);
+    makeInvoice($company, ['reference' => 'FAC-MARS2', 'issued_at' => Carbon::create(2026, 3, 20)]);
 
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
     $component->set('period', '2026-03');
 
     $refs = collect($component->get('rows'))->pluck('reference')->toArray();
     expect($refs)->toContain('FAC-MARS');
-    expect($refs)->toContain('DEV-MARS');
+    expect($refs)->toContain('FAC-MARS2');
     expect($refs)->not->toContain('FAC-FEV');
 });
 
-test('un filtre période vide retourne tous les documents', function () {
+test('un filtre période vide retourne toutes les factures', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     makeInvoice($company, ['issued_at' => now()->subMonths(3)]);
@@ -516,74 +388,39 @@ test('un filtre période vide retourne tous les documents', function () {
     expect($component->get('rows'))->toHaveCount(3);
 });
 
-test('typeCounts reflète les documents de la période sélectionnée', function () {
+test('une période spécifique conserve le filtre statut actif', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     $selectedPeriod = now()->format('Y-m');
 
-    makeInvoice($company, [
-        'reference' => 'FAC-CURRENT',
-        'issued_at' => now()->copy()->startOfMonth()->addDays(2),
-        'status' => InvoiceStatus::Paid->value,
-    ]);
-    makeQuote($company, [
-        'reference' => 'DEV-CURRENT',
-        'issued_at' => now()->copy()->startOfMonth()->addDays(3),
-        'status' => QuoteStatus::Accepted->value,
-    ]);
-    makeInvoice($company, [
-        'reference' => 'FAC-OLD',
-        'issued_at' => now()->copy()->subMonth()->startOfMonth()->addDays(2),
-        'status' => InvoiceStatus::Paid->value,
-    ]);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->set('period', $selectedPeriod);
-
-    expect($component->get('typeCounts'))->toMatchArray([
-        'all' => 2,
-        'invoice' => 1,
-        'quote' => 1,
-    ]);
-});
-
-test('une période spécifique conserve des filtres type et statut actifs', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    $selectedPeriod = now()->format('Y-m');
+    $currentStart = now()->copy()->startOfMonth();
+    $previousMonth = now()->copy()->startOfMonth()->subDays(15);
 
     makeInvoice($company, [
         'reference' => 'FAC-CURRENT',
-        'issued_at' => now()->copy()->startOfMonth()->addDays(2),
+        'issued_at' => $currentStart->copy()->addDays(2),
         'status' => InvoiceStatus::Paid->value,
     ]);
     makeInvoice($company, [
         'reference' => 'FAC-CURRENT-SENT',
-        'issued_at' => now()->copy()->startOfMonth()->addDays(3),
+        'issued_at' => $currentStart->copy()->addDays(3),
         'status' => InvoiceStatus::Sent->value,
         'amount_paid' => 0,
     ]);
     makeInvoice($company, [
         'reference' => 'FAC-OLD-PAID',
-        'issued_at' => now()->copy()->subMonth()->startOfMonth()->addDays(2),
+        'issued_at' => $previousMonth,
         'status' => InvoiceStatus::Paid->value,
-    ]);
-    makeQuote($company, [
-        'reference' => 'DEV-CURRENT',
-        'issued_at' => now()->copy()->startOfMonth()->addDays(4),
-        'status' => QuoteStatus::Accepted->value,
     ]);
 
     $component = Livewire::actingAs($user)
         ->withQueryParams([
             'periode' => $selectedPeriod,
-            'type' => 'invoice',
             'statut' => 'paid',
         ])
         ->test('pages::pme.invoices.index');
 
     expect($component->get('period'))->toBe($selectedPeriod);
-    expect($component->get('typeFilter'))->toBe('invoice');
     expect($component->get('statusFilter'))->toBe('paid');
     expect(collect($component->get('rows'))->pluck('reference')->all())
         ->toEqual(['FAC-CURRENT']);
@@ -592,36 +429,6 @@ test('une période spécifique conserve des filtres type et statut actifs', func
         'paid' => 1,
         'sent' => 1,
     ]);
-});
-
-// ─── typeCounts ───────────────────────────────────────────────────────────────
-
-test('typeCounts reflète le nombre de factures et devis', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company);
-    makeInvoice($company);
-    makeQuote($company);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $counts = $component->get('typeCounts');
-
-    expect($counts['all'])->toBe(3);
-    expect($counts['invoice'])->toBe(2);
-    expect($counts['quote'])->toBe(1);
-});
-
-test('typeCounts exclut les factures annulées du total', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company, ['status' => InvoiceStatus::Paid->value]);
-    makeInvoice($company, ['status' => InvoiceStatus::Cancelled->value, 'amount_paid' => 0]);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $counts = $component->get('typeCounts');
-
-    expect($counts['invoice'])->toBe(1);
-    expect($counts['all'])->toBe(1);
 });
 
 // ─── statusCounts ─────────────────────────────────────────────────────────────
@@ -643,21 +450,6 @@ test('statusCounts répartit les documents par statut', function () {
     expect($counts['all'])->toBe(4);
 });
 
-test('statusCounts tient compte du filtre type actif', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
-    makeQuote($company, ['status' => QuoteStatus::Sent->value]);
-
-    // En filtrant sur invoice, statusCounts ne compte que les factures
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
-    $component->call('setTypeFilter', 'invoice');
-    $counts = $component->get('statusCounts');
-
-    expect($counts['all'])->toBe(1);
-    expect($counts['sent'] ?? 0)->toBe(1);
-});
-
 // ─── availablePeriods ─────────────────────────────────────────────────────────
 
 test('availablePeriods retourne les 6 derniers mois', function () {
@@ -666,9 +458,10 @@ test('availablePeriods retourne les 6 derniers mois', function () {
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
     $periods = $component->get('availablePeriods');
 
-    expect($periods)->toHaveCount(6);
+    expect($periods)->toHaveCount(count(
+        collect(range(0, 5))->map(fn ($i) => now()->subMonths($i)->format('Y-m'))->unique()->all()
+    ));
     expect(array_keys($periods))->toContain(now()->format('Y-m'));
-    expect(array_keys($periods))->toContain(now()->subMonths(5)->format('Y-m'));
 });
 
 // ─── markAsPaid() ─────────────────────────────────────────────────────────────
@@ -721,12 +514,12 @@ test('markAsPaid() n\'affecte pas les factures d\'une autre PME', function () {
 
 // ─── Affichage Blade ──────────────────────────────────────────────────────────
 
-test('la page affiche le titre Factures & Devis', function () {
+test('la page affiche le titre Factures', function () {
     ['user' => $user] = createSmeWithCompany();
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->assertSee('Factures & Devis');
+        ->assertSee('Factures');
 });
 
 test('la page affiche les KPI labels', function () {
@@ -735,7 +528,7 @@ test('la page affiche les KPI labels', function () {
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
         ->assertSee('Factures émises')
-        ->assertSee('Devis en attente')
+        ->assertSee('Factures impayées')
         ->assertSee('Montant facturé')
         ->assertSee('En retard ou en attente');
 });
@@ -758,25 +551,15 @@ test('la page factures utilise FCFA hors tableau et conserve F dans le tableau',
         ->assertSee('378 780 F');
 });
 
-test('la page affiche les boutons CTA principaux', function () {
+test('la page affiche le bouton CTA principal', function () {
     ['user' => $user] = createSmeWithCompany();
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->assertSee('Nouvelle facture')
-        ->assertSee('Nouveau devis');
+        ->assertSee('Nouvelle facture');
 });
 
-test('la page affiche les onglets de filtre type', function () {
-    ['user' => $user] = createSmeWithCompany();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->assertSee('Factures')
-        ->assertSee('Devis');
-});
-
-test('une facture s\'affiche avec le badge Facture et son statut', function () {
+test('une facture s\'affiche avec sa référence et son statut', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     makeInvoice($company, ['reference' => 'FAC-XYZ', 'status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
@@ -784,20 +567,7 @@ test('une facture s\'affiche avec le badge Facture et son statut', function () {
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
         ->assertSee('FAC-XYZ')
-        ->assertSee('Facture')
         ->assertSee('Envoyée');
-});
-
-test('un devis s\'affiche avec le badge Devis et son statut', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    makeQuote($company, ['reference' => 'DEV-XYZ', 'status' => QuoteStatus::Accepted->value]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->assertSee('DEV-XYZ')
-        ->assertSee('Devis')
-        ->assertSee('Accepté');
 });
 
 test('une facture en retard affiche J+ dans l\'échéance', function () {
@@ -814,12 +584,12 @@ test('une facture en retard affiche J+ dans l\'échéance', function () {
         ->assertSee('J+15');
 });
 
-test('l\'état vide s\'affiche quand aucun document n\'existe', function () {
+test('l\'état vide s\'affiche quand aucune facture n\'existe', function () {
     ['user' => $user] = createSmeWithCompany();
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->assertSee('Aucun document pour le moment')
+        ->assertSee('Aucune facture pour le moment')
         ->assertSee('Créer une facture');
 });
 
@@ -831,7 +601,7 @@ test('le message "aucun résultat" s\'affiche quand le filtre ne correspond à r
     $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
     $component->set('search', 'AUCUN-RESULTAT-POSSIBLE');
 
-    $component->assertSee('Aucun document ne correspond');
+    $component->assertSee('Aucune facture ne correspond');
 });
 
 test('le bouton Réinitialiser les filtres est affiché dans l\'état vide filtré', function () {
@@ -845,7 +615,7 @@ test('le bouton Réinitialiser les filtres est affiché dans l\'état vide filtr
     $component->assertSee('Réinitialiser les filtres');
 });
 
-test('les filtres type et statut restent visibles quand une période spécifique est choisie', function () {
+test('les filtres statut restent visibles quand une période spécifique est choisie', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     makeInvoice($company, [
@@ -857,7 +627,6 @@ test('les filtres type et statut restent visibles quand une période spécifique
     Livewire::actingAs($user)
         ->withQueryParams(['periode' => now()->format('Y-m')])
         ->test('pages::pme.invoices.index')
-        ->assertSeeHtml('wire:click="setTypeFilter(\'invoice\')"')
         ->assertSeeHtml('wire:click="setStatusFilter(\'paid\')"');
 });
 

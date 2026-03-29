@@ -191,7 +191,7 @@ test('commissionAmount affiche la somme des commissions du mois courant', functi
         'accountant_firm_id' => $firm->id,
         'sme_company_id' => $smes[0]->id,
         'amount' => 999_999,
-        'period_month' => now()->subMonth()->startOfMonth(),
+        'period_month' => now()->subMonthWithoutOverflow()->startOfMonth(),
         'status' => 'paid',
     ]);
 

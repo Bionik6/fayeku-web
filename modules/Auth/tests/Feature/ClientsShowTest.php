@@ -163,7 +163,7 @@ test('stats.billed_month = somme des totaux du mois sélectionné', function () 
     makeShowInvoice($sme, ['issued_at' => now(), 'total' => 200_000, 'amount_paid' => 200_000]);
     makeShowInvoice($sme, ['issued_at' => now(), 'total' => 150_000, 'amount_paid' => 150_000]);
     // mois précédent → ne doit pas être inclus
-    makeShowInvoice($sme, ['issued_at' => now()->subMonth(), 'total' => 999_999, 'amount_paid' => 999_999]);
+    makeShowInvoice($sme, ['issued_at' => now()->subMonthWithoutOverflow(), 'total' => 999_999, 'amount_paid' => 999_999]);
 
     $stats = Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
@@ -244,7 +244,7 @@ test('la table filtre les factures sur le mois sélectionné', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
 
     makeShowInvoice($sme, ['issued_at' => now(), 'reference' => 'FAC-CURRENT']);
-    makeShowInvoice($sme, ['issued_at' => now()->subMonth(), 'reference' => 'FAC-OLD']);
+    makeShowInvoice($sme, ['issued_at' => now()->subMonthWithoutOverflow(), 'reference' => 'FAC-OLD']);
 
     Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])
@@ -275,9 +275,9 @@ test('changer selectedPeriod recharge les factures du mois cible', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
 
     makeShowInvoice($sme, ['issued_at' => now(), 'reference' => 'FAC-NOW']);
-    makeShowInvoice($sme, ['issued_at' => now()->subMonth(), 'reference' => 'FAC-PREV']);
+    makeShowInvoice($sme, ['issued_at' => now()->subMonthWithoutOverflow(), 'reference' => 'FAC-PREV']);
 
-    $prevPeriod = now()->subMonth()->format('Y-m');
+    $prevPeriod = now()->subMonthWithoutOverflow()->format('Y-m');
 
     $invoices = Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme])

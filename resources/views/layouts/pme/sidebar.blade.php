@@ -22,7 +22,14 @@
                     'navigate' => true,
                 ],
                 [
-                    'label' => __('Factures et devis'),
+                    'label' => __('Devis'),
+                    'icon' => 'invoice',
+                    'href' => route('pme.quotes.index'),
+                    'current' => request()->routeIs('pme.quotes.*'),
+                    'navigate' => true,
+                ],
+                [
+                    'label' => __('Factures'),
                     'icon' => 'invoice',
                     'href' => route('pme.invoices.index'),
                     'current' => request()->routeIs('pme.invoices.*'),
@@ -69,12 +76,19 @@
             ];
 
             $headerBreadcrumbs = match (true) {
+                request()->routeIs('pme.quotes.*') => [
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Devis'),
+                    ],
+                    'title' => __('Devis'),
+                ],
                 request()->routeIs('pme.invoices.*') => [
                     'segments' => [
                         __('Tableau de bord'),
-                        __('Factures et devis'),
+                        __('Factures'),
                     ],
-                    'title' => __('Factures et devis'),
+                    'title' => __('Factures'),
                 ],
                 request()->routeIs('pme.clients.*') => [
                     'segments' => [

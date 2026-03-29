@@ -78,7 +78,8 @@ test('pme dashboard sidebar renders pme navigation', function () {
     $response->assertOk();
     $response->assertSeeInOrder([
         'Tableau de bord',
-        'Factures et devis',
+        'Devis',
+        'Factures',
         'Clients',
         'Recouvrement et relance',
         'Trésorerie',

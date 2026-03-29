@@ -26,7 +26,7 @@ class Invoice extends Model
     }
 
     protected $fillable = [
-        'company_id', 'client_id', 'reference', 'currency', 'status',
+        'company_id', 'client_id', 'quote_id', 'reference', 'currency', 'status',
         'issued_at', 'due_at', 'paid_at',
         'subtotal', 'tax_amount', 'total', 'discount', 'amount_paid',
         'notes', 'payment_terms', 'payment_instructions',
@@ -62,6 +62,11 @@ class Invoice extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(InvoiceLine::class);
+    }
+
+    public function quote(): BelongsTo
+    {
+        return $this->belongsTo(Quote::class);
     }
 
     public function reminders(): HasMany

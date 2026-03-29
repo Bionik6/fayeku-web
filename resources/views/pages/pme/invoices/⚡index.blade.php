@@ -8,14 +8,9 @@ use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Enums\QuoteStatus;
 use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\Quote;
 
-new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Component {
-    #[Url(as: 'type')]
-    public string $typeFilter = 'all';
-
+new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
     #[Url(as: 'statut')]
     public string $statusFilter = 'all';
 
@@ -31,7 +26,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
     public int $invoiceCount = 0;
 
-    public int $pendingQuoteCount = 0;
+    public int $unpaidCount = 0;
 
     public int $invoicedAmount = 0;
 
@@ -55,9 +50,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
-
-    /** @var array<int, array<string, mixed>>|null */
-    private ?array $baseRowsCache = null;
 
     /** @var array<int, array<string, mixed>>|null */
     private ?array $rowsBeforeAggregateFiltersCache = null;
@@ -182,7 +174,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         $this->selectedInvoiceId = $invoice->id;
         $this->flushDocumentCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->typeCounts, $this->statusCounts, $this->selectedInvoice, $this->clients);
+        unset($this->rows, $this->statusCounts, $this->selectedInvoice, $this->clients);
 
         $this->dispatch('toast', type: 'success', title: __('La facture a été mise à jour.'));
     }
@@ -208,7 +200,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
         $this->flushDocumentCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->typeCounts, $this->statusCounts, $this->selectedInvoice);
+        unset($this->rows, $this->statusCounts, $this->selectedInvoice);
 
         $this->dispatch('toast', type: 'success', title: __('La facture a été supprimée.'));
     }
@@ -217,7 +209,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     {
         if (! $this->company) {
             $this->invoiceCount = 0;
-            $this->pendingQuoteCount = 0;
+            $this->unpaidCount = 0;
             $this->invoicedAmount = 0;
             $this->actionRequiredCount = 0;
 
@@ -232,10 +224,10 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             ->whereYear('issued_at', now()->year)
             ->count();
 
-        // KPI: devis en attente (sent)
-        $this->pendingQuoteCount = Quote::query()
+        // KPI: factures impayées
+        $this->unpaidCount = Invoice::query()
             ->where('company_id', $this->company->id)
-            ->where('status', QuoteStatus::Sent)
+            ->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid])
             ->count();
 
         // KPI: montant HT facturé ce mois
@@ -246,7 +238,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             ->whereYear('issued_at', now()->year)
             ->sum('subtotal');
 
-        // KPI: documents nécessitant une action (overdue + sent invoices)
+        // KPI: factures nécessitant une action (overdue + sent)
         $this->actionRequiredCount = Invoice::query()
             ->where('company_id', $this->company->id)
             ->whereIn('status', [InvoiceStatus::Overdue, InvoiceStatus::Sent])
@@ -257,34 +249,14 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     #[Computed]
     public function rows(): array
     {
-        $rows = $this->rowsBeforeAggregateFilters();
-        $rows = $this->applyTypeFilter($rows);
-
-        return $this->applyStatusFilter($rows);
-    }
-
-    /** @return array<string, int> */
-    #[Computed]
-    public function typeCounts(): array
-    {
-        if (! $this->company) {
-            return ['all' => 0, 'invoice' => 0, 'quote' => 0];
-        }
-
-        $base = $this->applyStatusFilter($this->rowsBeforeAggregateFilters());
-
-        return [
-            'all'     => count($base),
-            'invoice' => count(array_filter($base, fn ($r) => $r['type'] === 'invoice')),
-            'quote'   => count(array_filter($base, fn ($r) => $r['type'] === 'quote')),
-        ];
+        return $this->applyStatusFilter($this->rowsBeforeAggregateFilters());
     }
 
     /** @return array<string, int> */
     #[Computed]
     public function statusCounts(): array
     {
-        $base = $this->applyTypeFilter($this->rowsBeforeAggregateFilters());
+        $base = $this->rowsBeforeAggregateFilters();
         $counts = ['all' => count($base)];
 
         foreach ($base as $row) {
@@ -321,14 +293,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
         $this->flushDocumentCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->typeCounts, $this->statusCounts, $this->selectedInvoice);
-    }
-
-    public function setTypeFilter(string $type): void
-    {
-        $this->typeFilter = $type;
-        $this->statusFilter = 'all';
-        unset($this->rows, $this->typeCounts, $this->statusCounts);
+        unset($this->rows, $this->statusCounts, $this->selectedInvoice);
     }
 
     public function setStatusFilter(string $status): void
@@ -339,20 +304,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
     public function updatedPeriod(string $value): void
     {
-        unset($this->rows, $this->typeCounts, $this->statusCounts);
-    }
-
-    /** @return array<int, array<string, mixed>> */
-    private function baseRows(): array
-    {
-        if ($this->baseRowsCache !== null) {
-            return $this->baseRowsCache;
-        }
-
-        return $this->baseRowsCache = array_map(
-            fn ($row) => ['type' => $row['type'], 'status_value' => $row['status_value']],
-            $this->allRows()
-        );
+        unset($this->rows, $this->statusCounts);
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -376,10 +328,11 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
             return $this->allRowsCache = [];
         }
 
-        $invoices = Invoice::query()
+        return $this->allRowsCache = Invoice::query()
             ->where('company_id', $this->company->id)
             ->whereNotIn('status', [InvoiceStatus::Cancelled])
             ->with('client')
+            ->orderByDesc('issued_at')
             ->get()
             ->map(function ($inv) {
                 $delayDays = $inv->due_at ? (int) abs(now()->diffInDays($inv->due_at)) : 0;
@@ -387,7 +340,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
                 return [
                     'id'           => $inv->id,
-                    'type'         => 'invoice',
                     'reference'    => $inv->reference ?? '—',
                     'client_name'  => $inv->client?->name ?? '—',
                     'subtotal'     => $inv->subtotal,
@@ -400,34 +352,8 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                     'delay_days'   => $isOverdue ? $delayDays : 0,
                     'amount_paid'  => $inv->amount_paid,
                 ];
-            });
-
-        $quotes = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->with('client')
-            ->get()
-            ->map(function ($q) {
-                $isExpired = $q->status === QuoteStatus::Expired ||
-                    ($q->valid_until && $q->valid_until->isPast() && $q->status === QuoteStatus::Sent);
-
-                return [
-                    'id'           => $q->id,
-                    'type'         => 'quote',
-                    'reference'    => $q->reference ?? '—',
-                    'client_name'  => $q->client?->name ?? '—',
-                    'subtotal'     => $q->subtotal,
-                    'tax_amount'   => $q->tax_amount,
-                    'total'        => $q->total,
-                    'issued_at'    => $q->issued_at,
-                    'due_at'       => $q->valid_until,
-                    'status_value' => $q->status->value,
-                    'is_overdue'   => $isExpired,
-                    'delay_days'   => 0,
-                    'amount_paid'  => 0,
-                ];
-            });
-
-        return $this->allRowsCache = collect([...$invoices, ...$quotes])->sortByDesc('issued_at')->values()->toArray();
+            })
+            ->toArray();
     }
 
     /** @param array<int, array<string, mixed>> $rows
@@ -470,20 +396,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     /** @param array<int, array<string, mixed>> $rows
      *  @return array<int, array<string, mixed>>
      */
-    private function applyTypeFilter(array $rows, ?string $type = null): array
-    {
-        $type ??= $this->typeFilter;
-
-        if ($type === 'all') {
-            return $rows;
-        }
-
-        return array_values(array_filter($rows, fn ($row) => $row['type'] === $type));
-    }
-
-    /** @param array<int, array<string, mixed>> $rows
-     *  @return array<int, array<string, mixed>>
-     */
     private function applyStatusFilter(array $rows, ?string $status = null): array
     {
         $status ??= $this->statusFilter;
@@ -498,7 +410,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     private function flushDocumentCaches(): void
     {
         $this->allRowsCache = null;
-        $this->baseRowsCache = null;
         $this->rowsBeforeAggregateFiltersCache = null;
     }
 }; ?>
@@ -517,12 +428,12 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">
                     {{ __('Facturation') }} · {{ $currentMonth }}
                     @if (count($this->rows) > 0)
-                        · {{ count($this->rows) }} {{ count($this->rows) > 1 ? __('documents') : __('document') }}
+                        · {{ count($this->rows) }} {{ count($this->rows) > 1 ? __('factures') : __('facture') }}
                     @endif
                 </p>
-                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Factures & Devis') }}</h2>
+                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Factures') }}</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    {{ __('Gérez vos factures clients et vos devis en attente de validation.') }}
+                    {{ __('Gérez vos factures clients.') }}
                 </p>
             </div>
 
@@ -535,10 +446,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                     <flux:icon name="plus" class="size-4" />
                     {{ __('Nouvelle facture') }}
                 </a>
-                <button type="button"
-                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                    {{ __('Nouveau devis') }}
-                </button>
             </div>
         </div>
     </section>
@@ -563,15 +470,15 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
         <article class="app-shell-stat-card">
             <div class="flex items-start justify-between">
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
-                    <flux:icon name="document-duplicate" class="size-5 text-amber-500" />
+                    <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
                 <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
-                    {{ __('En attente') }}
+                    {{ __('Impayées') }}
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Devis en attente') }}</p>
-            <p class="mt-1 text-sm text-slate-500">{{ __('Réponse attendue') }}</p>
-            <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $pendingQuoteCount }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Factures impayées') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('En attente de paiement') }}</p>
+            <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $unpaidCount }}</p>
         </article>
 
         <article class="app-shell-stat-card">
@@ -613,31 +520,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
     {{-- Bloc C — Filtres --}}
     <section class="app-shell-panel p-4 md:p-5">
 
-        {{-- Filtre Type --}}
-        <div class="flex flex-wrap gap-2">
-            @foreach ([
-                'all'     => ['label' => 'Tous',     'count' => $this->typeCounts['all']],
-                'invoice' => ['label' => 'Factures', 'count' => $this->typeCounts['invoice']],
-                'quote'   => ['label' => 'Devis',    'count' => $this->typeCounts['quote']],
-            ] as $key => $tab)
-                <button
-                    wire:click="setTypeFilter('{{ $key }}')"
-                    @class([
-                        'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                        'bg-primary text-white shadow-sm'                                          => $typeFilter === $key,
-                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30' => $typeFilter !== $key,
-                    ])
-                >
-                    {{ __($tab['label']) }}
-                    <span @class([
-                        'inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-sm font-bold min-w-[1.25rem]',
-                        'bg-white/20 text-white'    => $typeFilter === $key,
-                        'bg-slate-100 text-slate-500' => $typeFilter !== $key,
-                    ])>{{ $tab['count'] }}</span>
-                </button>
-            @endforeach
-        </div>
-
         {{-- Filtre Statut --}}
         <div class="mt-3 flex flex-wrap gap-2">
             @php
@@ -648,8 +530,6 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                     'paid'          => ['label' => 'Payée',      'dot' => 'bg-accent'],
                     'overdue'       => ['label' => 'En retard',  'dot' => 'bg-rose-500'],
                     'partially_paid' => ['label' => 'Part. payée', 'dot' => 'bg-amber-500'],
-                    'accepted'      => ['label' => 'Accepté',   'dot' => 'bg-accent'],
-                    'declined'      => ['label' => 'Refusé',    'dot' => 'bg-rose-500'],
                 ];
             @endphp
             @foreach ($statusTabs as $key => $tab)
@@ -706,7 +586,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
 
         @php
             $rows = $this->rows;
-            $hasAny = count($this->baseRows()) > 0;
+            $hasAny = count($this->allRows()) > 0;
         @endphp
 
         @if (count($rows) > 0)
@@ -714,8 +594,7 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/80">
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Type') }}</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Date émission') }}</th>
@@ -734,36 +613,17 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                     'overdue'       => ['label' => 'En retard',   'class' => 'bg-rose-50 text-rose-700 ring-rose-600/20'],
                                     'partially_paid' => ['label' => 'Part. payée', 'class' => 'bg-amber-50 text-amber-700 ring-amber-600/20'],
                                     'draft'         => ['label' => 'Brouillon',  'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
-                                    'accepted'      => ['label' => 'Accepté',    'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
-                                    'declined'      => ['label' => 'Refusé',     'class' => 'bg-rose-50 text-rose-700 ring-rose-600/20'],
-                                    'expired'       => ['label' => 'Expiré',     'class' => 'bg-slate-100 text-slate-500 ring-slate-500/20'],
                                     default         => ['label' => ucfirst($row['status_value']), 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
                                 };
                             @endphp
                             <tr
-                                wire:key="doc-{{ $row['id'] }}"
-                                @class([
-                                    'transition hover:bg-slate-50/60',
-                                    'cursor-pointer' => $row['type'] === 'invoice',
-                                ])
-                                @if ($row['type'] === 'invoice')
-                                    wire:click="viewInvoice('{{ $row['id'] }}')"
-                                @endif
+                                wire:key="inv-{{ $row['id'] }}"
+                                class="cursor-pointer transition hover:bg-slate-50/60"
+                                wire:click="viewInvoice('{{ $row['id'] }}')"
                             >
 
-                                {{-- Type --}}
-                                <td class="px-6 py-4">
-                                    <span @class([
-                                        'inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-semibold',
-                                        'bg-teal-50 text-teal-700'     => $row['type'] === 'invoice',
-                                        'bg-violet-50 text-violet-700' => $row['type'] === 'quote',
-                                    ])>
-                                        {{ $row['type'] === 'invoice' ? __('Facture') : __('Devis') }}
-                                    </span>
-                                </td>
-
                                 {{-- Référence --}}
-                                <td class="px-4 py-4 font-semibold text-ink">{{ $row['reference'] }}</td>
+                                <td class="px-6 py-4 font-semibold text-ink">{{ $row['reference'] }}</td>
 
                                 {{-- Client --}}
                                 <td class="px-4 py-4">
@@ -815,53 +675,24 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                             <flux:icon name="chevron-down" class="size-3.5" />
                                         </button>
                                         <flux:menu>
-                                            @if ($row['type'] === 'invoice')
-                                                <flux:menu.item wire:click="viewInvoice('{{ $row['id'] }}')">
-                                                    <flux:icon name="eye" class="size-4 text-slate-500" />
-                                                    {{ __('Voir le document') }}
-                                                </flux:menu.item>
-                                                <flux:menu.item wire:click="openEditInvoiceModal('{{ $row['id'] }}')">
-                                                    <flux:icon name="pencil-square" class="size-4 text-slate-500" />
-                                                    {{ __('Éditer la facture') }}
-                                                </flux:menu.item>
-                                                <flux:menu.item
-                                                    variant="danger"
-                                                    wire:click="deleteInvoice('{{ $row['id'] }}')"
-                                                    wire:confirm="{{ __('Supprimer définitivement cette facture ?') }}"
-                                                >
-                                                    <flux:icon name="trash" class="size-4 text-rose-400" />
-                                                    {{ __('Supprimer la facture') }}
-                                                </flux:menu.item>
-                                            @else
-                                                <flux:menu.item disabled>
-                                                    <flux:icon name="eye" class="size-4 text-slate-500" />
-                                                    {{ __('Voir le document') }}
-                                                </flux:menu.item>
-                                            @endif
+                                            <flux:menu.item wire:click="viewInvoice('{{ $row['id'] }}')">
+                                                <flux:icon name="eye" class="size-4 text-slate-500" />
+                                                {{ __('Voir la facture') }}
+                                            </flux:menu.item>
+                                            <flux:menu.item wire:click="openEditInvoiceModal('{{ $row['id'] }}')">
+                                                <flux:icon name="pencil-square" class="size-4 text-slate-500" />
+                                                {{ __('Éditer la facture') }}
+                                            </flux:menu.item>
 
-                                            @if ($row['type'] === 'quote')
+                                            @if (in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
                                                 <flux:menu.separator />
-                                            @endif
-
-                                            @if ($row['type'] === 'quote')
-                                                <flux:menu.item :href="route('pme.invoices.index')" wire:navigate>
-                                                    <flux:icon name="document-text" class="size-4 text-slate-500" />
-                                                    {{ __('Voir les devis') }}
-                                                </flux:menu.item>
-                                            @endif
-
-                                            @if ($row['type'] === 'invoice' && in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
-                                                <flux:menu.separator />
-                                            @endif
-
-                                            @if ($row['type'] === 'invoice' && in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
                                                 <flux:menu.item :href="route('pme.collection.index')" wire:navigate>
                                                     <flux:icon name="bell" class="size-4 text-slate-500" />
                                                     {{ __('Relancer le client') }}
                                                 </flux:menu.item>
                                             @endif
 
-                                            @if ($row['type'] === 'invoice' && !in_array($row['status_value'], ['paid', 'cancelled', 'draft']))
+                                            @if (!in_array($row['status_value'], ['paid', 'cancelled', 'draft']))
                                                 <flux:menu.separator />
                                                 <flux:menu.item wire:click="markAsPaid('{{ $row['id'] }}')"
                                                     wire:confirm="{{ __('Marquer cette facture comme payée ?') }}">
@@ -870,13 +701,15 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                                                 </flux:menu.item>
                                             @endif
 
-                                            @if ($row['type'] === 'quote' && $row['status_value'] === 'accepted')
-                                                <flux:menu.separator />
-                                                <flux:menu.item disabled>
-                                                    <flux:icon name="document-arrow-up" class="size-4 text-slate-500" />
-                                                    {{ __('Convertir en facture') }}
-                                                </flux:menu.item>
-                                            @endif
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                variant="danger"
+                                                wire:click="deleteInvoice('{{ $row['id'] }}')"
+                                                wire:confirm="{{ __('Supprimer définitivement cette facture ?') }}"
+                                            >
+                                                <flux:icon name="trash" class="size-4 text-rose-400" />
+                                                {{ __('Supprimer la facture') }}
+                                            </flux:menu.item>
                                         </flux:menu>
                                     </flux:dropdown>
                                 </td>
@@ -893,15 +726,15 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <div class="flex size-14 items-center justify-center rounded-2xl bg-mist">
                     <x-app.icon name="invoice" class="size-6 text-primary" />
                 </div>
-                <h3 class="mt-4 text-lg font-semibold text-ink">{{ __('Aucun document pour le moment') }}</h3>
+                <h3 class="mt-4 text-lg font-semibold text-ink">{{ __('Aucune facture pour le moment') }}</h3>
                 <p class="mt-2 max-w-sm text-sm text-slate-500">
-                    {{ __('Commencez par créer votre première facture ou votre premier devis.') }}
+                    {{ __('Commencez par créer votre première facture.') }}
                 </p>
-                <button type="button"
+                <a href="{{ route('pme.invoices.create') }}" wire:navigate
                     class="mt-6 inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
                     <flux:icon name="plus" class="size-4" />
                     {{ __('Créer une facture') }}
-                </button>
+                </a>
             </div>
 
         @else
@@ -910,11 +743,11 @@ new #[Title('Factures & Devis')] #[Layout('layouts::pme')] class extends Compone
                 <div class="flex size-12 items-center justify-center rounded-2xl bg-slate-100">
                     <flux:icon name="magnifying-glass" class="size-5 text-slate-500" />
                 </div>
-                <p class="mt-4 font-semibold text-ink">{{ __('Aucun document ne correspond') }}</p>
+                <p class="mt-4 font-semibold text-ink">{{ __('Aucune facture ne correspond') }}</p>
                 <p class="mt-1 text-sm text-slate-500">{{ __('Essayez de modifier vos filtres ou votre recherche.') }}</p>
                 <button
                     wire:click="$set('search', '')"
-                    x-on:click="$wire.typeFilter = 'all'; $wire.statusFilter = 'all'; $wire.period = ''"
+                    x-on:click="$wire.statusFilter = 'all'; $wire.period = ''"
                     class="mt-4 text-sm font-semibold text-primary hover:underline"
                 >
                     {{ __('Réinitialiser les filtres') }}

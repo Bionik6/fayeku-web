@@ -5,6 +5,7 @@ namespace Modules\PME\Invoicing\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
@@ -16,9 +17,9 @@ class Quote extends Model
     use HasUlid, SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'client_id', 'reference', 'status',
+        'company_id', 'client_id', 'reference', 'currency', 'status',
         'issued_at', 'valid_until',
-        'subtotal', 'tax_amount', 'total', 'notes',
+        'subtotal', 'tax_amount', 'total', 'discount', 'notes',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class Quote extends Model
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
+        'discount' => 'integer',
         'status' => QuoteStatus::class,
     ];
 
@@ -43,5 +45,10 @@ class Quote extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(QuoteLine::class);
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class, 'quote_id');
     }
 }
