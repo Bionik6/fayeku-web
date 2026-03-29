@@ -128,6 +128,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
             $this->lines = $quote->lines->map(fn ($line) => [
                 'description' => $line->description,
+                'type' => $line->type?->value ?? 'service',
                 'quantity' => $line->quantity,
                 'unit_price' => $line->unit_price,
             ])->toArray();
@@ -502,6 +503,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     {
         return collect($this->lines)->map(fn (array $line) => [
             'description' => $line['description'],
+            'type' => $line['type'] ?? 'service',
             'quantity' => (int) $line['quantity'],
             'unit_price' => (int) $line['unit_price'],
         ])->toArray();
@@ -511,6 +513,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     {
         return [
             'description' => '',
+            'type' => 'service',
             'quantity' => 1,
             'unit_price' => 0,
         ];
@@ -748,23 +751,35 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     @foreach ($lines as $index => $line)
                         <div wire:key="line-{{ $index }}" class="rounded-2xl border border-slate-200 bg-slate-50/30 p-5">
                             <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="min-w-0 flex-1">
-                                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }} <span class="text-rose-500">*</span></label>
-                                        <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                        @error("lines.{$index}.description") <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                                {{-- Row 1: Type (full) + Désignation (full) sur mobile, inline sur md --}}
+                                <div class="flex flex-col gap-4 md:flex-row md:items-start md:gap-3">
+                                    <div class="md:w-36 md:shrink-0">
+                                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Type') }}</label>
+                                        <select wire:model="lines.{{ $index }}.type" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
+                                            @foreach (\Modules\PME\Invoicing\Enums\LineType::cases() as $type)
+                                                <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                    @if (count($lines) > 1)
-                                        <button
-                                            type="button"
-                                            wire:click="removeLine({{ $index }})"
-                                            class="mt-7 shrink-0 rounded-xl border border-transparent p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                                        >
-                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                                        </button>
-                                    @endif
+                                    <div class="flex min-w-0 flex-1 items-start gap-3">
+                                        <div class="min-w-0 flex-1">
+                                            <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }} <span class="text-rose-500">*</span></label>
+                                            <input wire:model.blur="lines.{{ $index }}.description" type="text" placeholder="{{ __('Ex : Ciment, prestation…') }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                            @error("lines.{$index}.description") <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        @if (count($lines) > 1)
+                                            <button
+                                                type="button"
+                                                wire:click="removeLine({{ $index }})"
+                                                class="mt-7 shrink-0 rounded-xl border border-transparent p-2 text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                                            >
+                                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </div>
 
+                                {{-- Row 2: Qté / P.U. / Total (full width mobile → 3 cols md) --}}
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div>
                                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Quantité') }}</label>

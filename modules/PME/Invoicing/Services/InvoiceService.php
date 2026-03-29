@@ -201,6 +201,7 @@ class InvoiceService
         foreach ($lines as $line) {
             $invoice->lines()->create([
                 'description' => $line['description'],
+                'type' => $line['type'] ?? 'service',
                 'quantity' => (int) $line['quantity'],
                 'unit_price' => (int) $line['unit_price'],
                 'tax_rate' => $taxRate,

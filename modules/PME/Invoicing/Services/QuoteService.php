@@ -215,6 +215,7 @@ class QuoteService
             foreach ($quote->lines as $line) {
                 $invoice->lines()->create([
                     'description' => $line->description,
+                    'type' => $line->type?->value ?? 'service',
                     'quantity' => $line->quantity,
                     'unit_price' => $line->unit_price,
                     'tax_rate' => $line->tax_rate,
@@ -242,6 +243,7 @@ class QuoteService
         foreach ($lines as $line) {
             $quote->lines()->create([
                 'description' => $line['description'],
+                'type' => $line['type'] ?? 'service',
                 'quantity' => (int) $line['quantity'],
                 'unit_price' => (int) $line['unit_price'],
                 'tax_rate' => $taxRate,
