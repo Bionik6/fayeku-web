@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
+use Modules\Auth\Models\Subscription;
 use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Partnership\Models\CommissionPayment;
 use Modules\Shared\Models\User;
@@ -27,6 +28,44 @@ function commTestCreateFirm(int $smeCount = 3): array
             'started_at' => now()->subMonths(3),
         ]);
         $smes[] = $sme;
+    }
+
+    return compact('user', 'firm', 'smes');
+}
+
+/**
+ * Creates a firm with SMEs that have named companies and active subscriptions.
+ *
+ * @return array{user: User, firm: Company, smes: array<string, Company>}
+ */
+function commTestCreateFirmWithSubscriptions(): array
+{
+    $user = User::factory()->accountantFirm()->create();
+    $firm = Company::factory()->accountantFirm()->create();
+    $firm->users()->attach($user->id, ['role' => 'admin']);
+
+    $smeData = [
+        'kane_import' => ['name' => 'Kane Import SARL', 'plan' => 'essentiel', 'price' => 20_000],
+        'sow_btp' => ['name' => 'Sow BTP SARL', 'plan' => 'essentiel', 'price' => 20_000],
+        'mbaye_transport' => ['name' => 'Mbaye Transport', 'plan' => 'basique', 'price' => 10_000],
+        'coury_commerce' => ['name' => 'Coury Commerce', 'plan' => 'basique', 'price' => 10_000],
+    ];
+
+    $smes = [];
+    foreach ($smeData as $key => $data) {
+        $sme = Company::factory()->create(['name' => $data['name']]);
+        AccountantCompany::create([
+            'accountant_firm_id' => $firm->id,
+            'sme_company_id' => $sme->id,
+            'started_at' => now()->subMonths(3),
+        ]);
+        Subscription::factory()->active()->create([
+            'company_id' => $sme->id,
+            'plan_slug' => $data['plan'],
+            'price_paid' => $data['price'],
+            'invited_by_firm_id' => $firm->id,
+        ]);
+        $smes[$key] = $sme;
     }
 
     return compact('user', 'firm', 'smes');
@@ -181,4 +220,139 @@ test('l\'historique affiche les versements passés', function () {
     $payments = $component->get('payments');
     expect($payments)->toHaveCount(1);
     expect($payments->first()->amount)->toBe(187500);
+});
+
+// ─── Filtres ─────────────────────────────────────────────────────────────────
+
+test('le filtre par statut "pending" retourne uniquement les commissions en attente', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['sow_btp']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'paid', 'paid_at' => now()]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('filterStatus', 'pending');
+
+    expect($component->get('monthCommissions'))->toHaveCount(1);
+    expect($component->get('monthCommissions')->first()->status)->toBe('pending');
+});
+
+test('le filtre par statut "paid" retourne uniquement les commissions versées', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['sow_btp']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'paid', 'paid_at' => now()]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('filterStatus', 'paid');
+
+    expect($component->get('monthCommissions'))->toHaveCount(1);
+    expect($component->get('monthCommissions')->first()->status)->toBe('paid');
+});
+
+test('le filtre par offre "essentiel" retourne uniquement les clients Essentiel', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['mbaye_transport']->id, 'amount' => 1_500, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('filterPlan', 'essentiel');
+
+    $results = $component->get('monthCommissions');
+    expect($results)->toHaveCount(1);
+    expect($results->first()->smeCompany->subscription->plan_slug)->toBe('essentiel');
+});
+
+test('le filtre par offre "basique" retourne uniquement les clients Basique', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['sow_btp']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['mbaye_transport']->id, 'amount' => 1_500, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['coury_commerce']->id, 'amount' => 1_500, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('filterPlan', 'basique');
+
+    expect($component->get('monthCommissions'))->toHaveCount(2);
+});
+
+test('la recherche par nom de client filtre correctement', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['mbaye_transport']->id, 'amount' => 1_500, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('search', 'kane');
+
+    expect($component->get('monthCommissions'))->toHaveCount(1);
+    expect($component->get('monthCommissions')->first()->smeCompany->name)->toBe('Kane Import SARL');
+});
+
+test('la recherche est insensible à la casse', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('search', 'KANE');
+
+    expect($component->get('monthCommissions'))->toHaveCount(1);
+});
+
+test('les filtres combinés affinent les résultats', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['sow_btp']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'paid', 'paid_at' => now()]);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['mbaye_transport']->id, 'amount' => 1_500, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('filterPlan', 'essentiel')
+        ->set('filterStatus', 'pending');
+
+    expect($component->get('monthCommissions'))->toHaveCount(1);
+    expect($component->get('monthCommissions')->first()->smeCompany->name)->toBe('Kane Import SARL');
+});
+
+test('resetFilters remet tous les filtres à zéro', function () {
+    ['user' => $user] = commTestCreateFirm(0);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('search', 'kane')
+        ->set('filterPlan', 'essentiel')
+        ->set('filterStatus', 'pending');
+
+    expect($component->get('hasActiveFilters'))->toBeTrue();
+
+    $component->call('resetFilters');
+
+    expect($component->get('search'))->toBe('');
+    expect($component->get('filterPlan'))->toBe('');
+    expect($component->get('filterStatus'))->toBe('');
+    expect($component->get('hasActiveFilters'))->toBeFalse();
+});
+
+test('le monthTotal n\'est pas affecté par les filtres actifs', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = commTestCreateFirmWithSubscriptions();
+
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['kane_import']->id, 'amount' => 3_000, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+    Commission::create(['accountant_firm_id' => $firm->id, 'sme_company_id' => $smes['mbaye_transport']->id, 'amount' => 1_500, 'period_month' => now()->startOfMonth(), 'status' => 'pending']);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::commissions.index')
+        ->set('filterPlan', 'essentiel');
+
+    // Filtered table shows 1, but KPI total stays at 4 500
+    expect($component->get('monthCommissions'))->toHaveCount(1);
+    expect($component->get('monthTotal'))->toBe(4_500);
 });

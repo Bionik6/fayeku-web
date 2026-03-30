@@ -36,6 +36,12 @@ new #[Title('Commissions')] class extends Component
 
     public int $pendingClientsCount = 0;
 
+    public string $search = '';
+
+    public string $filterPlan = '';
+
+    public string $filterStatus = '';
+
     public function mount(): void
     {
         $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
@@ -84,13 +90,67 @@ new #[Title('Commissions')] class extends Component
             ->whereYear('period_month', now()->year)
             ->whereMonth('period_month', now()->month)
             ->with(['smeCompany.subscription'])
-            ->get();
+            ->get()
+            ->when($this->search !== '', fn ($c) => $c->filter(
+                fn ($commission) => str_contains(
+                    mb_strtolower($commission->smeCompany?->name ?? ''),
+                    mb_strtolower(trim($this->search))
+                )
+            ))
+            ->when($this->filterPlan !== '', fn ($c) => $c->filter(
+                fn ($commission) => ($commission->smeCompany?->subscription?->plan_slug ?? '') === $this->filterPlan
+            ))
+            ->when($this->filterStatus !== '', fn ($c) => $c->filter(
+                fn ($commission) => $commission->status === $this->filterStatus
+            ))
+            ->values();
     }
 
     #[Computed]
     public function monthTotal(): int
     {
+        if (! $this->firm) {
+            return 0;
+        }
+
+        return (int) Commission::query()
+            ->where('accountant_firm_id', $this->firm->id)
+            ->whereYear('period_month', now()->year)
+            ->whereMonth('period_month', now()->month)
+            ->sum('amount');
+    }
+
+    #[Computed]
+    public function filteredTotal(): int
+    {
         return $this->monthCommissions->sum('amount');
+    }
+
+    #[Computed]
+    public function hasActiveFilters(): bool
+    {
+        return $this->search !== '' || $this->filterPlan !== '' || $this->filterStatus !== '';
+    }
+
+    /** @return array{all: int, pending: int, paid: int} */
+    #[Computed]
+    public function statusCounts(): array
+    {
+        if (! $this->firm) {
+            return ['all' => 0, 'pending' => 0, 'paid' => 0];
+        }
+
+        $commissions = Commission::query()
+            ->where('accountant_firm_id', $this->firm->id)
+            ->whereYear('period_month', now()->year)
+            ->whereMonth('period_month', now()->month)
+            ->get();
+
+        return [
+            'all' => $commissions->count(),
+            'pending' => $commissions->where('status', 'pending')->count(),
+            'paid' => $commissions->where('status', 'paid')->count(),
+        ];
     }
 
     #[Computed]
@@ -147,6 +207,18 @@ new #[Title('Commissions')] class extends Component
     public function toggleShowAll(): void
     {
         $this->showAllCommissions = ! $this->showAllCommissions;
+    }
+
+    public function setFilterStatus(string $status): void
+    {
+        $this->filterStatus = $status === 'all' ? '' : $status;
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->filterPlan = '';
+        $this->filterStatus = '';
     }
 }; ?>
 
@@ -347,18 +419,89 @@ new #[Title('Commissions')] class extends Component
             </div>
             @if ($this->monthTotal > 0)
                 <span class="text-sm font-bold text-accent">
-                    Total du mois : {{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
+                    @if ($this->hasActiveFilters)
+                        {{ __('Total filtré') }} : {{ number_format($this->filteredTotal, 0, ',', ' ') }} FCFA
+                    @else
+                        {{ __('Total du mois') }} : {{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
+                    @endif
                 </span>
             @endif
         </div>
 
+        {{-- ─── Filtres ──────────────────────────────────────────────────────── --}}
+        <div class="border-t border-slate-100 px-6 py-5">
+            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les commissions') }}</p>
+
+            {{-- Onglets statut --}}
+            <div class="flex flex-wrap items-center gap-2">
+                @foreach ([
+                    'all'     => ['label' => 'Tous',       'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                    'pending' => ['label' => 'En attente', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',  'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                    'paid'    => ['label' => 'Versées',    'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                ] as $key => $tab)
+                    @php $isActive = ($key === 'all' && $filterStatus === '') || $filterStatus === $key; @endphp
+                    <button
+                        wire:click="setFilterStatus('{{ $key }}')"
+                        @class([
+                            'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition',
+                            $tab['activeClass']                                                                            => $isActive,
+                            'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => ! $isActive,
+                        ])
+                    >
+                        @if ($tab['dot'])
+                            <span @class(['size-2 rounded-full', 'bg-white' => $isActive, $tab['dot'] => ! $isActive])></span>
+                        @endif
+                        {{ $tab['label'] }}
+                        <span @class([
+                            'rounded-full px-1.5 py-px text-sm font-bold',
+                            'bg-white/20 text-white' => $isActive,
+                            $tab['badgeInactive']    => ! $isActive,
+                        ])>{{ $this->statusCounts[$key] }}</span>
+                    </button>
+                @endforeach
+            </div>
+
+            {{-- Recherche + filtre plan --}}
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+                <div class="relative flex-1">
+                    <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    <input
+                        wire:model.live.debounce.300ms="search"
+                        type="text"
+                        placeholder="{{ __('Rechercher un client…') }}"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    />
+                </div>
+
+                <x-select-native>
+                    <select
+                        wire:model.live="filterPlan"
+                        class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 sm:w-48"
+                    >
+                        <option value="">{{ __('Toutes les offres') }}</option>
+                        <option value="essentiel">{{ __('Essentiel') }}</option>
+                        <option value="basique">{{ __('Basique') }}</option>
+                    </select>
+                </x-select-native>
+            </div>
+        </div>
+
         @if ($this->monthCommissions->isEmpty())
             <div class="px-6 pb-6">
-                <p class="text-sm text-slate-500">{{ __('Aucune commission ce mois-ci.') }}</p>
+                <p class="text-sm text-slate-500">
+                    @if ($this->hasActiveFilters)
+                        {{ __('Aucun résultat pour ces filtres.') }}
+                    @else
+                        {{ __('Aucune commission ce mois-ci.') }}
+                    @endif
+                </p>
             </div>
         @else
             @php
-                $visibleCommissions = $showAllCommissions
+                $showAll = $showAllCommissions || $this->hasActiveFilters;
+                $visibleCommissions = $showAll
                     ? $this->monthCommissions
                     : $this->monthCommissions->take(3);
                 $remainingCount = $this->monthCommissions->count() - 3;
@@ -431,26 +574,28 @@ new #[Title('Commissions')] class extends Component
                 </table>
             </div>
 
-            @if (! $showAllCommissions && $remainingCount > 0)
-                <div class="border-t border-slate-100 px-6 py-4 text-center">
-                    <button
-                        type="button"
-                        wire:click="toggleShowAll"
-                        class="text-sm font-medium text-slate-500 hover:text-primary"
-                    >
-                        {{ __('Afficher les') }} {{ $remainingCount }} {{ __('autres clients') }}
-                    </button>
-                </div>
-            @elseif ($showAllCommissions && $this->monthCommissions->count() > 3)
-                <div class="border-t border-slate-100 px-6 py-4 text-center">
-                    <button
-                        type="button"
-                        wire:click="toggleShowAll"
-                        class="text-sm font-medium text-primary underline"
-                    >
-                        {{ __('Réduire') }}
-                    </button>
-                </div>
+            @if (! $this->hasActiveFilters)
+                @if (! $showAllCommissions && $remainingCount > 0)
+                    <div class="border-t border-slate-100 px-6 py-4 text-center">
+                        <button
+                            type="button"
+                            wire:click="toggleShowAll"
+                            class="text-sm font-medium text-slate-500 hover:text-primary"
+                        >
+                            {{ __('Afficher les') }} {{ $remainingCount }} {{ __('autres clients') }}
+                        </button>
+                    </div>
+                @elseif ($showAllCommissions && $this->monthCommissions->count() > 3)
+                    <div class="border-t border-slate-100 px-6 py-4 text-center">
+                        <button
+                            type="button"
+                            wire:click="toggleShowAll"
+                            class="text-sm font-medium text-primary underline"
+                        >
+                            {{ __('Réduire') }}
+                        </button>
+                    </div>
+                @endif
             @endif
         @endif
     </section>

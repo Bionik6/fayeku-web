@@ -12,6 +12,7 @@ use Modules\Auth\Models\Subscription;
 use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Partnership\Models\CommissionPayment;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Partnership\Services\CommissionService;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -353,7 +354,10 @@ class DashboardDemoSeeder extends Seeder
     }
 
     /**
-     * Commissions du mois courant — total exactement 187 500 F.
+     * Commissions du mois courant — commission = abonnement × 15 %.
+     *
+     * Essentiel (20 000 F) × 15 % = 3 000 F
+     * Basique   (10 000 F) × 15 % = 1 500 F
      *
      * @param  array<string, Company>  $smes
      */
@@ -361,29 +365,28 @@ class DashboardDemoSeeder extends Seeder
     {
         /** @var array<string, int> */
         $amounts = [
-            // 5 × 15 000 F = 75 000 F
-            'kane_import' => 15_000,
-            'thies_industries' => 15_000,
-            'sow_btp' => 15_000,
-            'coulibaly_tech' => 15_000,
-            'ba_industries' => 15_000,
-            // 8 × 10 000 F = 80 000 F
-            'mbaye_transport' => 10_000,
-            'coury_commerce' => 10_000,
-            'diye_consulting' => 10_000,
-            'diop_services' => 10_000,
-            'dakar_pharma' => 10_000,
-            'ndiaye_commerce' => 10_000,
-            'sy_consulting' => 10_000,
-            'traore_agriculture' => 10_000,
-            // 5 × 6 500 F = 32 500 F
-            'toure_immobilier' => 6_500,
-            'ly_fashion' => 6_500,
-            'kone_services' => 6_500,
-            'cisse_associes' => 6_500,
-            'fall_digital' => 6_500,
+            // 11 × 3 000 F = 33 000 F (Essentiel)
+            'kane_import' => CommissionService::calculate(20_000),
+            'thies_industries' => CommissionService::calculate(20_000),
+            'sow_btp' => CommissionService::calculate(20_000),
+            'coulibaly_tech' => CommissionService::calculate(20_000),
+            'ba_industries' => CommissionService::calculate(20_000),
+            'diye_consulting' => CommissionService::calculate(20_000),
+            'dakar_pharma' => CommissionService::calculate(20_000),
+            'sy_consulting' => CommissionService::calculate(20_000),
+            'toure_immobilier' => CommissionService::calculate(20_000),
+            'cisse_associes' => CommissionService::calculate(20_000),
+            'fall_digital' => CommissionService::calculate(20_000),
+            // 7 × 1 500 F = 10 500 F (Basique)
+            'mbaye_transport' => CommissionService::calculate(10_000),
+            'coury_commerce' => CommissionService::calculate(10_000),
+            'diop_services' => CommissionService::calculate(10_000),
+            'ndiaye_commerce' => CommissionService::calculate(10_000),
+            'traore_agriculture' => CommissionService::calculate(10_000),
+            'ly_fashion' => CommissionService::calculate(10_000),
+            'kone_services' => CommissionService::calculate(10_000),
         ];
-        // Total : 75 000 + 80 000 + 32 500 = 187 500 F ✓
+        // Total : 33 000 + 10 500 = 43 500 F ✓
 
         foreach ($amounts as $key => $amount) {
             if (! isset($smes[$key])) {
@@ -404,9 +407,9 @@ class DashboardDemoSeeder extends Seeder
                     'accountant_firm_id' => $firm->id,
                     'sme_company_id' => $smes[$key]->id,
                     'amount' => $amount,
-                    'period_month' => now()->subMonths($monthsAgo)->startOfMonth(),
+                    'period_month' => now()->subMonthsNoOverflow($monthsAgo)->startOfMonth(),
                     'status' => 'paid',
-                    'paid_at' => now()->subMonths($monthsAgo)->endOfMonth(),
+                    'paid_at' => now()->subMonthsNoOverflow($monthsAgo)->endOfMonth(),
                 ]);
             }
         }
@@ -506,10 +509,10 @@ class DashboardDemoSeeder extends Seeder
         // Mois M-1 : 16 clients actifs
         CommissionPayment::create([
             'accountant_firm_id' => $firm->id,
-            'period_month' => now()->subMonths(1)->startOfMonth(),
+            'period_month' => now()->subMonthsNoOverflow(1)->startOfMonth(),
             'active_clients_count' => 16,
-            'amount' => 162_000,
-            'paid_at' => now()->subMonths(1)->startOfMonth()->addDays(4),
+            'amount' => 37_500,
+            'paid_at' => now()->subMonthsNoOverflow(1)->startOfMonth()->addDays(4),
             'payment_method' => 'wave',
             'status' => 'paid',
         ]);
@@ -517,10 +520,10 @@ class DashboardDemoSeeder extends Seeder
         // Mois M-2 : 14 clients actifs
         CommissionPayment::create([
             'accountant_firm_id' => $firm->id,
-            'period_month' => now()->subMonths(2)->startOfMonth(),
+            'period_month' => now()->subMonthsNoOverflow(2)->startOfMonth(),
             'active_clients_count' => 14,
-            'amount' => 138_000,
-            'paid_at' => now()->subMonths(2)->startOfMonth()->addDays(4),
+            'amount' => 33_000,
+            'paid_at' => now()->subMonthsNoOverflow(2)->startOfMonth()->addDays(4),
             'payment_method' => 'wave',
             'status' => 'paid',
         ]);
@@ -528,10 +531,10 @@ class DashboardDemoSeeder extends Seeder
         // Mois M-3 : 12 clients actifs
         CommissionPayment::create([
             'accountant_firm_id' => $firm->id,
-            'period_month' => now()->subMonths(3)->startOfMonth(),
+            'period_month' => now()->subMonthsNoOverflow(3)->startOfMonth(),
             'active_clients_count' => 12,
-            'amount' => 112_500,
-            'paid_at' => now()->subMonths(3)->startOfMonth()->addDays(4),
+            'amount' => 28_500,
+            'paid_at' => now()->subMonthsNoOverflow(3)->startOfMonth()->addDays(4),
             'payment_method' => 'wave',
             'status' => 'paid',
         ]);
@@ -541,7 +544,7 @@ class DashboardDemoSeeder extends Seeder
             'accountant_firm_id' => $firm->id,
             'period_month' => now()->startOfMonth(),
             'active_clients_count' => 18,
-            'amount' => 187_500,
+            'amount' => 43_500,
             'paid_at' => null,
             'payment_method' => null,
             'status' => 'pending',
