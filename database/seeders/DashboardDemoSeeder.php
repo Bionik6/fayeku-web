@@ -506,35 +506,35 @@ class DashboardDemoSeeder extends Seeder
      */
     private function createCommissionPayments(Company $firm): void
     {
-        // Mois M-1 : 16 clients actifs
+        // Mois M-1 : 16 clients actifs — versé le 5 du mois suivant
         CommissionPayment::create([
             'accountant_firm_id' => $firm->id,
             'period_month' => now()->subMonthsNoOverflow(1)->startOfMonth(),
             'active_clients_count' => 16,
             'amount' => 37_500,
-            'paid_at' => now()->subMonthsNoOverflow(1)->startOfMonth()->addDays(4),
+            'paid_at' => now()->startOfMonth()->addDays(4),
             'payment_method' => 'wave',
             'status' => 'paid',
         ]);
 
-        // Mois M-2 : 14 clients actifs
+        // Mois M-2 : 14 clients actifs — versé le 5 du mois suivant
         CommissionPayment::create([
             'accountant_firm_id' => $firm->id,
             'period_month' => now()->subMonthsNoOverflow(2)->startOfMonth(),
             'active_clients_count' => 14,
             'amount' => 33_000,
-            'paid_at' => now()->subMonthsNoOverflow(2)->startOfMonth()->addDays(4),
+            'paid_at' => now()->subMonthsNoOverflow(1)->startOfMonth()->addDays(4),
             'payment_method' => 'wave',
             'status' => 'paid',
         ]);
 
-        // Mois M-3 : 12 clients actifs
+        // Mois M-3 : 12 clients actifs — versé le 5 du mois suivant
         CommissionPayment::create([
             'accountant_firm_id' => $firm->id,
             'period_month' => now()->subMonthsNoOverflow(3)->startOfMonth(),
             'active_clients_count' => 12,
             'amount' => 28_500,
-            'paid_at' => now()->subMonthsNoOverflow(3)->startOfMonth()->addDays(4),
+            'paid_at' => now()->subMonthsNoOverflow(2)->startOfMonth()->addDays(4),
             'payment_method' => 'wave',
             'status' => 'paid',
         ]);

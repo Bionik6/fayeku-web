@@ -628,7 +628,7 @@ new #[Title('Commissions')] class extends Component
                         @foreach ($this->payments as $payment)
                             <tr class="transition hover:bg-slate-50/50">
                                 <td class="whitespace-nowrap px-6 py-3.5 font-medium text-ink">
-                                    {{ ucfirst($payment->period_month->locale('fr_FR')->translatedFormat('M Y')) }}
+                                    {{ Str::ucfirst($payment->period_month->locale('fr_FR')->translatedFormat('F')) }} {{ $payment->period_month->translatedFormat('Y') }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
                                     {{ $payment->active_clients_count }}
@@ -637,7 +637,7 @@ new #[Title('Commissions')] class extends Component
                                     {{ number_format($payment->amount, 0, ',', ' ') }} FCFA
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
-                                    {{ $payment->paid_at?->locale('fr_FR')->translatedFormat('j M') ?? '—' }}
+                                    {{ $payment->paid_at ? $payment->paid_at->locale('fr_FR')->translatedFormat('j') . ' ' . Str::ucfirst($payment->paid_at->locale('fr_FR')->translatedFormat('F')) . ' ' . $payment->paid_at->translatedFormat('Y') : '—' }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     @if ($payment->status === 'paid')
