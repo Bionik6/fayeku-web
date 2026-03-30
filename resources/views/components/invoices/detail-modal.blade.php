@@ -26,25 +26,25 @@
     <div class="relative w-full max-w-[1200px] overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div class="flex items-start justify-between border-b border-slate-100 px-10 py-7">
             <div>
-                <p class="text-xs font-semibold tracking-[0.24em] text-slate-400">{{ __('Facture') }}</p>
+                <p class="text-sm font-semibold tracking-[0.24em] text-slate-400">{{ __('Facture') }}</p>
                 <h2 class="mt-1 text-xl font-bold text-ink">{{ $inv->reference }}</h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    {{ __('Émise le') }} {{ $inv->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
-                    &nbsp;·&nbsp;
-                    {{ __('Échéance le') }} {{ $inv->due_at->locale('fr_FR')->translatedFormat('j F Y') }}
-                </p>
+                <div class="mt-1 flex items-center gap-3">
+                    <p class="text-sm text-slate-500">
+                        {{ __('Émise le') }} {{ $inv->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                        &nbsp;·&nbsp;
+                        {{ __('Échéance le') }} {{ $inv->due_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                    </p>
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
+                        {{ $statusConfig['label'] }}
+                    </span>
+                </div>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $statusConfig['class'] }}">
-                    {{ $statusConfig['label'] }}
-                </span>
-                <button
-                    wire:click="{{ $closeAction }}"
-                    class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                >
-                    <flux:icon name="x-mark" class="size-5" />
-                </button>
-            </div>
+            <button
+                wire:click="{{ $closeAction }}"
+                class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+                <flux:icon name="x-mark" class="size-5" />
+            </button>
         </div>
 
         <div class="max-h-[80vh] overflow-y-auto">
@@ -74,7 +74,7 @@
                                     </p>
                                 @endif
                                 @if ($client->tax_id)
-                                    <p class="mt-2 text-xs font-mono text-slate-400">{{ __('Référence fiscale') }} : {{ $client->tax_id }}</p>
+                                    <p class="mt-2 text-sm font-mono text-slate-400">{{ __('Référence fiscale') }} : {{ $client->tax_id }}</p>
                                 @endif
                             </div>
                         </div>
@@ -89,24 +89,24 @@
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-slate-100 text-left">
-                                    <th class="pb-2 pr-4 text-xs font-semibold text-slate-500">{{ __('Description') }}</th>
-                                    <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('Qté') }}</th>
-                                    <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('PU HT') }}</th>
-                                    <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('TVA') }}</th>
-                                    <th class="pb-2 pl-4 text-right text-xs font-semibold text-slate-500">{{ __('Total HT') }}</th>
+                                    <th class="pb-2 pr-4 text-sm font-semibold text-slate-500">{{ __('Description') }}</th>
+                                    <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Qté') }}</th>
+                                    <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('PU HT') }}</th>
+                                    <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('TVA') }}</th>
+                                    <th class="pb-2 pl-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Total HT') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 @forelse ($inv->lines as $line)
                                     <tr>
                                         <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
-                                        <td class="py-3 px-4 text-right tabular-nums text-slate-600">{{ $line->quantity }}</td>
-                                        <td class="py-3 px-4 text-right tabular-nums text-slate-600">
-                                            {{ number_format($line->unit_price, 0, ',', ' ') }} F
+                                        <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
+                                        <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
+                                            {{ number_format($line->unit_price, 0, ',', ' ') }} FCFA
                                         </td>
-                                        <td class="py-3 px-4 text-right tabular-nums text-slate-500">{{ $line->tax_rate }} %</td>
-                                        <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink">
-                                            {{ number_format($line->total, 0, ',', ' ') }} F
+                                        <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
+                                        <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
+                                            {{ number_format($line->total, 0, ',', ' ') }} FCFA
                                         </td>
                                     </tr>
                                 @empty
@@ -118,20 +118,20 @@
                             <tfoot class="border-t border-slate-200">
                                 <tr>
                                     <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
-                                    <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink">
-                                        {{ number_format($inv->subtotal, 0, ',', ' ') }} F
+                                    <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
+                                        {{ number_format($inv->subtotal, 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
-                                    <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink">
-                                        {{ number_format($inv->tax_amount, 0, ',', ' ') }} F
+                                    <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
+                                        {{ number_format($inv->tax_amount, 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
-                                    <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink">
-                                        {{ number_format($inv->total, 0, ',', ' ') }} F
+                                    <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
+                                        {{ number_format($inv->total, 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                             </tfoot>
@@ -168,37 +168,19 @@
                         @endif
                     </dl>
 
-                    <div class="mt-6 space-y-2 border-t border-slate-200 pt-4 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">{{ __('Émise le') }}</span>
-                            <span class="text-ink">{{ $inv->issued_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">{{ __('Échéance') }}</span>
-                            <span @class([
-                                'font-medium',
-                                'text-rose-600' => $inv->status === \Modules\PME\Invoicing\Enums\InvoiceStatus::Overdue,
-                                'text-ink' => $inv->status !== \Modules\PME\Invoicing\Enums\InvoiceStatus::Overdue,
-                            ])>{{ $inv->due_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
-                        </div>
-                        @if ($inv->paid_at)
+                    @if ($inv->paid_at)
+                        <div class="mt-6 border-t border-slate-200 pt-4 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-slate-500">{{ __('Payée le') }}</span>
                                 <span class="text-teal-600">{{ $inv->paid_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
                             </div>
-                        @endif
-                    </div>
-
-                    <div class="mt-6">
-                        <span class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold {{ $statusConfig['class'] }}">
-                            {{ $statusConfig['label'] }}
-                        </span>
-                    </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <div class="flex justify-end border-t border-slate-100 px-10 py-5">
+        <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-10 py-5">
             <flux:button variant="ghost" wire:click="{{ $closeAction }}">
                 {{ __('Fermer') }}
             </flux:button>

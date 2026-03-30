@@ -791,7 +791,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             <div class="relative w-full max-w-[1200px] overflow-hidden rounded-2xl bg-white shadow-2xl">
                 <div class="flex items-start justify-between border-b border-slate-100 px-10 py-7">
                     <div>
-                        <p class="text-xs font-semibold tracking-[0.24em] text-slate-400">{{ __('Devis') }}</p>
+                        <p class="text-sm font-semibold tracking-[0.24em] text-slate-400">{{ __('Devis') }}</p>
                         <h2 class="mt-1 text-xl font-bold text-ink">{{ $q->reference }}</h2>
                         <p class="mt-1 text-sm text-slate-500">
                             {{ __('Émis le') }} {{ $q->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
@@ -802,11 +802,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                         </p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $statusConfig['class'] }}">
-                            {{ $statusConfig['label'] }}
-                        </span>
                         @if ($q->invoice)
-                            <span class="inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+                            <span class="inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-700">
                                 {{ __('Facturé') }}
                             </span>
                         @endif
@@ -854,24 +851,24 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="border-b border-slate-100 text-left">
-                                            <th class="pb-2 pr-4 text-xs font-semibold text-slate-500">{{ __('Description') }}</th>
-                                            <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('Qté') }}</th>
-                                            <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('PU HT') }}</th>
-                                            <th class="pb-2 px-4 text-right text-xs font-semibold text-slate-500">{{ __('TVA') }}</th>
-                                            <th class="pb-2 pl-4 text-right text-xs font-semibold text-slate-500">{{ __('Total HT') }}</th>
+                                            <th class="pb-2 pr-4 text-sm font-semibold text-slate-500">{{ __('Description') }}</th>
+                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Qté') }}</th>
+                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('PU HT') }}</th>
+                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('TVA') }}</th>
+                                            <th class="pb-2 pl-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Total HT') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-50">
                                         @forelse ($q->lines as $line)
                                             <tr>
                                                 <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
-                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600">{{ $line->quantity }}</td>
-                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600">
-                                                    {{ number_format($line->unit_price, 0, ',', ' ') }} F
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
+                                                    {{ number_format($line->unit_price, 0, ',', ' ') }} FCFA
                                                 </td>
-                                                <td class="py-3 px-4 text-right tabular-nums text-slate-500">{{ $line->tax_rate }} %</td>
-                                                <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink">
-                                                    {{ number_format($line->total, 0, ',', ' ') }} F
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
+                                                <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
+                                                    {{ number_format($line->total, 0, ',', ' ') }} FCFA
                                                 </td>
                                             </tr>
                                         @empty
@@ -883,20 +880,20 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                     <tfoot class="border-t border-slate-200">
                                         <tr>
                                             <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
-                                            <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink">
-                                                {{ number_format($q->subtotal, 0, ',', ' ') }} F
+                                            <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
+                                                {{ number_format($q->subtotal, 0, ',', ' ') }} FCFA
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
-                                            <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink">
-                                                {{ number_format($q->tax_amount, 0, ',', ' ') }} F
+                                            <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
+                                                {{ number_format($q->tax_amount, 0, ',', ' ') }} FCFA
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
-                                            <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink">
-                                                {{ number_format($q->total, 0, ',', ' ') }} F
+                                            <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
+                                                {{ number_format($q->total, 0, ',', ' ') }} FCFA
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -921,27 +918,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                 </div>
                             </dl>
 
-                            <div class="mt-6 space-y-2 border-t border-slate-200 pt-4 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">{{ __('Émis le') }}</span>
-                                    <span class="text-ink">{{ $q->issued_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">{{ __('Valide jusqu\'au') }}</span>
-                                    <span @class([
-                                        'font-medium',
-                                        'text-rose-600' => $q->valid_until && $q->valid_until->isPast(),
-                                        'text-ink' => !$q->valid_until || !$q->valid_until->isPast(),
-                                    ])>{{ $q->valid_until?->locale('fr_FR')->translatedFormat('j M Y') ?? '—' }}</span>
-                                </div>
-                            </div>
-
-                            <div class="mt-6">
-                                <span class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold {{ $statusConfig['class'] }}">
-                                    {{ $statusConfig['label'] }}
-                                </span>
-                            </div>
-
                             @if (in_array($q->status, [\Modules\PME\Invoicing\Enums\QuoteStatus::Sent, \Modules\PME\Invoicing\Enums\QuoteStatus::Accepted]) && ! $q->invoice)
                                 <div class="mt-6">
                                     <button
@@ -958,7 +934,10 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     </div>
                 </div>
 
-                <div class="flex justify-end border-t border-slate-100 px-10 py-5">
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-10 py-5">
+                    <span class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold {{ $statusConfig['class'] }}">
+                        {{ $statusConfig['label'] }}
+                    </span>
                     <flux:button variant="ghost" wire:click="closeQuote">
                         {{ __('Fermer') }}
                     </flux:button>
