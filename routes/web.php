@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MarketingPageController;
 use Illuminate\Support\Facades\Route;
+use Modules\Compta\Export\Http\Controllers\ExportDownloadController;
 use Modules\PME\Invoicing\Http\Controllers\InvoicePdfController;
 use Modules\PME\Invoicing\Http\Controllers\QuotePdfController;
 use Modules\PME\Treasury\Http\Controllers\TreasuryExportController;
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix
     Route::livewire('clients', 'pages::clients.index')->name('clients.index');
     Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
     Route::livewire('exports', 'pages::export.index')->name('export.index');
+    Route::get('exports/{exportHistory}/download', ExportDownloadController::class)->name('export.download');
     Route::livewire('commissions', 'pages::commissions.index')->name('commissions.index');
     Route::livewire('invitations', 'pages::invitations.index')->name('invitations.index');
     Route::livewire('support', 'pages::support.index')->name('support.index');

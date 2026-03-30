@@ -120,7 +120,7 @@ test('l\'historique affiche les exports passés', function () {
         ->assertSee('Sage 100')
         ->assertSee('Lancé par')
         ->assertSee('Statut')
-        ->assertSee('Télécharger')
+        ->assertSee('Indisponible')
         ->assertSee('Terminé');
 });
 
@@ -203,7 +203,7 @@ test('toggleAllClients sélectionne puis désélectionne tous les clients', func
 
 // ─── generateExport ───────────────────────────────────────────────────────────
 
-test('generateExport crée un enregistrement ExportHistory', function () {
+test('generateExport crée un enregistrement ExportHistory pour le format Excel', function () {
     ['user' => $user, 'firm' => $firm, 'smes' => $smes] = exportTestCreateFirm(2);
 
     exportTestCreateInvoice($smes[0], ['issued_at' => now()]);
@@ -212,14 +212,31 @@ test('generateExport crée un enregistrement ExportHistory', function () {
     Livewire::actingAs($user)
         ->test('pages::export.index')
         ->call('mountExportModal')
+        ->set('exportFormat', 'excel')
         ->call('generateExport');
 
     expect(ExportHistory::where('firm_id', $firm->id)->count())->toBe(1);
 
     $history = ExportHistory::where('firm_id', $firm->id)->first();
-    expect($history->format)->toBe(ExportFormat::Sage100);
+    expect($history->format)->toBe(ExportFormat::Excel);
     expect($history->scope)->toBe('all');
     expect($history->clients_count)->toBe(2);
+});
+
+test('generateExport ne crée pas d\'historique pour les formats non disponibles', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = exportTestCreateFirm(1);
+
+    exportTestCreateInvoice($smes[0], ['issued_at' => now()]);
+
+    foreach (['sage100', 'ebp'] as $format) {
+        Livewire::actingAs($user)
+            ->test('pages::export.index')
+            ->call('mountExportModal')
+            ->set('exportFormat', $format)
+            ->call('generateExport');
+    }
+
+    expect(ExportHistory::where('firm_id', $firm->id)->count())->toBe(0);
 });
 
 test('generateExport en mode manuel utilise seulement les clients sélectionnés', function () {
@@ -230,6 +247,7 @@ test('generateExport en mode manuel utilise seulement les clients sélectionnés
     Livewire::actingAs($user)
         ->test('pages::export.index')
         ->call('mountExportModal')
+        ->set('exportFormat', 'excel')
         ->set('clientSelection', 'manual')
         ->set('selectedClientIds', [$smes[0]->id])
         ->call('generateExport');

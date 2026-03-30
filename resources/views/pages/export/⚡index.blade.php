@@ -9,6 +9,7 @@ use Modules\Auth\Models\Company;
 use Modules\Compta\Export\Enums\ExportFormat;
 use Modules\Compta\Export\Models\ExportHistory;
 use Modules\Compta\Portfolio\Services\PortfolioService;
+use Modules\Compta\Export\Services\ExportService;
 use Modules\PME\Invoicing\Models\Invoice;
 
 new #[Title('Export groupé')] class extends Component {
@@ -206,7 +207,16 @@ new #[Title('Export groupé')] class extends Component {
             return;
         }
 
-        ExportHistory::create([
+        $format = ExportFormat::from($this->exportFormat);
+
+        if ($format !== ExportFormat::Excel) {
+            $this->modal('export-groupe')->close();
+            $this->dispatch('toast', type: 'warning', title: __('Le format :format n\'est pas encore disponible.', ['format' => strtoupper($format->value)]));
+
+            return;
+        }
+
+        $exportHistory = ExportHistory::create([
             'firm_id' => $this->firm->id,
             'user_id' => auth()->id(),
             'period' => $this->exportPeriod,
@@ -216,12 +226,15 @@ new #[Title('Export groupé')] class extends Component {
             'clients_count' => count($clientIds),
         ]);
 
+        app(ExportService::class)->generate($exportHistory);
+
         unset($this->exportHistories);
 
         $this->modal('export-groupe')->close();
 
-        // TODO: Implement actual file generation via ExportService
         $this->dispatch('toast', type: 'success', title: __('Export généré avec succès.'));
+
+        $this->redirect(route('export.download', $exportHistory), navigate: false);
     }
 
     public function exportClient(string $companyId): void
@@ -391,13 +404,17 @@ new #[Title('Export groupé')] class extends Component {
                                     </span>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-right">
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-slate-50"
-                                    >
-                                        <x-app.icon name="download" class="size-3.5" />
-                                        {{ __('Télécharger') }}
-                                    </button>
+                                    @if ($history->file_path)
+                                        <a
+                                            href="{{ route('export.download', $history) }}"
+                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-slate-50"
+                                        >
+                                            <x-app.icon name="download" class="size-3.5" />
+                                            {{ __('Télécharger') }}
+                                        </a>
+                                    @else
+                                        <span class="text-sm text-slate-400">{{ __('Indisponible') }}</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
