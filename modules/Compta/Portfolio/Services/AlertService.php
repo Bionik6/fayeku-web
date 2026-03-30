@@ -91,19 +91,33 @@ class AlertService
             ->orderBy('due_at')
             ->get();
 
-        foreach ($criticalInvoices as $invoice) {
-            $daysLate = (int) now()->diffInDays($invoice->due_at);
-            $reminderLabel = $invoice->reminders_count > 0
-                ? $invoice->reminders_count.' relance(s) envoyée(s)'
-                : 'Aucune relance envoyée';
+        foreach ($criticalInvoices->groupBy('company_id') as $companyId => $invoices) {
+            $company = $invoices->first()->company;
+            $count = $invoices->count();
+            $totalAmount = $invoices->sum('total');
+            $maxDaysLate = $invoices->max(fn ($inv) => (int) abs(now()->diffInDays($inv->due_at)));
+            $totalReminders = $invoices->sum('reminders_count');
+
+            if ($count === 1) {
+                $invoice = $invoices->first();
+                $reminderLabel = $totalReminders > 0
+                    ? $totalReminders.' relance(s) envoyée(s)'
+                    : 'Aucune relance envoyée';
+                $subtitle = ($invoice->reference ?? 'FAC').' · '.number_format($totalAmount, 0, ',', ' ').' FCFA · J'.$maxDaysLate.' · '.$reminderLabel;
+            } else {
+                $reminderLabel = $totalReminders > 0
+                    ? $totalReminders.' relance(s) envoyée(s)'
+                    : 'Aucune relance envoyée';
+                $subtitle = $count.' factures impayées · '.number_format($totalAmount, 0, ',', ' ').' FCFA · J'.$maxDaysLate.' max · '.$reminderLabel;
+            }
 
             $alerts[] = [
                 'type' => 'critical',
-                'alert_key' => 'critical_'.$invoice->id,
-                'invoice_id' => $invoice->id,
-                'company_id' => $invoice->company_id,
-                'title' => $invoice->company->name.' · Impayé critique',
-                'subtitle' => ($invoice->reference ?? 'FAC').' · '.number_format($invoice->total, 0, ',', ' ').' FCFA · J+'.$daysLate.' · '.$reminderLabel,
+                'alert_key' => 'critical_'.$companyId,
+                'invoice_id' => null,
+                'company_id' => $companyId,
+                'title' => $company->name.' · Impayé critique',
+                'subtitle' => $subtitle,
             ];
         }
     }
@@ -131,7 +145,7 @@ class AlertService
         foreach ($inactiveCompanies as $company) {
             $invoices = $allInvoices->get($company->id, collect());
             $lastInvoice = $invoices->sortByDesc('issued_at')->first();
-            $daysSince = $lastInvoice ? (int) now()->diffInDays($lastInvoice->issued_at) : null;
+            $daysSince = $lastInvoice ? (int) abs(now()->diffInDays($lastInvoice->issued_at)) : null;
 
             $alerts[] = [
                 'type' => 'watch',

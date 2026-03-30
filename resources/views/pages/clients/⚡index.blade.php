@@ -276,7 +276,7 @@ new #[Title('Clients')] class extends Component {
             $lastInvoice = $invoices->sortByDesc('issued_at')->first();
 
             if ($lastInvoice) {
-                $daysDiff = (int) now()->diffInDays($lastInvoice->issued_at);
+                $daysDiff = (int) abs(now()->diffInDays($lastInvoice->issued_at));
                 $lastInvoiceLabel = match (true) {
                     $daysDiff === 0 => "Aujourd'hui",
                     $daysDiff === 1 => 'Hier',

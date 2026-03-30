@@ -211,7 +211,7 @@ new #[Title('Dashboard')] class extends Component
             $lastInvoice = $invoices->sortByDesc('issued_at')->first();
 
             if ($lastInvoice) {
-                $daysDiff = (int) now()->diffInDays($lastInvoice->issued_at);
+                $daysDiff = (int) abs(now()->diffInDays($lastInvoice->issued_at));
                 $lastInvoiceLabel = match (true) {
                     $daysDiff === 0 => "Aujourd'hui",
                     $daysDiff === 1 => 'Hier',
@@ -397,9 +397,6 @@ new #[Title('Dashboard')] class extends Component
                             'watch' => __('Client à surveiller'),
                             default => __('Nouvelle inscription'),
                         };
-                        $primaryActionLabel = in_array($alert['type'], ['critical', 'watch'], true)
-                            ? __('Relancer')
-                            : __('Voir le dossier');
                     @endphp
                     <div wire:key="dashboard-alert-{{ $alert['alert_key'] }}" class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
                         <span @class([
@@ -424,38 +421,19 @@ new #[Title('Dashboard')] class extends Component
                             </div>
                             <p class="mt-0.5 truncate text-sm text-slate-500">{{ $alert['subtitle'] }}</p>
                         </div>
-                        <div class="flex shrink-0 items-center gap-2 self-start sm:self-center">
-                            @if ($alert['company_id'] ?? null)
-                                <a
-                                    href="{{ route('clients.show', $alert['company_id']) }}"
-                                    wire:navigate
-                                    class="inline-flex items-center rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
-                                >
-                                    {{ $primaryActionLabel }}
-                                </a>
-                            @endif
-
+                        <div class="flex shrink-0 items-center self-start sm:self-center">
                             <flux:dropdown position="bottom" align="end">
-                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
-                                    <x-app.icon name="chevron-down" class="size-3.5" />
+                                <button type="button" class="inline-flex items-center gap-x-1.5 rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+                                    {{ __('Actions') }}
+                                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="-mr-0.5 size-4 text-slate-400">
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
+                                    </svg>
                                 </button>
                                 <flux:menu>
-                                    @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
-                                        <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                            <x-app.icon name="invoice" class="size-4 text-slate-500" />
-                                            {{ __('Voir la facture') }}
-                                        </flux:menu.item>
-                                    @endif
-
                                     @if ($alert['company_id'] ?? null)
                                         <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
                                             <x-app.icon name="user" class="size-4 text-slate-500" />
-                                            {{ __('Voir le dossier') }}
-                                        </flux:menu.item>
-
-                                        <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
-                                            <flux:icon name="phone" class="size-4 text-slate-500" />
-                                            {{ __('Contacter le client') }}
+                                            {{ __('Voir le client') }}
                                         </flux:menu.item>
                                     @endif
 

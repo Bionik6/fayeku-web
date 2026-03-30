@@ -293,11 +293,13 @@ new #[Title('Alertes')] class extends Component {
                             </span>
                         @endif
 
-                        <div class="flex shrink-0 items-center gap-2">
+                        <div class="flex shrink-0 items-center">
                             <flux:dropdown position="bottom" align="end">
-                                <button type="button" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                <button type="button" class="inline-flex items-center gap-x-1.5 rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
                                     {{ __('Actions') }}
-                                    <x-app.icon name="chevron-down" class="size-3.5" />
+                                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="-mr-0.5 size-4 text-slate-400">
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
+                                    </svg>
                                 </button>
                             <flux:menu>
                                 @if ($alert['type'] === 'critical' && ($alert['invoice_id'] ?? null))
@@ -310,7 +312,7 @@ new #[Title('Alertes')] class extends Component {
                                 @if ($alert['company_id'] ?? null)
                                     <flux:menu.item :href="route('clients.show', $alert['company_id'])" wire:navigate>
                                         <x-app.icon name="user" class="size-4 text-slate-500" />
-                                        {{ __('Voir le dossier') }}
+                                        {{ __('Voir le client') }}
                                     </flux:menu.item>
                                 @endif
 

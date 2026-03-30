@@ -78,7 +78,7 @@ test('une facture en retard > 60 jours génère une alerte critique', function (
     expect(collect($alerts)->where('type', 'critical'))->toHaveCount(1);
 });
 
-test('plusieurs factures critiques génèrent autant d\'alertes critiques', function () {
+test('plusieurs factures critiques sur des entreprises différentes génèrent une alerte par entreprise', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(2);
 
     createInvoice($smes[0], ['status' => InvoiceStatus::Overdue->value, 'due_at' => now()->subDays(70), 'amount_paid' => 0]);
@@ -88,6 +88,24 @@ test('plusieurs factures critiques génèrent autant d\'alertes critiques', func
     $alerts = $component->get('alerts');
 
     expect(collect($alerts)->where('type', 'critical'))->toHaveCount(2);
+});
+
+test('plusieurs factures critiques sur la même entreprise génèrent une seule alerte groupée', function () {
+    ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
+
+    createInvoice($smes[0], ['status' => InvoiceStatus::Overdue->value, 'due_at' => now()->subDays(70), 'total' => 200_000, 'amount_paid' => 0]);
+    createInvoice($smes[0], ['status' => InvoiceStatus::Overdue->value, 'due_at' => now()->subDays(65), 'total' => 300_000, 'amount_paid' => 0]);
+
+    $component = Livewire::actingAs($user)->test('pages::alerts.index');
+    $alerts = $component->get('alerts');
+    $criticals = collect($alerts)->where('type', 'critical');
+
+    expect($criticals)->toHaveCount(1);
+
+    $alert = $criticals->first();
+    expect($alert['alert_key'])->toBe('critical_'.$smes[0]->id);
+    expect($alert['subtitle'])->toContain('2 factures impayées');
+    expect($alert['subtitle'])->toContain('500 000');
 });
 
 test('une facture en retard < 60 jours ne génère pas d\'alerte critique', function () {
@@ -365,13 +383,13 @@ test('setFilter() désactive showDismissed et applique le filtre', function () {
 test('dismiss() crée un enregistrement DismissedAlert et masque l\'alerte', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
-    $invoice = createInvoice($smes[0], [
+    createInvoice($smes[0], [
         'status' => InvoiceStatus::Overdue->value,
         'due_at' => now()->subDays(65),
         'amount_paid' => 0,
     ]);
 
-    $alertKey = 'critical_'.$invoice->id;
+    $alertKey = 'critical_'.$smes[0]->id;
 
     $component = Livewire::actingAs($user)->test('pages::alerts.index');
 
@@ -386,13 +404,13 @@ test('dismiss() crée un enregistrement DismissedAlert et masque l\'alerte', fun
 test('dismiss() est idempotent pour la même alerte', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
-    $invoice = createInvoice($smes[0], [
+    createInvoice($smes[0], [
         'status' => InvoiceStatus::Overdue->value,
         'due_at' => now()->subDays(65),
         'amount_paid' => 0,
     ]);
 
-    $alertKey = 'critical_'.$invoice->id;
+    $alertKey = 'critical_'.$smes[0]->id;
 
     $component = Livewire::actingAs($user)->test('pages::alerts.index');
     $component->call('dismiss', $alertKey);
@@ -404,13 +422,13 @@ test('dismiss() est idempotent pour la même alerte', function () {
 test('undismiss() supprime l\'enregistrement et restaure l\'alerte', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
-    $invoice = createInvoice($smes[0], [
+    createInvoice($smes[0], [
         'status' => InvoiceStatus::Overdue->value,
         'due_at' => now()->subDays(65),
         'amount_paid' => 0,
     ]);
 
-    $alertKey = 'critical_'.$invoice->id;
+    $alertKey = 'critical_'.$smes[0]->id;
 
     DismissedAlert::create([
         'user_id' => $user->id,
@@ -431,7 +449,7 @@ test('undismiss() supprime l\'enregistrement et restaure l\'alerte', function ()
 test('counts() inclut le nombre d\'alertes archivées', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
-    $invoice = createInvoice($smes[0], [
+    createInvoice($smes[0], [
         'status' => InvoiceStatus::Overdue->value,
         'due_at' => now()->subDays(65),
         'amount_paid' => 0,
@@ -439,7 +457,7 @@ test('counts() inclut le nombre d\'alertes archivées', function () {
 
     DismissedAlert::create([
         'user_id' => $user->id,
-        'alert_key' => 'critical_'.$invoice->id,
+        'alert_key' => 'critical_'.$smes[0]->id,
         'dismissed_at' => now(),
     ]);
 
@@ -455,13 +473,13 @@ test('counts() inclut le nombre d\'alertes archivées', function () {
 test('showDismissed=true affiche uniquement les alertes archivées avec le flag dismissed', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(1);
 
-    $invoice = createInvoice($smes[0], [
+    createInvoice($smes[0], [
         'status' => InvoiceStatus::Overdue->value,
         'due_at' => now()->subDays(65),
         'amount_paid' => 0,
     ]);
 
-    $alertKey = 'critical_'.$invoice->id;
+    $alertKey = 'critical_'.$smes[0]->id;
 
     DismissedAlert::create([
         'user_id' => $user->id,
@@ -491,7 +509,7 @@ test('une alerte critique conserve le menu actions et son copy secondaire', func
     Livewire::actingAs($user)
         ->test('pages::alerts.index')
         ->assertSee('Actions')
-        ->assertSee('Voir le dossier')
+        ->assertSee('Voir le client')
         ->assertSee('Marquer comme traité')
         ->assertDontSee('Marquer comme vu')
         ->assertDontSee('Relancer')

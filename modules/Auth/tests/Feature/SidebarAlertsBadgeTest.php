@@ -66,7 +66,7 @@ test('le badge sidebar se met a jour quand les alertes changent', function () {
 
     DismissedAlert::create([
         'user_id' => $user->id,
-        'alert_key' => 'critical_'.$invoice->id,
+        'alert_key' => 'critical_'.$sme->id,
         'dismissed_at' => now(),
     ]);
 
@@ -75,7 +75,7 @@ test('le badge sidebar se met a jour quand les alertes changent', function () {
         ->assertSet('count', 0);
 
     DismissedAlert::where('user_id', $user->id)
-        ->where('alert_key', 'critical_'.$invoice->id)
+        ->where('alert_key', 'critical_'.$sme->id)
         ->delete();
 
     $component
