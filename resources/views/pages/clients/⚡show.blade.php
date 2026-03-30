@@ -38,9 +38,7 @@ new #[Title('Clients')] class extends Component {
 
     public function mount(Company $company): void
     {
-        $this->firm = auth()->user()->companies()
-            ->where('type', 'accountant_firm')
-            ->first();
+        $this->firm = auth()->user()->accountantFirm();
 
         $this->relation = $this->firm
             ? AccountantCompany::query()

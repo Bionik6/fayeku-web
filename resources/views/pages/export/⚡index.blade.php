@@ -28,9 +28,7 @@ new #[Title('Export groupé')] class extends Component {
 
     public function mount(): void
     {
-        $this->firm = auth()->user()->companies()
-            ->where('type', 'accountant_firm')
-            ->first();
+        $this->firm = auth()->user()->accountantFirm();
     }
 
     // ─── Computed ─────────────────────────────────────────────────────────

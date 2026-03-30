@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Services\ClientService;
 use Modules\Shared\Models\User;
@@ -25,10 +26,20 @@ function createSmeUserForQuery(): array
  */
 function countSmeCompanyQueries(): int
 {
+    return countCompanyQueriesForType('sme');
+}
+
+function countFirmCompanyQueries(): int
+{
+    return countCompanyQueriesForType('accountant_firm');
+}
+
+function countCompanyQueriesForType(string $type): int
+{
     return collect(DB::getQueryLog())
         ->filter(fn ($q) => str_contains($q['query'], 'company_user')
             && str_contains($q['query'], '"type"')
-            && in_array('sme', $q['bindings'] ?? [], true))
+            && in_array($type, $q['bindings'] ?? [], true))
         ->count();
 }
 
@@ -119,6 +130,79 @@ test('la page PME recouvrement ne duplique pas la requête SME company', functio
     $this->actingAs($user)->get(route('pme.collection.index'));
 
     expect(countSmeCompanyQueries())->toBe(1);
+
+    DB::disableQueryLog();
+});
+
+// ─── User::accountantFirm() ─────────────────────────────────────────────────
+
+function createFirmUserForQuery(): array
+{
+    $user = User::factory()->accountantFirm()->create();
+    $firm = Company::factory()->accountantFirm()->create();
+    $firm->users()->attach($user->id, ['role' => 'admin']);
+
+    $sme = Company::factory()->create();
+    AccountantCompany::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $sme->id,
+        'started_at' => now()->subMonth(),
+    ]);
+
+    return compact('user', 'firm', 'sme');
+}
+
+test('accountantFirm retourne le bon cabinet comptable', function () {
+    ['user' => $user, 'firm' => $firm] = createFirmUserForQuery();
+
+    expect($user->accountantFirm())
+        ->toBeInstanceOf(Company::class)
+        ->and($user->accountantFirm()->id)->toBe($firm->id);
+});
+
+test('accountantFirm retourne null pour un utilisateur SME', function () {
+    ['user' => $user] = createSmeUserForQuery();
+
+    expect($user->accountantFirm())->toBeNull();
+});
+
+test('accountantFirm ne lance qu\'une seule requête par instance', function () {
+    ['user' => $user] = createFirmUserForQuery();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    $user->accountantFirm();
+    $user->accountantFirm();
+    $user->accountantFirm();
+
+    expect(countFirmCompanyQueries())->toBe(1);
+
+    DB::disableQueryLog();
+});
+
+test('la page compta dashboard ne duplique pas la requête firm', function () {
+    ['user' => $user] = createFirmUserForQuery();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    $this->actingAs($user)->get(route('dashboard'));
+
+    expect(countFirmCompanyQueries())->toBe(1);
+
+    DB::disableQueryLog();
+});
+
+test('la page compta clients ne duplique pas la requête firm', function () {
+    ['user' => $user] = createFirmUserForQuery();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    $this->actingAs($user)->get(route('clients.index'));
+
+    expect(countFirmCompanyQueries())->toBe(1);
 
     DB::disableQueryLog();
 });

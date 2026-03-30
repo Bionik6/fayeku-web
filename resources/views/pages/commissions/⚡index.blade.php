@@ -39,9 +39,7 @@ new #[Title('Commissions')] class extends Component
     public function mount(): void
     {
         $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
-        $this->firm = auth()->user()->companies()
-            ->where('type', 'accountant_firm')
-            ->first();
+        $this->firm = auth()->user()->accountantFirm();
 
         if (! $this->firm) {
             return;

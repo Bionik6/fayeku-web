@@ -59,7 +59,7 @@ new #[Title('Paramètres')] class extends Component {
     #[Computed]
     public function firm(): ?Company
     {
-        return Auth::user()->companies()->where('type', 'accountant_firm')->first();
+        return Auth::user()->accountantFirm();
     }
 
     public function setSection(string $section): void

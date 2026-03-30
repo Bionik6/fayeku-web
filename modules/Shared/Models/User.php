@@ -58,20 +58,31 @@ class User extends Authenticatable
         )->withPivot('role')->withTimestamps();
     }
 
-    private bool $smeCompanyLoaded = false;
-
-    private ?Company $smeCompanyCache = null;
+    /** @var array<string, array{loaded: bool, value: ?Company}> */
+    private array $companyCache = [];
 
     /**
      * Return the user's SME company, cached on the instance (1 query per object lifecycle).
      */
     public function smeCompany(): ?Company
     {
-        if (! $this->smeCompanyLoaded) {
-            $this->smeCompanyCache = $this->companies()->where('type', 'sme')->first();
-            $this->smeCompanyLoaded = true;
+        return $this->cachedCompany('sme');
+    }
+
+    /**
+     * Return the user's accountant firm, cached on the instance (1 query per object lifecycle).
+     */
+    public function accountantFirm(): ?Company
+    {
+        return $this->cachedCompany('accountant_firm');
+    }
+
+    private function cachedCompany(string $type): ?Company
+    {
+        if (! isset($this->companyCache[$type])) {
+            $this->companyCache[$type] = $this->companies()->where('type', $type)->first();
         }
 
-        return $this->smeCompanyCache;
+        return $this->companyCache[$type];
     }
 }

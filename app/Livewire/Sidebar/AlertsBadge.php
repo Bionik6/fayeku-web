@@ -35,9 +35,7 @@ class AlertsBadge extends Component
             return 0;
         }
 
-        $firm = $user->companies()
-            ->where('type', 'accountant_firm')
-            ->first();
+        $firm = $user->accountantFirm();
 
         if (! $firm instanceof Company) {
             return 0;

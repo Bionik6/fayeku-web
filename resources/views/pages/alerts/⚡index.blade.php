@@ -22,9 +22,7 @@ new #[Title('Alertes')] class extends Component {
 
     public function mount(): void
     {
-        $this->firm = auth()->user()->companies()
-            ->where('type', 'accountant_firm')
-            ->first();
+        $this->firm = auth()->user()->accountantFirm();
     }
 
     public function viewInvoice(string $id): void
