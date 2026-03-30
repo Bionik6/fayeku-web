@@ -372,6 +372,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     'valid_until'  => $q->valid_until,
                     'status_value' => $isExpired ? 'expired' : $q->status->value,
                     'has_invoice'  => $q->invoice !== null,
+                    'invoice_id'   => $q->invoice?->id,
                 ];
             })
             ->sortByDesc('issued_at')
@@ -600,6 +601,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Date émission') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Valide jusqu\'au') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Facture') }}</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -668,6 +670,19 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                     <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
                                         {{ $statusConfig['label'] }}
                                     </span>
+                                </td>
+
+                                {{-- Facture --}}
+                                <td class="px-4 py-4" x-on:click.stop>
+                                    @if ($row['has_invoice'])
+                                        <a
+                                            href="{{ route('pme.invoices.index') }}"
+                                            wire:navigate
+                                            class="text-sm font-semibold text-primary hover:underline"
+                                        >{{ __('Ouvrir') }}</a>
+                                    @else
+                                        <span class="text-sm text-slate-400">{{ __('Aucune') }}</span>
+                                    @endif
                                 </td>
 
                                 {{-- Actions --}}
@@ -793,27 +808,25 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     <div>
                         <p class="text-sm font-semibold tracking-[0.24em] text-slate-400">{{ __('Devis') }}</p>
                         <h2 class="mt-1 text-xl font-bold text-ink">{{ $q->reference }}</h2>
-                        <p class="mt-1 text-sm text-slate-500">
-                            {{ __('Émis le') }} {{ $q->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
-                            @if ($q->valid_until)
-                                &nbsp;·&nbsp;
-                                {{ __('Valide jusqu\'au') }} {{ $q->valid_until->locale('fr_FR')->translatedFormat('j F Y') }}
-                            @endif
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        @if ($q->invoice)
-                            <span class="inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-700">
-                                {{ __('Facturé') }}
+                        <div class="mt-1 flex items-center gap-3">
+                            <p class="text-sm text-slate-500">
+                                {{ __('Émis le') }} {{ $q->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                                @if ($q->valid_until)
+                                    &nbsp;·&nbsp;
+                                    {{ __('Valide jusqu\'au') }} {{ $q->valid_until->locale('fr_FR')->translatedFormat('j F Y') }}
+                                @endif
+                            </p>
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
+                                {{ $statusConfig['label'] }}
                             </span>
-                        @endif
-                        <button
-                            wire:click="closeQuote"
-                            class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                        >
-                            <flux:icon name="x-mark" class="size-5" />
-                        </button>
+                        </div>
                     </div>
+                    <button
+                        wire:click="closeQuote"
+                        class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    >
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
                 </div>
 
                 <div class="max-h-[80vh] overflow-y-auto">
@@ -935,9 +948,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 </div>
 
                 <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-10 py-5">
-                    <span class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold {{ $statusConfig['class'] }}">
-                        {{ $statusConfig['label'] }}
-                    </span>
                     <flux:button variant="ghost" wire:click="closeQuote">
                         {{ __('Fermer') }}
                     </flux:button>
