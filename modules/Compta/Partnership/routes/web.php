@@ -1,6 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Compta\Partnership\Http\Controllers\InvitationLandingController;
+use Modules\Compta\Partnership\Http\Controllers\JoinController;
 
-Route::get('/invite/{token}', InvitationLandingController::class)->name('invitation.landing');
+Route::get('/join/{code}', JoinController::class)->name('join.landing');

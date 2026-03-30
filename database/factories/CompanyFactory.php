@@ -31,6 +31,7 @@ class CompanyFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'accountant_firm',
+            'invite_code' => strtoupper($this->faker->unique()->lexify('??????')),
         ]);
     }
 }

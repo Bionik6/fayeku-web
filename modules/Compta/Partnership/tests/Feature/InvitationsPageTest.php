@@ -204,7 +204,8 @@ test('sendInvitation crée une invitation', function () {
         ->test('pages::invitations.index')
         ->set('inviteCompanyName', 'Transport Ngor SARL')
         ->set('inviteContactName', 'Moussa Diallo')
-        ->set('invitePhone', '+221770000099')
+        ->set('inviteCountryCode', 'SN')
+        ->set('invitePhone', '770000099')
         ->set('invitePlan', 'essentiel')
         ->call('sendInvitation')
         ->assertHasNoErrors();
@@ -242,7 +243,8 @@ test('sendInvitation détecte les doublons', function () {
         ->test('pages::invitations.index')
         ->set('inviteCompanyName', 'New Co')
         ->set('inviteContactName', 'New Contact')
-        ->set('invitePhone', '+221770000099')
+        ->set('inviteCountryCode', 'SN')
+        ->set('invitePhone', '770000099')
         ->set('invitePlan', 'basique')
         ->call('sendInvitation')
         ->assertHasErrors('invitePhone');
@@ -347,7 +349,7 @@ test('sendInvitation envoie un message WhatsApp', function () {
         ->once()
         ->withArgs(fn (string $phone, string $msg) => $phone === '+221770000099'
             && str_contains($msg, 'Moussa Diallo')
-            && str_contains($msg, '/invite/')
+            && str_contains($msg, '/join/')
         )
         ->andReturn(true);
     app()->instance(WhatsAppProviderInterface::class, $mock);
@@ -358,7 +360,8 @@ test('sendInvitation envoie un message WhatsApp', function () {
         ->test('pages::invitations.index')
         ->set('inviteCompanyName', 'WA Test Co')
         ->set('inviteContactName', 'Moussa Diallo')
-        ->set('invitePhone', '+221770000099')
+        ->set('inviteCountryCode', 'SN')
+        ->set('invitePhone', '770000099')
         ->set('invitePlan', 'essentiel')
         ->call('sendInvitation')
         ->assertDispatched('toast', type: 'success');
@@ -375,7 +378,8 @@ test('sendInvitation affiche un warning si WhatsApp échoue', function () {
         ->test('pages::invitations.index')
         ->set('inviteCompanyName', 'Fail Co')
         ->set('inviteContactName', 'Fail Contact')
-        ->set('invitePhone', '+221770000088')
+        ->set('inviteCountryCode', 'SN')
+        ->set('invitePhone', '770000088')
         ->set('invitePlan', 'basique')
         ->call('sendInvitation')
         ->assertDispatched('toast', type: 'warning');
@@ -470,7 +474,7 @@ test('resendInvitation envoie un message WhatsApp', function () {
     $mock = Mockery::mock(WhatsAppProviderInterface::class);
     $mock->shouldReceive('send')
         ->once()
-        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, '/invite/'))
+        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, '/join/'))
         ->andReturn(true);
     app()->instance(WhatsAppProviderInterface::class, $mock);
 

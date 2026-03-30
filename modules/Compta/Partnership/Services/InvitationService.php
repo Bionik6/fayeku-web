@@ -61,6 +61,8 @@ class InvitationService
 
     private function buildInvitationLink(PartnerInvitation $invitation): string
     {
-        return config('app.url').'/invite/'.$invitation->token;
+        $invitation->loadMissing('accountantFirm');
+
+        return config('app.url').'/join/'.$invitation->accountantFirm?->invite_code;
     }
 }

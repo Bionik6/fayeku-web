@@ -53,9 +53,9 @@ class AuthService
         ];
     }
 
-    public function register(array $data, ?PartnerInvitation $invitation = null): User
+    public function register(array $data, ?PartnerInvitation $invitation = null, ?Company $invitingFirm = null): User
     {
-        return DB::transaction(function () use ($data, $invitation) {
+        return DB::transaction(function () use ($data, $invitation, $invitingFirm) {
             $phone = self::normalizePhone($data['phone'], $data['country_code']);
 
             $user = User::create([
@@ -67,6 +67,8 @@ class AuthService
                 'country_code' => $data['country_code'],
             ]);
 
+            // The linking firm is either from a specific invitation or a firm-level join
+            $firm = $invitation?->accountantFirm ?? $invitingFirm;
             $planSlug = $invitation?->recommended_plan ?? 'basique';
             $type = $data['profile_type'] === 'sme' ? 'sme' : 'accountant_firm';
 
@@ -88,16 +90,18 @@ class AuthService
                 'trial_ends_at' => now()->addDays(60),
                 'current_period_start' => now(),
                 'current_period_end' => now()->addDays(60),
-                'invited_by_firm_id' => $invitation?->accountant_firm_id,
+                'invited_by_firm_id' => $firm?->id,
             ]);
 
-            if ($invitation) {
+            if ($firm) {
                 AccountantCompany::create([
-                    'accountant_firm_id' => $invitation->accountant_firm_id,
+                    'accountant_firm_id' => $firm->id,
                     'sme_company_id' => $company->id,
                     'started_at' => now(),
                 ]);
+            }
 
+            if ($invitation) {
                 $invitation->update([
                     'status' => 'registering',
                     'sme_company_id' => $company->id,

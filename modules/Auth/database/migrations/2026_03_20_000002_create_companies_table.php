@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('type');
             $table->string('plan')->default('basique');
+            $table->string('invite_code', 6)->nullable()->unique();
             $table->char('country_code', 3);
             $table->string('phone')->nullable();
             $table->string('email')->nullable();

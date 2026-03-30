@@ -6,6 +6,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
+use Modules\Auth\Services\AuthService;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
 use Modules\Compta\Partnership\Services\InvitationService;
 
@@ -20,6 +21,8 @@ new #[Title('Invitations')] class extends Component {
     public string $inviteCompanyName = '';
 
     public string $inviteContactName = '';
+
+    public string $inviteCountryCode = 'SN';
 
     public string $invitePhone = '';
 
@@ -163,10 +166,12 @@ new #[Title('Invitations')] class extends Component {
             return;
         }
 
+        $normalizedPhone = AuthService::normalizePhone($this->invitePhone, $this->inviteCountryCode);
+
         // Check for duplicate
         $existing = PartnerInvitation::query()
             ->where('accountant_firm_id', $this->firm->id)
-            ->where('invitee_phone', $this->invitePhone)
+            ->where('invitee_phone', $normalizedPhone)
             ->where('status', '!=', 'expired')
             ->first();
 
@@ -181,7 +186,7 @@ new #[Title('Invitations')] class extends Component {
             'token' => Str::random(32),
             'invitee_company_name' => $this->inviteCompanyName,
             'invitee_name' => $this->inviteContactName,
-            'invitee_phone' => $this->invitePhone,
+            'invitee_phone' => $normalizedPhone,
             'recommended_plan' => $this->invitePlan,
             'channel' => 'whatsapp',
             'status' => 'pending',
@@ -260,6 +265,7 @@ new #[Title('Invitations')] class extends Component {
     {
         $this->inviteCompanyName = '';
         $this->inviteContactName = '';
+        $this->inviteCountryCode = 'SN';
         $this->invitePhone = '';
         $this->invitePlan = 'essentiel';
         $this->resetErrorBag();
@@ -632,13 +638,18 @@ new #[Title('Invitations')] class extends Component {
 
             {{-- Numéro WhatsApp --}}
             <div class="mt-4">
-                <label for="invite-phone" class="text-sm font-medium text-slate-700">{{ __('Numéro WhatsApp') }}</label>
-                <input
-                    id="invite-phone"
-                    type="tel"
-                    wire:model="invitePhone"
-                    placeholder="+221 77 000 00 00"
-                    class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                <x-phone-input
+                    :label="__('Numéro WhatsApp')"
+                    country-name="inviteCountryCode"
+                    :country-value="$inviteCountryCode"
+                    country-model="inviteCountryCode"
+                    phone-name="invitePhone"
+                    :phone-value="$invitePhone"
+                    phone-model="invitePhone"
+                    :required="true"
+                    phone-placeholder="XX XXX XX XX"
+                    label-class="text-sm font-medium text-slate-700"
+                    container-class="flex items-stretch rounded-xl border border-slate-200 bg-white shadow-sm transition focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 />
                 @error('invitePhone')
                     <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>

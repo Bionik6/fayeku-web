@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use Modules\PME\Collection\Enums\ReminderMode;
 use Modules\PME\Collection\Models\ReminderRule;
 use Modules\Shared\Models\User;
@@ -17,7 +18,22 @@ class Company extends Model
 {
     use HasFactory, HasUlid;
 
-    protected $fillable = ['name', 'type', 'plan', 'country_code', 'phone', 'email', 'address', 'city', 'ninea', 'rccm', 'logo_path', 'reminder_settings'];
+    protected $fillable = ['name', 'type', 'plan', 'invite_code', 'country_code', 'phone', 'email', 'address', 'city', 'ninea', 'rccm', 'logo_path', 'reminder_settings'];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (Company $company) {
+            if ($company->type === 'accountant_firm' && empty($company->invite_code)) {
+                do {
+                    $code = strtoupper(Str::random(6));
+                } while (static::where('invite_code', $code)->exists());
+
+                $company->invite_code = $code;
+            }
+        });
+    }
 
     protected $casts = [
         'reminder_settings' => 'array',

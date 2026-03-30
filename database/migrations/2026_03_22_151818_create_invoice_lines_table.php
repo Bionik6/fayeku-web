@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('invoice_id');
             $table->string('description');
+            $table->string('type')->default('service');
             $table->integer('quantity')->default(1);
             $table->integer('unit_price')->default(0);
             $table->integer('tax_rate')->default(0);  // en % (ex: 18 = 18 %)

@@ -28,8 +28,34 @@
                 :title="__('Créer votre compte')"
                 :description="__('Complétez votre inscription pour rejoindre Fayeku.')"
             />
+        @elseif (isset($joiningFirm) && $joiningFirm)
+            <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
+                <p class="text-sm font-semibold text-teal-800">
+                    {{ $joiningFirm->name }} {{ __('vous recommande Fayeku') }}
+                </p>
+                <p class="mt-1 text-sm text-teal-700">
+                    {{ __('Simplifiez votre facturation et gestion commerciale. Profitez de 2 mois offerts sur le plan Essentiel.') }}
+                </p>
+            </div>
+
+            <x-auth-header
+                :title="__('Créer votre compte')"
+                :description="__('Complétez votre inscription pour rejoindre Fayeku.')"
+            />
         @else
             <x-auth-header :title="__('Créer un compte')" :description="__('Remplissez les informations ci-dessous pour créer votre compte')" />
+
+            <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
+                <p class="text-sm font-semibold text-teal-800">
+                    {{ __('Cette page est réservée aux PME.') }}
+                </p>
+                <p class="mt-1 text-sm text-teal-700">
+                    {{ __('Vous êtes expert-comptable ?') }}
+                    <a href="{{ route('marketing.accountants.join') }}" class="font-medium underline">
+                        {{ __('Inscrivez-vous ici →') }}
+                    </a>
+                </p>
+            </div>
         @endif
 
         <x-auth-session-status :status="session('status')" />
@@ -37,9 +63,9 @@
         <form method="POST" action="{{ route('auth.register.submit') }}" class="flex flex-col gap-5">
             @csrf
 
+            <input type="hidden" name="profile_type" value="sme" />
             @if (isset($invitation) && $invitation)
                 <input type="hidden" name="invitation_token" value="{{ $invitation->token }}" />
-                <input type="hidden" name="profile_type" value="sme" />
             @endif
 
             <div class="grid gap-4 sm:grid-cols-2">
@@ -99,19 +125,6 @@
                 />
                 <x-auth-field-error name="company_name" />
             </label>
-
-            @if (! isset($invitation) || ! $invitation)
-                <label class="auth-label">
-                    <span>{{ __('Type de profil') }} *</span>
-                    <x-select-native>
-                        <select name="profile_type" class="auth-select" required>
-                            <option value="sme" @selected(old('profile_type', 'sme') === 'sme')>{{ __('PME') }}</option>
-                            <option value="accountant_firm" @selected(old('profile_type') === 'accountant_firm')>{{ __('Cabinet d\'expertise comptable') }}</option>
-                        </select>
-                    </x-select-native>
-                    <x-auth-field-error name="profile_type" />
-                </label>
-            @endif
 
             <label class="auth-label">
                 <span>{{ __('Mot de passe') }} *</span>

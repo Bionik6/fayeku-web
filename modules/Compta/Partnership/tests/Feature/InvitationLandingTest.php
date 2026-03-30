@@ -5,6 +5,8 @@ use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Auth\Models\Subscription;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Partnership\Services\InvitationService;
+use Modules\Shared\Interfaces\WhatsAppProviderInterface;
 use Modules\Shared\Models\User;
 use Modules\Shared\Services\OtpService;
 
@@ -32,83 +34,6 @@ function createInvitation(array $overrides = []): array
 
     return compact('firm', 'user', 'invitation');
 }
-
-// ─── Landing route ───────────────────────────────────────────────────────────
-
-test('invitation landing redirige vers register avec le token', function () {
-    ['invitation' => $invitation] = createInvitation();
-
-    $this->get(route('invitation.landing', $invitation->token))
-        ->assertRedirect(route('auth.register', ['join' => $invitation->token]));
-});
-
-test('invitation landing met à jour link_opened_at', function () {
-    ['invitation' => $invitation] = createInvitation();
-
-    expect($invitation->link_opened_at)->toBeNull();
-
-    $this->get(route('invitation.landing', $invitation->token));
-
-    $invitation->refresh();
-    expect($invitation->link_opened_at)->not->toBeNull();
-});
-
-test('invitation landing ne met à jour link_opened_at qu\'une seule fois', function () {
-    $openedAt = now()->subHour();
-    ['invitation' => $invitation] = createInvitation(['link_opened_at' => $openedAt]);
-
-    $this->get(route('invitation.landing', $invitation->token));
-
-    $invitation->refresh();
-    expect($invitation->link_opened_at->timestamp)->toBe($openedAt->timestamp);
-});
-
-test('invitation expirée affiche la vue expirée', function () {
-    ['invitation' => $invitation] = createInvitation([
-        'expires_at' => now()->subDay(),
-    ]);
-
-    $this->get(route('invitation.landing', $invitation->token))
-        ->assertOk()
-        ->assertSee(__('Invitation expirée'));
-});
-
-test('invitation déjà acceptée redirige vers login', function () {
-    ['invitation' => $invitation] = createInvitation([
-        'status' => 'accepted',
-        'accepted_at' => now(),
-    ]);
-
-    $this->get(route('invitation.landing', $invitation->token))
-        ->assertRedirect(route('login'));
-});
-
-test('token invalide retourne 404', function () {
-    $this->get('/invite/token-qui-nexiste-pas')
-        ->assertNotFound();
-});
-
-test('invitation redirige vers login si le numéro existe déjà', function () {
-    User::factory()->create(['phone' => '+221770000099']);
-
-    ['invitation' => $invitation] = createInvitation(['invitee_phone' => '+221770000099']);
-
-    $this->get(route('invitation.landing', $invitation->token))
-        ->assertRedirect(route('login'));
-});
-
-test('invitation affiche le message déjà inscrit si le numéro existe', function () {
-    User::factory()->create(['phone' => '+221770000099']);
-
-    ['invitation' => $invitation] = createInvitation(['invitee_phone' => '+221770000099']);
-
-    $this->get(route('invitation.landing', $invitation->token))
-        ->assertRedirect(route('login'));
-
-    $this->followingRedirects()
-        ->get(route('invitation.landing', $invitation->token))
-        ->assertSee(__('Vous êtes déjà inscrit sur Fayeku. Veuillez vous connecter.'));
-});
 
 // ─── Registration pré-remplie ────────────────────────────────────────────────
 
@@ -307,4 +232,109 @@ test('vérification OTP finalise le statut de l\'invitation à accepted', functi
     $invitation->refresh();
     expect($invitation->status)->toBe('accepted');
     expect($invitation->accepted_at)->not->toBeNull();
+});
+
+// ─── Nouveau flux /join/{invite_code} ───────────────────────────────────────
+
+test('/join/{code} redirige vers register et stocke le code en session', function () {
+    $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'ABC123']);
+
+    $this->get(route('join.landing', 'ABC123'))
+        ->assertRedirect(route('auth.register'))
+        ->assertSessionHas('joining_firm_code', 'ABC123');
+});
+
+test('/join/{code} est insensible à la casse', function () {
+    $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'ABC123']);
+
+    $this->get(route('join.landing', 'abc123'))
+        ->assertRedirect(route('auth.register'));
+});
+
+test('/join/{code} invalide retourne 404', function () {
+    $this->get(route('join.landing', 'XXXXXX'))
+        ->assertNotFound();
+});
+
+test('/join/{code} redirige vers le dashboard si déjà connecté (PME)', function () {
+    $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'FRM001']);
+    $user = User::factory()->create(['profile_type' => 'sme']);
+
+    $this->actingAs($user)
+        ->get(route('join.landing', 'FRM001'))
+        ->assertRedirect(route('pme.dashboard'));
+});
+
+test('le formulaire affiche la bannière du cabinet via joining_firm_code', function () {
+    $firm = Company::factory()->accountantFirm()->create([
+        'invite_code' => 'TST001',
+        'name' => 'Cabinet Test Join',
+    ]);
+
+    $this->withSession(['joining_firm_code' => 'TST001'])
+        ->get(route('auth.register'))
+        ->assertOk()
+        ->assertSee('Cabinet Test Join');
+});
+
+test('inscription via /join/{code} avec invitation existante crée la relation', function () {
+    ['firm' => $firm, 'invitation' => $invitation] = createInvitation([
+        'invitee_phone' => '+221770000099',
+        'recommended_plan' => 'essentiel',
+    ]);
+
+    $this->withSession(['joining_firm_code' => $firm->invite_code])
+        ->post(route('auth.register.submit'), [
+            'first_name' => 'Ibrahima',
+            'last_name' => 'Ciss',
+            'phone' => '770000099',
+            'password' => 'P@ssword123!',
+            'password_confirmation' => 'P@ssword123!',
+            'profile_type' => 'sme',
+            'country_code' => 'SN',
+            'company_name' => 'Khalil Soft',
+        ])->assertRedirect(route('auth.otp'));
+
+    $subscription = Subscription::first();
+    expect($subscription->plan_slug)->toBe('essentiel');
+    expect($subscription->invited_by_firm_id)->toBe($firm->id);
+
+    $invitation->refresh();
+    expect($invitation->status)->toBe('registering');
+});
+
+test('inscription via /join/{code} sans invitation existante lie quand même au cabinet', function () {
+    $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'NOINV1']);
+
+    $this->withSession(['joining_firm_code' => 'NOINV1'])
+        ->post(route('auth.register.submit'), [
+            'first_name' => 'Omar',
+            'last_name' => 'Sy',
+            'phone' => '770000077',
+            'password' => 'P@ssword123!',
+            'password_confirmation' => 'P@ssword123!',
+            'profile_type' => 'sme',
+            'country_code' => 'SN',
+            'company_name' => 'Omar Co',
+        ])->assertRedirect(route('auth.otp'));
+
+    $subscription = Subscription::first();
+    expect($subscription->invited_by_firm_id)->toBe($firm->id);
+
+    $accountantCompany = AccountantCompany::first();
+    expect($accountantCompany->accountant_firm_id)->toBe($firm->id);
+});
+
+test('le message WhatsApp utilise /join/{invite_code}', function () {
+    ['firm' => $firm, 'invitation' => $invitation] = createInvitation();
+
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')
+        ->once()
+        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, '/join/'.$firm->invite_code))
+        ->andReturn(true);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    app(InvitationService::class)
+        ->sendInvitationMessage($invitation);
 });
