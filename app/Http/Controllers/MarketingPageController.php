@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAccountantJoinRequest;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class MarketingPageController extends Controller
 {
@@ -36,6 +38,13 @@ class MarketingPageController extends Controller
             'title' => 'Rejoindre Fayeku Compta | Formulaire experts-comptables',
             'description' => 'Rejoignez Fayeku Compta avec un formulaire dédié aux cabinets d’expertise comptable au Sénégal.',
         ]);
+    }
+
+    public function accountantsJoinStore(StoreAccountantJoinRequest $request): RedirectResponse
+    {
+        // TODO: store lead or send notification email
+        return redirect()->route('marketing.accountants.join')
+            ->with('success', 'Votre demande a bien été reçue. Un conseiller Fayeku vous contactera sous 24h pour valider votre accès Compta.');
     }
 
     public function pricing(): View

@@ -12,6 +12,7 @@ Route::get('/pricing', [MarketingPageController::class, 'pricing'])->name('marke
 Route::get('/entreprises', [MarketingPageController::class, 'enterprises'])->name('marketing.enterprises');
 Route::get('/experts-comptables', [MarketingPageController::class, 'accountants'])->name('marketing.accountants');
 Route::get('/experts-comptables/rejoindre', [MarketingPageController::class, 'accountantsJoin'])->name('marketing.accountants.join');
+Route::post('/experts-comptables/rejoindre', [MarketingPageController::class, 'accountantsJoinStore'])->name('marketing.accountants.join.store');
 Route::get('/conformite', [MarketingPageController::class, 'compliance'])->name('marketing.compliance');
 Route::get('/contact', [MarketingPageController::class, 'contact'])->name('marketing.contact');
 Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defaults('page', 'mentions-legales')->name('marketing.legal');
