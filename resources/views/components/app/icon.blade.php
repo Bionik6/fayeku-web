@@ -7,7 +7,7 @@
         'dashboard'    => 'resources/icons/dashboard.svg',
         'clients'      => 'resources/icons/users-01.svg',
         'export'       => 'resources/icons/file-export-01.svg',
-        'commissions'  => 'resources/icons/wallet-01.svg',
+        'commissions'  => 'resources/icons/commissions.svg',
         'invitations'  => 'resources/icons/mail-plus.svg',
         'settings'     => 'resources/icons/gear-01.svg',
         'support'      => 'resources/icons/message-chat-square.svg',
@@ -27,6 +27,7 @@
         'download'     => 'resources/icons/download-01.svg',
         'chevron'      => 'resources/icons/chevron-down.svg',
         'layout-left'  => 'resources/icons/layout-left.svg',
+        'treasury'     => 'resources/icons/treasury.svg',
     ];
 
     $path = $icons[$name] ?? null;

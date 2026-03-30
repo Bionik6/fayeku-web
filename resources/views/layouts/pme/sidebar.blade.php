@@ -51,7 +51,7 @@
                 ],
                 [
                     'label' => __('Trésorerie'),
-                    'icon' => 'commissions',
+                    'icon' => 'treasury',
                     'href' => route('pme.treasury.index'),
                     'current' => request()->routeIs('pme.treasury.*'),
                     'navigate' => true,
