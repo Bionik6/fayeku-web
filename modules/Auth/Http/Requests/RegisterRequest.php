@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Modules\Auth\Services\AuthService;
+use Modules\Compta\Partnership\Models\PartnerInvitation;
 use Modules\Shared\Models\User;
 
 class RegisterRequest extends FormRequest
@@ -28,6 +29,7 @@ class RegisterRequest extends FormRequest
             'profile_type' => ['required', 'string', Rule::in(['sme', 'accountant_firm'])],
             'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
             'company_name' => ['required', 'string', 'max:255'],
+            'invitation_token' => ['nullable', 'string', 'max:100'],
         ];
     }
 
@@ -64,6 +66,18 @@ class RegisterRequest extends FormRequest
 
             if (User::where('phone', $normalizedPhone)->exists()) {
                 $validator->errors()->add('phone', 'Ce numéro de téléphone est déjà utilisé.');
+            }
+
+            $token = $this->input('invitation_token');
+
+            if ($token) {
+                $invitation = PartnerInvitation::where('token', $token)
+                    ->where('status', 'pending')
+                    ->first();
+
+                if (! $invitation || $invitation->expires_at?->isPast()) {
+                    $validator->errors()->add('invitation_token', 'Cette invitation est invalide ou expirée.');
+                }
             }
         });
     }

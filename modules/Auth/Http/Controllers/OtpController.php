@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\Auth\Http\Requests\VerifyOtpRequest;
+use Modules\Compta\Partnership\Models\PartnerInvitation;
 use Modules\Shared\Services\OtpService;
 
 class OtpController extends Controller
@@ -48,6 +49,23 @@ class OtpController extends Controller
 
         if ($user) {
             $user->forceFill(['phone_verified_at' => now()])->save();
+        }
+
+        $invitationToken = session('invitation_token');
+
+        if ($invitationToken) {
+            $invitation = PartnerInvitation::where('token', $invitationToken)
+                ->where('status', 'registering')
+                ->first();
+
+            if ($invitation) {
+                $invitation->update([
+                    'status' => 'accepted',
+                    'accepted_at' => now(),
+                ]);
+            }
+
+            session()->forget('invitation_token');
         }
 
         session()->forget('otp_phone');

@@ -5,6 +5,8 @@ use Livewire\Livewire;
 use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Partnership\Services\InvitationService;
+use Modules\Shared\Interfaces\WhatsAppProviderInterface;
 use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
@@ -335,4 +337,158 @@ test('les compteurs de priorité sont corrects', function () {
     expect($priority['not_opened'])->toBe(1);
     expect($priority['incomplete'])->toBe(2);
     expect($priority['pending_validation'])->toBe(0);
+});
+
+// ─── WhatsApp ──────────────────────────────────────────────────────────────
+
+test('sendInvitation envoie un message WhatsApp', function () {
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')
+        ->once()
+        ->withArgs(fn (string $phone, string $msg) => $phone === '+221770000099'
+            && str_contains($msg, 'Moussa Diallo')
+            && str_contains($msg, '/invite/')
+        )
+        ->andReturn(true);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    ['user' => $user] = invTestCreateFirm();
+
+    Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->set('inviteCompanyName', 'WA Test Co')
+        ->set('inviteContactName', 'Moussa Diallo')
+        ->set('invitePhone', '+221770000099')
+        ->set('invitePlan', 'essentiel')
+        ->call('sendInvitation')
+        ->assertDispatched('toast', type: 'success');
+});
+
+test('sendInvitation affiche un warning si WhatsApp échoue', function () {
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')->once()->andReturn(false);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->set('inviteCompanyName', 'Fail Co')
+        ->set('inviteContactName', 'Fail Contact')
+        ->set('invitePhone', '+221770000088')
+        ->set('invitePlan', 'basique')
+        ->call('sendInvitation')
+        ->assertDispatched('toast', type: 'warning');
+
+    expect(PartnerInvitation::where('accountant_firm_id', $firm->id)->count())->toBe(1);
+});
+
+test('le message essentiel contient la promotion 2 mois offerts', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'test-token-promo',
+        'invitee_company_name' => 'Promo Co',
+        'invitee_name' => 'Awa Ndiaye',
+        'invitee_phone' => '+221770000077',
+        'recommended_plan' => 'essentiel',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+    ]);
+
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')
+        ->once()
+        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, '2 mois offerts'))
+        ->andReturn(true);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    $service = app(InvitationService::class);
+    $result = $service->sendInvitationMessage($invitation);
+
+    expect($result)->toBeTrue();
+});
+
+test('le message basique ne contient pas la promotion', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'test-token-basic',
+        'invitee_company_name' => 'Basic Co',
+        'invitee_name' => 'Omar Ba',
+        'invitee_phone' => '+221770000066',
+        'recommended_plan' => 'basique',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+    ]);
+
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')
+        ->once()
+        ->withArgs(fn (string $phone, string $msg) => ! str_contains($msg, '2 mois offerts')
+            && str_contains($msg, 'Omar Ba')
+        )
+        ->andReturn(true);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    $service = app(InvitationService::class);
+    $result = $service->sendInvitationMessage($invitation);
+
+    expect($result)->toBeTrue();
+});
+
+test('remindInvitation envoie un message de rappel WhatsApp', function () {
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')
+        ->once()
+        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, 'rappel'))
+        ->andReturn(true);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'remind-wa-token',
+        'invitee_company_name' => 'Remind WA Co',
+        'invitee_name' => 'Contact WA',
+        'invitee_phone' => '+221770000055',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+        'reminder_count' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->call('remindInvitation', $invitation->id)
+        ->assertDispatched('toast', type: 'success');
+});
+
+test('resendInvitation envoie un message WhatsApp', function () {
+    $mock = Mockery::mock(WhatsAppProviderInterface::class);
+    $mock->shouldReceive('send')
+        ->once()
+        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, '/invite/'))
+        ->andReturn(true);
+    app()->instance(WhatsAppProviderInterface::class, $mock);
+
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'resend-wa-token',
+        'invitee_company_name' => 'Resend WA Co',
+        'invitee_name' => 'Contact Resend',
+        'invitee_phone' => '+221770000044',
+        'status' => 'expired',
+        'channel' => 'whatsapp',
+        'reminder_count' => 3,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->call('resendInvitation', $invitation->id)
+        ->assertDispatched('toast', type: 'success');
 });

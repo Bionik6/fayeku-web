@@ -4,8 +4,10 @@ namespace Modules\Auth\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
 use Modules\Auth\Models\Subscription;
+use Modules\Compta\Partnership\Models\PartnerInvitation;
 use Modules\Shared\Models\User;
 use Modules\Shared\Services\OtpService;
 
@@ -21,9 +23,39 @@ class AuthService
         return $prefix.ltrim($digits, '0');
     }
 
-    public function register(array $data): User
+    /**
+     * Parse an international phone number into country code and local number.
+     *
+     * @return array{country_code: string, local_number: string, normalized: string}
+     */
+    public static function parseInternationalPhone(string $phone): array
     {
-        return DB::transaction(function () use ($data) {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+
+        foreach (config('fayeku.countries', []) as $code => $country) {
+            $prefixDigits = preg_replace('/\D+/', '', $country['prefix']) ?? '';
+
+            if ($prefixDigits !== '' && str_starts_with($digits, $prefixDigits)) {
+                $localNumber = substr($digits, strlen($prefixDigits));
+
+                return [
+                    'country_code' => $code,
+                    'local_number' => $localNumber,
+                    'normalized' => $country['prefix'].ltrim($localNumber, '0'),
+                ];
+            }
+        }
+
+        return [
+            'country_code' => 'SN',
+            'local_number' => ltrim($digits, '0'),
+            'normalized' => '+221'.ltrim($digits, '0'),
+        ];
+    }
+
+    public function register(array $data, ?PartnerInvitation $invitation = null): User
+    {
+        return DB::transaction(function () use ($data, $invitation) {
             $phone = self::normalizePhone($data['phone'], $data['country_code']);
 
             $user = User::create([
@@ -35,26 +67,42 @@ class AuthService
                 'country_code' => $data['country_code'],
             ]);
 
+            $planSlug = $invitation?->recommended_plan ?? 'basique';
             $type = $data['profile_type'] === 'sme' ? 'sme' : 'accountant_firm';
+
             $company = Company::create([
                 'name' => $data['company_name'],
                 'type' => $type,
                 'country_code' => $data['country_code'],
-                'plan' => 'basique',
+                'plan' => $planSlug,
             ]);
 
             $company->users()->attach($user->id, ['role' => 'owner']);
 
             Subscription::create([
                 'company_id' => $company->id,
-                'plan_slug' => 'basique',
+                'plan_slug' => $planSlug,
                 'price_paid' => 0,
                 'billing_cycle' => 'trial',
                 'status' => 'trial',
                 'trial_ends_at' => now()->addDays(60),
                 'current_period_start' => now(),
                 'current_period_end' => now()->addDays(60),
+                'invited_by_firm_id' => $invitation?->accountant_firm_id,
             ]);
+
+            if ($invitation) {
+                AccountantCompany::create([
+                    'accountant_firm_id' => $invitation->accountant_firm_id,
+                    'sme_company_id' => $company->id,
+                    'started_at' => now(),
+                ]);
+
+                $invitation->update([
+                    'status' => 'registering',
+                    'sme_company_id' => $company->id,
+                ]);
+            }
 
             $this->otpService->generate($phone);
 

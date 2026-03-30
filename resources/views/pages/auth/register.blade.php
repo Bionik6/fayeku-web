@@ -1,11 +1,46 @@
+@php
+    $inviteeFirstName = '';
+    $inviteeLastName = '';
+
+    if (isset($invitation) && $invitation?->invitee_name) {
+        $parts = explode(' ', $invitation->invitee_name, 2);
+        $inviteeFirstName = $parts[0] ?? '';
+        $inviteeLastName = $parts[1] ?? '';
+    }
+@endphp
+
 <x-layouts::auth :title="__('Inscription')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Créer un compte')" :description="__('Remplissez les informations ci-dessous pour créer votre compte')" />
+        @if (isset($invitation) && $invitation)
+            <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
+                <p class="text-sm font-semibold text-teal-800">
+                    {{ $invitation->accountantFirm?->name }} {{ __('vous recommande Fayeku') }}
+                </p>
+                <p class="mt-1 text-sm text-teal-700">
+                    {{ __('Simplifiez votre facturation et gestion commerciale.') }}
+                    @if ($invitation->recommended_plan === 'essentiel')
+                        {{ __('Profitez de 2 mois offerts sur le plan Essentiel.') }}
+                    @endif
+                </p>
+            </div>
+
+            <x-auth-header
+                :title="__('Créer votre compte')"
+                :description="__('Complétez votre inscription pour rejoindre Fayeku.')"
+            />
+        @else
+            <x-auth-header :title="__('Créer un compte')" :description="__('Remplissez les informations ci-dessous pour créer votre compte')" />
+        @endif
 
         <x-auth-session-status :status="session('status')" />
 
         <form method="POST" action="{{ route('auth.register.submit') }}" class="flex flex-col gap-5">
             @csrf
+
+            @if (isset($invitation) && $invitation)
+                <input type="hidden" name="invitation_token" value="{{ $invitation->token }}" />
+                <input type="hidden" name="profile_type" value="sme" />
+            @endif
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <label class="auth-label">
@@ -13,7 +48,7 @@
                     <input
                         name="first_name"
                         type="text"
-                        value="{{ old('first_name') }}"
+                        value="{{ old('first_name', $inviteeFirstName) }}"
                         required
                         autofocus
                         autocomplete="given-name"
@@ -28,7 +63,7 @@
                     <input
                         name="last_name"
                         type="text"
-                        value="{{ old('last_name') }}"
+                        value="{{ old('last_name', $inviteeLastName) }}"
                         required
                         autocomplete="family-name"
                         placeholder="{{ __('Entrez votre nom') }}"
@@ -41,9 +76,9 @@
             <x-phone-input
                 :label="__('Téléphone')"
                 country-name="country_code"
-                :country-value="old('country_code', 'SN')"
+                :country-value="old('country_code', $inviteePhone['country_code'] ?? 'SN')"
                 phone-name="phone"
-                :phone-value="old('phone')"
+                :phone-value="old('phone', $inviteePhone['local_number'] ?? '')"
                 :required="true"
                 phone-placeholder="XX XXX XX XX"
             />
@@ -57,7 +92,7 @@
                 <input
                     name="company_name"
                     type="text"
-                    value="{{ old('company_name') }}"
+                    value="{{ old('company_name', $invitation->invitee_company_name ?? '') }}"
                     required
                     placeholder="{{ __('Nom commercial ou raison sociale') }}"
                     class="auth-input"
@@ -65,16 +100,18 @@
                 <x-auth-field-error name="company_name" />
             </label>
 
-            <label class="auth-label">
-                <span>{{ __('Type de profil') }} *</span>
-                <x-select-native>
-                    <select name="profile_type" class="auth-select" required>
-                        <option value="sme" @selected(old('profile_type', 'sme') === 'sme')>{{ __('PME') }}</option>
-                        <option value="accountant_firm" @selected(old('profile_type') === 'accountant_firm')>{{ __('Cabinet d\'expertise comptable') }}</option>
-                    </select>
-                </x-select-native>
-                <x-auth-field-error name="profile_type" />
-            </label>
+            @if (! isset($invitation) || ! $invitation)
+                <label class="auth-label">
+                    <span>{{ __('Type de profil') }} *</span>
+                    <x-select-native>
+                        <select name="profile_type" class="auth-select" required>
+                            <option value="sme" @selected(old('profile_type', 'sme') === 'sme')>{{ __('PME') }}</option>
+                            <option value="accountant_firm" @selected(old('profile_type') === 'accountant_firm')>{{ __('Cabinet d\'expertise comptable') }}</option>
+                        </select>
+                    </x-select-native>
+                    <x-auth-field-error name="profile_type" />
+                </label>
+            @endif
 
             <label class="auth-label">
                 <span>{{ __('Mot de passe') }} *</span>

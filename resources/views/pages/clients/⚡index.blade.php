@@ -7,6 +7,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Compta\Partnership\Services\InvitationService;
 use Modules\Compta\Portfolio\Services\PortfolioService;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -198,7 +199,7 @@ new #[Title('Clients')] class extends Component {
             return;
         }
 
-        PartnerInvitation::create([
+        $invitation = PartnerInvitation::create([
             'accountant_firm_id' => $this->firm->id,
             'token' => Str::random(32),
             'invitee_company_name' => $this->inviteCompanyName,
@@ -210,10 +211,16 @@ new #[Title('Clients')] class extends Component {
             'expires_at' => now()->addDays(30),
         ]);
 
+        $sent = app(InvitationService::class)->sendInvitationMessage($invitation);
+
         $this->resetInviteForm();
         $this->modal('invite-pme')->close();
 
-        session()->flash('message', __('Invitation envoyée avec succès.'));
+        if ($sent) {
+            session()->flash('message', __('Invitation envoyée avec succès.'));
+        } else {
+            session()->flash('message', __('Invitation créée mais l\'envoi WhatsApp a échoué.'));
+        }
     }
 
     public function resetInviteForm(): void
