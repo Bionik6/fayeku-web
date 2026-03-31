@@ -28,7 +28,6 @@ class RegisterRequest extends FormRequest
             'password' => ['required', 'string', Password::defaults(), 'confirmed'],
             'profile_type' => ['required', 'string', Rule::in(['sme', 'accountant_firm'])],
             'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
-            'company_name' => ['required', 'string', 'max:255'],
             'invitation_token' => ['nullable', 'string', 'max:100'],
         ];
     }
@@ -48,7 +47,6 @@ class RegisterRequest extends FormRequest
             'profile_type.in' => 'Le type de profil sélectionné est invalide.',
             'country_code.required' => 'Le pays est obligatoire.',
             'country_code.in' => 'Le pays sélectionné est invalide.',
-            'company_name.required' => "Le nom de l'entreprise est obligatoire.",
         ];
     }
 

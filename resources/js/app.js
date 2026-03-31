@@ -232,6 +232,11 @@ function bindPhoneFields() {
     const placeholders = {
         SN: "XX XXX XX XX",
         CI: "XX XX XX XX XX",
+        FR: "X XX XX XX XX",
+        ES: "XXX XXX XXX",
+        MA: "XX XX XX XX XX",
+        TN: "XX XXX XXX",
+        BE: "XXX XX XX XX",
     };
 
     document.querySelectorAll("[data-phone-field]").forEach((field) => {
@@ -240,7 +245,11 @@ function bindPhoneFields() {
         }
 
         field.dataset.bound = "true";
-        const country = field.querySelector("[data-phone-country]");
+        // Support both a <select data-phone-country> (multi-country) and a
+        // <input type="hidden" data-phone-country-static> (single-country mode).
+        const countrySelect = field.querySelector("[data-phone-country]");
+        const countryHidden = field.querySelector("[data-phone-country-static]");
+        const country = countrySelect ?? countryHidden;
         const input = field.querySelector("[data-phone-input]");
 
         if (!country || !input) {
@@ -280,10 +289,16 @@ function reFormatPhoneFields() {
     const placeholders = {
         SN: "XX XXX XX XX",
         CI: "XX XX XX XX XX",
+        FR: "X XX XX XX XX",
+        ES: "XXX XXX XXX",
+        MA: "XX XX XX XX XX",
+        TN: "XX XXX XXX",
+        BE: "XXX XX XX XX",
     };
 
     document.querySelectorAll("[data-phone-field]").forEach((field) => {
-        const country = field.querySelector("[data-phone-country]");
+        const country = field.querySelector("[data-phone-country]")
+                     ?? field.querySelector("[data-phone-country-static]");
         const input = field.querySelector("[data-phone-input]");
 
         // Skip fields the user is currently typing in.

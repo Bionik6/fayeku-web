@@ -5,6 +5,12 @@
             :description="__('Entrez le code à 6 chiffres envoyé au') . ' ' . $maskedPhone"
         />
 
+        @if (! app()->environment('production') && config('fayeku.otp_bypass_code'))
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-800">
+                {{ __('Mode développement') }} — {{ __('Code de bypass') }} : <strong>{{ config('fayeku.otp_bypass_code') }}</strong>
+            </div>
+        @endif
+
         <x-auth-session-status :status="session('status')" />
 
         <form method="POST" action="{{ route('auth.otp.verify') }}" class="flex flex-col gap-5">

@@ -88,7 +88,7 @@
           :phone-value="old('phone', '')"
           :required="true"
           phone-placeholder="XX XXX XX XX"
-          :container-class="'flex items-stretch rounded-2xl border bg-white transition focus-within:ring-2 focus-within:ring-primary/15 '.($errors->hasAny(['phone', 'country_code']) ? 'border-red-400' : 'border-slate-300 focus-within:border-primary')"
+          :countries="['SN' => config('fayeku.countries.SN.label', 'SEN (+221)')]"
         />
         @error('phone')
           <p class="text-xs text-red-600">{{ $message }}</p>

@@ -19,6 +19,7 @@
                 :required="true"
                 :autofocus="true"
                 phone-placeholder="XX XXX XX XX"
+                :countries="['SN' => config('fayeku.countries.SN.label', 'SEN (+221)')]"
             />
             <div class="-mt-0.5 space-y-1">
                 <x-auth-field-error name="country_code" />

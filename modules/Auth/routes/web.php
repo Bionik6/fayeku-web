@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Auth\Http\Controllers\CompanySetupController;
 use Modules\Auth\Http\Controllers\LoginController;
 use Modules\Auth\Http\Controllers\LogoutController;
 use Modules\Auth\Http\Controllers\OtpController;
@@ -23,4 +24,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/otp', [OtpController::class, 'verify'])->name('auth.otp.verify');
     Route::post('/otp/resend', [OtpController::class, 'resend'])->name('auth.otp.resend');
     Route::post('/logout', [LogoutController::class, 'destroy'])->name('auth.logout');
+});
+
+Route::middleware(['web', 'auth', 'verified.phone'])->group(function () {
+    Route::get('/company-setup', [CompanySetupController::class, 'show'])->name('auth.company-setup');
+    Route::post('/company-setup', [CompanySetupController::class, 'store'])->name('auth.company-setup.submit');
 });

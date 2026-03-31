@@ -18,7 +18,23 @@ class Company extends Model
 {
     use HasFactory, HasUlid;
 
-    protected $fillable = ['name', 'type', 'plan', 'invite_code', 'country_code', 'phone', 'email', 'address', 'city', 'ninea', 'rccm', 'logo_path', 'reminder_settings'];
+    protected $fillable = [
+        'name',
+        'type',
+        'plan',
+        'invite_code',
+        'country_code',
+        'phone',
+        'email',
+        'address',
+        'city',
+        'ninea',
+        'rccm',
+        'logo_path',
+        'reminder_settings',
+        'sector',
+        'setup_completed_at',
+    ];
 
     protected static function boot(): void
     {
@@ -37,6 +53,7 @@ class Company extends Model
 
     protected $casts = [
         'reminder_settings' => 'array',
+        'setup_completed_at' => 'datetime',
     ];
 
     protected static function newFactory(): CompanyFactory
@@ -46,10 +63,9 @@ class Company extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(
-            User::class,
-            'company_user', 'company_id', 'user_id'
-        )->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class, 'company_user', 'company_id', 'user_id')
+            ->withPivot('role')
+            ->withTimestamps();
     }
 
     public function subscription(): HasOne
@@ -59,17 +75,24 @@ class Company extends Model
 
     public function managedSmes(): HasMany
     {
-        return $this->hasMany(AccountantCompany::class, 'accountant_firm_id')->whereNull('ended_at');
+        return $this->hasMany(AccountantCompany::class, 'accountant_firm_id')
+            ->whereNull('ended_at');
     }
 
     public function activeAccountants(): HasMany
     {
-        return $this->hasMany(AccountantCompany::class, 'sme_company_id')->whereNull('ended_at');
+        return $this->hasMany(AccountantCompany::class, 'sme_company_id')
+            ->whereNull('ended_at');
     }
 
     public function reminderRules(): HasMany
     {
         return $this->hasMany(ReminderRule::class);
+    }
+
+    public function isSetupComplete(): bool
+    {
+        return $this->setup_completed_at !== null;
     }
 
     public function isReminderEnabled(): bool

@@ -74,6 +74,14 @@ class OtpController extends Controller
             return response()->json(['message' => 'Téléphone vérifié avec succès.']);
         }
 
+        if ($user?->profile_type === 'sme') {
+            $company = $user->smeCompany();
+
+            if ($company && ! $company->isSetupComplete()) {
+                return redirect()->route('auth.company-setup');
+            }
+        }
+
         return redirect()->route($this->dashboardRouteNameForUser());
     }
 

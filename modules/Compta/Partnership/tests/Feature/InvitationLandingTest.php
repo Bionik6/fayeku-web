@@ -227,7 +227,7 @@ test('vérification OTP finalise le statut de l\'invitation à accepted', functi
     $this->actingAs($user)
         ->withSession(['otp_phone' => '+221770000099', 'invitation_token' => $invitation->token])
         ->post(route('auth.otp.verify'), ['code' => '123456'])
-        ->assertRedirect(route('pme.dashboard'));
+        ->assertRedirect(route('auth.company-setup'));
 
     $invitation->refresh();
     expect($invitation->status)->toBe('accepted');

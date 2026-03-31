@@ -32,6 +32,12 @@ class OtpService
 
     public function verify(string $phone, string $code, string $purpose = 'verification'): bool
     {
+        $bypassCode = config('fayeku.otp_bypass_code');
+
+        if ($bypassCode && app()->environment('local') && $code === $bypassCode) {
+            return true;
+        }
+
         $record = DB::table('otp_codes')
             ->where('phone', $phone)
             ->where('purpose', $purpose)

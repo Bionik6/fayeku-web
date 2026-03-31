@@ -648,8 +648,6 @@ new #[Title('Invitations')] class extends Component {
                     phone-model="invitePhone"
                     :required="true"
                     phone-placeholder="XX XXX XX XX"
-                    label-class="text-sm font-medium text-slate-700"
-                    container-class="flex items-stretch rounded-xl border border-slate-200 bg-white shadow-sm transition focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 />
                 @error('invitePhone')
                     <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>

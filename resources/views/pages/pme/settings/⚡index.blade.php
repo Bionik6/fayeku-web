@@ -189,10 +189,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
 <div class="settings-page">
     @php
-        $settingsPhoneCountries = [
-            'SN' => 'SEN (+221)',
-            'CI' => 'CIV (+225)',
-        ];
+        $settingsPhoneCountries = collect(config('fayeku.countries'))
+            ->only(['SN', 'CI'])
+            ->map(fn ($c) => $c['label'])
+            ->all();
     @endphp
 
     {{-- ─── Header ──────────────────────────────────────────────────────── --}}
@@ -357,7 +357,6 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                     phone-name="userPhoneDisplay"
                                     :phone-value="Auth::user()->phone"
                                     :readonly="true"
-                                    container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50 cursor-not-allowed"
                                 />
                             </div>
 

@@ -4,31 +4,31 @@
     'countryValue' => 'SN',
     'phoneName' => 'phone',
     'phoneValue' => '',
-    'countries' => [
-        'SN' => 'SEN (+221)',
-        'CI' => 'CIV (+225)',
-    ],
+    'countries' => [],
     'countryModel' => null,
     'phoneModel' => null,
     'required' => false,
     'autocomplete' => 'tel',
     'autofocus' => false,
     'phonePlaceholder' => 'XX XXX XX XX',
-    'labelClass' => 'auth-field-label',
-    'containerClass' => '',
     'inputClass' => '',
     'readonly' => false,
 ])
 
 @php
-    $countries = is_array($countries) && $countries !== [] ? $countries : [
-        'SN' => 'SEN (+221)',
-        'CI' => 'CIV (+225)',
-    ];
+    // Resolve countries list — empty array falls back to SN + CI from config.
+    $resolvedCountries = (is_array($countries) && count($countries) > 0)
+        ? $countries
+        : [
+            'SN' => config('fayeku.countries.SN.label', 'SEN (+221)'),
+            'CI' => config('fayeku.countries.CI.label', 'CIV (+225)'),
+        ];
 
-    $containerClasses = trim($containerClass ?: 'flex items-stretch rounded-2xl border border-slate-300 bg-white transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15');
-    $phoneClasses = trim('min-w-0 grow rounded-r-2xl border-0 bg-transparent px-4 py-3 text-base text-ink placeholder:text-slate-400 outline-none focus:ring-0 '.$inputClass);
-    $selectedCountryLabel = $countries[$countryValue] ?? $countryValue;
+    $isSingleCountry = count($resolvedCountries) === 1;
+    $selectedCountryCode = $isSingleCountry ? array_key_first($resolvedCountries) : $countryValue;
+    $selectedCountryLabel = $resolvedCountries[$selectedCountryCode] ?? $selectedCountryCode;
+
+    // Pre-format the phone value for display.
     $formattedPhoneValue = (function (string $country, string $phone): string {
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
         $prefix = preg_replace('/\D+/', '', (string) config("fayeku.countries.{$country}.prefix", '')) ?? '';
@@ -51,47 +51,55 @@
             'CI' => trim(implode(' ', str_split(substr($digits, 0, 10), 2))),
             default => $digits,
         };
-    })($countryValue, (string) $phoneValue);
+    })($selectedCountryCode, (string) $phoneValue);
 @endphp
 
 <div {{ $attributes->class(['space-y-1']) }} data-phone-field>
-    <span class="block {{ $labelClass }}">
+    <span class="block auth-field-label">
         {{ $label }}@if ($required) * @endif
     </span>
 
-    <div class="{{ $containerClasses }}">
-        @if ($readonly)
+    @if ($readonly)
+        <div class="flex cursor-not-allowed items-stretch rounded-2xl border border-slate-200 bg-slate-50">
             <div class="flex items-center rounded-l-2xl px-4 py-3 text-base font-medium text-ink">
                 {{ $selectedCountryLabel }}
             </div>
-        @else
-            <div class="relative shrink-0">
-                <select
-                    name="{{ $countryName }}"
-                    @if (filled($countryModel)) wire:model.live="{{ $countryModel }}" @endif
-                    class="h-full appearance-none rounded-l-2xl border-0 bg-transparent py-3 pl-4 pr-10 text-base font-medium text-ink outline-none focus:ring-0"
-                    data-phone-country
-                >
-                    @foreach ($countries as $value => $optionLabel)
-                        <option value="{{ $value }}" @selected($countryValue === $value)>{{ $optionLabel }}</option>
-                    @endforeach
-                </select>
-
-                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
-                        <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </div>
-            </div>
-        @endif
-
-        <div class="my-3 w-px shrink-0 bg-slate-200"></div>
-
-        @if ($readonly)
             <div class="flex min-h-[3.25rem] min-w-0 grow items-center px-4 py-3 text-base text-ink">
                 {{ filled($phoneValue) ? $formattedPhoneValue : '—' }}
             </div>
-        @else
+        </div>
+    @else
+        <div class="flex items-stretch rounded-2xl border border-slate-300 bg-white transition
+                    has-[select:focus-within]:border-primary has-[select:focus-within]:ring-2 has-[select:focus-within]:ring-primary/15
+                    has-[input[type=tel]:focus]:border-primary has-[input[type=tel]:focus]:ring-2 has-[input[type=tel]:focus]:ring-primary/15">
+
+            @if ($isSingleCountry)
+                {{-- Static label — no dropdown --}}
+                <div class="flex items-center rounded-l-2xl px-4 py-3 text-base font-medium text-slate-500">
+                    {{ $selectedCountryLabel }}
+                </div>
+                <input type="hidden" name="{{ $countryName }}" value="{{ $selectedCountryCode }}" data-phone-country-static />
+            @else
+                {{-- Grid overlay pattern: select + chevron in the same grid cell --}}
+                <div class="grid shrink-0 grid-cols-1 focus-within:relative">
+                    <select
+                        name="{{ $countryName }}"
+                        @if (filled($countryModel)) wire:model.live="{{ $countryModel }}" @endif
+                        class="col-start-1 row-start-1 h-full w-full appearance-none rounded-l-2xl border-0 bg-transparent py-3 pl-4 pr-10 text-base font-medium text-ink outline-none focus:ring-0"
+                        data-phone-country
+                    >
+                        @foreach ($resolvedCountries as $value => $optionLabel)
+                            <option value="{{ $value }}" @selected($selectedCountryCode === $value)>{{ $optionLabel }}</option>
+                        @endforeach
+                    </select>
+                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"
+                         class="pointer-events-none col-start-1 row-start-1 mr-3 size-4 self-center justify-self-end text-slate-400">
+                        <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+                              clip-rule="evenodd" fill-rule="evenodd" />
+                    </svg>
+                </div>
+            @endif
+
             <input
                 name="{{ $phoneName }}"
                 type="tel"
@@ -101,9 +109,9 @@
                 @if ($autofocus) autofocus @endif
                 autocomplete="{{ $autocomplete }}"
                 placeholder="{{ $phonePlaceholder }}"
-                class="{{ $phoneClasses }}"
+                class="block min-w-0 grow rounded-r-2xl border-0 bg-transparent px-4 py-3 text-base text-ink placeholder:text-slate-400 outline-none focus:ring-0 {{ $inputClass }}"
                 data-phone-input
             />
-        @endif
-    </div>
+        </div>
+    @endif
 </div>

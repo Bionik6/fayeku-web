@@ -106,6 +106,10 @@ class RegisterController extends Controller
 
         if ($invitation) {
             session(['invitation_token' => $invitation->token]);
+
+            if ($invitation->invitee_company_name) {
+                session(['invitee_company_name' => $invitation->invitee_company_name]);
+            }
         }
 
         session()->forget('joining_firm_code');

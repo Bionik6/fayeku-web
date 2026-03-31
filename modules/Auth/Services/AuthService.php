@@ -73,7 +73,7 @@ class AuthService
             $type = $data['profile_type'] === 'sme' ? 'sme' : 'accountant_firm';
 
             $company = Company::create([
-                'name' => $data['company_name'],
+                'name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
                 'type' => $type,
                 'country_code' => $data['country_code'],
                 'plan' => $planSlug,

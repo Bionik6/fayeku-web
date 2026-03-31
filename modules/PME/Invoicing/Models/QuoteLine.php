@@ -4,7 +4,7 @@ namespace Modules\PME\Invoicing\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\PME\Invoicing\Enums\LineType;
+use Modules\PME\Invoicing\Enums\InvoiceLineType;
 use Modules\Shared\Traits\HasUlid;
 
 class QuoteLine extends Model
@@ -17,7 +17,7 @@ class QuoteLine extends Model
     ];
 
     protected $casts = [
-        'type' => LineType::class,
+        'type' => InvoiceLineType::class,
         'quantity' => 'integer',
         'unit_price' => 'integer',
         'tax_rate' => 'integer',

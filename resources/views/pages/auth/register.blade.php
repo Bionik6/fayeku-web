@@ -17,6 +17,9 @@
                     {{ $invitation->accountantFirm?->name }} {{ __('vous recommande Fayeku') }}
                 </p>
                 <p class="mt-1 text-sm text-teal-700">
+                    @if ($invitation->invitee_company_name)
+                        {{ $invitation->invitee_company_name }} &mdash;
+                    @endif
                     {{ __('Simplifiez votre facturation et gestion commerciale.') }}
                     @if ($invitation->recommended_plan === 'essentiel')
                         {{ __('Profitez de 2 mois offerts sur le plan Essentiel.') }}
@@ -107,24 +110,12 @@
                 :phone-value="old('phone', $inviteePhone['local_number'] ?? '')"
                 :required="true"
                 phone-placeholder="XX XXX XX XX"
+                :countries="['SN' => config('fayeku.countries.SN.label', 'SEN (+221)')]"
             />
             <div class="-mt-0.5 space-y-1">
                 <x-auth-field-error name="country_code" />
                 <x-auth-field-error name="phone" />
             </div>
-
-            <label class="auth-label">
-                <span>{{ __('Nom de l\'entreprise ou du cabinet') }} *</span>
-                <input
-                    name="company_name"
-                    type="text"
-                    value="{{ old('company_name', $invitation->invitee_company_name ?? '') }}"
-                    required
-                    placeholder="{{ __('Nom commercial ou raison sociale') }}"
-                    class="auth-input"
-                />
-                <x-auth-field-error name="company_name" />
-            </label>
 
             <label class="auth-label">
                 <span>{{ __('Mot de passe') }} *</span>

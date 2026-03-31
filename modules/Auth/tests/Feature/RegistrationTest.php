@@ -21,7 +21,6 @@ test('user can register as sme', function () {
         'password_confirmation' => 'P@ssword123!',
         'profile_type' => 'sme',
         'country_code' => 'SN',
-        'company_name' => 'Ma Société SARL',
     ]);
 
     $response->assertRedirect(route('auth.otp'));
@@ -31,6 +30,8 @@ test('user can register as sme', function () {
         'profile_type' => 'sme',
     ]);
     expect(Company::count())->toBe(1);
+    expect(Company::first()->name)->toBe('Amadou Diallo');
+    expect(Company::first()->setup_completed_at)->toBeNull();
     expect(Subscription::count())->toBe(1);
 });
 
@@ -43,7 +44,6 @@ test('user can register as accountant firm', function () {
         'password_confirmation' => 'P@ssword123!',
         'profile_type' => 'accountant_firm',
         'country_code' => 'CI',
-        'company_name' => 'Cabinet Comptable Sow',
     ]);
 
     $response->assertRedirect(route('auth.otp'));
@@ -58,7 +58,7 @@ test('registration fails with missing fields', function () {
 
     $response->assertSessionHasErrors([
         'first_name', 'last_name', 'phone', 'password',
-        'profile_type', 'country_code', 'company_name',
+        'profile_type', 'country_code',
     ]);
 });
 
@@ -73,7 +73,6 @@ test('registration fails with duplicate phone', function () {
         'password_confirmation' => 'P@ssword123!',
         'profile_type' => 'sme',
         'country_code' => 'SN',
-        'company_name' => 'Ma Société',
     ]);
 
     $response->assertSessionHasErrors('phone');
@@ -88,7 +87,6 @@ test('api registration returns json with token', function () {
         'password_confirmation' => 'P@ssword123!',
         'profile_type' => 'sme',
         'country_code' => 'SN',
-        'company_name' => 'Ma Société SARL',
     ]);
 
     $response->assertCreated()

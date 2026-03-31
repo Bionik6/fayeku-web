@@ -6,7 +6,7 @@ use Database\Factories\InvoiceLineFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\PME\Invoicing\Enums\LineType;
+use Modules\PME\Invoicing\Enums\InvoiceLineType;
 use Modules\Shared\Traits\HasUlid;
 
 class InvoiceLine extends Model
@@ -25,7 +25,7 @@ class InvoiceLine extends Model
     ];
 
     protected $casts = [
-        'type' => LineType::class,
+        'type' => InvoiceLineType::class,
         'quantity' => 'integer',
         'unit_price' => 'integer',
         'tax_rate' => 'integer',

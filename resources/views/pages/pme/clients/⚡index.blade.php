@@ -34,6 +34,9 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
     public string $clientPhoneCountry = 'SN';
 
+    /** @var array<string, string> */
+    public array $clientPhoneCountries = [];
+
     public string $clientEmail = '';
 
     public string $clientTaxId = '';
@@ -46,6 +49,10 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
     public function mount(): void
     {
         $this->company = app(ClientService::class)->companyForUser(auth()->user());
+        $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
+        $this->clientPhoneCountries = collect(config('fayeku.countries'))
+            ->map(fn ($c) => $c['label'])
+            ->all();
     }
 
     #[Computed]
@@ -231,10 +238,11 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
             return '+'.$digits;
         }
 
-        $prefix = match ($this->clientPhoneCountry) {
-            'CI' => '225',
-            default => '221',
-        };
+        $prefix = preg_replace(
+            '/\D+/',
+            '',
+            (string) config("fayeku.countries.{$this->clientPhoneCountry}.prefix", '221')
+        );
 
         if (str_starts_with($digits, $prefix)) {
             return '+'.$digits;
@@ -714,69 +722,17 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                             </div>
 
                             {{-- Téléphone / WhatsApp --}}
-                            <div
-                                x-data="{
-                                    country: '{{ $clientPhoneCountry }}',
-                                    digits: '',
-                                    get maxLen() { return this.country === 'SN' ? 9 : 10 },
-                                    get placeholder() { return this.country === 'SN' ? 'XX XXX XX XX' : 'XX XX XX XX XX' },
-                                    format(d) {
-                                        const s = d.slice(0, this.maxLen);
-                                        if (this.country === 'SN') {
-                                            if (s.length <= 2) return s;
-                                            if (s.length <= 5) return s.slice(0,2)+' '+s.slice(2);
-                                            if (s.length <= 7) return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5);
-                                            return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5,7)+' '+s.slice(7);
-                                        }
-                                        const g = []; for (let i=0; i<s.length; i+=2) g.push(s.slice(i,i+2)); return g.join(' ');
-                                    },
-                                    onInput(e) {
-                                        this.digits = e.target.value.replace(/\D/g, '');
-                                        e.target.value = this.format(this.digits);
-                                        this.sync();
-                                    },
-                                    changeCountry() {
-                                        this.digits = '';
-                                        this.$refs.phoneInput.value = '';
-                                        this.sync();
-                                    },
-                                    sync() {
-                                        const prefix = this.country === 'CI' ? '225' : '221';
-                                        $wire.clientPhone = this.digits ? '+'+prefix+this.digits : '';
-                                        $wire.clientPhoneCountry = this.country;
-                                    }
-                                }"
-                            >
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Téléphone / WhatsApp') }}</label>
-                                <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                    <div class="relative shrink-0">
-                                        <x-select-native>
-                                            <select
-                                                x-model="country"
-                                                @change="changeCountry()"
-                                                class="col-start-1 row-start-1 h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-8 text-sm font-medium text-ink outline-none focus:ring-0"
-                                            >
-                                                <option value="SN">SEN (+221)</option>
-                                                <option value="CI">CIV (+225)</option>
-                                            </select>
-                                        </x-select-native>
-                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
-                                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="my-3 w-px shrink-0 bg-slate-200"></div>
-                                    <input
-                                        x-ref="phoneInput"
-                                        type="tel"
-                                        inputmode="numeric"
-                                        :placeholder="placeholder"
-                                        @input="onInput($event)"
-                                        class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-500 outline-none focus:ring-0"
-                                    />
-                                </div>
-                            </div>
+                            <x-phone-input
+                                :label="__('Téléphone / WhatsApp')"
+                                country-name="clientPhoneCountry"
+                                :country-value="$clientPhoneCountry"
+                                country-model="clientPhoneCountry"
+                                phone-name="clientPhone"
+                                :phone-value="$clientPhone"
+                                phone-model="clientPhone"
+                                :countries="$clientPhoneCountries"
+                                phone-placeholder="XX XXX XX XX"
+                            />
 
                             {{-- Email --}}
                             <div>

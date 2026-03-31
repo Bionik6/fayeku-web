@@ -2,7 +2,7 @@
 
 namespace Modules\PME\Invoicing\Enums;
 
-enum LineType: string
+enum InvoiceLineType: string
 {
     case Acompte = 'acompte';
     case Heures = 'heures';

@@ -50,7 +50,6 @@
           country-value="SN"
           phone-name="phone"
           phone-placeholder="XX XXX XX XX"
-          container-class="flex items-stretch rounded-2xl border border-primary/10 bg-white transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
         />
         <label class="space-y-2 text-sm font-medium text-ink">
           <span>Pays</span>
