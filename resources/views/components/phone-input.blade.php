@@ -31,7 +31,7 @@
     // Pre-format the phone value for display.
     $formattedPhoneValue = (function (string $country, string $phone): string {
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
-        $prefix = preg_replace('/\D+/', '', (string) config("fayeku.countries.{$country}.prefix", '')) ?? '';
+        $prefix = preg_replace('/\D+/', '', (string) (config("fayeku.phone_countries.{$country}.prefix") ?? config("fayeku.countries.{$country}.prefix", ''))) ?? '';
 
         if ($prefix !== '' && str_starts_with($digits, $prefix)) {
             $digits = substr($digits, strlen($prefix));
@@ -103,12 +103,14 @@
             <input
                 name="{{ $phoneName }}"
                 type="tel"
+                inputmode="numeric"
                 value="{{ $formattedPhoneValue }}"
                 @if (filled($phoneModel)) wire:model="{{ $phoneModel }}" @endif
                 @if ($required) required @endif
                 @if ($autofocus) autofocus @endif
                 autocomplete="{{ $autocomplete }}"
                 placeholder="{{ $phonePlaceholder }}"
+                x-on:input="$el.value = $el.value.replace(/[^\d\s]/g, '')"
                 class="block min-w-0 grow rounded-r-2xl border-0 bg-transparent px-4 py-3 text-base text-ink placeholder:text-slate-400 outline-none focus:ring-0 {{ $inputClass }}"
                 data-phone-input
             />

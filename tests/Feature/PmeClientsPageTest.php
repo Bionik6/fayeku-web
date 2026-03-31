@@ -108,7 +108,7 @@ test('la page affiche l etat vide quand aucun client n existe', function () {
 test('la page calcule les kpis, les segments et l insight de risque', function () {
     ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
 
-    $best = makePortfolioClient($company, ['name' => 'Sonatel', 'sector' => 'Télécom']);
+    $best = makePortfolioClient($company, ['name' => 'Sonatel']);
     makePortfolioInvoice($best, [
         'total' => 500_000,
         'amount_paid' => 500_000,
@@ -124,7 +124,7 @@ test('la page calcule les kpis, les segments et l insight de risque', function (
         'paid_at' => now()->subMonths(14)->addDays(10),
     ]);
 
-    $risk = makePortfolioClient($company, ['name' => 'Dakar Pharma', 'sector' => 'Santé']);
+    $risk = makePortfolioClient($company, ['name' => 'Dakar Pharma']);
     $riskInvoice = makePortfolioInvoice($risk, [
         'status' => InvoiceStatus::Overdue->value,
         'total' => 800_000,
@@ -135,7 +135,7 @@ test('la page calcule les kpis, les segments et l insight de risque', function (
     ]);
     makePortfolioReminder($riskInvoice, ['sent_at' => now()->subDays(5)]);
 
-    makePortfolioClient($company, ['name' => 'Immeuble ATLAN', 'sector' => 'Immobilier']);
+    makePortfolioClient($company, ['name' => 'Immeuble ATLAN']);
 
     $component = Livewire::actingAs($user)->test('pages::pme.clients.index');
 
@@ -157,15 +157,15 @@ test('la page calcule les kpis, les segments et l insight de risque', function (
         ->and($insight['body'])->toContain('Dakar Pharma');
 });
 
-test('la recherche peut filtrer sur le nom ou le secteur', function () {
+test('la recherche peut filtrer sur le nom', function () {
     ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
 
-    makePortfolioClient($company, ['name' => 'Sonatel', 'sector' => 'Télécom']);
-    makePortfolioClient($company, ['name' => 'Dakar Pharma', 'sector' => 'Santé']);
+    makePortfolioClient($company, ['name' => 'Sonatel']);
+    makePortfolioClient($company, ['name' => 'Dakar Pharma']);
 
     $component = Livewire::actingAs($user)
         ->test('pages::pme.clients.index')
-        ->set('search', 'Santé');
+        ->set('search', 'Dakar');
 
     $rows = collect($component->get('rows'));
 
@@ -226,7 +226,6 @@ test('saveClient cree un client, normalise le telephone et redirige vers la fich
     $component = Livewire::actingAs($user)
         ->test('pages::pme.clients.index')
         ->set('clientName', 'Nouvelle Cliente')
-        ->set('clientSector', 'Distribution')
         ->set('clientPhone', '77 123 45 67')
         ->set('clientEmail', 'contact@nouvelle.sn')
         ->set('clientTaxId', 'SN123456')
@@ -236,8 +235,7 @@ test('saveClient cree un client, normalise le telephone et redirige vers la fich
     $client = Client::query()->where('company_id', $company->id)->first();
 
     expect($client)->not->toBeNull()
-        ->and($client->phone)->toBe('+221771234567')
-        ->and($client->sector)->toBe('Distribution');
+        ->and($client->phone)->toBe('+221771234567');
 
     $component->assertRedirect(route('pme.clients.show', $client));
 });
@@ -294,7 +292,6 @@ test('la fiche client affiche les totaux, les relances, les devis et la chronolo
 
     $client = makePortfolioClient($company, [
         'name' => 'Dakar Pharma',
-        'sector' => 'Santé',
         'phone' => '+221771112233',
         'email' => 'finance@dakarpharma.sn',
     ]);
@@ -364,12 +361,11 @@ test('la fiche client gere les etats vides sans erreurs', function () {
         ->assertSee('Aucune relance n’a encore été envoyée à ce client.');
 });
 
-test('la fiche client permet de modifier les informations et de supprimer le secteur vide', function () {
+test('la fiche client permet de modifier les informations client', function () {
     ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
 
     $client = makePortfolioClient($company, [
         'name' => 'Dakar Pharma',
-        'sector' => 'Santé',
         'phone' => '+221771112233',
         'email' => 'finance@dakarpharma.sn',
         'tax_id' => 'SN999999',
@@ -380,20 +376,17 @@ test('la fiche client permet de modifier les informations et de supprimer le sec
         ->test('pages::pme.clients.show', ['client' => $client])
         ->call('openEditClientModal')
         ->set('clientName', 'Dakar Pharma Groupe')
-        ->set('clientSector', '')
         ->set('clientPhoneCountry', 'CI')
         ->set('clientPhone', '07 08 09 10 11')
         ->set('clientEmail', 'compta@dakarpharma.ci')
         ->set('clientTaxId', 'CI123456')
         ->set('clientAddress', 'Abidjan Plateau')
         ->call('saveClientUpdates')
-        ->assertDispatched('toast', type: 'success', title: 'Les informations client ont été mises à jour.')
-        ->assertDontSee('Secteur');
+        ->assertDispatched('toast', type: 'success', title: 'Les informations client ont été mises à jour.');
 
     $client->refresh();
 
     expect($client->name)->toBe('Dakar Pharma Groupe')
-        ->and($client->sector)->toBeNull()
         ->and($client->phone)->toBe('+2250708091011')
         ->and($client->email)->toBe('compta@dakarpharma.ci')
         ->and($client->tax_id)->toBe('CI123456')

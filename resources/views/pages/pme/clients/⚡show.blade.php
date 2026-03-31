@@ -19,11 +19,12 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
     public string $clientName = '';
 
-    public string $clientSector = '';
-
     public string $clientPhone = '';
 
     public string $clientPhoneCountry = 'SN';
+
+    /** @var array<string, string> */
+    public array $clientPhoneCountries = [];
 
     public string $clientEmail = '';
 
@@ -51,6 +52,9 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         );
 
         $this->client = $client;
+        $this->clientPhoneCountries = collect(config('fayeku.phone_countries'))
+            ->map(fn ($c) => $c['label'])
+            ->all();
     }
 
     public function openEditClientModal(): void
@@ -68,20 +72,19 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
         $validated = $this->validate([
             'clientName' => ['required', 'string', 'max:255'],
-            'clientSector' => ['nullable', 'string', 'max:100'],
-            'clientPhone' => ['nullable', 'string', 'max:30'],
+            'clientPhone' => ['required', 'string', 'max:30'],
             'clientEmail' => ['nullable', 'email', 'max:255'],
             'clientTaxId' => ['nullable', 'string', 'max:100'],
             'clientAddress' => ['nullable', 'string', 'max:500'],
         ], [
             'clientName.required' => __('Le nom du client est requis.'),
+            'clientPhone.required' => __('Le numéro de téléphone est requis.'),
             'clientEmail.email' => __('L’adresse email doit être valide.'),
         ]);
 
         $this->client->update([
             'name' => trim($validated['clientName']),
-            'sector' => $this->emptyToNull($validated['clientSector'] ?? ''),
-            'phone' => $this->normalizePhone($validated['clientPhone'] ?? ''),
+            'phone' => $this->normalizePhone($validated['clientPhone']),
             'email' => $this->emptyToNull($validated['clientEmail'] ?? ''),
             'tax_id' => $this->emptyToNull($validated['clientTaxId'] ?? ''),
             'address' => $this->emptyToNull($validated['clientAddress'] ?? ''),
@@ -139,7 +142,6 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     private function fillClientForm(): void
     {
         $this->clientName = $this->client->name;
-        $this->clientSector = $this->client->sector ?? '';
         $this->clientPhone = $this->client->phone ?? '';
         $this->clientPhoneCountry = $this->phoneCountry($this->client->phone);
         $this->clientEmail = $this->client->email ?? '';
@@ -151,7 +153,15 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     {
         $digits = preg_replace('/\D+/', '', (string) $phone);
 
-        return str_starts_with($digits, '225') ? 'CI' : 'SN';
+        foreach (config('fayeku.phone_countries', []) as $code => $country) {
+            $prefix = preg_replace('/\D+/', '', $country['prefix']);
+
+            if ($prefix !== '' && str_starts_with($digits, $prefix)) {
+                return $code;
+            }
+        }
+
+        return 'SN';
     }
 
     private function normalizePhone(string $phone): ?string
@@ -166,7 +176,11 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             return '+'.$digits;
         }
 
-        $prefix = $this->clientPhoneCountry === 'CI' ? '225' : '221';
+        $prefix = preg_replace(
+            '/\D+/',
+            '',
+            (string) config("fayeku.phone_countries.{$this->clientPhoneCountry}.prefix", '221')
+        );
 
         if (str_starts_with($digits, $prefix)) {
             return '+'.$digits;
@@ -196,11 +210,6 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                     {{ __('← Retour aux clients') }}
                 </a>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
-                    @if ($this->detail['contact']['sector'] !== '—')
-                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
-                            {{ $this->detail['contact']['sector'] }}
-                        </span>
-                    @endif
                     <span @class([
                         'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold',
                         'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
@@ -362,12 +371,6 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Email') }}</p>
                     <p class="mt-2 text-sm font-semibold text-ink break-all">{{ $this->detail['contact']['email'] }}</p>
                 </div>
-                @if ($this->detail['contact']['sector'] !== '—')
-                    <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Secteur') }}</p>
-                        <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['sector'] }}</p>
-                    </div>
-                @endif
                 <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Identifiant fiscal') }}</p>
                     <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['tax_id'] }}</p>
@@ -652,7 +655,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                         <div class="grid gap-5 md:grid-cols-2">
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700">
-                                    {{ __('Nom du client') }} <span class="text-rose-500">*</span>
+                                    {{ __('Nom client ou Raison Sociale') }} <span class="text-rose-500">*</span>
                                 </label>
                                 <input
                                     wire:model="clientName"
@@ -664,104 +667,18 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                                 @error('clientName') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
 
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Secteur') }}</label>
-                                <x-select-native>
-                                    <select
-                                        wire:model="clientSector"
-                                        class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                    >
-                                        <option value="">{{ __('Choisir un secteur…') }}</option>
-                                        <option>Agriculture, Élevage &amp; Pêche</option>
-                                        <option>Agroalimentaire &amp; Transformation</option>
-                                        <option>Commerce de gros</option>
-                                        <option>Commerce de détail &amp; Distribution</option>
-                                        <option>Bâtiment &amp; Travaux Publics</option>
-                                        <option>Transport &amp; Logistique</option>
-                                        <option>Télécommunications</option>
-                                        <option>Technologies de l'information &amp; Communication</option>
-                                        <option>Industrie manufacturière</option>
-                                        <option>Énergie, Mines &amp; Pétrole</option>
-                                        <option>Santé &amp; Pharmacie</option>
-                                        <option>Éducation &amp; Formation</option>
-                                        <option>Immobilier &amp; Foncier</option>
-                                        <option>Finance, Banque &amp; Assurance</option>
-                                        <option>Hôtellerie &amp; Restauration</option>
-                                        <option>Tourisme &amp; Loisirs</option>
-                                        <option>Artisanat &amp; Arts</option>
-                                        <option>Médias &amp; Communication</option>
-                                        <option>Textile, Habillement &amp; Cuir</option>
-                                        <option>Services aux entreprises &amp; Conseil</option>
-                                        <option>Environnement &amp; Eau</option>
-                                        <option value="Autre">{{ __('Autre') }}</option>
-                                    </select>
-                                </x-select-native>
-                            </div>
-
-                            <div
-                                x-data="{
-                                    country: @js($clientPhoneCountry),
-                                    digits: @js(preg_replace('/^(221|225)/', '', preg_replace('/\\D+/', '', $clientPhone))),
-                                    get maxLen() { return this.country === 'SN' ? 9 : 10 },
-                                    get placeholder() { return this.country === 'SN' ? 'XX XXX XX XX' : 'XX XX XX XX XX' },
-                                    format(d) {
-                                        const s = d.slice(0, this.maxLen);
-                                        if (this.country === 'SN') {
-                                            if (s.length <= 2) return s;
-                                            if (s.length <= 5) return s.slice(0,2)+' '+s.slice(2);
-                                            if (s.length <= 7) return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5);
-                                            return s.slice(0,2)+' '+s.slice(2,5)+' '+s.slice(5,7)+' '+s.slice(7);
-                                        }
-                                        const g = []; for (let i = 0; i < s.length; i += 2) g.push(s.slice(i, i + 2)); return g.join(' ');
-                                    },
-                                    onInput(e) {
-                                        this.digits = e.target.value.replace(/\\D/g, '');
-                                        e.target.value = this.format(this.digits);
-                                        this.sync();
-                                    },
-                                    changeCountry() {
-                                        this.digits = '';
-                                        this.$refs.phoneInput.value = '';
-                                        this.sync();
-                                    },
-                                    sync() {
-                                        const prefix = this.country === 'CI' ? '225' : '221';
-                                        $wire.clientPhone = this.digits ? '+' + prefix + this.digits : '';
-                                        $wire.clientPhoneCountry = this.country;
-                                    }
-                                }"
-                                x-init="$refs.phoneInput.value = format(digits); sync()"
-                            >
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Téléphone / WhatsApp') }}</label>
-                                <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 transition focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                    <div class="relative shrink-0">
-                                        <x-select-native>
-                                            <select
-                                                x-model="country"
-                                                @change="changeCountry()"
-                                                class="col-start-1 row-start-1 h-full appearance-none border-0 bg-transparent py-3 pl-4 pr-8 text-sm font-medium text-ink outline-none focus:ring-0"
-                                            >
-                                                <option value="SN">SEN (+221)</option>
-                                                <option value="CI">CIV (+225)</option>
-                                            </select>
-                                        </x-select-native>
-                                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
-                                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="my-3 w-px shrink-0 bg-slate-200"></div>
-                                    <input
-                                        x-ref="phoneInput"
-                                        type="tel"
-                                        inputmode="numeric"
-                                        :placeholder="placeholder"
-                                        @input="onInput($event)"
-                                        class="min-w-0 grow border-0 bg-transparent px-4 py-3 text-sm text-ink placeholder:text-slate-500 outline-none focus:ring-0"
-                                    />
-                                </div>
-                            </div>
+                            <x-phone-input
+                                :label="__('Téléphone / WhatsApp')"
+                                country-name="clientPhoneCountry"
+                                :country-value="$clientPhoneCountry"
+                                country-model="clientPhoneCountry"
+                                phone-name="clientPhone"
+                                :phone-value="$clientPhone"
+                                phone-model="clientPhone"
+                                :countries="$clientPhoneCountries"
+                                required
+                            />
+                            @error('clientPhone') <p class="-mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
 
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Email') }}</label>

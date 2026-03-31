@@ -23,7 +23,9 @@
       "Bash(find /Volumes/Data/Business/Fayeku/Developments/fayeku-web -type f -path *Pages* -name *Invoices* -o -path *Pages* -name *form*)",
       "Bash(grep -n \"discount\\\\|public $\\\\|protected $\\\\|buildData\\\\|calculateLine\\\\|validateData\\\\|validation\" \"/Volumes/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/pme/invoices/⚡form.blade.php\")",
       "Bash(grep -E \"\\\\.\\(php|blade\\\\.php\\)$\")",
-      "Bash(composer require:*)"
+      "Bash(composer require:*)",
+      "Bash(find /Volumes/Data/Business/Fayeku/Developments/fayeku-web/modules/PME -name *Client*Test* -o -name *Clients*Test*)",
+      "Bash(php -l /Volumes/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/pme/clients/⚡index.blade.php)"
     ]
   },
   "enableAllProjectMcpServers": true,

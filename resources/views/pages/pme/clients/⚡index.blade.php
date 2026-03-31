@@ -28,8 +28,6 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
     public string $clientName = '';
 
-    public string $clientSector = '';
-
     public string $clientPhone = '';
 
     public string $clientPhoneCountry = 'SN';
@@ -50,7 +48,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
     {
         $this->company = app(ClientService::class)->companyForUser(auth()->user());
         $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
-        $this->clientPhoneCountries = collect(config('fayeku.countries'))
+        $this->clientPhoneCountries = collect(config('fayeku.phone_countries'))
             ->map(fn ($c) => $c['label'])
             ->all();
     }
@@ -72,7 +70,6 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
             $rows = array_values(array_filter($rows, function (array $row) use ($term): bool {
                 return str_contains(mb_strtolower($row['name']), $term)
-                    || str_contains(mb_strtolower($row['sector']), $term)
                     || str_contains(mb_strtolower((string) ($row['phone'] ?? '')), $term)
                     || str_contains(mb_strtolower((string) ($row['email'] ?? '')), $term);
             }));
@@ -162,21 +159,20 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
         $validated = $this->validate([
             'clientName' => ['required', 'string', 'max:255'],
-            'clientSector' => ['nullable', 'string', 'max:100'],
-            'clientPhone' => ['nullable', 'string', 'max:30'],
+            'clientPhone' => ['required', 'string', 'max:30'],
             'clientEmail' => ['nullable', 'email', 'max:255'],
             'clientTaxId' => ['nullable', 'string', 'max:100'],
             'clientAddress' => ['nullable', 'string', 'max:500'],
         ], [
             'clientName.required' => __('Le nom du client est requis.'),
+            'clientPhone.required' => __('Le numéro de téléphone est requis.'),
             'clientEmail.email' => __('L’adresse email doit être valide.'),
         ]);
 
         $client = Client::query()->create([
             'company_id' => $this->company->id,
             'name' => trim($validated['clientName']),
-            'sector' => $this->emptyToNull($validated['clientSector'] ?? ''),
-            'phone' => $this->normalizePhone($validated['clientPhone'] ?? ''),
+            'phone' => $this->normalizePhone($validated['clientPhone']),
             'email' => $this->emptyToNull($validated['clientEmail'] ?? ''),
             'tax_id' => $this->emptyToNull($validated['clientTaxId'] ?? ''),
             'address' => $this->emptyToNull($validated['clientAddress'] ?? ''),
@@ -241,7 +237,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
         $prefix = preg_replace(
             '/\D+/',
             '',
-            (string) config("fayeku.countries.{$this->clientPhoneCountry}.prefix", '221')
+            (string) config("fayeku.phone_countries.{$this->clientPhoneCountry}.prefix", '221')
         );
 
         if (str_starts_with($digits, $prefix)) {
@@ -261,7 +257,6 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
     private function resetClientForm(): void
     {
         $this->clientName = '';
-        $this->clientSector = '';
         $this->clientPhone = '';
         $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
         $this->clientEmail = '';
@@ -671,10 +666,10 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                     {{-- Body --}}
                     <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
                         <div class="grid gap-5 md:grid-cols-2">
-                            {{-- Nom du client --}}
+                            {{-- Nom client ou Raison Sociale --}}
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700">
-                                    {{ __('Nom du client') }} <span class="text-rose-500">*</span>
+                                    {{ __('Nom client ou Raison Sociale') }} <span class="text-rose-500">*</span>
                                 </label>
                                 <input
                                     wire:model="clientName"
@@ -684,41 +679,6 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                                 />
                                 @error('clientName') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            {{-- Secteur --}}
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Secteur') }}</label>
-                                <x-select-native>
-                                    <select
-                                        wire:model="clientSector"
-                                        class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                    >
-                                        <option value="">{{ __('Choisir un secteur…') }}</option>
-                                        <option>Agriculture, Élevage &amp; Pêche</option>
-                                        <option>Agroalimentaire &amp; Transformation</option>
-                                        <option>Commerce de gros</option>
-                                        <option>Commerce de détail &amp; Distribution</option>
-                                        <option>Bâtiment &amp; Travaux Publics</option>
-                                        <option>Transport &amp; Logistique</option>
-                                        <option>Télécommunications</option>
-                                        <option>Technologies de l'information &amp; Communication</option>
-                                        <option>Industrie manufacturière</option>
-                                        <option>Énergie, Mines &amp; Pétrole</option>
-                                        <option>Santé &amp; Pharmacie</option>
-                                        <option>Éducation &amp; Formation</option>
-                                        <option>Immobilier &amp; Foncier</option>
-                                        <option>Finance, Banque &amp; Assurance</option>
-                                        <option>Hôtellerie &amp; Restauration</option>
-                                        <option>Tourisme &amp; Loisirs</option>
-                                        <option>Artisanat &amp; Arts</option>
-                                        <option>Médias &amp; Communication</option>
-                                        <option>Textile, Habillement &amp; Cuir</option>
-                                        <option>Services aux entreprises &amp; Conseil</option>
-                                        <option>Environnement &amp; Eau</option>
-                                        <option value="Autre">{{ __('Autre') }}</option>
-                                    </select>
-                                </x-select-native>
                             </div>
 
                             {{-- Téléphone / WhatsApp --}}
@@ -731,8 +691,9 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                 :phone-value="$clientPhone"
                                 phone-model="clientPhone"
                                 :countries="$clientPhoneCountries"
-                                phone-placeholder="XX XXX XX XX"
+                                required
                             />
+                            @error('clientPhone') <p class="-mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
 
                             {{-- Email --}}
                             <div>

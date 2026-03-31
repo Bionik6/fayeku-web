@@ -301,7 +301,6 @@ class ClientService
             'contact' => [
                 'phone' => $client->phone ?? '—',
                 'email' => $client->email ?? '—',
-                'sector' => $client->sector ?: '—',
                 'tax_id' => $client->tax_id ?? '—',
                 'address' => $client->address ?? '—',
             ],
@@ -431,7 +430,6 @@ class ClientService
             'id' => $client->id,
             'name' => $client->name,
             'initials' => $this->initials($client->name),
-            'sector' => $client->sector ?: '—',
             'phone' => $client->phone,
             'email' => $client->email,
             'total_revenue' => $totalRevenue,

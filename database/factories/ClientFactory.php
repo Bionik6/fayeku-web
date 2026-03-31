@@ -23,7 +23,6 @@ class ClientFactory extends Factory
 
         return [
             'name' => SenegalFaker::companyName(),
-            'sector' => fake()->randomElement(['Télécom', 'Santé', 'Immobilier', 'Transport', 'Distribution']),
             'phone' => SenegalFaker::phone(),
             'email' => SenegalFaker::email($firstName, $lastName),
             'address' => SenegalFaker::address(),

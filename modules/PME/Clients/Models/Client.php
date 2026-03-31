@@ -23,7 +23,7 @@ class Client extends Model
     }
 
     protected $fillable = [
-        'company_id', 'name', 'sector', 'phone', 'email', 'address', 'tax_id',
+        'company_id', 'name', 'phone', 'email', 'address', 'tax_id',
     ];
 
     public function company(): BelongsTo
