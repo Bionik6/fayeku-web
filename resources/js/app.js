@@ -202,114 +202,114 @@ function bindForms() {
     });
 }
 
-function digitsOnly(value) {
-    return value.replace(/\D+/g, "");
-}
+window.phoneInput = function ({ initialCountry, initialPhone, countries, countryModel, phoneModel }) {
+    return {
+        open: false,
+        search: "",
+        country: initialCountry,
+        phone: initialPhone,
+        countries: countries,
 
-function formatPhoneValue(country, value) {
-    const digits = digitsOnly(value);
+        get filtered() {
+            const q = this.search.toLowerCase().trim();
+            if (!q) return this.countries;
+            return this.countries.filter(
+                (c) =>
+                    c.name.toLowerCase().includes(q) ||
+                    c.prefix.includes(q) ||
+                    c.code.toLowerCase().includes(q) ||
+                    c.label.toLowerCase().includes(q),
+            );
+        },
 
-    if (country === "SN") {
-        const normalized = digits.slice(0, 9);
+        get selected() {
+            return this.countries.find((c) => c.code === this.country) ?? this.countries[0];
+        },
 
-        if (normalized.length <= 2) return normalized;
-        if (normalized.length <= 5) return `${normalized.slice(0, 2)} ${normalized.slice(2)}`;
-        if (normalized.length <= 7) return `${normalized.slice(0, 2)} ${normalized.slice(2, 5)} ${normalized.slice(5)}`;
+        // Only these countries get auto-formatting; others accept raw digits.
+        formattedCountries: ["SN", "CI"],
 
-        return `${normalized.slice(0, 2)} ${normalized.slice(2, 5)} ${normalized.slice(5, 7)} ${normalized.slice(7)}`;
-    }
+        get localFormat() {
+            if (!this.formattedCountries.includes(this.country)) return "";
+            const fmt = this.selected?.format ?? "";
+            return fmt.replace(/^\+\d+\s*/, "");
+        },
 
-    if (country === "CI") {
-        const normalized = digits.slice(0, 10);
-        const groups = normalized.match(/.{1,2}/g) || [];
-        return groups.join(" ");
-    }
+        get maxDigits() {
+            if (!this.formattedCountries.includes(this.country)) return 15;
+            return (this.localFormat.match(/X/g) ?? []).length;
+        },
 
-    return digits;
-}
+        get placeholder() {
+            return this.localFormat || "Numéro de téléphone";
+        },
 
-function bindPhoneFields() {
-    const placeholders = {
-        SN: "XX XXX XX XX",
-        CI: "XX XX XX XX XX",
-        FR: "X XX XX XX XX",
-        ES: "XXX XXX XXX",
-        MA: "XX XX XX XX XX",
-        TN: "XX XXX XXX",
-        BE: "XXX XX XX XX",
-    };
+        formatPhone(raw) {
+            const digits = raw.replace(/\D/g, "").slice(0, this.maxDigits);
+            const pattern = this.localFormat;
 
-    document.querySelectorAll("[data-phone-field]").forEach((field) => {
-        if (field.dataset.bound === "true") {
-            return;
-        }
+            if (!pattern) return digits;
 
-        field.dataset.bound = "true";
-        // Support both a <select data-phone-country> (multi-country) and a
-        // <input type="hidden" data-phone-country-static> (single-country mode).
-        const countrySelect = field.querySelector("[data-phone-country]");
-        const countryHidden = field.querySelector("[data-phone-country-static]");
-        const country = countrySelect ?? countryHidden;
-        const input = field.querySelector("[data-phone-input]");
+            let result = "";
+            let di = 0;
 
-        if (!country || !input) {
-            return;
-        }
-
-        function render() {
-            input.placeholder = placeholders[country.value] || "Numéro de téléphone";
-            input.value = formatPhoneValue(country.value, input.value);
-        }
-
-        input.addEventListener("input", () => {
-            const pos = input.selectionStart;
-            const before = input.value;
-            input.value = formatPhoneValue(country.value, input.value);
-            // Preserve cursor — if the formatted string grew (space inserted), nudge forward.
-            if (input.value.length > before.length) {
-                input.setSelectionRange(pos + 1, pos + 1);
-            } else {
-                input.setSelectionRange(pos, pos);
+            for (let i = 0; i < pattern.length && di < digits.length; i++) {
+                result += pattern[i] === "X" ? digits[di++] : pattern[i];
             }
-        });
 
-        country.addEventListener("change", () => {
-            // Clear phone when country changes so old format doesn't bleed over.
-            input.value = "";
-            render();
-        });
+            return result;
+        },
 
-        // Format on initial bind — covers the case where Livewire's deferred
-        // wire:model initialises the input from its snapshot (raw digits).
-        render();
-    });
-}
+        selectCountry(code) {
+            this.country = code;
+            this.open = false;
+            this.search = "";
+            this.phone = "";
 
-function reFormatPhoneFields() {
-    const placeholders = {
-        SN: "XX XXX XX XX",
-        CI: "XX XX XX XX XX",
-        FR: "X XX XX XX XX",
-        ES: "XXX XXX XXX",
-        MA: "XX XX XX XX XX",
-        TN: "XX XXX XXX",
-        BE: "XXX XX XX XX",
+            // Batch both updates so the server re-renders with the new country AND an
+            // empty phone — preventing the old formatted value from being restored.
+            if (this.$wire) {
+                try {
+                    if (countryModel) this.$wire.set(countryModel, code);
+                    if (phoneModel) this.$wire.set(phoneModel, "");
+                } catch (_) {}
+            }
+
+            this.$nextTick(() => this.$refs.phoneInput?.focus());
+        },
+
+        onPhoneInput(event) {
+            const pos = event.target.selectionStart;
+            const before = event.target.value;
+            const formatted = this.formatPhone(event.target.value);
+
+            event.target.value = formatted;
+            this.phone = formatted;
+
+            // Preserve cursor position; nudge forward when a separator was inserted.
+            const nudge = formatted.length > before.length ? 1 : 0;
+            event.target.setSelectionRange(pos + nudge, pos + nudge);
+        },
+
+        init() {
+            if (this.phone) {
+                const formatted = this.formatPhone(this.phone);
+                this.phone = formatted;
+
+                if (this.$refs.phoneInput) {
+                    this.$refs.phoneInput.value = formatted;
+                }
+            }
+
+            // Auto-focus search field when dropdown opens.
+            this.$watch("open", (val) => {
+                if (val) {
+                    this.$nextTick(() => this.$refs.searchInput?.focus());
+                }
+            });
+        },
     };
-
-    document.querySelectorAll("[data-phone-field]").forEach((field) => {
-        const country = field.querySelector("[data-phone-country]")
-                     ?? field.querySelector("[data-phone-country-static]");
-        const input = field.querySelector("[data-phone-input]");
-
-        // Skip fields the user is currently typing in.
-        if (!country || !input || document.activeElement === input) {
-            return;
-        }
-
-        input.placeholder = placeholders[country.value] || "Numéro de téléphone";
-        input.value = formatPhoneValue(country.value, input.value);
-    });
-}
+};
 
 function bindAppShell() {
     const root = document.querySelector("[data-app-shell]");
@@ -391,7 +391,6 @@ function initializePage() {
     bindPricingPersona();
     bindAccordion();
     bindForms();
-    bindPhoneFields();
 }
 
 initializePage();
@@ -406,9 +405,3 @@ document.addEventListener("livewire:navigated", () => {
 
 document.addEventListener("livewire:navigated", initializePage);
 
-// After every Livewire network round-trip: bind any newly rendered phone fields
-// (e.g. a modal just became visible) and re-format existing ones.
-document.addEventListener("livewire:commit", () => {
-    bindPhoneFields();
-    reFormatPhoneFields();
-});
