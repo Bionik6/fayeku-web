@@ -383,7 +383,7 @@ new #[Title('Export groupé')] class extends Component {
                         @foreach ($this->exportHistories as $history)
                             <tr class="transition hover:bg-slate-50/50">
                                 <td class="whitespace-nowrap px-6 py-3.5 font-medium text-ink">
-                                    {{ $history->created_at->locale('fr_FR')->translatedFormat('j M Y H:i') }}
+                                    {{ format_date($history->created_at, true) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $history->period }}</td>
                                 <td class="whitespace-nowrap px-6 py-3.5">

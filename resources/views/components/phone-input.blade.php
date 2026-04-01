@@ -12,6 +12,7 @@
     'autofocus' => false,
     'inputClass' => '',
     'readonly' => false,
+    'showLabel' => true,
 ])
 
 @php
@@ -74,9 +75,11 @@
 @endphp
 
 <div {{ $attributes->class(['space-y-1']) }}>
-    <span class="block auth-field-label">
-        {{ $label }}@if ($required)<span class="text-red-500"> *</span>@endif
-    </span>
+    @if ($showLabel)
+        <span class="block auth-field-label">
+            {{ $label }}@if ($required)<span class="text-red-500"> *</span>@endif
+        </span>
+    @endif
 
     @if ($readonly)
         {{-- Read-only display --}}

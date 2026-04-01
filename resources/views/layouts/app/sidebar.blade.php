@@ -196,7 +196,7 @@
                                         <x-app.icon :name="$item['icon']" class="app-shell-nav-icon" />
                                         <span class="app-shell-nav-label sidebar-collapsible">{{ $item['label'] }}</span>
                                         @if ($item['badge_component'] ?? false)
-                                            <span class="sidebar-collapsible">
+                                            <span class="ml-auto sidebar-collapsible">
                                                 <livewire:sidebar.alerts-badge />
                                             </span>
                                         @elseif (($item['badge'] ?? 0) > 0)
