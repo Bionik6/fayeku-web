@@ -1156,8 +1156,27 @@ class extends Component {
                         {{-- Remise globale --}}
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Remise globale') }}</label>
+
+                            {{-- Simple inline radio list --}}
+                            <div class="mb-3 flex gap-6">
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="radio" wire:model.live="discountType" value="percent" class="peer sr-only">
+                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                        <span class="size-1.5 rounded-full bg-white"></span>
+                                    </span>
+                                    <span class="text-sm text-slate-700">{{ __('Pourcentage') }}</span>
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="radio" wire:model.live="discountType" value="fixed" class="peer sr-only">
+                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                        <span class="size-1.5 rounded-full bg-white"></span>
+                                    </span>
+                                    <span class="text-sm text-slate-700">{{ __('Montant fixe') }}</span>
+                                </label>
+                            </div>
+
+                            {{-- Input with trailing add-on --}}
                             <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                {{-- Fixed-width input --}}
                                 @if ($discountType === 'percent')
                                     <input wire:model.live="discount" type="number" min="0" max="100"
                                            placeholder="0"
@@ -1209,18 +1228,9 @@ class extends Component {
                                                class="w-full bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
                                     </div>
                                 @endif
-
-                                {{-- Trailing dropdown --}}
-                                <div class="relative flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80">
-                                    <select wire:model.live="discountType"
-                                            class="h-full appearance-none bg-transparent py-2.5 pl-3 pr-7 text-sm text-slate-700 focus:outline-none cursor-pointer">
-                                        <option value="percent">%</option>
-                                        <option value="fixed">{{ $this->currencyLabel }}</option>
-                                    </select>
-                                    <svg class="pointer-events-none absolute right-2 size-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                    </svg>
-                                </div>
+                                <span class="flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80 px-3 text-sm font-medium text-slate-600 select-none whitespace-nowrap">
+                                    {{ $discountType === 'percent' ? '%' : $this->currencyLabel }}
+                                </span>
                             </div>
                             <p class="mt-1.5 text-sm text-slate-500">
                                 {{ $discountType === 'percent' ? __('Appliquée sur le sous-total HT') : __('Montant déduit du sous-total HT') }}
@@ -1230,30 +1240,41 @@ class extends Component {
                         {{-- TVA --}}
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('TVA') }}</label>
-                            <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                {{-- Flexible input --}}
-                                @if ($taxMode === 'custom')
+
+                            {{-- Simple inline radio list --}}
+                            <div class="mb-3 flex gap-6">
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="radio" wire:model.live="taxMode" value="0" class="peer sr-only">
+                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                        <span class="size-1.5 rounded-full bg-white"></span>
+                                    </span>
+                                    <span class="text-sm text-slate-700">{{ __('Sans TVA') }}</span>
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="radio" wire:model.live="taxMode" value="18" class="peer sr-only">
+                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                        <span class="size-1.5 rounded-full bg-white"></span>
+                                    </span>
+                                    <span class="text-sm text-slate-700">18 %</span>
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="radio" wire:model.live="taxMode" value="custom" class="peer sr-only">
+                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                        <span class="size-1.5 rounded-full bg-white"></span>
+                                    </span>
+                                    <span class="text-sm text-slate-700">{{ __('Taux personnalisé') }}</span>
+                                </label>
+                            </div>
+
+                            {{-- Input with trailing add-on — only for custom rate --}}
+                            @if ($taxMode === 'custom')
+                                <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
                                     <input wire:model.live="customTaxRate" type="number" min="0" max="100"
                                            placeholder="0"
                                            class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
-                                @else
-                                    <input type="text" value="{{ $taxMode }}" disabled
-                                           class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-slate-400 tabular-nums cursor-default focus:outline-none"/>
-                                @endif
-
-                                {{-- Trailing dropdown --}}
-                                <div class="relative flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80">
-                                    <select wire:model.live="taxMode"
-                                            class="h-full appearance-none bg-transparent py-2.5 pl-3 pr-7 text-sm text-slate-700 focus:outline-none cursor-pointer">
-                                        <option value="0">{{ __('Sans TVA') }}</option>
-                                        <option value="18">18 %</option>
-                                        <option value="custom">{{ __('Taux personnalisé') }}</option>
-                                    </select>
-                                    <svg class="pointer-events-none absolute right-2 size-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                    </svg>
+                                    <span class="flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80 px-3 text-sm font-medium text-slate-600 select-none">%</span>
                                 </div>
-                            </div>
+                            @endif
                             <p class="mt-1.5 text-sm text-slate-500">{{ __('La TVA est calculée après application de la remise.') }}</p>
                         </div>
                     </div>
