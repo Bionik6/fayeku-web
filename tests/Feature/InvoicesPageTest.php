@@ -832,7 +832,7 @@ test('la modale de détail affiche la réduction quand elle est présente', func
         ->test('pages::pme.invoices.index')
         ->call('viewInvoice', $invoice->id)
         ->assertSeeHtml('Réduction')
-        ->assertSeeHtml('10 %')
+        ->assertSeeHtml('10%')
         ->assertSeeHtml('10 000');
 });
 

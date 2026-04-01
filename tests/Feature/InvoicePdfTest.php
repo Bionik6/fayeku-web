@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
+use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Models\InvoiceLine;
 use Modules\PME\Invoicing\Services\PdfService;
@@ -95,4 +96,71 @@ test('PdfService stream retourne une réponse HTTP valide', function () {
     $response = $pdfService->stream($invoice);
 
     expect($response->getStatusCode())->toBe(200);
+});
+
+// ─── Remise dans le PDF ──────────────────────────────────────────────────────
+
+test('le PDF facture affiche la remise en pourcentage correctement', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-REMPC',
+        'currency' => 'XOF',
+        'status' => InvoiceStatus::Draft,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 16_200,
+        'total' => 106_200,
+        'discount' => 10,
+        'discount_type' => 'percent',
+        'amount_paid' => 0,
+    ]));
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('Remise (10%)')
+        ->toContain('10 000')
+        ->not->toContain('montant fixe');
+});
+
+test('le PDF facture affiche la remise en montant fixe correctement', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-REMFX',
+        'currency' => 'XOF',
+        'status' => InvoiceStatus::Draft,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 16_380,
+        'total' => 108_380,
+        'discount' => 8_000,
+        'discount_type' => 'fixed',
+        'amount_paid' => 0,
+    ]));
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('Remise (montant fixe)')
+        ->toContain('8 000')
+        ->not->toContain('8000%');
+});
+
+test('le PDF facture n\'affiche pas de ligne remise quand elle est nulle', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $invoice = createInvoiceForPdf($company);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)->not->toContain('Remise');
 });

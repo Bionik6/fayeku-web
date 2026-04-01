@@ -123,9 +123,16 @@
                                     </td>
                                 </tr>
                                 @if ($inv->discount > 0)
-                                    @php $discountAmount = (int) round($inv->subtotal * $inv->discount / 100); @endphp
+                                    @php
+                                        $discountAmount = ($inv->discount_type ?? 'percent') === 'fixed'
+                                            ? $inv->discount
+                                            : (int) round($inv->subtotal * $inv->discount / 100);
+                                        $discountLabel = ($inv->discount_type ?? 'percent') === 'fixed'
+                                            ? __('Réduction (montant fixe)')
+                                            : __('Réduction (:rate%)', ['rate' => $inv->discount]);
+                                    @endphp
                                     <tr>
-                                        <td colspan="4" class="pt-1 pr-4 text-right text-sm text-emerald-600">{{ __('Réduction') }} ({{ $inv->discount }} %)</td>
+                                        <td colspan="4" class="pt-1 pr-4 text-right text-sm text-emerald-600">{{ $discountLabel }}</td>
                                         <td class="pt-1 pl-4 text-right tabular-nums text-sm text-emerald-600 whitespace-nowrap">
                                             − {{ format_money($discountAmount, $inv->currency) }}
                                         </td>
@@ -157,9 +164,16 @@
                             <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->subtotal, $inv->currency) }}</dd>
                         </div>
                         @if ($inv->discount > 0)
-                            @php $discountAmount = (int) round($inv->subtotal * $inv->discount / 100); @endphp
+                            @php
+                                $discountAmount = ($inv->discount_type ?? 'percent') === 'fixed'
+                                    ? $inv->discount
+                                    : (int) round($inv->subtotal * $inv->discount / 100);
+                                $discountLabel = ($inv->discount_type ?? 'percent') === 'fixed'
+                                    ? __('Réduction (montant fixe)')
+                                    : __('Réduction (:rate%)', ['rate' => $inv->discount]);
+                            @endphp
                             <div class="flex justify-between text-emerald-600">
-                                <dt>{{ __('Réduction') }} ({{ $inv->discount }} %)</dt>
+                                <dt>{{ $discountLabel }}</dt>
                                 <dd class="tabular-nums font-medium">− {{ format_money($discountAmount, $inv->currency) }}</dd>
                             </div>
                         @endif

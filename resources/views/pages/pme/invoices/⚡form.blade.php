@@ -41,6 +41,8 @@ class extends Component {
 
     public ?int $discount = 0;
 
+    public string $discountType = 'percent';
+
     public int $customTaxRate = 0;
 
     public string $taxMode = '18';
@@ -125,6 +127,7 @@ class extends Component {
             $this->dueAt = $invoice->due_at?->format('Y-m-d') ?? '';
             $this->currency = $invoice->currency ?? 'XOF';
             $this->discount = $invoice->discount ?? 0;
+            $this->discountType = $invoice->discount_type ?? 'percent';
             $this->notes = $invoice->notes ?? '';
             $this->paymentMethod = $invoice->payment_method ?? '';
             $this->paymentDetails = $invoice->payment_details ?? '';
@@ -267,7 +270,7 @@ class extends Component {
     #[Computed]
     public function computedTotals(): array
     {
-        return app(InvoiceService::class)->calculateInvoiceTotals($this->lines, $this->taxRate, $this->discount ?? 0);
+        return app(InvoiceService::class)->calculateInvoiceTotals($this->lines, $this->taxRate, $this->discount ?? 0, $this->discountType);
     }
 
     #[Computed]
@@ -318,6 +321,11 @@ class extends Component {
     public function cancel(): void
     {
         $this->redirect(route('pme.invoices.index'), navigate: true);
+    }
+
+    public function updatedDiscountType(): void
+    {
+        $this->discount = 0;
     }
 
     public function updatedTaxMode(string $value): void
@@ -400,10 +408,14 @@ class extends Component {
     {
         if (in_array($value, $this->reminderSchedule)) {
             $this->reminderSchedule = array_values(array_filter($this->reminderSchedule, fn(string $v) => $v !== $value,));
-        }
-        else {
+        } else {
             $this->reminderSchedule[] = $value;
         }
+    }
+
+    public function clearReminders(): void
+    {
+        $this->reminderSchedule = [];
     }
 
     /**
@@ -591,7 +603,10 @@ class extends Component {
                 'in:' . implode(',', CurrencyService::codes())
             ],
             'taxRate'             => ['required', 'integer', 'min:0', 'max:100'],
-            'discount'            => ['nullable', 'integer', 'min:0', 'max:100'],
+            'discountType'        => ['required', 'string', 'in:percent,fixed'],
+            'discount'            => $this->discountType === 'fixed'
+                ? ['nullable', 'integer', 'min:0', 'max:' . CurrencyService::maxAmount($this->currency)]
+                : ['nullable', 'integer', 'min:0', 'max:100'],
             'notes'               => ['nullable', 'string', 'max:2000'],
             'paymentMethod'       => [
                 'nullable',
@@ -637,6 +652,7 @@ class extends Component {
             'due_at'            => $this->dueAt,
             'tax_rate'          => $this->taxRate,
             'discount'          => $this->discount ?? 0,
+            'discount_type'     => $this->discountType,
             'notes'             => $this->emptyToNull($this->notes),
             'payment_method'    => $this->emptyToNull($this->paymentMethod),
             'payment_details'   => $this->emptyToNull($this->paymentDetails),
@@ -1140,39 +1156,105 @@ class extends Component {
                         {{-- Remise globale --}}
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Remise globale') }}</label>
-                            <div class="flex items-center gap-0.5">
-                                <span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 px-3 py-2.5 text-sm font-semibold text-slate-700">%</span>
-                                <input wire:model.live="discount" type="number" min="0"
-                                       max="100" placeholder="0"
-                                       class="w-20 rounded-r-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
+                            <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+                                {{-- Fixed-width input --}}
+                                @if ($discountType === 'percent')
+                                    <input wire:model.live="discount" type="number" min="0" max="100"
+                                           placeholder="0"
+                                           class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
+                                @else
+                                    <div class="min-w-0 flex-1"
+                                         x-data="{
+                                             raw: {{ (int) ($discount ?? 0) }},
+                                             formatted: '',
+                                             get noDecimals() { return $wire.currencyJs.decimals === 0; },
+                                             formatNoDecimal(v) {
+                                                 return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
+                                             },
+                                             onInput(e) {
+                                                 if (this.noDecimals) {
+                                                     this.raw = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                                                     this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                                     e.target.value = this.formatted;
+                                                 } else {
+                                                     let v = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+                                                     this.raw = Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals));
+                                                 }
+                                                 $wire.set('discount', this.raw);
+                                             },
+                                             init() {
+                                                 if (this.noDecimals) {
+                                                     this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                                 } else {
+                                                     this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
+                                                 }
+                                                 this.$watch('$wire.currencyJs', () => {
+                                                     if (this.noDecimals) {
+                                                         this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                                     } else {
+                                                         this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
+                                                     }
+                                                 });
+                                                 this.$watch('$wire.discount', (val) => {
+                                                     if (!val) { this.raw = 0; this.formatted = ''; }
+                                                 });
+                                             }
+                                         }"
+                                    >
+                                        <input type="text"
+                                               :value="formatted"
+                                               :inputmode="noDecimals ? 'numeric' : 'decimal'"
+                                               @input="onInput($event)"
+                                               placeholder="0"
+                                               class="w-full bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
+                                    </div>
+                                @endif
+
+                                {{-- Trailing dropdown --}}
+                                <div class="relative flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80">
+                                    <select wire:model.live="discountType"
+                                            class="h-full appearance-none bg-transparent py-2.5 pl-3 pr-7 text-sm text-slate-700 focus:outline-none cursor-pointer">
+                                        <option value="percent">%</option>
+                                        <option value="fixed">{{ $this->currencyLabel }}</option>
+                                    </select>
+                                    <svg class="pointer-events-none absolute right-2 size-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                    </svg>
+                                </div>
                             </div>
-                            <p class="mt-1.5 text-sm text-slate-600">{{ __('Appliquée sur le sous-total HT') }}</p>
+                            <p class="mt-1.5 text-sm text-slate-500">
+                                {{ $discountType === 'percent' ? __('Appliquée sur le sous-total HT') : __('Montant déduit du sous-total HT') }}
+                            </p>
                         </div>
 
                         {{-- TVA --}}
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('TVA') }}</label>
-                            <div class="inline-flex overflow-hidden rounded-xl border border-slate-200">
-                                <button type="button" wire:click="$set('taxMode', '0')"
-                                        class="border-r border-slate-200 px-4 py-2.5 text-sm font-medium transition {{ $taxMode === '0' ? 'bg-primary/10 text-primary' : 'bg-white text-slate-700 hover:bg-slate-50' }}">{{ __('Sans TVA') }}</button>
-                                <button type="button" wire:click="$set('taxMode', '18')"
-                                        class="border-r border-slate-200 px-4 py-2.5 text-sm font-medium transition {{ $taxMode === '18' ? 'bg-primary/10 text-primary' : 'bg-white text-slate-700 hover:bg-slate-50' }}">
-                                    18 %
-                                </button>
-                                <button type="button"
-                                        wire:click="$set('taxMode', 'custom')"
-                                        class="px-4 py-2.5 text-sm font-medium transition {{ $taxMode === 'custom' ? 'bg-primary/10 text-primary' : 'bg-white text-slate-700 hover:bg-slate-50' }}">{{ __('Autre') }}</button>
-                            </div>
-                            @if ($taxMode === 'custom')
-                                <div class="mt-3 flex items-center gap-2">
-                                    <label class="text-sm font-medium text-slate-700">{{ __('Taux personnalisé') }}</label>
-                                    <input wire:model.live="customTaxRate" type="number"
-                                           min="0" max="100"
-                                           class="w-20 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                                    <span class="text-sm text-slate-700">%</span>
+                            <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+                                {{-- Flexible input --}}
+                                @if ($taxMode === 'custom')
+                                    <input wire:model.live="customTaxRate" type="number" min="0" max="100"
+                                           placeholder="0"
+                                           class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
+                                @else
+                                    <input type="text" value="{{ $taxMode }}" disabled
+                                           class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-slate-400 tabular-nums cursor-default focus:outline-none"/>
+                                @endif
+
+                                {{-- Trailing dropdown --}}
+                                <div class="relative flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80">
+                                    <select wire:model.live="taxMode"
+                                            class="h-full appearance-none bg-transparent py-2.5 pl-3 pr-7 text-sm text-slate-700 focus:outline-none cursor-pointer">
+                                        <option value="0">{{ __('Sans TVA') }}</option>
+                                        <option value="18">18 %</option>
+                                        <option value="custom">{{ __('Taux personnalisé') }}</option>
+                                    </select>
+                                    <svg class="pointer-events-none absolute right-2 size-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                    </svg>
                                 </div>
-                            @endif
-                            <p class="mt-1.5 text-sm text-slate-600">{{ __('La TVA est calculée après application de la remise.') }}</p>
+                            </div>
+                            <p class="mt-1.5 text-sm text-slate-500">{{ __('La TVA est calculée après application de la remise.') }}</p>
                         </div>
                     </div>
 
@@ -1190,7 +1272,13 @@ class extends Component {
                             </div>
                             @if ($totals['discount_amount'] > 0)
                                 <div class="flex items-baseline justify-between gap-3">
-                                    <span class="text-slate-600">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                    <span class="text-slate-600">
+                                        @if ($discountType === 'fixed')
+                                            {{ __('Remise (montant fixe)') }}
+                                        @else
+                                            {{ __('Remise (:rate%)', ['rate' => $discount]) }}
+                                        @endif
+                                    </span>
                                     <span class="whitespace-nowrap tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
                                 </div>
                             @endif
@@ -1258,7 +1346,15 @@ class extends Component {
 
             {{-- Relances --}}
             <section class="app-shell-panel p-6">
-                <h3 class="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Relances') }}</h3>
+                <div class="mb-1 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Relances') }}</h3>
+                    @if (count($reminderSchedule) > 0)
+                        <button type="button" wire:click="clearReminders"
+                                class="text-sm font-medium text-slate-500 transition hover:text-rose-500">
+                            {{ __('Désactiver toutes') }}
+                        </button>
+                    @endif
+                </div>
                 <p class="mb-5 text-sm text-slate-500">{{ __('Configurez les relances automatiques envoyées au client autour de l\'échéance.') }}</p>
 
                 <div class="space-y-4">
@@ -1306,7 +1402,7 @@ class extends Component {
             </section>
 
             {{-- Notes & conditions --}}
-            <section class="app-shell-panel p-6" x-data="{ open: false }">
+            <section class="app-shell-panel p-6" x-data="{ open: true }">
                 <button type="button" @click="open = !open"
                         class="flex w-full items-center justify-between">
                     <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Notes') }}</h3>
@@ -1367,7 +1463,13 @@ class extends Component {
                         </div>
                         @if ($totals['discount_amount'] > 0)
                             <div class="flex items-baseline justify-between gap-3">
-                                <span class="shrink-0 text-slate-700">{{ __('Remise (:rate%)', ['rate' => $discount]) }}</span>
+                                <span class="shrink-0 text-slate-700">
+                                    @if ($discountType === 'fixed')
+                                        {{ __('Remise (montant fixe)') }}
+                                    @else
+                                        {{ __('Remise (:rate%)', ['rate' => $discount]) }}
+                                    @endif
+                                </span>
                                 <span class="whitespace-nowrap tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
                             </div>
                         @endif

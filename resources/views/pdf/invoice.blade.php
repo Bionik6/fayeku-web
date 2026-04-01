@@ -302,9 +302,17 @@
                 <td class="value">{{ CurrencyService::format($invoice->subtotal, $invoice->currency) }}</td>
             </tr>
             @if ($invoice->discount > 0)
+                @php
+                    $discountAmount = ($invoice->discount_type ?? 'percent') === 'fixed'
+                        ? $invoice->discount
+                        : (int) round($invoice->subtotal * $invoice->discount / 100);
+                    $discountLabel = ($invoice->discount_type ?? 'percent') === 'fixed'
+                        ? __('Remise (montant fixe)')
+                        : __('Remise (:rate%)', ['rate' => $invoice->discount]);
+                @endphp
                 <tr class="discount">
-                    <td class="label">{{ __('Remise (:rate%)', ['rate' => $invoice->discount]) }}</td>
-                    <td class="value">-{{ CurrencyService::format((int) round($invoice->subtotal * $invoice->discount / 100), $invoice->currency) }}</td>
+                    <td class="label">{{ $discountLabel }}</td>
+                    <td class="value">-{{ CurrencyService::format($discountAmount, $invoice->currency) }}</td>
                 </tr>
             @endif
             @if ($invoice->tax_amount > 0)

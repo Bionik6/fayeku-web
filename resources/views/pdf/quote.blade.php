@@ -295,9 +295,17 @@
                 <td class="value">{{ CurrencyService::format($quote->subtotal, $quote->currency ?? 'XOF') }}</td>
             </tr>
             @if ($quote->discount > 0)
+                @php
+                    $discountAmount = ($quote->discount_type ?? 'percent') === 'fixed'
+                        ? $quote->discount
+                        : (int) round($quote->subtotal * $quote->discount / 100);
+                    $discountLabel = ($quote->discount_type ?? 'percent') === 'fixed'
+                        ? __('Remise (montant fixe)')
+                        : __('Remise (:rate%)', ['rate' => $quote->discount]);
+                @endphp
                 <tr class="discount">
-                    <td class="label">{{ __('Remise (:rate%)', ['rate' => $quote->discount]) }}</td>
-                    <td class="value">-{{ CurrencyService::format((int) round($quote->subtotal * $quote->discount / 100), $quote->currency ?? 'XOF') }}</td>
+                    <td class="label">{{ $discountLabel }}</td>
+                    <td class="value">-{{ CurrencyService::format($discountAmount, $quote->currency ?? 'XOF') }}</td>
                 </tr>
             @endif
             @if ($quote->tax_amount > 0)
