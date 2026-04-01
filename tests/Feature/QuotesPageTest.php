@@ -169,3 +169,42 @@ test('le modal de détail affiche les montants XOF correctement', function () {
         ->assertSeeHtml('500 000')
         ->assertSeeHtml('590 000');
 });
+
+// ─── Réduction ────────────────────────────────────────────────────────────────
+
+test('la modale de détail devis affiche la réduction quand elle est présente', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $quote = Quote::unguarded(fn () => Quote::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'DEV-REMISE',
+        'currency' => 'XOF',
+        'status' => QuoteStatus::Draft->value,
+        'issued_at' => now(),
+        'valid_until' => now()->addDays(30),
+        'discount' => 10,
+        'subtotal' => 100_000,
+        'tax_amount' => 16_200,
+        'total' => 106_200,
+    ]));
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewQuote', $quote->id)
+        ->assertSeeHtml('Réduction')
+        ->assertSeeHtml('10 %')
+        ->assertSeeHtml('10 000');
+});
+
+test('la modale de détail devis n\'affiche pas la réduction quand elle est nulle', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company, ['discount' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewQuote', $quote->id)
+        ->assertDontSeeHtml('Réduction');
+});

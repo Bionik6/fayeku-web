@@ -674,57 +674,19 @@ test('une ligne facture ouvre la modale de détail', function () {
         ->assertSet('selectedInvoiceId', null);
 });
 
-test('openEditInvoiceModal pre-remplit le formulaire de facture', function () {
+test('le menu Actions affiche un lien vers la page d\'édition pour les factures modifiables', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
-    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'Dakar Pharma']);
     $invoice = makeInvoice($company, [
-        'client_id' => $client->id,
-        'reference' => 'FAC-EDIT',
-        'issued_at' => now()->startOfMonth(),
-        'due_at' => now()->startOfMonth()->addDays(30),
-        'notes' => 'Note initiale',
+        'reference' => 'FAC-EDIT-LINK',
+        'status' => InvoiceStatus::Draft->value,
     ]);
+
+    $editUrl = route('pme.invoices.edit', $invoice->id);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->call('openEditInvoiceModal', $invoice->id)
-        ->assertSet('showEditInvoiceModal', true)
-        ->assertSet('invoiceReference', 'FAC-EDIT')
-        ->assertSet('invoiceClientId', $client->id)
-        ->assertSet('invoiceNotes', 'Note initiale');
-});
-
-test('saveInvoiceUpdates modifie une facture existante', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    $oldClient = Client::factory()->create(['company_id' => $company->id, 'name' => 'Ancien client']);
-    $newClient = Client::factory()->create(['company_id' => $company->id, 'name' => 'Nouveau client']);
-
-    $invoice = makeInvoice($company, [
-        'client_id' => $oldClient->id,
-        'reference' => 'FAC-BEFORE',
-        'issued_at' => now()->subDays(10),
-        'due_at' => now()->addDays(20),
-        'notes' => 'Avant',
-    ]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('openEditInvoiceModal', $invoice->id)
-        ->set('invoiceReference', 'FAC-AFTER')
-        ->set('invoiceClientId', $newClient->id)
-        ->set('invoiceIssuedAt', now()->subDays(5)->format('Y-m-d'))
-        ->set('invoiceDueAt', now()->addDays(10)->format('Y-m-d'))
-        ->set('invoiceNotes', 'Apres modification')
-        ->call('saveInvoiceUpdates')
-        ->assertDispatched('toast', type: 'success', title: 'La facture a été mise à jour.');
-
-    $invoice->refresh();
-
-    expect($invoice->reference)->toBe('FAC-AFTER')
-        ->and($invoice->client_id)->toBe($newClient->id)
-        ->and($invoice->notes)->toBe('Apres modification');
+        ->assertSeeHtml($editUrl);
 });
 
 test('deleteInvoice supprime une facture de la PME courante', function () {
@@ -846,4 +808,41 @@ test('le modal de détail affiche les montants XOF correctement', function () {
         ->call('viewInvoice', $invoice->id)
         ->assertSeeHtml('500 000')
         ->assertSeeHtml('590 000');
+});
+
+// ─── Réduction ────────────────────────────────────────────────────────────────
+
+test('la modale de détail affiche la réduction quand elle est présente', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->draft()
+        ->create([
+            'currency' => 'XOF',
+            'discount' => 10,
+            'subtotal' => 100_000,
+            'tax_amount' => 16_200,
+            'total' => 106_200,
+        ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSeeHtml('Réduction')
+        ->assertSeeHtml('10 %')
+        ->assertSeeHtml('10 000');
+});
+
+test('la modale de détail n\'affiche pas la réduction quand elle est nulle', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $invoice = makeInvoice($company, ['discount' => 0, 'currency' => 'XOF']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertDontSeeHtml('Réduction');
 });

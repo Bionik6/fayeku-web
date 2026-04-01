@@ -6,7 +6,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\QuoteStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Models\Quote;
@@ -36,20 +35,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $selectedQuoteId = null;
 
-    public bool $showEditQuoteModal = false;
-
-    public string $editingQuoteId = '';
-
-    public string $quoteReference = '';
-
-    public string $quoteClientId = '';
-
-    public string $quoteIssuedAt = '';
-
-    public string $quoteValidUntil = '';
-
-    public string $quoteNotes = '';
-
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
 
@@ -66,24 +51,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         }
 
         $this->refreshKpis();
-    }
-
-    #[Computed]
-    public function clients(): array
-    {
-        if (! $this->company) {
-            return [];
-        }
-
-        return Client::query()
-            ->where('company_id', $this->company->id)
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (Client $client) => [
-                'id' => $client->id,
-                'name' => $client->name,
-            ])
-            ->all();
     }
 
     #[Computed]
@@ -116,71 +83,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $this->selectedQuoteId = null;
     }
 
-    public function openEditQuoteModal(string $quoteId): void
-    {
-        abort_unless($this->company, 403);
-
-        $quote = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->with('client')
-            ->findOrFail($quoteId);
-
-        $this->editingQuoteId = $quote->id;
-        $this->quoteReference = $quote->reference ?? '';
-        $this->quoteClientId = $quote->client_id ?? '';
-        $this->quoteIssuedAt = $quote->issued_at?->format('Y-m-d') ?? '';
-        $this->quoteValidUntil = $quote->valid_until?->format('Y-m-d') ?? '';
-        $this->quoteNotes = $quote->notes ?? '';
-        $this->resetValidation();
-        $this->showEditQuoteModal = true;
-    }
-
-    public function saveQuoteUpdates(): void
-    {
-        abort_unless($this->company, 403);
-
-        $quote = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($this->editingQuoteId);
-
-        $validated = $this->validate([
-            'quoteReference' => ['required', 'string', 'max:255'],
-            'quoteClientId' => ['required', 'string', 'exists:clients,id'],
-            'quoteIssuedAt' => ['required', 'date'],
-            'quoteValidUntil' => ['required', 'date', 'after_or_equal:quoteIssuedAt'],
-            'quoteNotes' => ['nullable', 'string', 'max:1000'],
-        ], [
-            'quoteReference.required' => __('La référence du devis est requise.'),
-            'quoteClientId.required' => __('Le client est requis.'),
-            'quoteValidUntil.after_or_equal' => __('La date de validité doit être postérieure ou égale à la date d\'émission.'),
-        ]);
-
-        abort_unless(
-            Client::query()
-                ->where('company_id', $this->company->id)
-                ->whereKey($validated['quoteClientId'])
-                ->exists(),
-            403
-        );
-
-        $quote->update([
-            'reference' => trim($validated['quoteReference']),
-            'client_id' => $validated['quoteClientId'],
-            'issued_at' => $validated['quoteIssuedAt'],
-            'valid_until' => $validated['quoteValidUntil'],
-            'notes' => trim((string) ($validated['quoteNotes'] ?? '')) ?: null,
-        ]);
-
-        $this->showEditQuoteModal = false;
-        $this->editingQuoteId = '';
-        $this->selectedQuoteId = $quote->id;
-        $this->flushCaches();
-        $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedQuote, $this->clients);
-
-        $this->dispatch('toast', type: 'success', title: __('Le devis a été mis à jour.'));
-    }
-
     public function deleteQuote(string $quoteId): void
     {
         abort_unless($this->company, 403);
@@ -193,11 +95,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
         if ($this->selectedQuoteId === $quoteId) {
             $this->selectedQuoteId = null;
-        }
-
-        if ($this->editingQuoteId === $quoteId) {
-            $this->showEditQuoteModal = false;
-            $this->editingQuoteId = '';
         }
 
         $this->flushCaches();
@@ -896,6 +793,15 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                                 {{ format_money($q->subtotal, $q->currency) }}
                                             </td>
                                         </tr>
+                                        @if ($q->discount > 0)
+                                            @php $discountAmount = (int) round($q->subtotal * $q->discount / 100); @endphp
+                                            <tr>
+                                                <td colspan="4" class="pt-1 pr-4 text-right text-sm text-emerald-600">{{ __('Réduction') }} ({{ $q->discount }} %)</td>
+                                                <td class="pt-1 pl-4 text-right tabular-nums text-sm text-emerald-600 whitespace-nowrap">
+                                                    − {{ format_money($discountAmount, $q->currency) }}
+                                                </td>
+                                            </tr>
+                                        @endif
                                         <tr>
                                             <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
                                             <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
@@ -920,6 +826,13 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                     <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
                                     <dd class="tabular-nums font-medium text-ink">{{ format_money($q->subtotal, $q->currency) }}</dd>
                                 </div>
+                                @if ($q->discount > 0)
+                                    @php $discountAmount = (int) round($q->subtotal * $q->discount / 100); @endphp
+                                    <div class="flex justify-between text-emerald-600">
+                                        <dt>{{ __('Réduction') }} ({{ $q->discount }} %)</dt>
+                                        <dd class="tabular-nums font-medium">− {{ format_money($discountAmount, $q->currency) }}</dd>
+                                    </div>
+                                @endif
                                 <div class="flex justify-between">
                                     <dt class="text-slate-500">{{ __('TVA') }}</dt>
                                     <dd class="tabular-nums font-medium text-ink">{{ format_money($q->tax_amount, $q->currency) }}</dd>
@@ -955,110 +868,5 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         </div>
     @endif
 
-    {{-- Edit quote modal --}}
-    @if ($showEditQuoteModal)
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-            wire:click.self="$set('showEditQuoteModal', false)"
-            x-data
-            @keydown.escape.window="$wire.set('showEditQuoteModal', false)"
-        >
-            <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <form wire:submit="saveQuoteUpdates">
-                    <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
-                        <div>
-                            <h2 class="text-lg font-semibold text-ink">{{ __('Éditer le devis') }}</h2>
-                            <p class="mt-1 text-sm text-slate-500">{{ __('Modifiez les informations principales du devis.') }}</p>
-                        </div>
-                        <button
-                            type="button"
-                            wire:click="$set('showEditQuoteModal', false)"
-                            class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                        >
-                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Référence') }}</label>
-                                <input
-                                    wire:model="quoteReference"
-                                    type="text"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                />
-                                @error('quoteReference') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Client') }}</label>
-                                <x-select-native>
-                                    <select
-                                        wire:model="quoteClientId"
-                                        class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                    >
-                                        <option value="">{{ __('Choisir un client…') }}</option>
-                                        @foreach ($this->clients as $client)
-                                            <option value="{{ $client['id'] }}">{{ $client['name'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </x-select-native>
-                                @error('quoteClientId') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Date d\'émission') }}</label>
-                                <input
-                                    wire:model="quoteIssuedAt"
-                                    type="date"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                />
-                                @error('quoteIssuedAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Valide jusqu\'au') }}</label>
-                                <input
-                                    wire:model="quoteValidUntil"
-                                    type="date"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                />
-                                @error('quoteValidUntil') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Notes') }}</label>
-                                <textarea
-                                    wire:model="quoteNotes"
-                                    rows="4"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                ></textarea>
-                                @error('quoteNotes') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                        <button
-                            type="button"
-                            wire:click="$set('showEditQuoteModal', false)"
-                            class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
-                        >
-                            {{ __('Annuler') }}
-                        </button>
-                        <button
-                            type="submit"
-                            class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
-                        >
-                            {{ __('Enregistrer') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 
 </div>

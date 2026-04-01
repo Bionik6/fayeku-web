@@ -6,7 +6,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
 
@@ -34,20 +33,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $selectedInvoiceId = null;
 
-    public bool $showEditInvoiceModal = false;
-
-    public string $editingInvoiceId = '';
-
-    public string $invoiceReference = '';
-
-    public string $invoiceClientId = '';
-
-    public string $invoiceIssuedAt = '';
-
-    public string $invoiceDueAt = '';
-
-    public string $invoiceNotes = '';
-
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
 
@@ -64,24 +49,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         }
 
         $this->refreshKpis();
-    }
-
-    #[Computed]
-    public function clients(): array
-    {
-        if (! $this->company) {
-            return [];
-        }
-
-        return Client::query()
-            ->where('company_id', $this->company->id)
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (Client $client) => [
-                'id' => $client->id,
-                'name' => $client->name,
-            ])
-            ->all();
     }
 
     #[Computed]
@@ -114,71 +81,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         $this->selectedInvoiceId = null;
     }
 
-    public function openEditInvoiceModal(string $invoiceId): void
-    {
-        abort_unless($this->company, 403);
-
-        $invoice = Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->with('client')
-            ->findOrFail($invoiceId);
-
-        $this->editingInvoiceId = $invoice->id;
-        $this->invoiceReference = $invoice->reference ?? '';
-        $this->invoiceClientId = $invoice->client_id ?? '';
-        $this->invoiceIssuedAt = $invoice->issued_at?->format('Y-m-d') ?? '';
-        $this->invoiceDueAt = $invoice->due_at?->format('Y-m-d') ?? '';
-        $this->invoiceNotes = $invoice->notes ?? '';
-        $this->resetValidation();
-        $this->showEditInvoiceModal = true;
-    }
-
-    public function saveInvoiceUpdates(): void
-    {
-        abort_unless($this->company, 403);
-
-        $invoice = Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($this->editingInvoiceId);
-
-        $validated = $this->validate([
-            'invoiceReference' => ['required', 'string', 'max:255'],
-            'invoiceClientId' => ['required', 'string', 'exists:clients,id'],
-            'invoiceIssuedAt' => ['required', 'date'],
-            'invoiceDueAt' => ['required', 'date', 'after_or_equal:invoiceIssuedAt'],
-            'invoiceNotes' => ['nullable', 'string', 'max:1000'],
-        ], [
-            'invoiceReference.required' => __('La référence de la facture est requise.'),
-            'invoiceClientId.required' => __('Le client est requis.'),
-            'invoiceDueAt.after_or_equal' => __('L’échéance doit être postérieure ou égale à la date d’émission.'),
-        ]);
-
-        abort_unless(
-            Client::query()
-                ->where('company_id', $this->company->id)
-                ->whereKey($validated['invoiceClientId'])
-                ->exists(),
-            403
-        );
-
-        $invoice->update([
-            'reference' => trim($validated['invoiceReference']),
-            'client_id' => $validated['invoiceClientId'],
-            'issued_at' => $validated['invoiceIssuedAt'],
-            'due_at' => $validated['invoiceDueAt'],
-            'notes' => trim((string) ($validated['invoiceNotes'] ?? '')) ?: null,
-        ]);
-
-        $this->showEditInvoiceModal = false;
-        $this->editingInvoiceId = '';
-        $this->selectedInvoiceId = $invoice->id;
-        $this->flushDocumentCaches();
-        $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedInvoice, $this->clients);
-
-        $this->dispatch('toast', type: 'success', title: __('La facture a été mise à jour.'));
-    }
-
     public function deleteInvoice(string $invoiceId): void
     {
         abort_unless($this->company, 403);
@@ -191,11 +93,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
         if ($this->selectedInvoiceId === $invoiceId) {
             $this->selectedInvoiceId = null;
-        }
-
-        if ($this->editingInvoiceId === $invoiceId) {
-            $this->showEditInvoiceModal = false;
-            $this->editingInvoiceId = '';
         }
 
         $this->flushDocumentCaches();
@@ -677,10 +574,12 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                                 <flux:icon name="eye" class="size-4 text-slate-500" />
                                                 {{ __('Voir la facture') }}
                                             </flux:menu.item>
-                                            <flux:menu.item wire:click="openEditInvoiceModal('{{ $row['id'] }}')">
-                                                <flux:icon name="pencil-square" class="size-4 text-slate-500" />
-                                                {{ __('Éditer la facture') }}
-                                            </flux:menu.item>
+                                            @if (in_array($row['status_value'], ['draft', 'sent']))
+                                                <flux:menu.item :href="route('pme.invoices.edit', $row['id'])" wire:navigate>
+                                                    <flux:icon name="pencil-square" class="size-4 text-slate-500" />
+                                                    {{ __('Éditer la facture') }}
+                                                </flux:menu.item>
+                                            @endif
 
                                             @if (in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
                                                 <flux:menu.separator />
@@ -759,109 +658,5 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
     @endif
 
-    @if ($showEditInvoiceModal)
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-            wire:click.self="$set('showEditInvoiceModal', false)"
-            x-data
-            @keydown.escape.window="$wire.set('showEditInvoiceModal', false)"
-        >
-            <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <form wire:submit="saveInvoiceUpdates">
-                    <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
-                        <div>
-                            <h2 class="text-lg font-semibold text-ink">{{ __('Éditer la facture') }}</h2>
-                            <p class="mt-1 text-sm text-slate-500">{{ __('Modifiez les informations principales de la facture.') }}</p>
-                        </div>
-                        <button
-                            type="button"
-                            wire:click="$set('showEditInvoiceModal', false)"
-                            class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                        >
-                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Référence') }}</label>
-                                <input
-                                    wire:model="invoiceReference"
-                                    type="text"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                />
-                                @error('invoiceReference') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Client') }}</label>
-                                <x-select-native>
-                                    <select
-                                        wire:model="invoiceClientId"
-                                        class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                    >
-                                        <option value="">{{ __('Choisir un client…') }}</option>
-                                        @foreach ($this->clients as $client)
-                                            <option value="{{ $client['id'] }}">{{ $client['name'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </x-select-native>
-                                @error('invoiceClientId') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Date d’émission') }}</label>
-                                <input
-                                    wire:model="invoiceIssuedAt"
-                                    type="date"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                />
-                                @error('invoiceIssuedAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Échéance') }}</label>
-                                <input
-                                    wire:model="invoiceDueAt"
-                                    type="date"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                />
-                                @error('invoiceDueAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Notes') }}</label>
-                                <textarea
-                                    wire:model="invoiceNotes"
-                                    rows="4"
-                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                                ></textarea>
-                                @error('invoiceNotes') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                        <button
-                            type="button"
-                            wire:click="$set('showEditInvoiceModal', false)"
-                            class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
-                        >
-                            {{ __('Annuler') }}
-                        </button>
-                        <button
-                            type="submit"
-                            class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
-                        >
-                            {{ __('Enregistrer') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 
 </div>
