@@ -44,7 +44,7 @@ new #[Title('Commissions')] class extends Component
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
         $this->firm = auth()->user()->accountantFirm();
 
         if (! $this->firm) {
@@ -171,7 +171,7 @@ new #[Title('Commissions')] class extends Component
     {
         $months = [];
         for ($m = 1; $m <= now()->month; $m++) {
-            $months[] = ucfirst(now()->setMonth($m)->locale('fr_FR')->translatedFormat('M'));
+            $months[] = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][$m - 1];
         }
 
         if (count($months) <= 3) {
@@ -184,7 +184,7 @@ new #[Title('Commissions')] class extends Component
     #[Computed]
     public function nextPaymentDate(): string
     {
-        return now()->locale('fr_FR')->addMonth()->startOfMonth()->addDays(4)->translatedFormat('j F');
+        return format_date(now()->addMonth()->startOfMonth()->addDays(4), withYear: false);
     }
 
     /** @return Collection<int, CommissionPayment> */
@@ -354,7 +354,7 @@ new #[Title('Commissions')] class extends Component
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Commission du mois') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-accent">
-                {{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
+                {{ format_money($this->monthTotal) }}
             </p>
             <p class="mt-1 text-sm text-slate-500">Versement prévu le {{ $this->nextPaymentDate }} via Wave</p>
         </article>
@@ -385,7 +385,7 @@ new #[Title('Commissions')] class extends Component
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Commissions cumulées') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">
-                {{ number_format($this->yearTotal, 0, ',', ' ') }} FCFA
+                {{ format_money($this->yearTotal) }}
             </p>
             <p class="mt-1 text-sm text-slate-500">{{ __('Depuis janvier') }} {{ now()->year }}</p>
         </article>
@@ -402,7 +402,7 @@ new #[Title('Commissions')] class extends Component
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Estimation du mois prochain') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">
-                ~{{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
+                ~{{ format_money($this->monthTotal) }}
             </p>
             <p class="mt-1 text-sm text-slate-500">{{ __('Projection basée sur les clients actifs actuels') }}</p>
         </article>
@@ -420,9 +420,9 @@ new #[Title('Commissions')] class extends Component
             @if ($this->monthTotal > 0)
                 <span class="text-sm font-bold text-accent">
                     @if ($this->hasActiveFilters)
-                        {{ __('Total filtré') }} : {{ number_format($this->filteredTotal, 0, ',', ' ') }} FCFA
+                        {{ __('Total filtré') }} : {{ format_money($this->filteredTotal) }}
                     @else
-                        {{ __('Total du mois') }} : {{ number_format($this->monthTotal, 0, ',', ' ') }} FCFA
+                        {{ __('Total du mois') }} : {{ format_money($this->monthTotal) }}
                     @endif
                 </span>
             @endif
@@ -542,11 +542,11 @@ new #[Title('Commissions')] class extends Component
                                     </span>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
-                                    {{ number_format($price, 0, ',', ' ') }} FCFA
+                                    {{ format_money($price, compact: true) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">{{ $rate }}%</td>
                                 <td class="whitespace-nowrap px-6 py-3.5 font-semibold text-accent">
-                                    {{ number_format($commission->amount, 0, ',', ' ') }} FCFA
+                                    {{ format_money($commission->amount, compact: true) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     @php
@@ -628,16 +628,16 @@ new #[Title('Commissions')] class extends Component
                         @foreach ($this->payments as $payment)
                             <tr class="transition hover:bg-slate-50/50">
                                 <td class="whitespace-nowrap px-6 py-3.5 font-medium text-ink">
-                                    {{ Str::ucfirst($payment->period_month->locale('fr_FR')->translatedFormat('F')) }} {{ $payment->period_month->translatedFormat('Y') }}
+                                    {{ format_month($payment->period_month) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
                                     {{ $payment->active_clients_count }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 font-semibold text-accent">
-                                    {{ number_format($payment->amount, 0, ',', ' ') }} FCFA
+                                    {{ format_money($payment->amount, compact: true) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
-                                    {{ $payment->paid_at ? $payment->paid_at->locale('fr_FR')->translatedFormat('j') . ' ' . Str::ucfirst($payment->paid_at->locale('fr_FR')->translatedFormat('F')) . ' ' . $payment->paid_at->translatedFormat('Y') : '—' }}
+                                    {{ format_date($payment->paid_at) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     @if ($payment->status === 'paid')

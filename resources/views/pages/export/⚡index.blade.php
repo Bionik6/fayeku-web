@@ -80,7 +80,7 @@ new #[Title('Export groupé')] class extends Component {
             $date = now()->setMonth($m)->startOfMonth();
             $periods[] = [
                 'value' => $date->format('Y-m'),
-                'label' => ucfirst($date->locale('fr_FR')->translatedFormat('F Y')),
+                'label' => format_month($date),
                 'type' => 'Mois',
             ];
         }
@@ -264,7 +264,7 @@ new #[Title('Export groupé')] class extends Component {
 
     public function currentPeriodLabel(): string
     {
-        return now()->locale('fr_FR')->translatedFormat('F Y');
+        return format_month(now());
     }
 
     public function selectedClientsLabel(): string

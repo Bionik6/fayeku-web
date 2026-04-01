@@ -333,7 +333,7 @@ new #[Title('Invitations')] class extends Component {
                     <flux:icon name="check-circle" class="size-5 text-accent" />
                 </div>
                 <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
-                    {{ ucfirst(now()->locale('fr_FR')->translatedFormat('M Y')) }}
+                    {{ format_month(now()) }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Activées ce mois') }}</p>
@@ -474,11 +474,7 @@ new #[Title('Invitations')] class extends Component {
                                     </span>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-500">
-                                    @if ($invitation->last_reminder_at)
-                                        {{ $invitation->last_reminder_at->locale('fr_FR')->diffForHumans() }}
-                                    @else
-                                        {{ __('Aucune') }}
-                                    @endif
+                                                    {{ $invitation->last_reminder_at ? format_date($invitation->last_reminder_at) : __('Aucune') }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     @php $btnBase = 'inline-flex w-32 items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition'; @endphp

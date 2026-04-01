@@ -76,7 +76,7 @@ new #[Title('Clients')] class extends Component {
         $nameParts = collect(explode(' ', $company->name));
         $this->initials = $nameParts->map(fn ($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
         $this->companyRef = $this->initials.'-'.strtoupper(substr($company->id, -4));
-        $this->clientSince = $this->relation->started_at->locale('fr_FR')->translatedFormat('M Y');
+        $this->clientSince = format_month($this->relation->started_at);
     }
 
     private function selectedYear(): int
@@ -135,7 +135,7 @@ new #[Title('Clients')] class extends Component {
             ->get()
             ->map(fn ($inv) => [
                 'value' => $inv->issued_at->format('Y-m'),
-                'label' => ucfirst($inv->issued_at->locale('fr_FR')->translatedFormat('F Y')),
+                'label' => format_month($inv->issued_at),
             ])
             ->unique('value')
             ->values()
@@ -145,7 +145,7 @@ new #[Title('Clients')] class extends Component {
         if (collect($months)->where('value', $current)->isEmpty()) {
             array_unshift($months, [
                 'value' => $current,
-                'label' => ucfirst(now()->locale('fr_FR')->translatedFormat('F Y')),
+                'label' => format_month(now()),
             ]);
         }
 
@@ -235,10 +235,10 @@ new #[Title('Clients')] class extends Component {
         $pendingLabel = $this->stats['pending_count'] === 1 ? 'facture' : 'factures';
 
         return sprintf(
-            '%s %s en attente · %s F à recouvrer · Taux de recouvrement de %s%%',
+            '%s %s en attente · %s à recouvrer · Taux de recouvrement de %s%%',
             number_format($this->stats['pending_count'], 0, ',', ' '),
             $pendingLabel,
-            number_format($this->stats['pending_amount'], 0, ',', ' '),
+            format_money($this->stats['pending_amount']),
             $this->stats['recovery_rate']
         );
     }
@@ -249,7 +249,7 @@ new #[Title('Clients')] class extends Component {
         $selectedPeriod = collect($this->availableMonths)->firstWhere('value', $this->selectedPeriod);
 
         return $selectedPeriod['label']
-            ?? ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('F Y'));
+            ?? format_month(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth()));
     }
 
     /** Facture sélectionnée pour la modale de détail. */
@@ -294,7 +294,7 @@ new #[Title('Clients')] class extends Component {
             $date = now()->setMonth($m)->startOfMonth();
             $periods[] = [
                 'value' => $date->format('Y-m'),
-                'label' => ucfirst($date->locale('fr_FR')->translatedFormat('F Y')),
+                'label' => format_month($date),
                 'type' => 'Mois',
             ];
         }
@@ -481,12 +481,12 @@ new #[Title('Clients')] class extends Component {
                     <flux:icon name="document-chart-bar" class="size-5 text-slate-600" />
                 </div>
                 <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-600">
-                    {{ ucfirst(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())->locale('fr_FR')->translatedFormat('M Y')) }}
+                    {{ format_month(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth())) }}
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('CA facturé') }}</p>
             <p class="mt-1 text-2xl font-bold tracking-tight text-ink">
-                {{ number_format($this->stats['billed_month'], 0, ',', ' ') }} FCFA
+                {{ format_money($this->stats['billed_month']) }}
             </p>
         </section>
 
@@ -502,7 +502,7 @@ new #[Title('Clients')] class extends Component {
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Encaissé') }}</p>
             <p class="mt-1 text-2xl font-bold tracking-tight text-accent">
-                {{ number_format($this->stats['collected'], 0, ',', ' ') }} FCFA
+                {{ format_money($this->stats['collected']) }}
             </p>
         </section>
 
@@ -543,7 +543,7 @@ new #[Title('Clients')] class extends Component {
                 'text-amber-500' => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
                 'text-ink'       => $this->stats['pending_amount'] === 0,
             ])>
-                {{ number_format($this->stats['pending_amount'], 0, ',', ' ') }} FCFA
+                {{ format_money($this->stats['pending_amount']) }}
             </p>
         </section>
 
@@ -657,19 +657,19 @@ new #[Title('Clients')] class extends Component {
                                 {{ $invoice->client?->name ?? '—' }}
                             </td>
                             <td class="px-4 py-4 text-right text-slate-600">
-                                {{ number_format($invoice->subtotal, 0, ',', ' ') }} F
+                                {{ format_money($invoice->subtotal, compact: true) }}
                             </td>
                             <td class="px-4 py-4 text-right text-slate-500">
-                                {{ number_format($invoice->tax_amount, 0, ',', ' ') }} F
+                                {{ format_money($invoice->tax_amount, compact: true) }}
                             </td>
                             <td class="px-4 py-4 text-right font-semibold text-ink">
-                                {{ number_format($invoice->total, 0, ',', ' ') }} F
+                                {{ format_money($invoice->total, compact: true) }}
                             </td>
                             <td class="px-4 py-4 text-slate-600">
-                                {{ $invoice->issued_at->locale('fr_FR')->translatedFormat('j M.') }}
+                                {{ format_date($invoice->issued_at) }}
                             </td>
                             <td class="px-4 py-4 text-slate-600">
-                                {{ $invoice->due_at->locale('fr_FR')->translatedFormat('j M.') }}
+                                {{ format_date($invoice->due_at) }}
                             </td>
                             <td class="px-4 py-4 text-center">
                                 <span class="font-semibold {{ $delayClass }}">{{ $delayDays }} j</span>

@@ -103,12 +103,12 @@ class AlertService
                 $reminderLabel = $totalReminders > 0
                     ? $totalReminders.' relance(s) envoyée(s)'
                     : 'Aucune relance envoyée';
-                $subtitle = ($invoice->reference ?? 'FAC').' · '.number_format($totalAmount, 0, ',', ' ').' FCFA · J'.$maxDaysLate.' · '.$reminderLabel;
+                $subtitle = ($invoice->reference ?? 'FAC').' · '.format_money($totalAmount).' · J'.$maxDaysLate.' · '.$reminderLabel;
             } else {
                 $reminderLabel = $totalReminders > 0
                     ? $totalReminders.' relance(s) envoyée(s)'
                     : 'Aucune relance envoyée';
-                $subtitle = $count.' factures impayées · '.number_format($totalAmount, 0, ',', ' ').' FCFA · J'.$maxDaysLate.' max · '.$reminderLabel;
+                $subtitle = $count.' factures impayées · '.format_money($totalAmount).' · J'.$maxDaysLate.' max · '.$reminderLabel;
             }
 
             $alerts[] = [

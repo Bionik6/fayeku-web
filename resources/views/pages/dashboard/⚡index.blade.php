@@ -52,7 +52,7 @@ new #[Title('Dashboard')] class extends Component
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
         $this->firm = auth()->user()->accountantFirm();
 
         if (! $this->firm) {
@@ -94,7 +94,7 @@ new #[Title('Dashboard')] class extends Component
             ->whereMonth('period_month', now()->month)
             ->sum('amount');
 
-        $this->nextPaymentDate = now()->locale('fr_FR')->addMonth()->startOfMonth()->addDays(4)->translatedFormat('j F');
+        $this->nextPaymentDate = format_date(now()->addMonth()->startOfMonth()->addDays(4), withYear: false);
 
         $tier = PartnerTier::fromActiveClients($this->activeClientsCount);
         $this->tierValue = $tier->value;
@@ -365,7 +365,7 @@ new #[Title('Dashboard')] class extends Component
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Commissions du mois') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-primary">
-                {{ number_format($commissionAmount, 0, ',', ' ') }} FCFA
+                {{ format_money($commissionAmount) }}
             </p>
             <p class="mt-1 text-sm text-slate-500">
                 {{ $currentMonth }}
@@ -595,7 +595,7 @@ new #[Title('Dashboard')] class extends Component
                                 </td>
                                 <td class="px-4 py-4 font-semibold text-ink">
                                     @if ($row['pending_amount'] > 0)
-                                        {{ number_format($row['pending_amount'], 0, ',', ' ') }} F
+                                        {{ format_money($row['pending_amount'], compact: true) }}
                                     @else
                                         <span class="text-slate-500">—</span>
                                     @endif

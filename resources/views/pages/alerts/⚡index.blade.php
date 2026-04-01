@@ -144,7 +144,7 @@ new #[Title('Alertes')] class extends Component {
             $activeLabel,
             $this->counts['critical'],
             $criticalLabel,
-            ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'))
+            format_month(now())
         );
     }
 

@@ -29,7 +29,7 @@ new #[Title('Clients')] class extends Component {
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
 
         $this->firm = auth()->user()->accountantFirm();
     }
@@ -291,7 +291,7 @@ new #[Title('Clients')] class extends Component {
                 </span>
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Montant total en attente') }}</p>
-            <p class="mt-1 text-3xl font-semibold tracking-tight text-ink">{{ number_format($this->summaryStats['pending_amount_total'], 0, ',', ' ') }} F</p>
+            <p class="mt-1 text-3xl font-semibold tracking-tight text-ink">{{ format_money($this->summaryStats['pending_amount_total']) }}</p>
         </article>
 
         <article class="app-shell-stat-card">
@@ -516,7 +516,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Montant en attente --}}
                                 <td class="px-4 py-4 font-semibold text-ink">
                                     @if ($row['pending_amount'] > 0)
-                                        {{ number_format($row['pending_amount'], 0, ',', ' ') }} F
+                                        {{ format_money($row['pending_amount'], compact: true) }}
                                     @else
                                         <span class="text-slate-500">—</span>
                                     @endif
