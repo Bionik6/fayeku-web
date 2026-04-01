@@ -195,6 +195,31 @@ test('rows() est trié par issued_at décroissant', function () {
     expect($refs[2])->toBe('FAC-OLD');
 });
 
+test('rows() trie par created_at décroissant quand issued_at est identique', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $sameDate = now()->startOfDay();
+
+    $first = makeInvoice($company, ['reference' => 'FAC-FIRST', 'issued_at' => $sameDate]);
+    $second = makeInvoice($company, ['reference' => 'FAC-SECOND', 'issued_at' => $sameDate]);
+    $third = makeInvoice($company, ['reference' => 'FAC-THIRD', 'issued_at' => $sameDate]);
+
+    // Forcer des created_at distincts pour garantir l'ordre
+    $first->timestamps = false;
+    $first->forceFill(['created_at' => now()->subMinutes(10)])->save();
+    $second->forceFill(['created_at' => now()->subMinutes(5)])->save();
+    $third->forceFill(['created_at' => now()])->save();
+
+    $refs = collect(
+        Livewire::actingAs($user)->test('pages::pme.invoices.index')->get('rows')
+    )->pluck('reference')->values()->toArray();
+
+    // La plus récemment créée doit apparaître en premier
+    expect($refs[0])->toBe('FAC-THIRD');
+    expect($refs[1])->toBe('FAC-SECOND');
+    expect($refs[2])->toBe('FAC-FIRST');
+});
+
 test('rows() mappe correctement le nom du client', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
     $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'Sonatel SA']);

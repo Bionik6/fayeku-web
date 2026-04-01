@@ -56,6 +56,8 @@ class extends Component {
 
     public bool $showSendModal = false;
 
+    public bool $showSaveDraftModal = false;
+
     public string $clientName = '';
 
     public string $clientSector = '';
@@ -345,6 +347,28 @@ class extends Component {
         }
     }
 
+    public function openSaveDraftModal(): void
+    {
+        try {
+            $this->validateForm();
+        } catch (ValidationException $e) {
+            $this->dispatch('validation-errors', messages: $e->validator->errors()->all());
+
+            throw $e;
+        }
+
+        $this->showSaveDraftModal = true;
+    }
+
+    public function confirmSaveDraft(): void
+    {
+        $this->saveDraft(notify: false);
+        $this->showSaveDraftModal = false;
+
+        session()->flash('success', __('Brouillon enregistré avec succès.'));
+        $this->redirect(route('pme.quotes.index').'?statut=draft', navigate: true);
+    }
+
     public function saveDraft(bool $notify = true): void
     {
         try {
@@ -623,7 +647,7 @@ class extends Component {
                     </svg>
                     {{ __('Aperçu PDF') }}
                 </button>
-                <button type="button" wire:click="saveDraft"
+                <button type="button" wire:click="openSaveDraftModal"
                         class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
                     <svg class="mr-2 size-4" fill="none" stroke="currentColor"
                          stroke-width="1.5" viewBox="0 0 24 24">
@@ -1145,7 +1169,7 @@ class extends Component {
                         </svg>
                         {{ __('Aperçu PDF') }}
                     </button>
-                    <button type="button" wire:click="saveDraft"
+                    <button type="button" wire:click="openSaveDraftModal"
                             class="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
                         <svg class="mr-2 size-4" fill="none" stroke="currentColor"
                              stroke-width="1.5" viewBox="0 0 24 24">
@@ -1183,6 +1207,39 @@ class extends Component {
             </div>
         </div>
     </div>
+
+    {{-- Save draft confirmation modal --}}
+    @if ($showSaveDraftModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+             wire:click.self="$set('showSaveDraftModal', false)" x-data
+             @keydown.escape.window="$wire.set('showSaveDraftModal', false)">
+            <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+                <div class="flex items-start gap-4">
+                    <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <svg class="size-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">{{ __('Enregistrer en brouillon') }}</h3>
+                        <p class="mt-1.5 text-sm text-slate-500">
+                            {{ __('Votre devis sera sauvegardé mais non envoyé. Vous serez redirigé vers la liste des devis où vous pourrez retrouver votre brouillon dans l\'onglet « Brouillon ».') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" wire:click="$set('showSaveDraftModal', false)"
+                            class="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                        {{ __('Continuer l\'édition') }}
+                    </button>
+                    <button type="button" wire:click="confirmSaveDraft"
+                            class="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong">
+                        {{ __('Enregistrer') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- Cancel modal --}}
     @if ($showCancelModal)

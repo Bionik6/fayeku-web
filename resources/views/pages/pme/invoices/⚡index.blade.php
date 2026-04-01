@@ -333,6 +333,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
             ->whereNotIn('status', [InvoiceStatus::Cancelled])
             ->with('client')
             ->orderByDesc('issued_at')
+            ->orderByDesc('created_at')
             ->get()
             ->map(function ($inv) {
                 $delayDays = $inv->due_at ? (int) abs(now()->diffInDays($inv->due_at)) : 0;

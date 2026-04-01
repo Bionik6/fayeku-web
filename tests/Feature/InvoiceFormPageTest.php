@@ -741,3 +741,65 @@ test('envoyer en PDF ne marque pas la facture comme envoyée', function () {
 
     expect($invoice->fresh()->status)->toBe(InvoiceStatus::Draft);
 });
+
+// ─── openSaveDraftModal ──────────────────────────────────────────────────────
+
+test('openSaveDraftModal ouvre la modale si le formulaire est valide', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Prestation')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->call('openSaveDraftModal')
+        ->assertSet('showSaveDraftModal', true)
+        ->assertHasNoErrors();
+});
+
+test('openSaveDraftModal ne ouvre pas la modale si le formulaire est invalide', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->call('openSaveDraftModal')
+        ->assertSet('showSaveDraftModal', false)
+        ->assertHasErrors(['clientId']);
+});
+
+test('confirmSaveDraft sauvegarde la facture et redirige vers la liste en brouillon', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Prestation')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->call('openSaveDraftModal')
+        ->call('confirmSaveDraft')
+        ->assertRedirect(route('pme.invoices.index').'?statut=draft');
+
+    expect(Invoice::query()->where('company_id', $company->id)->first())
+        ->not->toBeNull()
+        ->status->toBe(InvoiceStatus::Draft);
+});
+
+test('confirmSaveDraft flash un message de succès pour le toaster', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Prestation')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->call('openSaveDraftModal')
+        ->call('confirmSaveDraft');
+
+    expect(session('success'))->toBe('Brouillon enregistré avec succès.');
+});

@@ -356,6 +356,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         return $this->allRowsCache = Quote::query()
             ->where('company_id', $this->company->id)
             ->with(['client', 'invoice'])
+            ->orderByDesc('issued_at')
+            ->orderByDesc('created_at')
             ->get()
             ->map(function ($q) {
                 $isExpired = $q->status === QuoteStatus::Expired ||
