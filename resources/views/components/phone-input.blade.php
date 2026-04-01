@@ -44,6 +44,13 @@
 
         $localPattern = (string) preg_replace('/^\+\d+\s*/', '', $data['format']);
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
+
+        // Strip country prefix digits if present (e.g. '221' from '+221771234567').
+        $prefixDigits = preg_replace('/\D+/', '', $data['prefix']) ?? '';
+        if ($prefixDigits !== '' && str_starts_with($digits, $prefixDigits)) {
+            $digits = substr($digits, strlen($prefixDigits));
+        }
+
         $maxDigits = substr_count($localPattern, 'X');
         $digits = substr($digits, 0, $maxDigits);
 
@@ -74,7 +81,7 @@
     ));
 @endphp
 
-<div {{ $attributes->class(['space-y-1']) }}>
+<div {{ $attributes->class(['space-y-1']) }} data-phone-field>
     @if ($showLabel)
         <span class="block auth-field-label">
             {{ $label }}@if ($required)<span class="text-red-500"> *</span>@endif

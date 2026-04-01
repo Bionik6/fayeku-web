@@ -58,7 +58,7 @@
                                 @if ($client->phone)
                                     <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                                         <flux:icon name="phone" class="size-3.5 shrink-0" />
-                                        {{ $client->phone }}
+                                        {{ format_phone($client->phone) }}
                                     </p>
                                 @endif
                                 @if ($client->email)

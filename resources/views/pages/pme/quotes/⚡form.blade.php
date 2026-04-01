@@ -687,7 +687,7 @@ class extends Component {
                                 <span class="text-slate-500">·</span>
                             @endif
                             @if ($this->selectedClient->phone)
-                                <span>{{ $this->selectedClient->phone }}</span>
+                                <span>{{ format_phone($this->selectedClient->phone) }}</span>
                             @endif
                         </div>
                     </div>

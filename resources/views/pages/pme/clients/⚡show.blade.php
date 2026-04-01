@@ -365,7 +365,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             <div class="mt-6 grid gap-4 md:grid-cols-2">
                 <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Téléphone / WhatsApp') }}</p>
-                    <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['phone'] }}</p>
+                    <p class="mt-2 text-sm font-semibold text-ink">{{ format_phone($this->detail['contact']['phone']) }}</p>
                 </div>
                 <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Email') }}</p>

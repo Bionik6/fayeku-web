@@ -253,7 +253,7 @@
                         @if ($invoice->company->city), {{ $invoice->company->city }} @endif
                         <br>
                     @endif
-                    @if ($invoice->company->phone) {{ $invoice->company->phone }}<br> @endif
+                    @if ($invoice->company->phone) {{ format_phone($invoice->company->phone) }}<br> @endif
                     @if ($invoice->company->email) {{ $invoice->company->email }} @endif
                 </div>
             </td>
@@ -262,7 +262,7 @@
                 <div class="info-value">{{ $invoice->client->name }}</div>
                 <div class="info-detail">
                     @if ($invoice->client->address) {{ $invoice->client->address }}<br> @endif
-                    @if ($invoice->client->phone) {{ $invoice->client->phone }}<br> @endif
+                    @if ($invoice->client->phone) {{ format_phone($invoice->client->phone) }}<br> @endif
                     @if ($invoice->client->email) {{ $invoice->client->email }} @endif
                 </div>
             </td>

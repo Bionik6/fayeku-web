@@ -7,6 +7,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
+use Modules\Auth\Services\AuthService;
 use Modules\Compta\Partnership\Services\InvitationService;
 
 new #[Title('Invitations')] class extends Component {
@@ -15,6 +16,17 @@ new #[Title('Invitations')] class extends Component {
     public string $search = '';
 
     public string $statusFilter = 'all';
+
+    // ─── Formulaire d'invitation ──────────────────────────────────────
+    public string $inviteCompanyName = '';
+
+    public string $inviteContactName = '';
+
+    public string $inviteCountryCode = 'SN';
+
+    public string $invitePhone = '';
+
+    public string $invitePlan = 'basique';
 
     public function mount(): void
     {
@@ -141,6 +153,53 @@ new #[Title('Invitations')] class extends Component {
     public function onInvitationSent(): void
     {
         unset($this->invitations, $this->totalSent, $this->pendingCount, $this->priorityItems);
+    }
+
+    public function sendInvitation(): void
+    {
+        $this->validate([
+            'inviteCompanyName' => ['required', 'string', 'max:255'],
+            'inviteContactName' => ['required', 'string', 'max:255'],
+            'invitePhone' => ['required', 'string', 'max:30'],
+        ]);
+
+        $normalizedPhone = AuthService::normalizePhone($this->invitePhone, $this->inviteCountryCode);
+
+        // Vérifier les doublons
+        $duplicate = PartnerInvitation::query()
+            ->where('accountant_firm_id', $this->firm?->id)
+            ->where('invitee_phone', $normalizedPhone)
+            ->whereIn('status', ['pending', 'registering', 'accepted'])
+            ->exists();
+
+        if ($duplicate) {
+            $this->addError('invitePhone', __('Une invitation a déjà été envoyée à ce numéro.'));
+
+            return;
+        }
+
+        $invitation = PartnerInvitation::create([
+            'accountant_firm_id' => $this->firm->id,
+            'token' => \Illuminate\Support\Str::random(32),
+            'invitee_company_name' => $this->inviteCompanyName,
+            'invitee_name' => $this->inviteContactName,
+            'invitee_phone' => $normalizedPhone,
+            'recommended_plan' => $this->invitePlan,
+            'status' => 'pending',
+            'channel' => 'whatsapp',
+            'expires_at' => now()->addDays(30),
+        ]);
+
+        $sent = app(InvitationService::class)->sendInvitationMessage($invitation);
+
+        $this->reset('inviteCompanyName', 'inviteContactName', 'invitePhone', 'invitePlan');
+        unset($this->invitations, $this->totalSent, $this->pendingCount, $this->priorityItems);
+
+        if ($sent) {
+            $this->dispatch('toast', type: 'success', title: __('Invitation envoyée avec succès.'));
+        } else {
+            $this->dispatch('toast', type: 'warning', title: __('Invitation créée mais l\'envoi WhatsApp a échoué.'));
+        }
     }
 
     public function remindInvitation(string $id): void
@@ -374,34 +433,6 @@ new #[Title('Invitations')] class extends Component {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @php
-                            $phoneCountries = config('fayeku.phone_countries', []);
-                            $formatPhone = static function (?string $phone) use ($phoneCountries): string {
-                                if (! $phone) {
-                                    return '—';
-                                }
-
-                                foreach ($phoneCountries as $code => $data) {
-                                    $prefix = $data['prefix'] ?? '';
-                                    if ($prefix && str_starts_with($phone, $prefix)) {
-                                        if (! in_array($code, ['SN', 'CI'], true) || empty($data['format'])) {
-                                            return $phone;
-                                        }
-                                        $localPattern = (string) preg_replace('/^\+\d+\s*/', '', $data['format']);
-                                        $localDigits  = substr((string) preg_replace('/\D+/', '', substr($phone, strlen($prefix))), 0, substr_count($localPattern, 'X'));
-                                        $result = '';
-                                        $di = 0;
-                                        for ($i = 0; $i < strlen($localPattern) && $di < strlen($localDigits); $i++) {
-                                            $result .= $localPattern[$i] === 'X' ? $localDigits[$di++] : $localPattern[$i];
-                                        }
-
-                                        return $prefix . ' ' . $result;
-                                    }
-                                }
-
-                                return $phone;
-                            };
-                        @endphp
                         @foreach ($this->invitations as $invitation)
                             @php
                                 $displayStatus = match (true) {
@@ -422,7 +453,7 @@ new #[Title('Invitations')] class extends Component {
                                 <td class="px-6 py-3.5">
                                     <div class="text-sm text-ink">{{ $invitation->invitee_name ?? '—' }}</div>
                                     @if ($invitation->invitee_phone)
-                                        <div class="text-sm text-slate-500">{{ $formatPhone($invitation->invitee_phone) }}</div>
+                                        <div class="text-sm text-slate-500">{{ format_phone($invitation->invitee_phone) }}</div>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">

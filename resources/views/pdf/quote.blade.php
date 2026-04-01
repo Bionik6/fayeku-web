@@ -246,7 +246,7 @@
                         @if ($quote->company->city), {{ $quote->company->city }} @endif
                         <br>
                     @endif
-                    @if ($quote->company->phone) {{ $quote->company->phone }}<br> @endif
+                    @if ($quote->company->phone) {{ format_phone($quote->company->phone) }}<br> @endif
                     @if ($quote->company->email) {{ $quote->company->email }} @endif
                 </div>
             </td>
@@ -255,7 +255,7 @@
                 <div class="info-value">{{ $quote->client->name }}</div>
                 <div class="info-detail">
                     @if ($quote->client->address) {{ $quote->client->address }}<br> @endif
-                    @if ($quote->client->phone) {{ $quote->client->phone }}<br> @endif
+                    @if ($quote->client->phone) {{ format_phone($quote->client->phone) }}<br> @endif
                     @if ($quote->client->email) {{ $quote->client->email }} @endif
                 </div>
             </td>
