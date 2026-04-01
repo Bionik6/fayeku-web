@@ -108,7 +108,7 @@ test('le header affiche le nom, le plan et la référence', function () {
         ->assertSee('Client depuis')
         ->assertSee('Réf.')
         ->assertSee('1 facture en attente')
-        ->assertSee('145 000 F à recouvrer')
+        ->assertSee('145 000 FCFA à recouvrer')
         ->assertSee('Taux de recouvrement de 0%');
 });
 
