@@ -1928,6 +1928,54 @@ FNE_TEST_URL=http://54.247.95.108/ws
 43. Run `vendor/bin/pint --dirty --format agent` to format all modified PHP files.
     Do not run `--test` mode — always run with `--format agent` to fix issues.
 
+### When displaying formatted values
+
+Use the global helpers defined in `app/helpers.php` — never inline formatting logic in Blade
+templates, Livewire components, or services.
+
+| Helper | Output example | Notes |
+|---|---|---|
+| `format_date($date)` | `21 Jan 2026` | 3-letter French month abbreviation, no dot |
+| `format_date($date, withTime: true)` | `21 Jan 2026, 14:35` | With time |
+| `format_date($date, withYear: false)` | `21 Jan` | Without year |
+| `format_month($date)` | `Janvier 2026` | Full French month name |
+| `format_month($date, withYear: false)` | `Janvier` | Without year |
+| `format_phone($phone)` | `+221 77 123 45 67` | Uses `fayeku.phone_countries` config |
+| `format_money($amount)` | `14 632 000 FCFA` | XOF by default, delegates to `CurrencyService` |
+| `format_money($amount, 'EUR')` | `12,50 EUR` | Amount in cents for currencies with decimals |
+| `format_money($amount, withLabel: false)` | `14 632 000` | Without currency label |
+| `format_amount($amount)` | `1 560 000F` | Compact symbol for tables — XOF by default |
+| `format_amount($amount, 'EUR')` | `€40,00` | Symbol before, no space |
+| `format_amount($amount, 'CHF')` | `CHF 40.00` | Symbol before, with space |
+
+**`format_amount` symbol reference:**
+
+| Currency | Symbol | Position | Example |
+|---|---|---|---|
+| XOF (FCFA) | `F` | after | `1 560 000F` |
+| EUR | `€` | before | `€40,00` |
+| USD | `$` | before | `$40.00` |
+| GBP | `£` | before | `£40.00` |
+| JPY | `¥` | before | `¥1,250` |
+| CAD | `CA$` | before | `CA$40.00` |
+| AUD | `A$` | before | `A$40.00` |
+| HKD | `HK$` | before | `HK$40.00` |
+| NZD | `NZ$` | before | `NZ$40.00` |
+| CNH | `¥` | before | `¥40.00` |
+| CHF | `CHF` | before + space | `CHF 40.00` |
+
+Use `format_amount` in tables and compact displays. Use `format_money` for verbose labels and
+detail views (invoices, summaries, alerts).
+
+Rules:
+- **Never** use `number_format()`, `->diffForHumans()`, `->translatedFormat()`, or
+  `->locale('fr_FR')` to display amounts, dates, or phone numbers in views.
+- **Never** write an inline closure or local `$formatPhone` / `$formatDate` variable in a
+  Blade `@php` block — extract to the helper instead.
+- `format_money` and `format_amount` expect amounts in the smallest stored unit, consistent
+  with `CurrencyService::format()`: whole FCFA for XOF/JPY, cents for USD/EUR/etc.
+- All helpers return `'—'` for `null` or empty input.
+
 ### General
 
 44. Never log raw OTP codes.

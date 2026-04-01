@@ -99,6 +99,48 @@ describe('format_month', function () {
     ]);
 });
 
+// ─── format_amount ────────────────────────────────────────────────────────────
+
+describe('format_amount', function () {
+    it('appends F suffix for XOF with no space', function () {
+        expect(format_amount(1_560_000))->toBe('1 560 000F');
+    });
+
+    it('prepends € for EUR with no space', function () {
+        expect(format_amount(4_000, 'EUR'))->toBe('€40,00');
+    });
+
+    it('prepends $ for USD with no space', function () {
+        expect(format_amount(4_000, 'USD'))->toBe('$40.00');
+    });
+
+    it('prepends £ for GBP with no space', function () {
+        expect(format_amount(4_000, 'GBP'))->toBe('£40.00');
+    });
+
+    it('prepends ¥ for JPY with no space', function () {
+        expect(format_amount(1_250, 'JPY'))->toBe('¥1,250');
+    });
+
+    it('prepends CHF with a space for CHF', function () {
+        expect(format_amount(4_000, 'CHF'))->toBe('CHF 40.00');
+    });
+
+    it('formats all currencies with the correct symbol and position', function (int $amount, string $currency, string $expected) {
+        expect(format_amount($amount, $currency))->toBe($expected);
+    })->with([
+        'CAD' => [4_000, 'CAD', 'CA$40.00'],
+        'AUD' => [4_000, 'AUD', 'A$40.00'],
+        'HKD' => [4_000, 'HKD', 'HK$40.00'],
+        'NZD' => [4_000, 'NZD', 'NZ$40.00'],
+        'CNH' => [4_000, 'CNH', '¥40.00'],
+    ]);
+
+    it('falls back to currency code as prefix with a space for unknown currencies', function () {
+        expect(format_amount(4_000, 'XYZ'))->toBe('XYZ 4 000');
+    });
+});
+
 // ─── format_money ─────────────────────────────────────────────────────────────
 
 describe('format_money', function () {

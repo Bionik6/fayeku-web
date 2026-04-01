@@ -156,3 +156,50 @@ if (! function_exists('format_money')) {
         return CurrencyService::format((int) $amount, $currency, $withLabel);
     }
 }
+
+if (! function_exists('format_amount')) {
+    /**
+     * Format an amount for compact table display using a currency symbol instead of the code label.
+     *
+     * Symbol is placed before the number for most currencies, after for XOF (FCFA):
+     *   - XOF : 1 560 000F
+     *   - EUR : €40,00
+     *   - USD : $40.00
+     *   - GBP : £40.00
+     *   - JPY : ¥1,250
+     *   - CHF : CHF 40.00
+     *   - CAD : CA$40.00
+     *   - AUD : A$40.00
+     *   - HKD : HK$40.00
+     *   - NZD : NZ$40.00
+     *   - CNH : ¥40.00
+     *
+     * Amounts follow the same smallest-unit convention as format_money / CurrencyService::format.
+     */
+    function format_amount(int|float $amount, string $currency = 'XOF'): string
+    {
+        // symbol, position ('before'|'after'), space between symbol and number
+        $symbols = [
+            'XOF' => ['symbol' => 'F',    'position' => 'after',  'space' => false],
+            'EUR' => ['symbol' => '€',    'position' => 'before', 'space' => false],
+            'USD' => ['symbol' => '$',    'position' => 'before', 'space' => false],
+            'GBP' => ['symbol' => '£',    'position' => 'before', 'space' => false],
+            'JPY' => ['symbol' => '¥',    'position' => 'before', 'space' => false],
+            'CAD' => ['symbol' => 'CA$',  'position' => 'before', 'space' => false],
+            'AUD' => ['symbol' => 'A$',   'position' => 'before', 'space' => false],
+            'HKD' => ['symbol' => 'HK$',  'position' => 'before', 'space' => false],
+            'NZD' => ['symbol' => 'NZ$',  'position' => 'before', 'space' => false],
+            'CNH' => ['symbol' => '¥',    'position' => 'before', 'space' => false],
+            'CHF' => ['symbol' => 'CHF',  'position' => 'before', 'space' => true],
+        ];
+
+        $number = CurrencyService::format((int) $amount, $currency, withLabel: false);
+
+        $config = $symbols[$currency] ?? ['symbol' => $currency, 'position' => 'before', 'space' => true];
+        $sep = $config['space'] ? ' ' : '';
+
+        return $config['position'] === 'after'
+            ? $number.$sep.$config['symbol']
+            : $config['symbol'].$sep.$number;
+    }
+}
