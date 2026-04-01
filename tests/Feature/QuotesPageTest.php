@@ -1,0 +1,171 @@
+<?php
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Modules\Auth\Models\Company;
+use Modules\PME\Clients\Models\Client;
+use Modules\PME\Invoicing\Enums\QuoteStatus;
+use Modules\PME\Invoicing\Models\Quote;
+use Modules\PME\Invoicing\Models\QuoteLine;
+use Modules\Shared\Models\User;
+
+uses(RefreshDatabase::class);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function createSmeWithCompanyForQuotes(): array
+{
+    $user = User::factory()->create(['profile_type' => 'sme']);
+    $company = Company::factory()->create([
+        'type' => 'sme',
+        'name' => 'Test PME SARL',
+    ]);
+    $company->users()->attach($user->id, ['role' => 'owner']);
+
+    return compact('user', 'company');
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function makeQuote(Company $company, array $overrides = []): Quote
+{
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    return Quote::unguarded(fn () => Quote::create(array_merge([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'DEV-'.fake()->unique()->numerify('###'),
+        'currency' => 'XOF',
+        'status' => QuoteStatus::Draft->value,
+        'issued_at' => now(),
+        'valid_until' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 18_000,
+        'total' => 118_000,
+        'discount' => 0,
+    ], $overrides)));
+}
+
+// ─── Accès & sécurité ─────────────────────────────────────────────────────────
+
+test('un visiteur non authentifié est redirigé vers la connexion', function () {
+    $this->get(route('pme.quotes.index'))
+        ->assertRedirect(route('login'));
+});
+
+test('un utilisateur SME peut accéder à la page devis', function () {
+    ['user' => $user] = createSmeWithCompanyForQuotes();
+
+    $this->actingAs($user)
+        ->get(route('pme.quotes.index'))
+        ->assertOk();
+});
+
+// ─── Devise (currency) ────────────────────────────────────────────────────────
+
+test('rows() inclut le champ currency pour chaque devis', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    makeQuote($company, ['reference' => 'DEV-EUR', 'currency' => 'EUR']);
+    makeQuote($company, ['reference' => 'DEV-XOF', 'currency' => 'XOF']);
+
+    $rows = collect(
+        Livewire::actingAs($user)->test('pages::pme.quotes.index')->get('rows')
+    );
+
+    expect($rows->firstWhere('reference', 'DEV-EUR')['currency'])->toBe('EUR');
+    expect($rows->firstWhere('reference', 'DEV-XOF')['currency'])->toBe('XOF');
+});
+
+test('les montants EUR sont affichés en euros dans la liste des devis', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    // 814 000 centimes EUR = 8 140,00 EUR
+    makeQuote($company, [
+        'reference' => 'DEV-EUR',
+        'currency' => 'EUR',
+        'subtotal' => 814_000,
+        'tax_amount' => 0,
+        'total' => 814_000,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->assertSeeHtml('8 140,00');
+});
+
+test('les montants XOF sont affichés en FCFA dans la liste des devis', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    makeQuote($company, [
+        'reference' => 'DEV-XOF',
+        'currency' => 'XOF',
+        'subtotal' => 814_000,
+        'tax_amount' => 0,
+        'total' => 814_000,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->assertSeeHtml('814 000');
+});
+
+test('le modal de détail affiche les montants EUR correctement', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $quote = Quote::unguarded(fn () => Quote::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'DEV-EUR-DETAIL',
+        'currency' => 'EUR',
+        'status' => QuoteStatus::Draft->value,
+        'issued_at' => now(),
+        'valid_until' => now()->addDays(30),
+        'subtotal' => 814_000,
+        'tax_amount' => 0,
+        'total' => 814_000,
+        'discount' => 0,
+    ]));
+
+    QuoteLine::query()->create([
+        'quote_id' => $quote->id,
+        'description' => 'Prestation EUR',
+        'quantity' => 22,
+        'unit_price' => 37_000,
+        'tax_rate' => 0,
+        'total' => 814_000,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewQuote', $quote->id)
+        ->assertSeeHtml('8 140,00')
+        ->assertDontSeeHtml('814 000 FCFA');
+});
+
+test('le modal de détail affiche les montants XOF correctement', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $quote = Quote::unguarded(fn () => Quote::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'DEV-XOF-DETAIL',
+        'currency' => 'XOF',
+        'status' => QuoteStatus::Draft->value,
+        'issued_at' => now(),
+        'valid_until' => now()->addDays(30),
+        'subtotal' => 500_000,
+        'tax_amount' => 90_000,
+        'total' => 590_000,
+        'discount' => 0,
+    ]));
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewQuote', $quote->id)
+        ->assertSeeHtml('500 000')
+        ->assertSeeHtml('590 000');
+});

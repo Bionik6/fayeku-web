@@ -729,3 +729,96 @@ test('deleteInvoice n affecte pas les factures d une autre PME', function () {
         ->test('pages::pme.invoices.index')
         ->call('deleteInvoice', $otherInvoice->id);
 })->throws(ModelNotFoundException::class);
+
+// ─── Devise (currency) ────────────────────────────────────────────────────────
+
+test('rows() inclut le champ currency pour chaque facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    makeInvoice($company, ['reference' => 'FAC-EUR', 'currency' => 'EUR']);
+    makeInvoice($company, ['reference' => 'FAC-XOF', 'currency' => 'XOF']);
+
+    $rows = collect(
+        Livewire::actingAs($user)->test('pages::pme.invoices.index')->get('rows')
+    );
+
+    expect($rows->firstWhere('reference', 'FAC-EUR')['currency'])->toBe('EUR');
+    expect($rows->firstWhere('reference', 'FAC-XOF')['currency'])->toBe('XOF');
+});
+
+test('les montants EUR sont affichés en euros dans la liste des factures', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    // 814 000 centimes EUR = 8 140,00 EUR
+    makeInvoice($company, [
+        'reference' => 'FAC-EUR',
+        'currency' => 'EUR',
+        'subtotal' => 814_000,
+        'tax_amount' => 0,
+        'total' => 814_000,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml('8 140,00');
+});
+
+test('les montants XOF sont affichés en FCFA dans la liste des factures', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    makeInvoice($company, [
+        'reference' => 'FAC-XOF',
+        'currency' => 'XOF',
+        'subtotal' => 814_000,
+        'tax_amount' => 0,
+        'total' => 814_000,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml('814 000');
+});
+
+test('le modal de détail affiche les montants EUR correctement', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->draft()
+        ->create([
+            'currency' => 'EUR',
+            'subtotal' => 814_000,
+            'tax_amount' => 0,
+            'total' => 814_000,
+        ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSeeHtml('8 140,00')
+        ->assertDontSeeHtml('814 000 FCFA');
+});
+
+test('le modal de détail affiche les montants XOF correctement', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->draft()
+        ->create([
+            'currency' => 'XOF',
+            'subtotal' => 500_000,
+            'tax_amount' => 90_000,
+            'total' => 590_000,
+        ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSeeHtml('500 000')
+        ->assertSeeHtml('590 000');
+});

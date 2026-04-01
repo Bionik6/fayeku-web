@@ -102,11 +102,11 @@
                                         <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
                                         <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
                                         <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
-                                            {{ format_money($line->unit_price) }}
+                                            {{ format_money($line->unit_price, $inv->currency) }}
                                         </td>
                                         <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
                                         <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
-                                            {{ format_money($line->total) }}
+                                            {{ format_money($line->total, $inv->currency) }}
                                         </td>
                                     </tr>
                                 @empty
@@ -119,19 +119,19 @@
                                 <tr>
                                     <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
                                     <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                        {{ format_money($inv->subtotal) }}
+                                        {{ format_money($inv->subtotal, $inv->currency) }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
                                     <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                        {{ format_money($inv->tax_amount) }}
+                                        {{ format_money($inv->tax_amount, $inv->currency) }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
                                     <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
-                                        {{ format_money($inv->total) }}
+                                        {{ format_money($inv->total, $inv->currency) }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -145,25 +145,25 @@
                     <dl class="space-y-3 text-sm">
                         <div class="flex justify-between">
                             <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
-                            <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->subtotal) }}</dd>
+                            <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->subtotal, $inv->currency) }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-slate-500">{{ __('TVA') }}</dt>
-                            <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->tax_amount) }}</dd>
+                            <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->tax_amount, $inv->currency) }}</dd>
                         </div>
                         <div class="flex justify-between border-t border-slate-200 pt-3">
                             <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
-                            <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($inv->total) }}</dd>
+                            <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($inv->total, $inv->currency) }}</dd>
                         </div>
 
                         @if ($inv->status === \Modules\PME\Invoicing\Enums\InvoiceStatus::PartiallyPaid)
                             <div class="flex justify-between text-amber-600">
                                 <dt>{{ __('Encaissé') }}</dt>
-                                <dd class="tabular-nums font-medium">{{ format_money($inv->amount_paid) }}</dd>
+                                <dd class="tabular-nums font-medium">{{ format_money($inv->amount_paid, $inv->currency) }}</dd>
                             </div>
                             <div class="flex justify-between text-rose-600">
                                 <dt class="font-semibold">{{ __('Reste dû') }}</dt>
-                                <dd class="tabular-nums font-bold">{{ format_money($inv->total - $inv->amount_paid) }}</dd>
+                                <dd class="tabular-nums font-bold">{{ format_money($inv->total - $inv->amount_paid, $inv->currency) }}</dd>
                             </div>
                         @endif
                     </dl>

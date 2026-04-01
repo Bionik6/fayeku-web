@@ -345,6 +345,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                     'subtotal'     => $inv->subtotal,
                     'tax_amount'   => $inv->tax_amount,
                     'total'        => $inv->total,
+                    'currency'     => $inv->currency,
                     'issued_at'    => $inv->issued_at,
                     'due_at'       => $inv->due_at,
                     'status_value' => $inv->status->value,
@@ -632,7 +633,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Montant TTC --}}
                                 <td class="px-4 py-4 text-right font-semibold text-ink">
-                                    {{ format_money($row['total'], compact: true) }}
+                                    {{ format_money($row['total'], $row['currency'], compact: true) }}
                                 </td>
 
                                 {{-- Date émission --}}
