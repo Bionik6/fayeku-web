@@ -1944,15 +1944,15 @@ templates, Livewire components, or services.
 | `format_money($amount)` | `14 632 000 FCFA` | XOF by default, delegates to `CurrencyService` |
 | `format_money($amount, 'EUR')` | `12,50 EUR` | Amount in cents for currencies with decimals |
 | `format_money($amount, withLabel: false)` | `14 632 000` | Without currency label |
-| `format_amount($amount)` | `1 560 000F` | Compact symbol for tables — XOF by default |
-| `format_amount($amount, 'EUR')` | `€40,00` | Symbol before, no space |
-| `format_amount($amount, 'CHF')` | `CHF 40.00` | Symbol before, with space |
+| `format_money($amount, compact: true)` | `885 000 F` | Compact symbol for tables — XOF by default |
+| `format_money($amount, 'EUR', compact: true)` | `€40,00` | Symbol before, no space |
+| `format_money($amount, 'CHF', compact: true)` | `CHF 40.00` | Symbol before, with space |
 
-**`format_amount` symbol reference:**
+**`compact: true` symbol reference:**
 
 | Currency | Symbol | Position | Example |
 |---|---|---|---|
-| XOF (FCFA) | `F` | after | `1 560 000F` |
+| XOF (FCFA) | `F` | after + space | `885 000 F` |
 | EUR | `€` | before | `€40,00` |
 | USD | `$` | before | `$40.00` |
 | GBP | `£` | before | `£40.00` |
@@ -1964,15 +1964,16 @@ templates, Livewire components, or services.
 | CNH | `¥` | before | `¥40.00` |
 | CHF | `CHF` | before + space | `CHF 40.00` |
 
-Use `format_amount` in tables and compact displays. Use `format_money` for verbose labels and
-detail views (invoices, summaries, alerts).
+Use `format_money($amount, compact: true)` in tables and compact displays. Use `format_money($amount)` for
+verbose labels, detail views (invoices, summaries, alerts), **and KPI stat cards** — KPI cards always show
+the full currency label (e.g. `14 632 000 FCFA`, never `14 632 000 F`).
 
 Rules:
 - **Never** use `number_format()`, `->diffForHumans()`, `->translatedFormat()`, or
   `->locale('fr_FR')` to display amounts, dates, or phone numbers in views.
 - **Never** write an inline closure or local `$formatPhone` / `$formatDate` variable in a
   Blade `@php` block — extract to the helper instead.
-- `format_money` and `format_amount` expect amounts in the smallest stored unit, consistent
+- `format_money` expects amounts in the smallest stored unit, consistent
   with `CurrencyService::format()`: whole FCFA for XOF/JPY, cents for USD/EUR/etc.
 - All helpers return `'—'` for `null` or empty input.
 

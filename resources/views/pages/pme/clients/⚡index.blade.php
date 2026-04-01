@@ -323,7 +323,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('CA moyen par client') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-ink">
                 @if ($this->summary['average_revenue_per_client'] > 0)
-                    {{ number_format($this->summary['average_revenue_per_client'], 0, ',', ' ') }} F
+                    {{ format_money($this->summary['average_revenue_per_client']) }}
                 @else
                     —
                 @endif
@@ -511,7 +511,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     </td>
                                     <td class="px-4 py-4 font-semibold text-ink">
                                         @if ($row['period_revenue'] > 0)
-                                            {{ number_format($row['period_revenue'], 0, ',', ' ') }} F
+                                            {{ format_money($row['period_revenue'], compact: true) }}
                                         @else
                                             <span class="text-slate-500">—</span>
                                         @endif
@@ -520,13 +520,13 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     <td class="px-4 py-4">
                                         @if ($row['outstanding_amount'] > 0)
                                             <div class="font-semibold text-rose-600">
-                                                {{ number_format($row['outstanding_amount'], 0, ',', ' ') }} F
+                                                {{ format_money($row['outstanding_amount'], compact: true) }}
                                             </div>
                                             <div class="mt-1 text-sm text-slate-500">
                                                 {{ $row['outstanding_count'] }} {{ $row['outstanding_count'] > 1 ? __('factures ouvertes') : __('facture ouverte') }}
                                             </div>
                                         @else
-                                            <span class="text-slate-500">0 F</span>
+                                            <span class="text-slate-500">{{ format_money(0, compact: true) }}</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-4">

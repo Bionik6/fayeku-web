@@ -75,7 +75,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
         $this->company = auth()->user()->smeCompany();
 
         if (! $this->company) {
@@ -135,8 +135,8 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 'remaining' => $remaining,
                 'days_overdue' => abs($daysOverdue),
                 'reminder_count' => $inv->reminders->count(),
-                'last_reminder_at' => $lastReminder?->sent_at?->format('d/m/Y'),
-                'next_reminder_at' => $nextReminderDate?->format('d/m/Y'),
+                'last_reminder_at' => format_date($lastReminder?->sent_at),
+                'next_reminder_at' => format_date($nextReminderDate),
                 'mode' => $this->company->getReminderMode()->value,
                 'status' => $inv->status->value,
             ];
@@ -515,8 +515,8 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
         $clientName = $inv->client?->name ?? '—';
         $reference = $inv->reference ?? '—';
-        $remaining = number_format($inv->total - $inv->amount_paid, 0, ',', ' ');
-        $dueDate = $inv->due_at?->format('d/m/Y') ?? '—';
+        $remaining = format_money($inv->total - $inv->amount_paid);
+        $dueDate = format_date($inv->due_at);
 
         $toneGreetings = [
             'cordial' => "Bonjour {$clientName},",
@@ -557,7 +557,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">{{ __('Recouvrement') }}</p>
                 <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Relances & impayés') }}</h2>
                 <p class="mt-1 text-sm text-slate-600">
-                    {{ $this->totalPendingCount }} {{ __('factures en attente') }} · {{ number_format($this->totalPendingAmount, 0, ',', ' ') }} FCFA {{ __('à encaisser') }}
+                    {{ $this->totalPendingCount }} {{ __('factures en attente') }} · {{ format_money($this->totalPendingAmount) }} {{ __('à encaisser') }}
                 </p>
             </div>
             <div class="flex shrink-0 flex-wrap items-center gap-3">
@@ -604,7 +604,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             </div>
             <p class="mt-4 text-sm font-medium text-slate-600">{{ __('Critiques') }}</p>
             <p class="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-rose-500">{{ $criticalCount }}</p>
-            <p class="mt-0.5 text-sm text-slate-600">{{ number_format($criticalAmount, 0, ',', ' ') }} FCFA</p>
+            <p class="mt-0.5 text-sm text-slate-600">{{ format_money($criticalAmount) }}</p>
         </article>
 
         {{-- En retard 30-60j --}}
@@ -619,7 +619,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             </div>
             <p class="mt-4 text-sm font-medium text-slate-600">{{ __('En retard') }}</p>
             <p class="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-amber-500">{{ $lateCount }}</p>
-            <p class="mt-0.5 text-sm text-slate-600">{{ number_format($lateAmount, 0, ',', ' ') }} FCFA</p>
+            <p class="mt-0.5 text-sm text-slate-600">{{ format_money($lateAmount) }}</p>
         </article>
 
         {{-- En attente < 30j --}}
@@ -634,7 +634,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             </div>
             <p class="mt-4 text-sm font-medium text-slate-600">{{ __('En attente') }}</p>
             <p class="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-primary">{{ $pendingCount }}</p>
-            <p class="mt-0.5 text-sm text-slate-600">{{ number_format($pendingAmount, 0, ',', ' ') }} FCFA</p>
+            <p class="mt-0.5 text-sm text-slate-600">{{ format_money($pendingAmount) }}</p>
         </article>
 
         {{-- Relances ce mois --}}
@@ -854,7 +854,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                 <td class="px-4 py-4 font-medium text-ink">{{ $row['reference'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $row['client_name'] }}</td>
                                 <td class="px-4 py-4 text-right font-semibold tabular-nums text-ink">
-                                    {{ number_format($row['remaining'], 0, ',', ' ') }} <span class="text-sm text-slate-600">F</span>
+                                    {{ format_money($row['remaining'], compact: true) }}
                                 </td>
                                 <td class="px-4 py-4 text-center">
                                     <span @class([
@@ -1037,10 +1037,10 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                             <div class="absolute -left-[1.85rem] top-0.5 flex size-4 items-center justify-center rounded-full bg-slate-200">
                                 <span class="size-2 rounded-full bg-slate-500"></span>
                             </div>
-                            <p class="text-sm font-semibold text-slate-600">{{ $this->timelineInvoice->due_at?->format('d/m/Y') }}</p>
+                            <p class="text-sm font-semibold text-slate-600">{{ format_date($this->timelineInvoice->due_at) }}</p>
                             <p class="mt-0.5 text-sm font-medium text-ink">{{ __('Date d\'échéance') }}</p>
                             <p class="text-sm text-slate-600">
-                                {{ __('Montant dû') }} : {{ number_format($this->timelineInvoice->total - $this->timelineInvoice->amount_paid, 0, ',', ' ') }} FCFA
+                                {{ __('Montant dû') }} : {{ format_money($this->timelineInvoice->total - $this->timelineInvoice->amount_paid) }}
                             </p>
                         </div>
 

@@ -30,9 +30,9 @@
                 <h2 class="mt-1 text-xl font-bold text-ink">{{ $inv->reference }}</h2>
                 <div class="mt-1 flex items-center gap-3">
                     <p class="text-sm text-slate-500">
-                        {{ __('Émise le') }} {{ $inv->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                        {{ __('Émise le') }} {{ format_date($inv->issued_at) }}
                         &nbsp;·&nbsp;
-                        {{ __('Échéance le') }} {{ $inv->due_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                        {{ __('Échéance le') }} {{ format_date($inv->due_at) }}
                     </p>
                     <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
                         {{ $statusConfig['label'] }}
@@ -102,11 +102,11 @@
                                         <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
                                         <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
                                         <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
-                                            {{ number_format($line->unit_price, 0, ',', ' ') }} FCFA
+                                            {{ format_money($line->unit_price) }}
                                         </td>
                                         <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
                                         <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
-                                            {{ number_format($line->total, 0, ',', ' ') }} FCFA
+                                            {{ format_money($line->total) }}
                                         </td>
                                     </tr>
                                 @empty
@@ -119,19 +119,19 @@
                                 <tr>
                                     <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
                                     <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                        {{ number_format($inv->subtotal, 0, ',', ' ') }} FCFA
+                                        {{ format_money($inv->subtotal) }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
                                     <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                        {{ number_format($inv->tax_amount, 0, ',', ' ') }} FCFA
+                                        {{ format_money($inv->tax_amount) }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
                                     <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
-                                        {{ number_format($inv->total, 0, ',', ' ') }} FCFA
+                                        {{ format_money($inv->total) }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -145,25 +145,25 @@
                     <dl class="space-y-3 text-sm">
                         <div class="flex justify-between">
                             <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
-                            <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->subtotal, 0, ',', ' ') }} FCFA</dd>
+                            <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->subtotal) }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-slate-500">{{ __('TVA') }}</dt>
-                            <dd class="tabular-nums font-medium text-ink">{{ number_format($inv->tax_amount, 0, ',', ' ') }} FCFA</dd>
+                            <dd class="tabular-nums font-medium text-ink">{{ format_money($inv->tax_amount) }}</dd>
                         </div>
                         <div class="flex justify-between border-t border-slate-200 pt-3">
                             <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
-                            <dd class="tabular-nums text-lg font-bold text-ink">{{ number_format($inv->total, 0, ',', ' ') }} FCFA</dd>
+                            <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($inv->total) }}</dd>
                         </div>
 
                         @if ($inv->status === \Modules\PME\Invoicing\Enums\InvoiceStatus::PartiallyPaid)
                             <div class="flex justify-between text-amber-600">
                                 <dt>{{ __('Encaissé') }}</dt>
-                                <dd class="tabular-nums font-medium">{{ number_format($inv->amount_paid, 0, ',', ' ') }} FCFA</dd>
+                                <dd class="tabular-nums font-medium">{{ format_money($inv->amount_paid) }}</dd>
                             </div>
                             <div class="flex justify-between text-rose-600">
                                 <dt class="font-semibold">{{ __('Reste dû') }}</dt>
-                                <dd class="tabular-nums font-bold">{{ number_format($inv->total - $inv->amount_paid, 0, ',', ' ') }} FCFA</dd>
+                                <dd class="tabular-nums font-bold">{{ format_money($inv->total - $inv->amount_paid) }}</dd>
                             </div>
                         @endif
                     </dl>
@@ -172,7 +172,7 @@
                         <div class="mt-6 border-t border-slate-200 pt-4 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-slate-500">{{ __('Payée le') }}</span>
-                                <span class="text-teal-600">{{ $inv->paid_at->locale('fr_FR')->translatedFormat('j M Y') }}</span>
+                                <span class="text-teal-600">{{ format_date($inv->paid_at) }}</span>
                             </div>
                         </div>
                     @endif

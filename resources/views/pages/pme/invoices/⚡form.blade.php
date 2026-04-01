@@ -245,8 +245,7 @@ class extends Component {
         return [
             'average_days'      => $averageDays,
             'outstanding'       => $outstanding,
-            'last_invoice_date' => $lastInvoice?->issued_at?->locale('fr_FR')
-                                                           ->translatedFormat('d M Y'),
+            'last_invoice_date' => format_date($lastInvoice?->issued_at),
         ];
     }
 
@@ -277,9 +276,7 @@ class extends Component {
         }
 
         try {
-            return Carbon::parse($this->dueAt)
-                         ->locale('fr_FR')
-                         ->translatedFormat('d F Y');
+            return format_date(Carbon::parse($this->dueAt));
         } catch (\Exception) {
             return '';
         }
@@ -1326,7 +1323,7 @@ class extends Component {
                         @endif
                         <div class="flex items-baseline justify-between gap-3">
                             <span class="shrink-0 text-slate-700">{{ __('Émission') }}</span>
-                            <span class="whitespace-nowrap text-ink">{{ $issuedAt ? Carbon::parse($issuedAt)->locale('fr_FR')->translatedFormat('d M Y') : '—' }}</span>
+                            <span class="whitespace-nowrap text-ink">{{ format_date($issuedAt) }}</span>
                         </div>
                         <div class="flex items-baseline justify-between gap-3">
                             <span class="shrink-0 text-slate-700">{{ __('Échéance') }}</span>

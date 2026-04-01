@@ -137,12 +137,7 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
         ];
     }
 
-    public function formatFcfa(int $amount): string
-    {
-        return number_format($amount, 0, ',', ' ').' FCFA';
-    }
-
-    private function hasRecipientForChannel(Invoice $invoice, ReminderChannel $channel): bool
+private function hasRecipientForChannel(Invoice $invoice, ReminderChannel $channel): bool
     {
         return match ($channel) {
             ReminderChannel::WhatsApp, ReminderChannel::Sms => filled($invoice->client?->phone),
@@ -268,7 +263,7 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
                     @if (($kpi['suffix'] ?? null) === 'j')
                         {{ $kpi['value'] > 0 ? $kpi['value'].'j' : '—' }}
                     @else
-                        {{ $this->formatFcfa((int) $kpi['value']) }}
+                        {{ format_money((int) $kpi['value']) }}
                     @endif
                 </p>
             </article>
@@ -290,7 +285,7 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
                         </div>
                         <span class="rounded-full bg-mist px-3 py-1 text-sm font-semibold text-primary">{{ $card['progress'] }}%</span>
                     </div>
-                    <p class="mt-5 text-3xl font-semibold tracking-tight text-ink">{{ $this->formatFcfa($card['amount']) }}</p>
+                    <p class="mt-5 text-3xl font-semibold tracking-tight text-ink">{{ format_money($card['amount']) }}</p>
                     <p class="mt-2 text-sm text-slate-500">{{ $card['basis'] }}</p>
                     <div class="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
                         <div class="h-full rounded-full bg-primary transition-all" style="width: {{ $card['progress'] }}%"></div>
@@ -354,10 +349,10 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-ink">{{ number_format($row['total'], 0, ',', ' ') }} F</p>
+                                    <p class="font-semibold text-ink">{{ format_money($row['total'], compact: true) }}</p>
                                     @if ($row['amount_paid'] > 0)
                                         <p class="mt-1 text-sm text-slate-500">
-                                            {{ __('Reste à encaisser') }} {{ number_format($row['remaining'], 0, ',', ' ') }} F
+                                            {{ __('Reste à encaisser') }} {{ format_money($row['remaining'], compact: true) }}
                                         </p>
                                     @endif
                                 </td>
@@ -397,7 +392,7 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-ink">{{ number_format($row['estimated_amount'], 0, ',', ' ') }} F</p>
+                                    <p class="font-semibold text-ink">{{ format_money($row['estimated_amount'], compact: true) }}</p>
                                     <p class="mt-1 text-sm text-slate-500">{{ $row['estimated_date_label'] }}</p>
                                 </td>
                                 <td class="px-6 py-4">

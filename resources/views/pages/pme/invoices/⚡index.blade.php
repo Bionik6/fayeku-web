@@ -56,7 +56,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
         $this->company = auth()->user()->smeCompany();
 
         if (! $this->company) {
@@ -273,7 +273,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         $periods = [];
         for ($i = 0; $i < 6; $i++) {
             $date = now()->subMonths($i);
-            $periods[$date->format('Y-m')] = ucfirst($date->locale('fr_FR')->translatedFormat('F Y'));
+            $periods[$date->format('Y-m')] = format_month($date);
         }
 
         return $periods;
@@ -494,7 +494,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-1 text-sm text-slate-500">{{ __('HT ce mois') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-primary">
                 @if ($invoicedAmount > 0)
-                    {{ number_format($invoicedAmount, 0, ',', ' ') }} FCFA
+                    {{ format_money($invoicedAmount) }}
                 @else
                     —
                 @endif
@@ -632,16 +632,12 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Montant TTC --}}
                                 <td class="px-4 py-4 text-right font-semibold text-ink">
-                                    {{ number_format($row['total'], 0, ',', ' ') }} F
+                                    {{ format_money($row['total'], compact: true) }}
                                 </td>
 
                                 {{-- Date émission --}}
                                 <td class="px-4 py-4 text-slate-500">
-                                    @if ($row['issued_at'])
-                                        {{ $row['issued_at']->locale('fr_FR')->translatedFormat('j M. Y') }}
-                                    @else
-                                        —
-                                    @endif
+                                    {{ format_date($row['issued_at']) }}
                                 </td>
 
                                 {{-- Échéance --}}
@@ -649,10 +645,10 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                     @if ($row['due_at'])
                                         @if ($row['is_overdue'])
                                             <span class="font-bold text-rose-500">
-                                                {{ $row['due_at']->locale('fr_FR')->translatedFormat('j M.') }} ! J+{{ $row['delay_days'] }}
+                                                {{ format_date($row['due_at'], withYear: false) }} ! J+{{ $row['delay_days'] }}
                                             </span>
                                         @else
-                                            <span class="text-slate-500">{{ $row['due_at']->locale('fr_FR')->translatedFormat('j M. Y') }}</span>
+                                            <span class="text-slate-500">{{ format_date($row['due_at']) }}</span>
                                         @endif
                                     @else
                                         <span class="text-slate-500">—</span>

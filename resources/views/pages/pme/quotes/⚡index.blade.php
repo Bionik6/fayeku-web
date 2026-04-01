@@ -58,7 +58,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
         $this->company = auth()->user()->smeCompany();
 
         if (! $this->company) {
@@ -317,7 +317,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $periods = [];
         for ($i = 0; $i < 6; $i++) {
             $date = now()->subMonths($i);
-            $periods[$date->format('Y-m')] = ucfirst($date->locale('fr_FR')->translatedFormat('F Y'));
+            $periods[$date->format('Y-m')] = format_month($date);
         }
 
         return $periods;
@@ -638,16 +638,12 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Montant TTC --}}
                                 <td class="px-4 py-4 text-right font-semibold text-ink">
-                                    {{ number_format($row['total'], 0, ',', ' ') }} F
+                                    {{ format_money($row['total'], compact: true) }}
                                 </td>
 
                                 {{-- Date émission --}}
                                 <td class="px-4 py-4 text-slate-500">
-                                    @if ($row['issued_at'])
-                                        {{ $row['issued_at']->locale('fr_FR')->translatedFormat('j M. Y') }}
-                                    @else
-                                        —
-                                    @endif
+                                    {{ format_date($row['issued_at']) }}
                                 </td>
 
                                 {{-- Valide jusqu'au --}}
@@ -655,10 +651,10 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                     @if ($row['valid_until'])
                                         @if ($row['status_value'] === 'expired')
                                             <span class="font-bold text-rose-500">
-                                                {{ $row['valid_until']->locale('fr_FR')->translatedFormat('j M. Y') }}
+                                                {{ format_date($row['valid_until']) }}
                                             </span>
                                         @else
-                                            <span class="text-slate-500">{{ $row['valid_until']->locale('fr_FR')->translatedFormat('j M. Y') }}</span>
+                                            <span class="text-slate-500">{{ format_date($row['valid_until']) }}</span>
                                         @endif
                                     @else
                                         <span class="text-slate-500">—</span>
@@ -810,10 +806,10 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                         <h2 class="mt-1 text-xl font-bold text-ink">{{ $q->reference }}</h2>
                         <div class="mt-1 flex items-center gap-3">
                             <p class="text-sm text-slate-500">
-                                {{ __('Émis le') }} {{ $q->issued_at->locale('fr_FR')->translatedFormat('j F Y') }}
+                                {{ __('Émis le') }} {{ format_date($q->issued_at) }}
                                 @if ($q->valid_until)
                                     &nbsp;·&nbsp;
-                                    {{ __('Valide jusqu\'au') }} {{ $q->valid_until->locale('fr_FR')->translatedFormat('j F Y') }}
+                                    {{ __('Valide jusqu\'au') }} {{ format_date($q->valid_until) }}
                                 @endif
                             </p>
                             <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
@@ -877,11 +873,11 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                                 <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
                                                 <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
                                                 <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
-                                                    {{ number_format($line->unit_price, 0, ',', ' ') }} FCFA
+                                                    {{ format_money($line->unit_price) }}
                                                 </td>
                                                 <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
                                                 <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
-                                                    {{ number_format($line->total, 0, ',', ' ') }} FCFA
+                                                    {{ format_money($line->total) }}
                                                 </td>
                                             </tr>
                                         @empty
@@ -894,19 +890,19 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                         <tr>
                                             <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
                                             <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                                {{ number_format($q->subtotal, 0, ',', ' ') }} FCFA
+                                                {{ format_money($q->subtotal) }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
                                             <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                                {{ number_format($q->tax_amount, 0, ',', ' ') }} FCFA
+                                                {{ format_money($q->tax_amount) }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
                                             <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
-                                                {{ number_format($q->total, 0, ',', ' ') }} FCFA
+                                                {{ format_money($q->total) }}
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -919,15 +915,15 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                             <dl class="space-y-3 text-sm">
                                 <div class="flex justify-between">
                                     <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
-                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($q->subtotal, 0, ',', ' ') }} FCFA</dd>
+                                    <dd class="tabular-nums font-medium text-ink">{{ format_money($q->subtotal) }}</dd>
                                 </div>
                                 <div class="flex justify-between">
                                     <dt class="text-slate-500">{{ __('TVA') }}</dt>
-                                    <dd class="tabular-nums font-medium text-ink">{{ number_format($q->tax_amount, 0, ',', ' ') }} FCFA</dd>
+                                    <dd class="tabular-nums font-medium text-ink">{{ format_money($q->tax_amount) }}</dd>
                                 </div>
                                 <div class="flex justify-between border-t border-slate-200 pt-3">
                                     <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
-                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ number_format($q->total, 0, ',', ' ') }} FCFA</dd>
+                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($q->total) }}</dd>
                                 </div>
                             </dl>
 

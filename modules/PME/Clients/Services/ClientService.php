@@ -120,7 +120,7 @@ class ClientService
             'watch_client' => $watchClient ? [
                 'name' => $watchClient['name'],
                 'support' => $watchClient['outstanding_amount'] > 0
-                    ? number_format($watchClient['outstanding_amount'], 0, ',', ' ').' F en attente'
+                    ? format_money($watchClient['outstanding_amount']).' en attente'
                     : ($watchClient['average_late_days'] > 0
                         ? $watchClient['average_late_days'].'j de retard moyen'
                         : 'Aucun signal critique'),
@@ -233,7 +233,7 @@ class ClientService
                     'channel' => $this->channelLabel($reminder->channel),
                     'status' => ucfirst($reminder->status->value),
                     'sent_at_label' => $reminder->sent_at
-                        ? $reminder->sent_at->locale('fr_FR')->translatedFormat('j M. Y · H:i')
+                        ? format_date($reminder->sent_at, withTime: true)
                         : 'Non envoyée',
                     'body' => $reminder->message_body,
                 ]
@@ -251,7 +251,7 @@ class ClientService
                 'reference' => $invoice->reference ?? '—',
                 'amount' => (int) $invoice->amount_paid,
                 'paid_at_label' => $invoice->paid_at
-                    ? $invoice->paid_at->locale('fr_FR')->translatedFormat('j F Y · H:i')
+                    ? format_date($invoice->paid_at, withTime: true)
                     : 'Paiement enregistré',
                 'status' => $this->invoiceStatusLabel($invoice->status),
             ])
@@ -262,19 +262,19 @@ class ClientService
                 'invoice_id' => $invoice->id,
                 'date' => $invoice->issued_at,
                 'title' => 'Facture envoyée',
-                'body' => ($invoice->reference ?? '—').' · '.number_format($invoice->total, 0, ',', ' ').' FCFA',
+                'body' => ($invoice->reference ?? '—').' · '.format_money($invoice->total),
             ]))
             ->merge($invoices->filter(fn (Invoice $invoice) => $invoice->paid_at)->map(fn (Invoice $invoice) => [
                 'invoice_id' => $invoice->id,
                 'date' => $invoice->paid_at,
                 'title' => 'Paiement reçu',
-                'body' => ($invoice->reference ?? '—').' · '.number_format((int) $invoice->amount_paid, 0, ',', ' ').' FCFA',
+                'body' => ($invoice->reference ?? '—').' · '.format_money((int) $invoice->amount_paid),
             ]))
             ->merge($quotes->map(fn ($quote) => [
                 'invoice_id' => null,
                 'date' => $quote->issued_at,
                 'title' => 'Devis envoyé',
-                'body' => ($quote->reference ?? '—').' · '.number_format($quote->total, 0, ',', ' ').' FCFA',
+                'body' => ($quote->reference ?? '—').' · '.format_money($quote->total),
             ]))
             ->merge($invoices->flatMap(fn (Invoice $invoice) => $invoice->reminders->filter(fn ($reminder) => $reminder->sent_at)->map(
                 fn ($reminder) => [
@@ -292,7 +292,7 @@ class ClientService
                 'invoice_id' => $event['invoice_id'],
                 'title' => $event['title'],
                 'body' => $event['body'],
-                'date_label' => $event['date']->locale('fr_FR')->translatedFormat('j F Y · H:i'),
+                'date_label' => format_date($event['date'], withTime: true),
             ])
             ->all();
 
@@ -307,12 +307,8 @@ class ClientService
             'invoices' => $invoices->map(fn (Invoice $invoice) => [
                 'id' => $invoice->id,
                 'reference' => $invoice->reference ?? '—',
-                'issued_at_label' => $invoice->issued_at
-                    ? $invoice->issued_at->locale('fr_FR')->translatedFormat('j M. Y')
-                    : '—',
-                'due_at_label' => $invoice->due_at
-                    ? $invoice->due_at->locale('fr_FR')->translatedFormat('j M. Y')
-                    : '—',
+                'issued_at_label' => format_date($invoice->issued_at),
+                'due_at_label' => format_date($invoice->due_at),
                 'total' => (int) $invoice->total,
                 'remaining' => max(0, (int) $invoice->total - (int) $invoice->amount_paid),
                 'status' => $this->invoiceStatusLabel($invoice->status),
@@ -322,9 +318,7 @@ class ClientService
             'quotes' => $quotes->map(fn ($quote) => [
                 'id' => $quote->id,
                 'reference' => $quote->reference ?? '—',
-                'issued_at_label' => $quote->issued_at
-                    ? $quote->issued_at->locale('fr_FR')->translatedFormat('j M. Y')
-                    : '—',
+                'issued_at_label' => format_date($quote->issued_at),
                 'total' => (int) $quote->total,
                 'status' => $this->quoteStatusLabel($quote->status),
             ])->all(),

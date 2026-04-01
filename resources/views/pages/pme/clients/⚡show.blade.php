@@ -97,12 +97,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         $this->dispatch('toast', type: 'success', title: __('Les informations client ont été mises à jour.'));
     }
 
-    public function formatFcfa(?int $amount): string
-    {
-        return number_format((int) $amount, 0, ',', ' ').' FCFA';
-    }
-
-    public function viewInvoice(string $id): void
+public function viewInvoice(string $id): void
     {
         abort_unless(
             $this->client->invoices()->whereKey($id)->exists(),
@@ -266,7 +261,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Total facturé') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-ink">
                 @if ($this->detail['row']['total_revenue'] > 0)
-                    {{ $this->formatFcfa($this->detail['row']['total_revenue']) }}
+                    {{ format_money($this->detail['row']['total_revenue']) }}
                 @else
                     —
                 @endif
@@ -285,7 +280,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Total encaissé') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-emerald-700">
                 @if ($this->detail['row']['total_collected'] > 0)
-                    {{ $this->formatFcfa($this->detail['row']['total_collected']) }}
+                    {{ format_money($this->detail['row']['total_collected']) }}
                 @else
                     —
                 @endif
@@ -303,11 +298,9 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
             </div>
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Solde en cours') }}</p>
             <p class="mt-1 text-2xl font-semibold tracking-tight text-rose-600">
-                @if ($this->detail['row']['outstanding_amount'] > 0)
-                    {{ $this->formatFcfa($this->detail['row']['outstanding_amount']) }}
-                @else
-                    {{ __('0 FCFA') }}
-                @endif
+                {{ $this->detail['row']['outstanding_amount'] > 0
+                    ? format_money($this->detail['row']['outstanding_amount'])
+                    : format_money(0) }}
             </p>
         </article>
 
@@ -410,7 +403,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                 <p class="mt-2 text-sm text-slate-600">
                     @if ($this->detail['exposure']['total_outstanding'] > 0)
                         {{ __('Ce client représente') }} {{ $this->detail['exposure']['share'] }}% {{ __('de vos montants en attente, soit') }}
-                        {{ $this->formatFcfa($this->detail['exposure']['total_outstanding']) }}.
+                        {{ format_money($this->detail['exposure']['total_outstanding']) }}.
                     @else
                         {{ __('Aucune exposition en attente pour le moment.') }}
                     @endif
@@ -452,12 +445,12 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                                 <td class="px-6 py-4 font-semibold text-ink">{{ $invoice['reference'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['issued_at_label'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['due_at_label'] }}</td>
-                                <td class="px-4 py-4 font-semibold text-ink">{{ $this->formatFcfa($invoice['total']) }}</td>
+                                <td class="px-4 py-4 font-semibold text-ink">{{ format_money($invoice['total'], compact: true) }}</td>
                                 <td class="px-4 py-4">
                                     @if ($invoice['remaining'] > 0)
-                                        <span class="font-semibold text-rose-600">{{ $this->formatFcfa($invoice['remaining']) }}</span>
+                                        <span class="font-semibold text-rose-600">{{ format_money($invoice['remaining'], compact: true) }}</span>
                                     @else
-                                        <span class="text-slate-500">{{ __('0 FCFA') }}</span>
+                                        <span class="text-slate-500">{{ format_money(0, compact: true) }}</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4">
@@ -501,7 +494,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                                 <p class="mt-1 text-sm text-slate-500">{{ $quote['issued_at_label'] }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-semibold text-ink">{{ $this->formatFcfa($quote['total']) }}</p>
+                                <p class="font-semibold text-ink">{{ format_money($quote['total']) }}</p>
                                 <p class="mt-1 text-sm text-slate-500">{{ $quote['status'] }}</p>
                             </div>
                         </div>
@@ -533,7 +526,7 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
                                 <p class="mt-1 text-sm text-slate-500">{{ $payment['paid_at_label'] }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-semibold text-emerald-700">{{ $this->formatFcfa($payment['amount']) }}</p>
+                                <p class="font-semibold text-emerald-700">{{ format_money($payment['amount']) }}</p>
                                 <p class="mt-1 text-sm text-slate-500">{{ $payment['status'] }}</p>
                             </div>
                         </div>

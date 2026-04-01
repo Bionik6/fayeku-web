@@ -145,42 +145,26 @@ if (! function_exists('format_phone')) {
 
 if (! function_exists('format_money')) {
     /**
-     * Format an amount for display using the currency's configuration from CurrencyService.
+     * Format an amount for display using the currency's configuration.
      *
      * Amounts are expected in the smallest unit (same convention as CurrencyService::format):
      *   - XOF / JPY (0 decimals): stored value IS the amount → 14_632_000 → "14 632 000 FCFA"
      *   - USD / EUR  (2 decimals): stored value is in cents  →     1_250   → "12.50 USD"
+     *
+     * Pass compact: true for table/inline display — renders a symbol instead of the full label:
+     *   - XOF : "885 000 F"   (symbol after, with space)
+     *   - EUR : "€885,00"     (symbol before, no space)
+     *   - CHF : "CHF 885.00"  (symbol before, with space)
      */
-    function format_money(int|float $amount, string $currency = 'XOF', bool $withLabel = true): string
+    function format_money(int|float $amount, string $currency = 'XOF', bool $withLabel = true, bool $compact = false): string
     {
-        return CurrencyService::format((int) $amount, $currency, $withLabel);
-    }
-}
+        if (! $compact) {
+            return CurrencyService::format((int) $amount, $currency, $withLabel);
+        }
 
-if (! function_exists('format_amount')) {
-    /**
-     * Format an amount for compact table display using a currency symbol instead of the code label.
-     *
-     * Symbol is placed before the number for most currencies, after for XOF (FCFA):
-     *   - XOF : 1 560 000F
-     *   - EUR : €40,00
-     *   - USD : $40.00
-     *   - GBP : £40.00
-     *   - JPY : ¥1,250
-     *   - CHF : CHF 40.00
-     *   - CAD : CA$40.00
-     *   - AUD : A$40.00
-     *   - HKD : HK$40.00
-     *   - NZD : NZ$40.00
-     *   - CNH : ¥40.00
-     *
-     * Amounts follow the same smallest-unit convention as format_money / CurrencyService::format.
-     */
-    function format_amount(int|float $amount, string $currency = 'XOF'): string
-    {
         // symbol, position ('before'|'after'), space between symbol and number
         $symbols = [
-            'XOF' => ['symbol' => 'F',    'position' => 'after',  'space' => false],
+            'XOF' => ['symbol' => 'F',    'position' => 'after',  'space' => true],
             'EUR' => ['symbol' => '€',    'position' => 'before', 'space' => false],
             'USD' => ['symbol' => '$',    'position' => 'before', 'space' => false],
             'GBP' => ['symbol' => '£',    'position' => 'before', 'space' => false],

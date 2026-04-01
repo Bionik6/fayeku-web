@@ -41,7 +41,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
     public function mount(): void
     {
-        $this->currentMonth = ucfirst(now()->locale('fr_FR')->translatedFormat('F Y'));
+        $this->currentMonth = format_month(now());
         $this->company = auth()->user()->smeCompany();
 
         if (! $this->company) {
@@ -142,7 +142,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                     'reference'           => $inv->reference,
                     'client'              => $inv->client?->name ?? '—',
                     'total'               => $inv->total - $inv->amount_paid,
-                    'issued_at'           => $inv->issued_at->translatedFormat('j M. Y'),
+                    'issued_at'           => format_date($inv->issued_at),
                     'delay_days'          => $delayDays,
                     'last_reminder_label' => $lastReminderLabel,
                     'is_critical'         => $isCritical,
@@ -261,7 +261,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             <p class="mt-1 text-sm text-slate-500">{{ $currentMonth }}</p>
             <p class="mt-1 text-3xl font-semibold tracking-tight text-ink">
                 @if ($invoicedAmount > 0)
-                    {{ number_format($invoicedAmount, 0, ',', ' ') }} FCFA
+                    {{ format_money($invoicedAmount) }}
                 @else
                     —
                 @endif
@@ -288,7 +288,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             </p>
             <p class="mt-1 text-3xl font-semibold tracking-tight text-accent">
                 @if ($collectedAmount > 0)
-                    {{ number_format($collectedAmount, 0, ',', ' ') }} FCFA
+                    {{ format_money($collectedAmount) }}
                 @else
                     —
                 @endif
@@ -309,7 +309,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             <p class="mt-1 text-sm text-slate-500">{{ __('Factures en attente') }}</p>
             <p class="mt-1 text-3xl font-semibold tracking-tight text-amber-500">
                 @if ($pendingAmount > 0)
-                    {{ number_format($pendingAmount, 0, ',', ' ') }} FCFA
+                    {{ format_money($pendingAmount) }}
                 @else
                     —
                 @endif
@@ -336,7 +336,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             </p>
             <p class="mt-1 text-3xl font-semibold tracking-tight text-rose-500">
                 @if ($overdueAmount > 0)
-                    {{ number_format($overdueAmount, 0, ',', ' ') }} FCFA
+                    {{ format_money($overdueAmount) }}
                 @else
                     —
                 @endif
@@ -362,7 +362,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="mt-5">
                     <p class="text-sm text-slate-500">{{ __('Cash disponible estimé · Mise à jour aujourd\'hui') }}</p>
                     <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">
-                        {{ number_format($collectedAmount, 0, ',', ' ') }} FCFA
+                        {{ format_money($collectedAmount) }}
                     </p>
 
                     {{-- Barre visuelle tricolore --}}
@@ -397,7 +397,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                         <div>
                             <p class="text-sm text-slate-500">{{ __('Entrées prévues (30j)') }}</p>
                             <p class="mt-0.5 text-lg font-semibold text-accent">
-                                +{{ number_format($pendingAmount, 0, ',', ' ') }} FCFA
+                                +{{ format_money($pendingAmount) }}
                             </p>
                         </div>
                         <div>
@@ -446,7 +446,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                 <p class="truncate text-sm text-slate-500">{{ $inv['client'] }} · {{ $inv['date_label'] }}</p>
                             </div>
                             <div class="flex shrink-0 flex-col items-end gap-1">
-                                <p class="text-sm font-semibold text-ink">{{ number_format($inv['total'], 0, ',', ' ') }} FCFA</p>
+                                <p class="text-sm font-semibold text-ink">{{ format_money($inv['total']) }}</p>
                                 <span class="inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
                                     {{ $statusConfig['label'] }}
                                 </span>
@@ -491,7 +491,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                             <tr wire:key="overdue-{{ $row['id'] }}" class="transition hover:bg-slate-50/60">
                                 <td class="px-6 py-4 font-semibold text-ink">{{ $row['reference'] }}</td>
                                 <td class="px-4 py-4 font-semibold text-ink">{{ $row['client'] }}</td>
-                                <td class="px-4 py-4 font-semibold text-ink">{{ number_format($row['total'], 0, ',', ' ') }} F</td>
+                                <td class="px-4 py-4 font-semibold text-ink">{{ format_money($row['total'], compact: true) }}</td>
                                 <td class="px-4 py-4 text-slate-500">{{ $row['issued_at'] }}</td>
                                 <td class="px-4 py-4">
                                     <span @class([
