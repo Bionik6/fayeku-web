@@ -9,6 +9,8 @@ use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Clients\Services\ClientService;
 use Modules\PME\Invoicing\Models\Invoice;
+use Modules\PME\Invoicing\Models\Quote;
+use Modules\PME\Invoicing\Services\QuoteService;
 
 new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public Client $client;
@@ -33,6 +35,8 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public string $clientAddress = '';
 
     public ?string $selectedInvoiceId = null;
+
+    public ?string $selectedQuoteId = null;
 
     #[Url(as: 'focus')]
     public string $focus = '';
@@ -112,6 +116,33 @@ public function viewInvoice(string $id): void
         $this->selectedInvoiceId = null;
     }
 
+    public function viewQuote(string $id): void
+    {
+        abort_unless(
+            $this->client->quotes()->whereKey($id)->exists(),
+            404
+        );
+
+        $this->selectedQuoteId = $id;
+    }
+
+    public function closeQuote(): void
+    {
+        $this->selectedQuoteId = null;
+    }
+
+    public function convertToInvoice(string $quoteId): void
+    {
+        $quote = Quote::query()
+            ->where('company_id', $this->client->company_id)
+            ->with('lines')
+            ->findOrFail($quoteId);
+
+        $invoice = app(QuoteService::class)->convertToInvoice($quote, $this->company);
+
+        $this->redirect(route('pme.invoices.edit', $invoice), navigate: true);
+    }
+
     /** @return array<string, mixed> */
     #[Computed]
     public function detail(): array
@@ -131,6 +162,21 @@ public function viewInvoice(string $id): void
             ->where('company_id', $this->client->company_id)
             ->where('client_id', $this->client->id)
             ->whereKey($this->selectedInvoiceId)
+            ->first();
+    }
+
+    #[Computed]
+    public function selectedQuote(): ?Quote
+    {
+        if (! $this->selectedQuoteId) {
+            return null;
+        }
+
+        return Quote::query()
+            ->with(['client', 'lines', 'invoice'])
+            ->where('company_id', $this->client->company_id)
+            ->where('client_id', $this->client->id)
+            ->whereKey($this->selectedQuoteId)
             ->first();
     }
 
@@ -229,20 +275,6 @@ public function viewInvoice(string $id): void
                 >
                     <flux:icon name="plus" class="size-4" />
                     {{ __('Nouvelle facture') }}
-                </a>
-                <a
-                    href="{{ route('pme.clients.show', ['client' => $client, 'focus' => 'impayes']) }}"
-                    wire:navigate
-                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
-                >
-                    {{ __('Voir les impayés') }}
-                </a>
-                <a
-                    href="{{ route('pme.clients.show', ['client' => $client, 'focus' => 'relances']) }}"
-                    wire:navigate
-                    class="text-sm font-semibold text-slate-500 transition hover:text-primary"
-                >
-                    {{ __('Aller aux relances') }} →
                 </a>
             </div>
         </div>
@@ -488,7 +520,11 @@ public function viewInvoice(string $id): void
             @if (count($this->detail['quotes']) > 0)
                 <div class="divide-y divide-slate-100">
                     @foreach ($this->detail['quotes'] as $quote)
-                        <div wire:key="client-quote-{{ $quote['id'] }}" class="flex items-center justify-between gap-4 px-6 py-4">
+                        <div
+                            wire:key="client-quote-{{ $quote['id'] }}"
+                            wire:click="viewQuote('{{ $quote['id'] }}')"
+                            class="flex cursor-pointer items-center justify-between gap-4 px-6 py-4 transition hover:bg-slate-50/70"
+                        >
                             <div>
                                 <p class="font-semibold text-ink">{{ $quote['reference'] }}</p>
                                 <p class="mt-1 text-sm text-slate-500">{{ $quote['issued_at_label'] }}</p>
@@ -593,10 +629,12 @@ public function viewInvoice(string $id): void
                         wire:key="client-timeline-{{ $index }}"
                         @class([
                             'flex gap-4 px-6 py-4',
-                            'cursor-pointer transition hover:bg-slate-50/70' => filled($event['invoice_id']),
+                            'cursor-pointer transition hover:bg-slate-50/70' => filled($event['invoice_id']) || filled($event['quote_id']),
                         ])
                         @if (filled($event['invoice_id']))
                             wire:click="viewInvoice('{{ $event['invoice_id'] }}')"
+                        @elseif (filled($event['quote_id']))
+                            wire:click="viewQuote('{{ $event['quote_id'] }}')"
                         @endif
                     >
                         <div class="mt-1 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-primary">
@@ -732,6 +770,194 @@ public function viewInvoice(string $id): void
 
     @if ($this->selectedInvoice)
         <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
+    @endif
+
+    @if ($this->selectedQuote)
+        @php
+            $q = $this->selectedQuote;
+            $client = $q->client;
+            $statusConfig = match ($q->status) {
+                \Modules\PME\Invoicing\Enums\QuoteStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+                \Modules\PME\Invoicing\Enums\QuoteStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
+                \Modules\PME\Invoicing\Enums\QuoteStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
+                \Modules\PME\Invoicing\Enums\QuoteStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700'],
+                \Modules\PME\Invoicing\Enums\QuoteStatus::Expired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500'],
+                default => ['label' => ucfirst($q->status->value), 'class' => 'bg-slate-100 text-slate-600'],
+            };
+        @endphp
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            wire:click.self="closeQuote"
+            x-data
+            @keydown.escape.window="$wire.closeQuote()"
+        >
+            <div class="relative w-full max-w-[1200px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-start justify-between border-b border-slate-100 px-10 py-7">
+                    <div>
+                        <p class="text-sm font-semibold tracking-[0.24em] text-slate-400">{{ __('Devis') }}</p>
+                        <h2 class="mt-1 text-xl font-bold text-ink">{{ $q->reference }}</h2>
+                        <div class="mt-1 flex items-center gap-3">
+                            <p class="text-sm text-slate-500">
+                                {{ __('Émis le') }} {{ format_date($q->issued_at) }}
+                                @if ($q->valid_until)
+                                    &nbsp;·&nbsp;
+                                    {{ __('Valide jusqu\'au') }} {{ format_date($q->valid_until) }}
+                                @endif
+                            </p>
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
+                                {{ $statusConfig['label'] }}
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        wire:click="closeQuote"
+                        class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    >
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="max-h-[80vh] overflow-y-auto">
+                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-3">
+                        <div class="col-span-2 px-10 py-8">
+                            @if ($client)
+                                <div class="mb-6">
+                                    <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Destinataire') }}</p>
+                                    <div class="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4">
+                                        <p class="font-semibold text-ink">{{ $client->name }}</p>
+                                        @if ($client->phone)
+                                            <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+                                                <flux:icon name="phone" class="size-3.5 shrink-0" />
+                                                {{ format_phone($client->phone) }}
+                                            </p>
+                                        @endif
+                                        @if ($client->email)
+                                            <p class="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                                                <flux:icon name="envelope" class="size-3.5 shrink-0" />
+                                                {{ $client->email }}
+                                            </p>
+                                        @endif
+                                        @if ($client->address)
+                                            <p class="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                                                <flux:icon name="map-pin" class="size-3.5 shrink-0" />
+                                                {{ $client->address }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div>
+                                <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Détail des prestations') }}</p>
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b border-slate-100 text-left">
+                                            <th class="pb-2 pr-4 text-sm font-semibold text-slate-500">{{ __('Description') }}</th>
+                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Qté') }}</th>
+                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('PU HT') }}</th>
+                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('TVA') }}</th>
+                                            <th class="pb-2 pl-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Total HT') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50">
+                                        @forelse ($q->lines as $line)
+                                            <tr>
+                                                <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
+                                                    {{ format_money($line->unit_price, $q->currency) }}
+                                                </td>
+                                                <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
+                                                <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
+                                                    {{ format_money($line->total, $q->currency) }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="py-4 text-center text-slate-400">{{ __('Aucune ligne.') }}</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                    <tfoot class="border-t border-slate-200">
+                                        <tr>
+                                            <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
+                                            <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
+                                                {{ format_money($q->subtotal, $q->currency) }}
+                                            </td>
+                                        </tr>
+                                        @if ($q->discount > 0)
+                                            @php $discountAmount = (int) round($q->subtotal * $q->discount / 100); @endphp
+                                            <tr>
+                                                <td colspan="4" class="pt-1 pr-4 text-right text-sm text-emerald-600">{{ __('Réduction') }} ({{ $q->discount }} %)</td>
+                                                <td class="pt-1 pl-4 text-right tabular-nums text-sm text-emerald-600 whitespace-nowrap">
+                                                    − {{ format_money($discountAmount, $q->currency) }}
+                                                </td>
+                                            </tr>
+                                        @endif
+                                        <tr>
+                                            <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
+                                            <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
+                                                {{ format_money($q->tax_amount, $q->currency) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
+                                            <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
+                                                {{ format_money($q->total, $q->currency) }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 bg-slate-50/60 px-8 py-8 lg:border-t-0 lg:border-l">
+                            <p class="mb-4 text-sm font-semibold text-slate-500">{{ __('Récapitulatif') }}</p>
+                            <dl class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
+                                    <dd class="tabular-nums font-medium text-ink">{{ format_money($q->subtotal, $q->currency) }}</dd>
+                                </div>
+                                @if ($q->discount > 0)
+                                    @php $discountAmount = (int) round($q->subtotal * $q->discount / 100); @endphp
+                                    <div class="flex justify-between text-emerald-600">
+                                        <dt>{{ __('Réduction') }} ({{ $q->discount }} %)</dt>
+                                        <dd class="tabular-nums font-medium">− {{ format_money($discountAmount, $q->currency) }}</dd>
+                                    </div>
+                                @endif
+                                <div class="flex justify-between">
+                                    <dt class="text-slate-500">{{ __('TVA') }}</dt>
+                                    <dd class="tabular-nums font-medium text-ink">{{ format_money($q->tax_amount, $q->currency) }}</dd>
+                                </div>
+                                <div class="flex justify-between border-t border-slate-200 pt-3">
+                                    <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
+                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($q->total, $q->currency) }}</dd>
+                                </div>
+                            </dl>
+
+                            @if (in_array($q->status, [\Modules\PME\Invoicing\Enums\QuoteStatus::Sent, \Modules\PME\Invoicing\Enums\QuoteStatus::Accepted]) && ! $q->invoice)
+                                <div class="mt-6">
+                                    <button
+                                        wire:click="convertToInvoice('{{ $q->id }}')"
+                                        wire:confirm="{{ __('Convertir ce devis en facture ?') }}"
+                                        class="flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                                    >
+                                        <flux:icon name="document-arrow-up" class="mr-2 size-4" />
+                                        {{ __('Convertir en facture') }}
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-10 py-5">
+                    <flux:button variant="ghost" wire:click="closeQuote">
+                        {{ __('Fermer') }}
+                    </flux:button>
+                </div>
+            </div>
+        </div>
     @endif
 
 </div>

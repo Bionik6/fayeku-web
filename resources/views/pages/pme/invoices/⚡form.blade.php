@@ -328,6 +328,13 @@ class extends Component {
         $this->discount = 0;
     }
 
+    public function updatedDiscount(?int $value): void
+    {
+        if ($this->discountType === 'percent' && $value !== null && $value > 100) {
+            $this->discount = 100;
+        }
+    }
+
     public function updatedTaxMode(string $value): void
     {
         $this->taxRate = match ($value) {
@@ -341,7 +348,8 @@ class extends Component {
     public function updatedCustomTaxRate(?int $value): void
     {
         if ($this->taxMode === 'custom') {
-            $this->taxRate = max(0, min(100, $value ?? 0));
+            $this->customTaxRate = max(0, min(100, $value ?? 0));
+            $this->taxRate = $this->customTaxRate;
         }
     }
 
@@ -1148,173 +1156,136 @@ class extends Component {
 
                 @php $totals = $this->computedTotals; @endphp
 
-                <div class="flex flex-col gap-8 md:flex-row md:items-start">
-                    {{-- Left: Ajustements --}}
-                    <div class="space-y-6 md:w-[55%]">
-                        <p class="text-sm font-semibold uppercase tracking-widest text-slate-600">{{ __('Ajustements') }}</p>
+                <div class="space-y-6">
+                    <p class="text-sm font-semibold uppercase tracking-widest text-slate-600">{{ __('Ajustements') }}</p>
 
-                        {{-- Remise globale --}}
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Remise globale') }}</label>
+                    {{-- TVA --}}
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('TVA') }}</label>
 
-                            {{-- Simple inline radio list --}}
-                            <div class="mb-3 flex gap-6">
-                                <label class="flex cursor-pointer items-center gap-2">
-                                    <input type="radio" wire:model.live="discountType" value="percent" class="peer sr-only">
-                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                                        <span class="size-1.5 rounded-full bg-white"></span>
-                                    </span>
-                                    <span class="text-sm text-slate-700">{{ __('Pourcentage') }}</span>
-                                </label>
-                                <label class="flex cursor-pointer items-center gap-2">
-                                    <input type="radio" wire:model.live="discountType" value="fixed" class="peer sr-only">
-                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                                        <span class="size-1.5 rounded-full bg-white"></span>
-                                    </span>
-                                    <span class="text-sm text-slate-700">{{ __('Montant fixe') }}</span>
-                                </label>
+                        {{-- Simple inline radio list --}}
+                        <div class="mb-3 flex gap-6">
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio" wire:model.live="taxMode" value="0" class="peer sr-only">
+                                <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                    <span class="size-1.5 rounded-full bg-white"></span>
+                                </span>
+                                <span class="text-sm text-slate-700">{{ __('Sans TVA') }}</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio" wire:model.live="taxMode" value="18" class="peer sr-only">
+                                <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                    <span class="size-1.5 rounded-full bg-white"></span>
+                                </span>
+                                <span class="text-sm text-slate-700">18 %</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio" wire:model.live="taxMode" value="custom" class="peer sr-only">
+                                <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                    <span class="size-1.5 rounded-full bg-white"></span>
+                                </span>
+                                <span class="text-sm text-slate-700">{{ __('Taux personnalisé') }}</span>
+                            </label>
+                        </div>
+
+                        {{-- Input with trailing add-on — only for custom rate --}}
+                        @if ($taxMode === 'custom')
+                            <div class="flex w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+                                <input wire:model.live="customTaxRate" type="number" min="0" max="100"
+                                       placeholder="0"
+                                       @paste.prevent
+                                       class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
+                                <span class="flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80 px-3 text-sm font-medium text-slate-600 select-none">%</span>
                             </div>
+                        @endif
+                        <p class="mt-1.5 text-sm text-slate-500">{{ __('La TVA est calculée après application de la remise.') }}</p>
+                    </div>
 
-                            {{-- Input with trailing add-on --}}
-                            <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                @if ($discountType === 'percent')
-                                    <input wire:model.live="discount" type="number" min="0" max="100"
-                                           placeholder="0"
-                                           class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
-                                @else
-                                    <div class="min-w-0 flex-1"
-                                         x-data="{
-                                             raw: {{ (int) ($discount ?? 0) }},
-                                             formatted: '',
-                                             get noDecimals() { return $wire.currencyJs.decimals === 0; },
-                                             formatNoDecimal(v) {
-                                                 return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
-                                             },
-                                             onInput(e) {
-                                                 if (this.noDecimals) {
-                                                     this.raw = parseInt(e.target.value.replace(/\D/g, '')) || 0;
-                                                     this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
-                                                     e.target.value = this.formatted;
-                                                 } else {
-                                                     let v = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-                                                     this.raw = Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals));
-                                                 }
-                                                 $wire.set('discount', this.raw);
-                                             },
-                                             init() {
+                    {{-- Remise globale --}}
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('Remise globale') }}</label>
+
+                        {{-- Simple inline radio list --}}
+                        <div class="mb-3 flex gap-6">
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio" wire:model.live="discountType" value="percent" class="peer sr-only">
+                                <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                    <span class="size-1.5 rounded-full bg-white"></span>
+                                </span>
+                                <span class="text-sm text-slate-700">{{ __('Pourcentage') }}</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input type="radio" wire:model.live="discountType" value="fixed" class="peer sr-only">
+                                <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
+                                    <span class="size-1.5 rounded-full bg-white"></span>
+                                </span>
+                                <span class="text-sm text-slate-700">{{ __('Montant fixe') }}</span>
+                            </label>
+                        </div>
+
+                        {{-- Input with trailing add-on --}}
+                        <div class="flex w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+                            @if ($discountType === 'percent')
+                                <input wire:model.live="discount" type="number" min="0" max="100"
+                                       placeholder="0"
+                                       @paste.prevent
+                                       class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
+                            @else
+                                <div class="min-w-0 flex-1"
+                                     x-data="{
+                                         raw: {{ min((int) ($discount ?? 0), CurrencyService::maxAmount($this->currency)) }},
+                                         formatted: '',
+                                         get noDecimals() { return $wire.currencyJs.decimals === 0; },
+                                         get maxRaw() { return $wire.currencyJs.maxAmount; },
+                                         clamp(v) { return Math.min(Math.max(v, 0), this.maxRaw); },
+                                         formatNoDecimal(v) {
+                                             return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
+                                         },
+                                         onInput(e) {
+                                             if (this.noDecimals) {
+                                                 this.raw = this.clamp(parseInt(e.target.value.replace(/\D/g, '')) || 0);
+                                                 this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                                 e.target.value = this.formatted;
+                                             } else {
+                                                 let v = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+                                                 this.raw = this.clamp(Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals)));
+                                             }
+                                             $wire.set('discount', this.raw);
+                                         },
+                                         init() {
+                                             if (this.noDecimals) {
+                                                 this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                             } else {
+                                                 this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
+                                             }
+                                             this.$watch('$wire.currencyJs', () => {
                                                  if (this.noDecimals) {
                                                      this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
                                                  } else {
                                                      this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
                                                  }
-                                                 this.$watch('$wire.currencyJs', () => {
-                                                     if (this.noDecimals) {
-                                                         this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
-                                                     } else {
-                                                         this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
-                                                     }
-                                                 });
-                                                 this.$watch('$wire.discount', (val) => {
-                                                     if (!val) { this.raw = 0; this.formatted = ''; }
-                                                 });
-                                             }
-                                         }"
-                                    >
-                                        <input type="text"
-                                               :value="formatted"
-                                               :inputmode="noDecimals ? 'numeric' : 'decimal'"
-                                               @input="onInput($event)"
-                                               placeholder="0"
-                                               class="w-full bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
-                                    </div>
-                                @endif
-                                <span class="flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80 px-3 text-sm font-medium text-slate-600 select-none whitespace-nowrap">
-                                    {{ $discountType === 'percent' ? '%' : $this->currencyLabel }}
-                                </span>
-                            </div>
-                            <p class="mt-1.5 text-sm text-slate-500">
-                                {{ $discountType === 'percent' ? __('Appliquée sur le sous-total HT') : __('Montant déduit du sous-total HT') }}
-                            </p>
-                        </div>
-
-                        {{-- TVA --}}
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-800">{{ __('TVA') }}</label>
-
-                            {{-- Simple inline radio list --}}
-                            <div class="mb-3 flex gap-6">
-                                <label class="flex cursor-pointer items-center gap-2">
-                                    <input type="radio" wire:model.live="taxMode" value="0" class="peer sr-only">
-                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                                        <span class="size-1.5 rounded-full bg-white"></span>
-                                    </span>
-                                    <span class="text-sm text-slate-700">{{ __('Sans TVA') }}</span>
-                                </label>
-                                <label class="flex cursor-pointer items-center gap-2">
-                                    <input type="radio" wire:model.live="taxMode" value="18" class="peer sr-only">
-                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                                        <span class="size-1.5 rounded-full bg-white"></span>
-                                    </span>
-                                    <span class="text-sm text-slate-700">18 %</span>
-                                </label>
-                                <label class="flex cursor-pointer items-center gap-2">
-                                    <input type="radio" wire:model.live="taxMode" value="custom" class="peer sr-only">
-                                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                                        <span class="size-1.5 rounded-full bg-white"></span>
-                                    </span>
-                                    <span class="text-sm text-slate-700">{{ __('Taux personnalisé') }}</span>
-                                </label>
-                            </div>
-
-                            {{-- Input with trailing add-on — only for custom rate --}}
-                            @if ($taxMode === 'custom')
-                                <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-                                    <input wire:model.live="customTaxRate" type="number" min="0" max="100"
+                                             });
+                                             this.$watch('$wire.discount', (val) => {
+                                                 if (!val) { this.raw = 0; this.formatted = ''; }
+                                             });
+                                         }
+                                     }"
+                                >
+                                    <input type="text"
+                                           :value="formatted"
+                                           :inputmode="noDecimals ? 'numeric' : 'decimal'"
+                                           @input="onInput($event)"
                                            placeholder="0"
-                                           class="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
-                                    <span class="flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80 px-3 text-sm font-medium text-slate-600 select-none">%</span>
+                                           class="w-full bg-transparent px-3 py-2.5 text-sm text-ink tabular-nums focus:outline-none"/>
                                 </div>
                             @endif
-                            <p class="mt-1.5 text-sm text-slate-500">{{ __('La TVA est calculée après application de la remise.') }}</p>
+                            <span class="flex shrink-0 items-center border-l border-slate-200 bg-slate-50/80 px-3 text-sm font-medium text-slate-600 select-none whitespace-nowrap">
+                                {{ $discountType === 'percent' ? '%' : $this->currencyLabel }}
+                            </span>
                         </div>
-                    </div>
-
-                    {{-- Vertical separator (desktop) --}}
-                    <div class="hidden self-stretch border-l border-slate-100 md:block"></div>
-
-                    {{-- Right: Récapitulatif --}}
-                    <div class="md:w-[45%]">
-                        <p class="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-600">{{ __('Récapitulatif') }}</p>
-
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-baseline justify-between gap-3">
-                                <span class="text-slate-600">{{ __('Sous-total HT') }}</span>
-                                <span class="whitespace-nowrap font-medium tabular-nums text-ink">{{ CurrencyService::format($totals['subtotal'], $currency) }}</span>
-                            </div>
-                            @if ($totals['discount_amount'] > 0)
-                                <div class="flex items-baseline justify-between gap-3">
-                                    <span class="text-slate-600">
-                                        @if ($discountType === 'fixed')
-                                            {{ __('Remise (montant fixe)') }}
-                                        @else
-                                            {{ __('Remise (:rate%)', ['rate' => $discount]) }}
-                                        @endif
-                                    </span>
-                                    <span class="whitespace-nowrap tabular-nums text-rose-600">-{{ CurrencyService::format($totals['discount_amount'], $currency) }}</span>
-                                </div>
-                            @endif
-                            <div class="flex items-baseline justify-between gap-3">
-                                <span class="text-slate-600">{{ __('TVA (:rate%)', ['rate' => $taxRate]) }}</span>
-                                <span class="whitespace-nowrap tabular-nums text-ink">{{ CurrencyService::format($totals['tax_amount'], $currency) }}</span>
-                            </div>
-
-                            <hr class="border-slate-200">
-
-                            <div class="flex items-baseline justify-between gap-3 pt-1">
-                                <span class="text-base font-semibold text-ink">{{ __('Total TTC') }}</span>
-                                <span class="whitespace-nowrap text-2xl font-bold tabular-nums text-ink">{{ CurrencyService::format($totals['total'], $currency) }}</span>
-                            </div>
-                        </div>
+                        <p class="mt-1.5 text-sm text-slate-500">
+                            {{ $discountType === 'percent' ? __('Appliquée sur le sous-total HT') : __('Montant déduit du sous-total HT') }}
+                        </p>
                     </div>
                 </div>
             </section>

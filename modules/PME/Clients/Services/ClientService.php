@@ -251,7 +251,7 @@ class ClientService
                 'reference' => $invoice->reference ?? '—',
                 'amount' => (int) $invoice->amount_paid,
                 'paid_at_label' => $invoice->paid_at
-                    ? format_date($invoice->paid_at, withTime: true)
+                    ? format_date($invoice->updated_at, withTime: true)
                     : 'Paiement enregistré',
                 'status' => $this->invoiceStatusLabel($invoice->status),
             ])
@@ -260,25 +260,29 @@ class ClientService
         $timeline = collect()
             ->merge($invoices->map(fn (Invoice $invoice) => [
                 'invoice_id' => $invoice->id,
-                'date' => $invoice->issued_at,
+                'quote_id' => null,
+                'date' => $invoice->created_at,
                 'title' => 'Facture envoyée',
                 'body' => ($invoice->reference ?? '—').' · '.format_money($invoice->total),
             ]))
             ->merge($invoices->filter(fn (Invoice $invoice) => $invoice->paid_at)->map(fn (Invoice $invoice) => [
                 'invoice_id' => $invoice->id,
+                'quote_id' => null,
                 'date' => $invoice->paid_at,
                 'title' => 'Paiement reçu',
                 'body' => ($invoice->reference ?? '—').' · '.format_money((int) $invoice->amount_paid),
             ]))
             ->merge($quotes->map(fn ($quote) => [
                 'invoice_id' => null,
-                'date' => $quote->issued_at,
+                'quote_id' => $quote->id,
+                'date' => $quote->created_at,
                 'title' => 'Devis envoyé',
                 'body' => ($quote->reference ?? '—').' · '.format_money($quote->total),
             ]))
             ->merge($invoices->flatMap(fn (Invoice $invoice) => $invoice->reminders->filter(fn ($reminder) => $reminder->sent_at)->map(
                 fn ($reminder) => [
                     'invoice_id' => $invoice->id,
+                    'quote_id' => null,
                     'date' => $reminder->sent_at,
                     'title' => 'Relance envoyée',
                     'body' => ($invoice->reference ?? '—').' · '.$this->channelLabel($reminder->channel),
@@ -290,6 +294,7 @@ class ClientService
             ->values()
             ->map(fn (array $event) => [
                 'invoice_id' => $event['invoice_id'],
+                'quote_id' => $event['quote_id'],
                 'title' => $event['title'],
                 'body' => $event['body'],
                 'date_label' => format_date($event['date'], withTime: true),

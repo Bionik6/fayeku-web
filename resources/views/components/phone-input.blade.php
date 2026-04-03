@@ -83,8 +83,8 @@
 
 <div {{ $attributes->class(['space-y-1']) }} data-phone-field>
     @if ($showLabel)
-        <span class="block auth-field-label">
-            {{ $label }}@if ($required)<span class="text-red-500"> *</span>@endif
+        <span class="mb-1.5 block text-sm font-medium text-slate-700">
+            {{ $label }}@if ($required)<span class="text-rose-500"> *</span>@endif
         </span>
     @endif
 

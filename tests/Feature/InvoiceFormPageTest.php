@@ -440,6 +440,95 @@ test('le taux de TVA personnalisé est limité entre 0 et 100', function () {
         ->assertSet('taxRate', 100);
 });
 
+test('le champ customTaxRate est lui-même clampé à 100 quand la valeur dépasse 100', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', 999)
+        ->assertSet('customTaxRate', 100);
+});
+
+test('le taux de TVA personnalisé accepte exactement 100', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', 100)
+        ->assertSet('customTaxRate', 100)
+        ->assertSet('taxRate', 100);
+});
+
+test('le taux de TVA personnalisé est clampé à 0 si une valeur négative est saisie', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', -5)
+        ->assertSet('customTaxRate', 0)
+        ->assertSet('taxRate', 0);
+});
+
+// ─── Discount percentage cap ─────────────────────────────────────────────────
+
+test('la remise en pourcentage est clampée à 100 si la valeur dépasse 100', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('discountType', 'percent')
+        ->set('discount', 150)
+        ->assertSet('discount', 100);
+});
+
+test('la remise en pourcentage accepte exactement 100', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('discountType', 'percent')
+        ->set('discount', 100)
+        ->assertSet('discount', 100);
+});
+
+test('la remise en pourcentage accepte 0', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('discountType', 'percent')
+        ->set('discount', 0)
+        ->assertSet('discount', 0);
+});
+
+test('le hook clamp empêche discount > 100 donc la soumission ne produit pas d\'erreur de validation sur ce champ', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('discountType', 'percent')
+        ->set('discount', 999)
+        ->assertSet('discount', 100)
+        ->set('clientId', $client->id)
+        ->call('saveDraft')
+        ->assertHasNoErrors(['discount']);
+});
+
+test('le changement de type de remise remet le discount à 0', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('discountType', 'percent')
+        ->set('discount', 50)
+        ->set('discountType', 'fixed')
+        ->assertSet('discount', 0);
+});
+
 // ─── Payment method ─────────────────────────────────────────────────────────
 
 test('on peut sélectionner un moyen de paiement', function () {
