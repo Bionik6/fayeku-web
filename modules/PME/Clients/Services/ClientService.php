@@ -318,6 +318,7 @@ class ClientService
                 'remaining' => max(0, (int) $invoice->total - (int) $invoice->amount_paid),
                 'status' => $this->invoiceStatusLabel($invoice->status),
                 'status_tone' => $this->invoiceStatusTone($invoice->status),
+                'is_overdue' => $invoice->status === InvoiceStatus::Overdue,
                 'reminders_count' => $invoice->reminders->count(),
             ])->all(),
             'quotes' => $quotes->map(fn ($quote) => [

@@ -19,12 +19,17 @@ class ReminderService
         private EmailReminderService $email,
     ) {}
 
-    public function send(Invoice $invoice, Company $company, ReminderChannel $channel): Reminder
+    public function send(Invoice $invoice, Company $company, ReminderChannel $channel, ?string $messageBody = null): Reminder
     {
         $this->quotaService->authorize($company, 'reminders');
 
-        return DB::transaction(function () use ($invoice, $company, $channel) {
+        return DB::transaction(function () use ($invoice, $company, $channel, $messageBody) {
             $reminder = $this->resolveChannel($channel)->send($invoice);
+
+            if ($messageBody !== null) {
+                $reminder->update(['message_body' => $messageBody]);
+            }
+
             $this->quotaService->consume($company, 'reminders');
 
             return $reminder;

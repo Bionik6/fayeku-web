@@ -8,6 +8,8 @@ use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Clients\Services\ClientService;
+use Modules\PME\Collection\Enums\ReminderChannel;
+use Modules\PME\Collection\Services\ReminderService;
 use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Models\Quote;
 use Modules\PME\Invoicing\Services\QuoteService;
@@ -37,6 +39,12 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public ?string $selectedInvoiceId = null;
 
     public ?string $selectedQuoteId = null;
+
+    public ?string $previewInvoiceId = null;
+
+    public string $previewTone = 'cordial';
+
+    public bool $previewAttachPdf = true;
 
     #[Url(as: 'focus')]
     public string $focus = '';
@@ -141,6 +149,116 @@ public function viewInvoice(string $id): void
         $invoice = app(QuoteService::class)->convertToInvoice($quote, $this->company);
 
         $this->redirect(route('pme.invoices.edit', $invoice), navigate: true);
+    }
+
+    public function openPreview(string $invoiceId): void
+    {
+        abort_unless(
+            $this->client->invoices()->whereKey($invoiceId)->exists(),
+            404
+        );
+
+        $this->previewInvoiceId = $invoiceId;
+        $this->previewTone = $this->company->getReminderSetting('default_tone', 'cordial');
+        $this->previewAttachPdf = (bool) $this->company->getReminderSetting('attach_pdf', true);
+    }
+
+    public function closePreview(): void
+    {
+        $this->previewInvoiceId = null;
+    }
+
+    public function sendReminder(string $invoiceId): void
+    {
+        abort_unless(
+            $this->client->invoices()->whereKey($invoiceId)->exists(),
+            404
+        );
+
+        $invoice = Invoice::query()
+            ->where('company_id', $this->client->company_id)
+            ->findOrFail($invoiceId);
+
+        try {
+            $channel = ReminderChannel::from(
+                $this->company->getReminderSetting('default_channel', 'whatsapp')
+            );
+
+            $msg = $this->buildPreviewMessage();
+            $messageBody = implode("\n\n", array_filter([
+                $msg['greeting'],
+                $msg['body'],
+                $msg['closing'],
+                $this->company->name,
+            ])) ?: null;
+
+            app(ReminderService::class)->send($invoice, $this->company, $channel, $messageBody);
+
+            $this->previewInvoiceId = null;
+            $this->detailCache = null;
+
+            $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'warning', title: __('Service d\'envoi bientôt disponible. Votre relance sera envoyée prochainement.'));
+        }
+    }
+
+    #[Computed]
+    public function previewInvoice(): ?Invoice
+    {
+        if (! $this->previewInvoiceId) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->with('client')
+            ->where('company_id', $this->client->company_id)
+            ->where('client_id', $this->client->id)
+            ->whereKey($this->previewInvoiceId)
+            ->first();
+    }
+
+    /**
+     * @return array{greeting: string, body: string, closing: string}
+     */
+    public function buildPreviewMessage(): array
+    {
+        $inv = $this->previewInvoice;
+
+        if (! $inv) {
+            return ['greeting' => '', 'body' => '', 'closing' => ''];
+        }
+
+        $clientName = $inv->client?->name ?? '—';
+        $reference = $inv->reference ?? '—';
+        $remaining = format_money((int) $inv->total - (int) $inv->amount_paid);
+        $dueDate = format_date($inv->due_at);
+
+        $toneGreetings = [
+            'cordial' => "Bonjour {$clientName},",
+            'ferme' => "Bonjour {$clientName},",
+            'urgent' => "{$clientName},",
+        ];
+
+        $toneBody = [
+            'cordial' => "Nous souhaitons vous rappeler que la facture {$reference} d'un montant de {$remaining}, échue le {$dueDate}, reste en attente de règlement.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.",
+            'ferme' => "La facture {$reference} d'un montant de {$remaining} est en retard de paiement depuis le {$dueDate}.\n\nNous vous demandons de procéder au règlement dans les plus brefs délais.",
+            'urgent' => "URGENT : La facture {$reference} ({$remaining}) est impayée depuis le {$dueDate}. Malgré nos précédentes relances, aucun règlement n'a été effectué.\n\nNous vous prions de régulariser cette situation immédiatement.",
+        ];
+
+        $toneClosing = [
+            'cordial' => 'Cordialement,',
+            'ferme' => "Dans l'attente de votre règlement,",
+            'urgent' => 'En espérant une action immédiate de votre part,',
+        ];
+
+        $tone = $this->previewTone;
+
+        return [
+            'greeting' => $toneGreetings[$tone] ?? $toneGreetings['cordial'],
+            'body' => $toneBody[$tone] ?? $toneBody['cordial'],
+            'closing' => $toneClosing[$tone] ?? $toneClosing['cordial'],
+        ];
     }
 
     /** @return array<string, mixed> */
@@ -400,7 +518,7 @@ public function viewInvoice(string $id): void
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Identifiant fiscal') }}</p>
                     <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['tax_id'] }}</p>
                 </div>
-                <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
+                <div class="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Adresse') }}</p>
                     <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['address'] }}</p>
                 </div>
@@ -465,6 +583,7 @@ public function viewInvoice(string $id): void
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Reste dû') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Relances') }}</th>
+                            <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -498,6 +617,17 @@ public function viewInvoice(string $id): void
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['reminders_count'] }}</td>
+                                <td class="px-4 py-4" @click.stop>
+                                    @if ($invoice['is_overdue'])
+                                        <button
+                                            wire:click="openPreview('{{ $invoice['id'] }}')"
+                                            class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 transition hover:bg-amber-100"
+                                        >
+                                            <flux:icon name="paper-airplane" class="size-3.5" />
+                                            {{ __('Relancer') }}
+                                        </button>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -589,23 +719,20 @@ public function viewInvoice(string $id): void
             <div class="divide-y divide-slate-100">
                 @foreach ($this->detail['reminders'] as $reminder)
                     <div wire:key="client-reminder-{{ $reminder['id'] }}" class="px-6 py-4">
-                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
-                                <p class="font-semibold text-ink">{{ $reminder['invoice_reference'] }}</p>
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <p class="font-semibold text-ink">{{ $reminder['invoice_reference'] }}</p>
+                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600">
+                                        {{ $reminder['channel'] }}
+                                    </span>
+                                </div>
                                 <p class="mt-1 text-sm text-slate-500">{{ $reminder['sent_at_label'] }}</p>
-                            </div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600">
-                                    {{ $reminder['channel'] }}
-                                </span>
-                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600">
-                                    {{ $reminder['status'] }}
-                                </span>
+                                @if ($reminder['body'])
+                                    <p class="mt-2 text-sm text-slate-600">{{ $reminder['body'] }}</p>
+                                @endif
                             </div>
                         </div>
-                        @if ($reminder['body'])
-                            <p class="mt-3 text-sm text-slate-600">{{ $reminder['body'] }}</p>
-                        @endif
                     </div>
                 @endforeach
             </div>
@@ -958,6 +1085,17 @@ public function viewInvoice(string $id): void
                 </div>
             </div>
         </div>
+    @endif
+
+    {{-- Slide-over aperçu relance --}}
+    @if ($previewInvoiceId && $this->previewInvoice)
+        <x-collection.reminder-preview-slideover
+            :invoice="$this->previewInvoice"
+            :message="$this->buildPreviewMessage()"
+            :company="$company"
+            :preview-invoice-id="$previewInvoiceId"
+            :preview-attach-pdf="$previewAttachPdf"
+        />
     @endif
 
 </div>
