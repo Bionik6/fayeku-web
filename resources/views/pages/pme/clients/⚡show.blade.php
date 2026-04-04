@@ -715,32 +715,14 @@ public function viewInvoice(string $id): void
             <p class="mt-1 text-sm text-slate-500">{{ __('Historique des rappels déjà envoyés à ce client et canaux utilisés.') }}</p>
         </div>
 
-        @if (count($this->detail['reminders']) > 0)
-            <div class="divide-y divide-slate-100">
-                @foreach ($this->detail['reminders'] as $reminder)
-                    <div wire:key="client-reminder-{{ $reminder['id'] }}" class="px-6 py-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <p class="font-semibold text-ink">{{ $reminder['invoice_reference'] }}</p>
-                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600">
-                                        {{ $reminder['channel'] }}
-                                    </span>
-                                </div>
-                                <p class="mt-1 text-sm text-slate-500">{{ $reminder['sent_at_label'] }}</p>
-                                @if ($reminder['body'])
-                                    <p class="mt-2 text-sm text-slate-600">{{ $reminder['body'] }}</p>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <div class="px-6 py-12 text-center text-sm text-slate-500">
-                {{ __('Aucune relance n’a encore été envoyée à ce client.') }}
-            </div>
-        @endif
+        <div class="px-6 py-6">
+            @php $noRemindersMsg = "Aucune relance n\u{2019}a encore \u{00e9}t\u{00e9} envoy\u{00e9}e \u{00e0} ce client."; @endphp
+            <x-collection.reminder-feed
+                :reminders="$this->detail['reminders']"
+                :show-invoice-ref="true"
+                :empty-message="$noRemindersMsg"
+            />
+        </div>
     </section>
 
     <section class="app-shell-panel overflow-hidden">

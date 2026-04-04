@@ -955,83 +955,26 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
         <div
             class="fixed inset-0 z-50 flex justify-end bg-black/40"
             wire:click.self="closeTimeline"
+            x-data
             @keydown.escape.window="$wire.closeTimeline()"
         >
             <div class="flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
                     <div>
-                        <h3 class="font-semibold text-ink">{{ __('Historique') }}</h3>
-                        <p class="mt-0.5 text-sm text-slate-600">{{ $this->timelineInvoice->reference }} · {{ $this->timelineInvoice->client?->name }}</p>
+                        <h3 class="font-semibold text-ink">{{ __('Historique des relances') }}</h3>
+                        <p class="mt-0.5 text-sm text-slate-600">
+                            {{ $this->timelineInvoice->reference }} · {{ $this->timelineInvoice->client?->name }}
+                        </p>
                     </div>
                     <button wire:click="closeTimeline" class="rounded-xl p-2 transition hover:bg-slate-100">
                         <flux:icon name="x-mark" class="size-5 text-slate-500" />
                     </button>
                 </div>
 
-                {{-- Timeline --}}
+                {{-- Feed --}}
                 <div class="flex-1 overflow-y-auto px-6 py-6">
-                    <div class="relative ml-4 border-l-2 border-slate-200 pl-6 space-y-6">
-
-                        {{-- Échéance --}}
-                        <div class="relative">
-                            <div class="absolute -left-[1.85rem] top-0.5 flex size-4 items-center justify-center rounded-full bg-slate-200">
-                                <span class="size-2 rounded-full bg-slate-500"></span>
-                            </div>
-                            <p class="text-sm font-semibold text-slate-600">{{ format_date($this->timelineInvoice->due_at) }}</p>
-                            <p class="mt-0.5 text-sm font-medium text-ink">{{ __('Date d\'échéance') }}</p>
-                            <p class="text-sm text-slate-600">
-                                {{ __('Montant dû') }} : {{ format_money($this->timelineInvoice->total - $this->timelineInvoice->amount_paid) }}
-                            </p>
-                        </div>
-
-                        {{-- Relances --}}
-                        @foreach ($this->timelineInvoice->reminders as $reminder)
-                            <div class="relative" wire:key="tl-{{ $reminder->id }}">
-                                <div class="absolute -left-[1.85rem] top-0.5 flex size-4 items-center justify-center rounded-full
-                                    {{ $reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Delivered ? 'bg-accent/20' : ($reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Failed ? 'bg-rose-100' : 'bg-blue-100') }}">
-                                    <span class="size-2 rounded-full
-                                        {{ $reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Delivered ? 'bg-accent' : ($reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Failed ? 'bg-rose-500' : 'bg-blue-500') }}"></span>
-                                </div>
-                                <p class="text-sm font-semibold text-slate-600">{{ $reminder->created_at->format('d/m/Y H:i') }}</p>
-                                <p class="mt-0.5 text-sm font-medium text-ink">
-                                    {{ __('Relance') }} {{ $reminder->channel?->value ?? '' }}
-                                </p>
-                                <div class="mt-1 flex items-center gap-2">
-                                    <span @class([
-                                        'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                                        'bg-accent/10 text-accent' => $reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Delivered,
-                                        'bg-blue-50 text-blue-700' => $reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Sent,
-                                        'bg-amber-50 text-amber-700' => $reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Pending,
-                                        'bg-rose-50 text-rose-700' => $reminder->status === \Modules\PME\Collection\Enums\ReminderStatus::Failed,
-                                    ])>
-                                        {{ $reminder->status?->value ?? '—' }}
-                                    </span>
-                                </div>
-                            </div>
-                        @endforeach
-
-                        {{-- Paiement si payé --}}
-                        @if ($this->timelineInvoice->paid_at)
-                            <div class="relative">
-                                <div class="absolute -left-[1.85rem] top-0.5 flex size-4 items-center justify-center rounded-full bg-accent/20">
-                                    <span class="size-2 rounded-full bg-accent"></span>
-                                </div>
-                                <p class="text-sm font-semibold text-slate-600">{{ $this->timelineInvoice->paid_at->format('d/m/Y') }}</p>
-                                <p class="mt-0.5 text-sm font-semibold text-accent">{{ __('Paiement reçu') }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Aucun événement --}}
-                        @if ($this->timelineInvoice->reminders->isEmpty() && ! $this->timelineInvoice->paid_at)
-                            <div class="relative">
-                                <div class="absolute -left-[1.85rem] top-0.5 flex size-4 items-center justify-center rounded-full bg-slate-100">
-                                    <span class="size-2 rounded-full bg-slate-400"></span>
-                                </div>
-                                <p class="text-sm text-slate-600">{{ __('Aucune relance envoyée pour le moment.') }}</p>
-                            </div>
-                        @endif
-                    </div>
+                    <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
                 </div>
             </div>
         </div>

@@ -226,21 +226,13 @@ class ClientService
             ->values();
 
         $reminders = $invoices
-            ->flatMap(fn (Invoice $invoice) => $invoice->reminders->map(
-                fn ($reminder) => [
-                    'id' => $reminder->id,
-                    'invoice_reference' => $invoice->reference ?? '—',
-                    'channel' => $this->channelLabel($reminder->channel),
-                    'status' => ucfirst($reminder->status->value),
-                    'sent_at_label' => $reminder->sent_at
-                        ? format_date($reminder->sent_at, withTime: true)
-                        : 'Non envoyée',
-                    'body' => $reminder->message_body,
-                ]
-            ))
-            ->sortByDesc(fn (array $reminder) => $reminder['sent_at_label'])
-            ->values()
-            ->all();
+            ->flatMap(function (Invoice $invoice): Collection {
+                return $invoice->reminders->each(
+                    fn ($reminder) => $reminder->setRelation('invoice', $invoice)
+                );
+            })
+            ->sortByDesc('sent_at')
+            ->values();
 
         $payments = $invoices
             ->filter(fn (Invoice $invoice) => $invoice->amount_paid > 0)
