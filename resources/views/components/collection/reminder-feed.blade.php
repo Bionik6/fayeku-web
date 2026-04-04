@@ -32,7 +32,7 @@ if ($items->isEmpty() && ! $invoice?->paid_at) {
 }
 ?>
 
-<div class="flow-root">
+<div class="flow-root pb-12">
     <ul role="list" class="-mb-8">
         @foreach ($feedItems as $item)
             @php $isLast = $loop->last; @endphp
