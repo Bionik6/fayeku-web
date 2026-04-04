@@ -87,7 +87,7 @@ class PmeDashboardSeeder extends Seeder
         $btpHorizon = $this->client('BTP Horizon SARL', '+221338200017', 'direction@btphorizon.sn');
 
         // ── Décembre 2025 — 4 factures payées ────────────────────────────────
-        $this->invoice($sonatel, 'FAC-071', InvoiceStatus::Paid, 650_000,
+        $this->invoice($sonatel, 'FYK-FAC-071', InvoiceStatus::Paid, 650_000,
             issuedAt: '2025-12-05', dueAt: '2026-01-04', paidAt: '2025-12-28',
             lines: [
                 ['Prestation de conseil en stratégie commerciale', 2, 250_000],
@@ -95,7 +95,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($portDakar, 'FAC-072', InvoiceStatus::Paid, 800_000,
+        $this->invoice($portDakar, 'FYK-FAC-072', InvoiceStatus::Paid, 800_000,
             issuedAt: '2025-12-10', dueAt: '2026-01-09', paidAt: '2026-01-05',
             lines: [
                 ['Audit logistique portuaire', 1, 600_000],
@@ -103,7 +103,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($btpHorizon, 'FAC-073', InvoiceStatus::Paid, 450_000,
+        $this->invoice($btpHorizon, 'FYK-FAC-073', InvoiceStatus::Paid, 450_000,
             issuedAt: '2025-12-15', dueAt: '2026-01-14', paidAt: '2025-12-30',
             lines: [
                 ['Étude technique de faisabilité', 1, 350_000],
@@ -111,7 +111,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($africomm, 'FAC-074', InvoiceStatus::Paid, 550_000,
+        $this->invoice($africomm, 'FYK-FAC-074', InvoiceStatus::Paid, 550_000,
             issuedAt: '2025-12-20', dueAt: '2026-01-19', paidAt: '2026-01-10',
             lines: [
                 ['Intégration système de communication', 1, 400_000],
@@ -120,7 +120,7 @@ class PmeDashboardSeeder extends Seeder
         );
 
         // ── Janvier 2026 — 5 factures payées ─────────────────────────────────
-        $this->invoice($dakarPharma, 'FAC-075', InvoiceStatus::Paid, 720_000,
+        $this->invoice($dakarPharma, 'FYK-FAC-075', InvoiceStatus::Paid, 720_000,
             issuedAt: '2026-01-08', dueAt: '2026-02-07', paidAt: '2026-02-03',
             lines: [
                 ['Assistance réglementaire pharmaceutique', 3, 200_000],
@@ -128,7 +128,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($transco, 'FAC-076', InvoiceStatus::Paid, 380_000,
+        $this->invoice($transco, 'FYK-FAC-076', InvoiceStatus::Paid, 380_000,
             issuedAt: '2026-01-12', dueAt: '2026-02-11', paidAt: '2026-02-08',
             lines: [
                 ['Optimisation des flux logistiques', 1, 280_000],
@@ -136,7 +136,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($sonatel, 'FAC-077', InvoiceStatus::Paid, 920_000,
+        $this->invoice($sonatel, 'FYK-FAC-077', InvoiceStatus::Paid, 920_000,
             issuedAt: '2026-01-18', dueAt: '2026-02-17', paidAt: '2026-02-12',
             lines: [
                 ['Déploiement infrastructure réseau (phase 1)', 1, 700_000],
@@ -144,7 +144,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($senwater, 'FAC-078', InvoiceStatus::Paid, 480_000,
+        $this->invoice($senwater, 'FYK-FAC-078', InvoiceStatus::Paid, 480_000,
             issuedAt: '2026-01-25', dueAt: '2026-02-24', paidAt: '2026-02-20',
             lines: [
                 ['Diagnostic réseau de distribution', 1, 380_000],
@@ -152,7 +152,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($portDakar, 'FAC-079', InvoiceStatus::Paid, 680_000,
+        $this->invoice($portDakar, 'FYK-FAC-079', InvoiceStatus::Paid, 680_000,
             issuedAt: '2026-01-28', dueAt: '2026-02-27', paidAt: '2026-02-25',
             lines: [
                 ['Optimisation gestion des conteneurs', 1, 550_000],
@@ -161,7 +161,7 @@ class PmeDashboardSeeder extends Seeder
         );
 
         // ── Février 2026 — 4 factures payées ─────────────────────────────────
-        $this->invoice($btpHorizon, 'FAC-080', InvoiceStatus::Paid, 850_000,
+        $this->invoice($btpHorizon, 'FYK-FAC-080', InvoiceStatus::Paid, 850_000,
             issuedAt: '2026-02-05', dueAt: '2026-03-07', paidAt: '2026-03-04',
             lines: [
                 ['Coordination travaux phase 2', 1, 650_000],
@@ -169,7 +169,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($africomm, 'FAC-081', InvoiceStatus::Paid, 560_000,
+        $this->invoice($africomm, 'FYK-FAC-081', InvoiceStatus::Paid, 560_000,
             issuedAt: '2026-02-10', dueAt: '2026-03-12', paidAt: '2026-03-08',
             lines: [
                 ['Déploiement solution VoIP', 1, 420_000],
@@ -177,7 +177,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($senwater, 'FAC-082', InvoiceStatus::Paid, 440_000,
+        $this->invoice($senwater, 'FYK-FAC-082', InvoiceStatus::Paid, 440_000,
             issuedAt: '2026-02-14', dueAt: '2026-03-16', paidAt: '2026-03-12',
             lines: [
                 ['Audit qualité eau potable', 1, 350_000],
@@ -185,7 +185,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($transco, 'FAC-083', InvoiceStatus::Paid, 620_000,
+        $this->invoice($transco, 'FYK-FAC-083', InvoiceStatus::Paid, 620_000,
             issuedAt: '2026-02-20', dueAt: '2026-03-22', paidAt: '2026-03-18',
             lines: [
                 ['Refonte du système de tracking', 1, 500_000],
@@ -196,7 +196,7 @@ class PmeDashboardSeeder extends Seeder
         // ── Impayés en retard ─────────────────────────────────────────────────
 
         // Critique (J+64) : émise le 20 déc → échéance 19 jan → 64 jours de retard
-        $fac085 = $this->invoice($atlan, 'FAC-085', InvoiceStatus::Overdue, 720_000,
+        $fac085 = $this->invoice($atlan, 'FYK-FAC-085', InvoiceStatus::Overdue, 720_000,
             issuedAt: '2025-12-20', dueAt: '2026-01-19', paidAt: null,
             lines: [
                 ['Gestion administrative immeuble — janv.', 1, 500_000],
@@ -204,13 +204,13 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        // 2 relances envoyées pour FAC-085
+        // 2 relances envoyées pour FYK-FAC-085
         Reminder::create([
             'invoice_id' => $fac085->id,
             'channel' => ReminderChannel::Email,
             'status' => ReminderStatus::Sent,
             'sent_at' => now()->subDays(45),
-            'message_body' => 'Rappel de paiement : facture FAC-085 échue depuis plus de 30 jours.',
+            'message_body' => 'Rappel de paiement : facture FYK-FAC-085 échue depuis plus de 30 jours.',
             'recipient_email' => 'direction@atlan.sn',
         ]);
 
@@ -219,22 +219,22 @@ class PmeDashboardSeeder extends Seeder
             'channel' => ReminderChannel::WhatsApp,
             'status' => ReminderStatus::Sent,
             'sent_at' => now()->subDays(15),
-            'message_body' => 'Bonjour, nous revenons vers vous concernant la facture FAC-085 de 849 600 F toujours impayée. Merci de régulariser.',
+            'message_body' => 'Bonjour, nous revenons vers vous concernant la facture FYK-FAC-085 de 849 600 F toujours impayée. Merci de régulariser.',
             'recipient_phone' => '+221338200012',
         ]);
 
         // Attention (J+31) : émise le 22 jan → échéance 21 fév → 31 jours de retard
-        $this->invoice($dakarPharma, 'FAC-088', InvoiceStatus::Overdue, 450_000,
+        $this->invoice($dakarPharma, 'FYK-FAC-088', InvoiceStatus::Overdue, 450_000,
             issuedAt: '2026-01-22', dueAt: '2026-02-21', paidAt: null,
             lines: [
                 ['Conseil en stratégie pharmaceutique', 2, 180_000],
                 ['Veille réglementaire mensuelle', 1, 90_000],
             ]
         );
-        // Pas encore de relance envoyée pour FAC-088
+        // Pas encore de relance envoyée pour FYK-FAC-088
 
         // ── Mars 2026 — 6 factures payées ────────────────────────────────────
-        $this->invoice($btpHorizon, 'FAC-089', InvoiceStatus::Paid, 900_000,
+        $this->invoice($btpHorizon, 'FYK-FAC-089', InvoiceStatus::Paid, 900_000,
             issuedAt: '2026-03-03', dueAt: '2026-04-02', paidAt: '2026-03-10',
             lines: [
                 ['Coordination chantier résidence Les Almadies', 1, 700_000],
@@ -242,7 +242,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($sonatel, 'FAC-090', InvoiceStatus::Paid, 1_000_000,
+        $this->invoice($sonatel, 'FYK-FAC-090', InvoiceStatus::Paid, 1_000_000,
             issuedAt: '2026-03-05', dueAt: '2026-04-04', paidAt: '2026-03-15',
             lines: [
                 ['Déploiement infrastructure réseau (phase 2)', 1, 800_000],
@@ -250,7 +250,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($portDakar, 'FAC-091', InvoiceStatus::Paid, 700_000,
+        $this->invoice($portDakar, 'FYK-FAC-091', InvoiceStatus::Paid, 700_000,
             issuedAt: '2026-03-10', dueAt: '2026-04-09', paidAt: '2026-03-18',
             lines: [
                 ['Conseil en gestion portuaire', 1, 550_000],
@@ -258,7 +258,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($btpHorizon, 'FAC-092', InvoiceStatus::Paid, 550_000,
+        $this->invoice($btpHorizon, 'FYK-FAC-092', InvoiceStatus::Paid, 550_000,
             issuedAt: '2026-03-12', dueAt: '2026-04-11', paidAt: '2026-03-20',
             lines: [
                 ['Suivi chantier résidence (mars)', 1, 420_000],
@@ -266,7 +266,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($senwater, 'FAC-093', InvoiceStatus::Paid, 750_000,
+        $this->invoice($senwater, 'FYK-FAC-093', InvoiceStatus::Paid, 750_000,
             issuedAt: '2026-03-14', dueAt: '2026-04-13', paidAt: '2026-03-21',
             lines: [
                 ['Audit complet réseau de distribution Q1', 1, 600_000],
@@ -274,7 +274,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($sonatel, 'FAC-094', InvoiceStatus::Paid, 400_000,
+        $this->invoice($sonatel, 'FYK-FAC-094', InvoiceStatus::Paid, 400_000,
             issuedAt: '2026-03-22', dueAt: '2026-04-21', paidAt: '2026-03-23',
             lines: [
                 ['Maintenance corrective système', 1, 300_000],
@@ -283,7 +283,7 @@ class PmeDashboardSeeder extends Seeder
         );
 
         // ── Mars 2026 — 5 factures envoyées (à encaisser) ────────────────────
-        $this->invoice($dakarPharma, 'FAC-095', InvoiceStatus::Sent, 1_200_000,
+        $this->invoice($dakarPharma, 'FYK-FAC-095', InvoiceStatus::Sent, 1_200_000,
             issuedAt: '2026-03-23', dueAt: '2026-04-22', paidAt: null,
             lines: [
                 ['Audit qualité laboratoire pharmaceutique', 1, 900_000],
@@ -291,7 +291,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($transco, 'FAC-096', InvoiceStatus::Sent, 680_000,
+        $this->invoice($transco, 'FYK-FAC-096', InvoiceStatus::Sent, 680_000,
             issuedAt: '2026-03-22', dueAt: '2026-04-21', paidAt: null,
             lines: [
                 ['Système de tracking temps réel', 1, 550_000],
@@ -299,7 +299,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($africomm, 'FAC-097', InvoiceStatus::Sent, 500_000,
+        $this->invoice($africomm, 'FYK-FAC-097', InvoiceStatus::Sent, 500_000,
             issuedAt: '2026-03-21', dueAt: '2026-04-20', paidAt: null,
             lines: [
                 ['Intégration API partenaires', 1, 380_000],
@@ -307,7 +307,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($senwater, 'FAC-098', InvoiceStatus::Sent, 360_000,
+        $this->invoice($senwater, 'FYK-FAC-098', InvoiceStatus::Sent, 360_000,
             issuedAt: '2026-03-18', dueAt: '2026-04-17', paidAt: null,
             lines: [
                 ['Analyse qualité réseau Q1 2026', 1, 280_000],
@@ -315,7 +315,7 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        $this->invoice($portDakar, 'FAC-099', InvoiceStatus::Sent, 420_000,
+        $this->invoice($portDakar, 'FYK-FAC-099', InvoiceStatus::Sent, 420_000,
             issuedAt: '2026-03-16', dueAt: '2026-04-15', paidAt: null,
             lines: [
                 ['Optimisation flux conteneurs Q1', 1, 350_000],
@@ -389,8 +389,8 @@ class PmeDashboardSeeder extends Seeder
         $transco = Client::where('company_id', $this->company->id)->where('name', 'Transco SARL')->first();
         $africomm = Client::where('company_id', $this->company->id)->where('name', 'Africomm CI SARL')->first();
 
-        // DEV-010 · Sonatel SA · 850 000 F · Accepté il y a 3 semaines
-        $this->quote($sonatel, 'DEV-010', QuoteStatus::Accepted, 850_000,
+        // FYK-DEV-010 · Sonatel SA · 850 000 F · Accepté il y a 3 semaines
+        $this->quote($sonatel, 'FYK-DEV-010', QuoteStatus::Accepted, 850_000,
             issuedAt: now()->subDays(21)->toDateString(),
             validUntil: now()->subDays(21)->addDays(30)->toDateString(),
             lines: [
@@ -399,8 +399,8 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        // DEV-011 · BTP Horizon · 1 200 000 F · Envoyé il y a 5 jours
-        $this->quote($btpHorizon, 'DEV-011', QuoteStatus::Sent, 1_200_000,
+        // FYK-DEV-011 · BTP Horizon · 1 200 000 F · Envoyé il y a 5 jours
+        $this->quote($btpHorizon, 'FYK-DEV-011', QuoteStatus::Sent, 1_200_000,
             issuedAt: now()->subDays(5)->toDateString(),
             validUntil: now()->subDays(5)->addDays(30)->toDateString(),
             lines: [
@@ -409,8 +409,8 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        // DEV-012 · Transco SARL · 680 000 F · Envoyé il y a 8 jours
-        $this->quote($transco, 'DEV-012', QuoteStatus::Sent, 680_000,
+        // FYK-DEV-012 · Transco SARL · 680 000 F · Envoyé il y a 8 jours
+        $this->quote($transco, 'FYK-DEV-012', QuoteStatus::Sent, 680_000,
             issuedAt: now()->subDays(8)->toDateString(),
             validUntil: now()->subDays(8)->addDays(30)->toDateString(),
             lines: [
@@ -419,8 +419,8 @@ class PmeDashboardSeeder extends Seeder
             ]
         );
 
-        // DEV-013 · Africomm CI · 450 000 F · Refusé il y a 12 jours
-        $this->quote($africomm, 'DEV-013', QuoteStatus::Declined, 450_000,
+        // FYK-DEV-013 · Africomm CI · 450 000 F · Refusé il y a 12 jours
+        $this->quote($africomm, 'FYK-DEV-013', QuoteStatus::Declined, 450_000,
             issuedAt: now()->subDays(12)->toDateString(),
             validUntil: now()->subDays(12)->addDays(30)->toDateString(),
             lines: [
