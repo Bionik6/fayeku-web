@@ -213,7 +213,7 @@ class DashboardDemoSeeder extends Seeder
     {
         foreach (range(1, 12) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Paid,
                 'issued_at' => now()->subMonths(6)->addWeeks($i),
                 'due_at' => now()->subMonths(5)->addWeeks($i),
@@ -224,7 +224,7 @@ class DashboardDemoSeeder extends Seeder
 
         foreach (range(83, 88) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Overdue,
                 'issued_at' => now()->subDays(75),
                 'due_at' => now()->subDays(65),
@@ -234,7 +234,7 @@ class DashboardDemoSeeder extends Seeder
         }
 
         $this->createInvoice($sme, [
-            'reference' => 'FYK-FAC-089',
+            'reference' => $this->invoiceRef(),
             'status' => InvoiceStatus::Overdue,
             'issued_at' => now()->subDays(72),
             'due_at' => now()->subDays(62),
@@ -250,7 +250,7 @@ class DashboardDemoSeeder extends Seeder
     {
         foreach (range(1, 8) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Paid,
                 'issued_at' => now()->subMonths(5)->addWeeks($i),
                 'due_at' => now()->subMonths(4)->addWeeks($i),
@@ -261,7 +261,7 @@ class DashboardDemoSeeder extends Seeder
 
         foreach (range(9, 13) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Overdue,
                 'issued_at' => now()->subDays(78),
                 'due_at' => now()->subDays(65),
@@ -279,7 +279,7 @@ class DashboardDemoSeeder extends Seeder
     {
         foreach (range(1, 7) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Paid,
                 'issued_at' => now()->subMonths(4)->addWeeks($i),
                 'due_at' => now()->subMonths(3)->addWeeks($i),
@@ -291,7 +291,7 @@ class DashboardDemoSeeder extends Seeder
         $overdueAmounts = [500_000, 450_000, 500_000];
         foreach ($overdueAmounts as $j => $amount) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', 8 + $j),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Overdue,
                 'issued_at' => now()->subDays(28 - ($j * 3)),
                 'due_at' => now()->subDays(18 - ($j * 3)),
@@ -305,7 +305,7 @@ class DashboardDemoSeeder extends Seeder
     {
         foreach (range(1, 4) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Paid,
                 'issued_at' => now()->subMonths(3)->addWeeks($i),
                 'due_at' => now()->subMonths(2)->addWeeks($i),
@@ -315,7 +315,7 @@ class DashboardDemoSeeder extends Seeder
         }
 
         $this->createInvoice($sme, [
-            'reference' => 'FYK-FAC-005',
+            'reference' => $this->invoiceRef(),
             'status' => InvoiceStatus::Overdue,
             'issued_at' => now()->subDays($overdueAgoDays + 15),
             'due_at' => now()->subDays($overdueAgoDays),
@@ -328,7 +328,7 @@ class DashboardDemoSeeder extends Seeder
     {
         foreach (range(1, 5) as $i) {
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Paid,
                 'issued_at' => now()->subDays($lastInvoiceAgoDays + (($i - 1) * 15)),
                 'due_at' => now()->subDays($lastInvoiceAgoDays - 15 + (($i - 1) * 15)),
@@ -343,7 +343,7 @@ class DashboardDemoSeeder extends Seeder
         foreach (range(1, $count) as $i) {
             $isLatest = $i === $count;
             $this->createInvoice($sme, [
-                'reference' => sprintf('FYK-FAC-%03d', $i),
+                'reference' => $this->invoiceRef(),
                 'status' => InvoiceStatus::Paid,
                 'issued_at' => $isLatest ? now()->subDays(rand(1, 7)) : now()->subMonths(4)->addWeeks($i),
                 'due_at' => $isLatest ? now()->addDays(23) : now()->subMonths(3)->addWeeks($i),
@@ -413,6 +413,11 @@ class DashboardDemoSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    private function invoiceRef(): string
+    {
+        return 'FYK-FAC-'.Str::upper(Str::random(6));
     }
 
     /**
