@@ -319,6 +319,7 @@ class ClientService
                 'issued_at_label' => format_date($quote->issued_at),
                 'total' => (int) $quote->total,
                 'status' => $this->quoteStatusLabel($quote->status),
+                'status_tone' => $this->quoteStatusTone($quote->status),
             ])->all(),
             'payments' => $payments,
             'reminders' => $reminders,
@@ -636,6 +637,16 @@ class ClientService
             QuoteStatus::Accepted => 'Accepté',
             QuoteStatus::Declined => 'Refusé',
             QuoteStatus::Expired => 'Expiré',
+        };
+    }
+
+    private function quoteStatusTone(QuoteStatus $status): string
+    {
+        return match ($status) {
+            QuoteStatus::Accepted => 'green',
+            QuoteStatus::Sent => 'blue',
+            QuoteStatus::Declined => 'red',
+            QuoteStatus::Draft, QuoteStatus::Expired => 'gray',
         };
     }
 }

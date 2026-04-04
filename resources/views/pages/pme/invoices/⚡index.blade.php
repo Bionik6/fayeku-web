@@ -33,6 +33,8 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $selectedInvoiceId = null;
 
+    public ?string $timelineInvoiceId = null;
+
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
 
@@ -79,6 +81,44 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
     public function closeInvoice(): void
     {
         $this->selectedInvoiceId = null;
+    }
+
+    #[Computed]
+    public function timelineInvoice(): ?Invoice
+    {
+        if (! $this->timelineInvoiceId || ! $this->company) {
+            return null;
+        }
+
+        $invoice = Invoice::query()
+            ->with(['client', 'reminders'])
+            ->where('company_id', $this->company->id)
+            ->whereKey($this->timelineInvoiceId)
+            ->first();
+
+        $invoice?->setRelation(
+            'reminders',
+            $invoice->reminders->sortBy('created_at')->values()
+        );
+
+        return $invoice;
+    }
+
+    public function openTimeline(string $invoiceId): void
+    {
+        abort_unless($this->company, 403);
+
+        Invoice::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($invoiceId);
+
+        $this->timelineInvoiceId = $invoiceId;
+        $this->selectedInvoiceId = null;
+    }
+
+    public function closeTimeline(): void
+    {
+        $this->timelineInvoiceId = null;
     }
 
     public function deleteInvoice(string $invoiceId): void
@@ -228,7 +268,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         return $this->allRowsCache = Invoice::query()
             ->where('company_id', $this->company->id)
             ->whereNotIn('status', [InvoiceStatus::Cancelled])
-            ->with('client')
+            ->with(['client', 'reminders'])
             ->orderByDesc('issued_at')
             ->orderByDesc('created_at')
             ->get()
@@ -237,19 +277,20 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                 $isOverdue = $inv->status === InvoiceStatus::Overdue;
 
                 return [
-                    'id'           => $inv->id,
-                    'reference'    => $inv->reference ?? '—',
-                    'client_name'  => $inv->client?->name ?? '—',
-                    'subtotal'     => $inv->subtotal,
-                    'tax_amount'   => $inv->tax_amount,
-                    'total'        => $inv->total,
-                    'currency'     => $inv->currency,
-                    'issued_at'    => $inv->issued_at,
-                    'due_at'       => $inv->due_at,
-                    'status_value' => $inv->status->value,
-                    'is_overdue'   => $isOverdue,
-                    'delay_days'   => $isOverdue ? $delayDays : 0,
-                    'amount_paid'  => $inv->amount_paid,
+                    'id'              => $inv->id,
+                    'reference'       => $inv->reference ?? '—',
+                    'client_name'     => $inv->client?->name ?? '—',
+                    'subtotal'        => $inv->subtotal,
+                    'tax_amount'      => $inv->tax_amount,
+                    'total'           => $inv->total,
+                    'currency'        => $inv->currency,
+                    'issued_at'       => $inv->issued_at,
+                    'due_at'          => $inv->due_at,
+                    'status_value'    => $inv->status->value,
+                    'is_overdue'      => $isOverdue,
+                    'delay_days'      => $isOverdue ? $delayDays : 0,
+                    'amount_paid'     => $inv->amount_paid,
+                    'reminders_count' => $inv->reminders->count(),
                 ];
             })
             ->toArray();
@@ -574,6 +615,13 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                                 <flux:icon name="eye" class="size-4 text-slate-500" />
                                                 {{ __('Voir la facture') }}
                                             </flux:menu.item>
+                                            <flux:menu.item wire:click="openTimeline('{{ $row['id'] }}')">
+                                                <flux:icon name="clock" class="size-4 text-slate-500" />
+                                                {{ __('Voir les relances') }}
+                                                @if ($row['reminders_count'] > 0)
+                                                    <flux:badge size="sm" color="zinc" class="ml-auto">{{ $row['reminders_count'] }}</flux:badge>
+                                                @endif
+                                            </flux:menu.item>
                                             @if (in_array($row['status_value'], ['draft', 'sent']))
                                                 <flux:menu.item :href="route('pme.invoices.edit', $row['id'])" wire:navigate>
                                                     <flux:icon name="pencil-square" class="size-4 text-slate-500" />
@@ -658,5 +706,31 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
     @endif
 
+    {{-- Slide-over historique des relances --}}
+    @if ($timelineInvoiceId && $this->timelineInvoice)
+        <div
+            class="fixed inset-0 z-50 flex justify-end bg-black/40"
+            wire:click.self="closeTimeline"
+            x-data
+            @keydown.escape.window="$wire.closeTimeline()"
+        >
+            <div class="flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                    <div>
+                        <h3 class="font-semibold text-ink">{{ __('Historique des relances') }}</h3>
+                        <p class="mt-0.5 text-sm text-slate-600">
+                            {{ $this->timelineInvoice->reference }} · {{ $this->timelineInvoice->client?->name }}
+                        </p>
+                    </div>
+                    <button wire:click="closeTimeline" class="rounded-xl p-2 transition hover:bg-slate-100">
+                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 py-6">
+                    <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

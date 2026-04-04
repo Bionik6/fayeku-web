@@ -332,9 +332,7 @@ test('la fiche client affiche les totaux, les relances, les devis et la chronolo
         ->assertSee('Dakar Pharma')
         ->assertSee('Informations client')
         ->assertSee('Factures et impayés')
-        ->assertSee('Relances')
-        ->assertSee('Chronologie des interactions')
-        ->assertSee('Merci de régulariser la facture FAC-101.');
+        ->assertSee('DEV-777');
 
     $detail = $component->get('detail');
 
@@ -356,9 +354,7 @@ test('la fiche client gere les etats vides sans erreurs', function () {
     Livewire::actingAs($user)
         ->test('pages::pme.clients.show', ['client' => $client])
         ->assertSee('Aucune facture liée à ce client pour le moment.')
-        ->assertSee('Aucun devis pour ce client pour le moment.')
-        ->assertSee('Aucun paiement enregistré pour ce client.')
-        ->assertSee('Aucune relance n’a encore été envoyée à ce client.');
+        ->assertSee('Aucun devis pour ce client pour le moment.');
 });
 
 test('la fiche client permet de modifier les informations client', function () {

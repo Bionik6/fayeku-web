@@ -42,6 +42,8 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $previewInvoiceId = null;
 
+    public ?string $timelineInvoiceId = null;
+
     public string $previewTone = 'cordial';
 
     public bool $previewAttachPdf = true;
@@ -168,6 +170,22 @@ public function viewInvoice(string $id): void
         $this->previewInvoiceId = null;
     }
 
+    public function openTimeline(string $invoiceId): void
+    {
+        abort_unless(
+            $this->client->invoices()->whereKey($invoiceId)->exists(),
+            404
+        );
+
+        $this->timelineInvoiceId = $invoiceId;
+        $this->selectedInvoiceId = null;
+    }
+
+    public function closeTimeline(): void
+    {
+        $this->timelineInvoiceId = null;
+    }
+
     public function sendReminder(string $invoiceId): void
     {
         abort_unless(
@@ -216,6 +234,28 @@ public function viewInvoice(string $id): void
             ->where('client_id', $this->client->id)
             ->whereKey($this->previewInvoiceId)
             ->first();
+    }
+
+    #[Computed]
+    public function timelineInvoice(): ?Invoice
+    {
+        if (! $this->timelineInvoiceId) {
+            return null;
+        }
+
+        $invoice = Invoice::query()
+            ->with(['client', 'reminders'])
+            ->where('company_id', $this->client->company_id)
+            ->where('client_id', $this->client->id)
+            ->whereKey($this->timelineInvoiceId)
+            ->first();
+
+        $invoice?->setRelation(
+            'reminders',
+            $invoice->reminders->sortBy('created_at')->values()
+        );
+
+        return $invoice;
     }
 
     /**
@@ -617,16 +657,30 @@ public function viewInvoice(string $id): void
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['reminders_count'] }}</td>
-                                <td class="px-4 py-4" @click.stop>
-                                    @if ($invoice['is_overdue'])
-                                        <button
-                                            wire:click="openPreview('{{ $invoice['id'] }}')"
-                                            class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 transition hover:bg-amber-100"
-                                        >
-                                            <flux:icon name="paper-airplane" class="size-3.5" />
-                                            {{ __('Relancer') }}
+                                <td class="px-4 py-4" x-on:click.stop>
+                                    <flux:dropdown position="bottom" align="end">
+                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                            {{ __('Actions') }}
+                                            <flux:icon name="chevron-down" class="size-3.5" />
                                         </button>
-                                    @endif
+                                        <flux:menu>
+                                            <flux:menu.item wire:click="viewInvoice('{{ $invoice['id'] }}')">
+                                                <flux:icon name="eye" class="size-4 text-slate-500" />
+                                                {{ __('Voir la facture') }}
+                                            </flux:menu.item>
+                                            <flux:menu.item wire:click="openTimeline('{{ $invoice['id'] }}')">
+                                                <flux:icon name="clock" class="size-4 text-slate-500" />
+                                                {{ __('Voir les relances') }}
+                                            </flux:menu.item>
+                                            @if ($invoice['is_overdue'])
+                                                <flux:menu.separator />
+                                                <flux:menu.item wire:click="openPreview('{{ $invoice['id'] }}')">
+                                                    <flux:icon name="paper-airplane" class="size-4 text-slate-500" />
+                                                    {{ __('Relancer le client') }}
+                                                </flux:menu.item>
+                                            @endif
+                                        </flux:menu>
+                                    </flux:dropdown>
                                 </td>
                             </tr>
                         @endforeach
@@ -640,126 +694,40 @@ public function viewInvoice(string $id): void
         @endif
     </section>
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <article class="app-shell-panel overflow-hidden">
-            <div class="border-b border-slate-100 px-6 py-4">
-                <h3 class="text-lg font-semibold text-ink">{{ __('Devis') }}</h3>
-                <p class="mt-1 text-sm text-slate-500">{{ __('Suivi des propositions commerciales envoyées à ce client.') }}</p>
-            </div>
-
-            @if (count($this->detail['quotes']) > 0)
-                <div class="divide-y divide-slate-100">
-                    @foreach ($this->detail['quotes'] as $quote)
-                        <div
-                            wire:key="client-quote-{{ $quote['id'] }}"
-                            wire:click="viewQuote('{{ $quote['id'] }}')"
-                            class="flex cursor-pointer items-center justify-between gap-4 px-6 py-4 transition hover:bg-slate-50/70"
-                        >
-                            <div>
-                                <p class="font-semibold text-ink">{{ $quote['reference'] }}</p>
-                                <p class="mt-1 text-sm text-slate-500">{{ $quote['issued_at_label'] }}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-semibold text-ink">{{ format_money($quote['total']) }}</p>
-                                <p class="mt-1 text-sm text-slate-500">{{ $quote['status'] }}</p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="px-6 py-12 text-center text-sm text-slate-500">
-                    {{ __('Aucun devis pour ce client pour le moment.') }}
-                </div>
-            @endif
-        </article>
-
-        <article class="app-shell-panel overflow-hidden">
-            <div class="border-b border-slate-100 px-6 py-4">
-                <h3 class="text-lg font-semibold text-ink">{{ __('Paiements') }}</h3>
-                <p class="mt-1 text-sm text-slate-500">{{ __('Encaissements reçus, y compris les paiements partiels enregistrés.') }}</p>
-            </div>
-
-            @if (count($this->detail['payments']) > 0)
-                <div class="divide-y divide-slate-100">
-                    @foreach ($this->detail['payments'] as $payment)
-                        <div
-                            wire:key="client-payment-{{ $payment['id'] }}"
-                            wire:click="viewInvoice('{{ $payment['id'] }}')"
-                            class="flex cursor-pointer items-center justify-between gap-4 px-6 py-4 transition hover:bg-slate-50/70"
-                        >
-                            <div>
-                                <p class="font-semibold text-ink">{{ $payment['reference'] }}</p>
-                                <p class="mt-1 text-sm text-slate-500">{{ $payment['paid_at_label'] }}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-semibold text-emerald-700">{{ format_money($payment['amount']) }}</p>
-                                <p class="mt-1 text-sm text-slate-500">{{ $payment['status'] }}</p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="px-6 py-12 text-center text-sm text-slate-500">
-                    {{ __('Aucun paiement enregistré pour ce client.') }}
-                </div>
-            @endif
-        </article>
-    </section>
-
-    <section @class([
-        'app-shell-panel overflow-hidden',
-        'ring-2 ring-primary/15' => $focus === 'relances',
-    ])>
-        <div class="border-b border-slate-100 px-6 py-4">
-            <h3 class="text-lg font-semibold text-ink">{{ __('Relances') }}</h3>
-            <p class="mt-1 text-sm text-slate-500">{{ __('Historique des rappels déjà envoyés à ce client et canaux utilisés.') }}</p>
-        </div>
-
-        <div class="px-6 py-6">
-            @php $noRemindersMsg = "Aucune relance n\u{2019}a encore \u{00e9}t\u{00e9} envoy\u{00e9}e \u{00e0} ce client."; @endphp
-            <x-collection.reminder-feed
-                :reminders="$this->detail['reminders']"
-                :show-invoice-ref="true"
-                :empty-message="$noRemindersMsg"
-            />
-        </div>
-    </section>
-
     <section class="app-shell-panel overflow-hidden">
         <div class="border-b border-slate-100 px-6 py-4">
-            <h3 class="text-lg font-semibold text-ink">{{ __('Chronologie des interactions') }}</h3>
-            <p class="mt-1 text-sm text-slate-500">{{ __('Un historique lisible des factures, devis, paiements et relances liés à ce client.') }}</p>
+            <h3 class="text-lg font-semibold text-ink">{{ __('Devis') }}</h3>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Suivi des propositions commerciales envoyées à ce client.') }}</p>
         </div>
 
-        @if (count($this->detail['timeline']) > 0)
+        @if (count($this->detail['quotes']) > 0)
             <div class="divide-y divide-slate-100">
-                @foreach ($this->detail['timeline'] as $index => $event)
+                @foreach ($this->detail['quotes'] as $quote)
                     <div
-                        wire:key="client-timeline-{{ $index }}"
-                        @class([
-                            'flex gap-4 px-6 py-4',
-                            'cursor-pointer transition hover:bg-slate-50/70' => filled($event['invoice_id']) || filled($event['quote_id']),
-                        ])
-                        @if (filled($event['invoice_id']))
-                            wire:click="viewInvoice('{{ $event['invoice_id'] }}')"
-                        @elseif (filled($event['quote_id']))
-                            wire:click="viewQuote('{{ $event['quote_id'] }}')"
-                        @endif
+                        wire:key="client-quote-{{ $quote['id'] }}"
+                        wire:click="viewQuote('{{ $quote['id'] }}')"
+                        class="flex cursor-pointer items-center justify-between gap-4 px-6 py-4 transition hover:bg-slate-50/70"
                     >
-                        <div class="mt-1 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-mist text-primary">
-                            <flux:icon name="sparkles" class="size-4" />
+                        <div>
+                            <p class="font-semibold text-ink">{{ $quote['reference'] }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $quote['issued_at_label'] }}</p>
                         </div>
-                        <div class="min-w-0">
-                            <p class="font-semibold text-ink">{{ $event['title'] }}</p>
-                            <p class="mt-1 text-sm text-slate-600">{{ $event['body'] }}</p>
-                            <p class="mt-1 text-sm text-slate-500">{{ $event['date_label'] }}</p>
+                        <div class="flex flex-col items-end gap-1.5">
+                            <p class="font-semibold text-ink">{{ format_money($quote['total']) }}</p>
+                            <span @class([
+                                'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
+                                'bg-gray-50 text-gray-600 inset-ring inset-ring-gray-500/10' => $quote['status_tone'] === 'gray',
+                                'bg-blue-50 text-blue-700 inset-ring inset-ring-blue-700/10' => $quote['status_tone'] === 'blue',
+                                'bg-green-50 text-green-700 inset-ring inset-ring-green-600/20' => $quote['status_tone'] === 'green',
+                                'bg-red-50 text-red-700 inset-ring inset-ring-red-600/10' => $quote['status_tone'] === 'red',
+                            ])>{{ $quote['status'] }}</span>
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
             <div class="px-6 py-12 text-center text-sm text-slate-500">
-                {{ __('La chronologie se remplira avec les premières interactions client.') }}
+                {{ __('Aucun devis pour ce client pour le moment.') }}
             </div>
         @endif
     </section>
@@ -1064,6 +1032,33 @@ public function viewInvoice(string $id): void
                     <flux:button variant="ghost" wire:click="closeQuote">
                         {{ __('Fermer') }}
                     </flux:button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Slide-over historique des relances --}}
+    @if ($timelineInvoiceId && $this->timelineInvoice)
+        <div
+            class="fixed inset-0 z-50 flex justify-end bg-black/40"
+            wire:click.self="closeTimeline"
+            x-data
+            @keydown.escape.window="$wire.closeTimeline()"
+        >
+            <div class="flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                    <div>
+                        <h3 class="font-semibold text-ink">{{ __('Historique des relances') }}</h3>
+                        <p class="mt-0.5 text-sm text-slate-600">
+                            {{ $this->timelineInvoice->reference }} · {{ $this->client->name }}
+                        </p>
+                    </div>
+                    <button wire:click="closeTimeline" class="rounded-xl p-2 transition hover:bg-slate-100">
+                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 py-6">
+                    <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
                 </div>
             </div>
         </div>
