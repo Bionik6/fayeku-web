@@ -708,29 +708,13 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     {{-- Slide-over historique des relances --}}
     @if ($timelineInvoiceId && $this->timelineInvoice)
-        <div
-            class="fixed inset-0 z-50 flex justify-end bg-black/40"
-            wire:click.self="closeTimeline"
-            x-data
-            @keydown.escape.window="$wire.closeTimeline()"
+        <x-ui.drawer
+            :title="__('Historique des relances')"
+            :subtitle="$this->timelineInvoice->reference . ' · ' . ($this->timelineInvoice->client?->name ?? '')"
+            close-action="closeTimeline"
         >
-            <div class="flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-                    <div>
-                        <h3 class="font-semibold text-ink">{{ __('Historique des relances') }}</h3>
-                        <p class="mt-0.5 text-sm text-slate-600">
-                            {{ $this->timelineInvoice->reference }} · {{ $this->timelineInvoice->client?->name }}
-                        </p>
-                    </div>
-                    <button wire:click="closeTimeline" class="rounded-xl p-2 transition hover:bg-slate-100">
-                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
-                    </button>
-                </div>
-                <div class="flex-1 overflow-y-auto px-6 py-6">
-                    <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
-                </div>
-            </div>
-        </div>
+            <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
+        </x-ui.drawer>
     @endif
 
 </div>

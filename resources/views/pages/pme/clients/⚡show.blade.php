@@ -48,6 +48,8 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
     public bool $previewAttachPdf = true;
 
+    public string $previewChannel = 'whatsapp';
+
     #[Url(as: 'focus')]
     public string $focus = '';
 
@@ -163,6 +165,7 @@ public function viewInvoice(string $id): void
         $this->previewInvoiceId = $invoiceId;
         $this->previewTone = $this->company->getReminderSetting('default_tone', 'cordial');
         $this->previewAttachPdf = (bool) $this->company->getReminderSetting('attach_pdf', true);
+        $this->previewChannel = $this->company->getReminderSetting('default_channel', 'whatsapp');
     }
 
     public function closePreview(): void
@@ -198,9 +201,7 @@ public function viewInvoice(string $id): void
             ->findOrFail($invoiceId);
 
         try {
-            $channel = ReminderChannel::from(
-                $this->company->getReminderSetting('default_channel', 'whatsapp')
-            );
+            $channel = ReminderChannel::from($this->previewChannel);
 
             $msg = $this->buildPreviewMessage();
             $messageBody = implode("\n\n", array_filter([
@@ -1039,29 +1040,13 @@ public function viewInvoice(string $id): void
 
     {{-- Slide-over historique des relances --}}
     @if ($timelineInvoiceId && $this->timelineInvoice)
-        <div
-            class="fixed inset-0 z-50 flex justify-end bg-black/40"
-            wire:click.self="closeTimeline"
-            x-data
-            @keydown.escape.window="$wire.closeTimeline()"
+        <x-ui.drawer
+            :title="__('Historique des relances')"
+            :subtitle="$this->timelineInvoice->reference . ' · ' . $this->client->name"
+            close-action="closeTimeline"
         >
-            <div class="flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-                    <div>
-                        <h3 class="font-semibold text-ink">{{ __('Historique des relances') }}</h3>
-                        <p class="mt-0.5 text-sm text-slate-600">
-                            {{ $this->timelineInvoice->reference }} · {{ $this->client->name }}
-                        </p>
-                    </div>
-                    <button wire:click="closeTimeline" class="rounded-xl p-2 transition hover:bg-slate-100">
-                        <flux:icon name="x-mark" class="size-5 text-slate-500" />
-                    </button>
-                </div>
-                <div class="flex-1 overflow-y-auto px-6 py-6">
-                    <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
-                </div>
-            </div>
-        </div>
+            <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
+        </x-ui.drawer>
     @endif
 
     {{-- Slide-over aperçu relance --}}
@@ -1072,6 +1057,7 @@ public function viewInvoice(string $id): void
             :company="$company"
             :preview-invoice-id="$previewInvoiceId"
             :preview-attach-pdf="$previewAttachPdf"
+            :preview-channel="$previewChannel"
         />
     @endif
 

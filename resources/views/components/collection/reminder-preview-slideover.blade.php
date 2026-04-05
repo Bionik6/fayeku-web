@@ -4,9 +4,38 @@
     'company',
     'previewInvoiceId',
     'previewAttachPdf' => true,
-    'closeAction' => 'closePreview',
-    'sendAction' => 'sendReminder',
+    'previewChannel'   => 'whatsapp',
+    'closeAction'      => 'closePreview',
+    'sendAction'       => 'sendReminder',
 ])
+
+<?php
+use Modules\PME\Collection\Enums\ReminderChannel;
+
+$client = $invoice->client;
+$availableChannels = [];
+
+if ($client?->email) {
+    $availableChannels[] = [
+        'value' => ReminderChannel::Email->value,
+        'label' => 'Email',
+        'icon'  => 'envelope',
+    ];
+}
+
+if ($client?->phone) {
+    $availableChannels[] = [
+        'value' => ReminderChannel::WhatsApp->value,
+        'label' => 'WhatsApp',
+        'icon'  => 'chat-bubble-left-right',
+    ];
+    $availableChannels[] = [
+        'value' => ReminderChannel::Sms->value,
+        'label' => 'SMS',
+        'icon'  => 'device-phone-mobile',
+    ];
+}
+?>
 
 <div
     class="fixed inset-0 z-50 flex justify-end bg-black/40"
@@ -45,6 +74,30 @@
 
         {{-- Options --}}
         <div class="space-y-4 border-t border-slate-100 px-6 py-4">
+
+            {{-- Channel selector --}}
+            @if (count($availableChannels) > 0)
+                <div>
+                    <label class="text-sm font-semibold text-slate-600">{{ __('Canal d\'envoi') }}</label>
+                    <div class="mt-1.5 flex gap-2">
+                        @foreach ($availableChannels as $ch)
+                            <button
+                                type="button"
+                                wire:click="$set('previewChannel', '{{ $ch['value'] }}')"
+                                @class([
+                                    'flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition',
+                                    'border-primary bg-primary/5 text-primary' => $previewChannel === $ch['value'],
+                                    'border-slate-200 text-slate-600 hover:bg-slate-50' => $previewChannel !== $ch['value'],
+                                ])
+                            >
+                                <flux:icon name="{{ $ch['icon'] }}" class="size-4" />
+                                {{ $ch['label'] }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="flex items-center gap-4">
                 <div class="flex-1">
                     <label class="text-sm font-semibold text-slate-600">{{ __('Ton du message') }}</label>
