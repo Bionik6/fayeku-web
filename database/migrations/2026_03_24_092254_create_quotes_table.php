@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('tax_amount')->default(0);
             $table->integer('total')->default(0);
             $table->integer('discount')->default(0);
+            $table->string('discount_type')->default('percent');
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();

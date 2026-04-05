@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('company_id');
             $table->string('client_id')->nullable();
+            $table->string('quote_id')->nullable();
             $table->string('reference')->nullable();
             $table->string('status')->default('draft');
             $table->string('currency', 3)->default('XOF');
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->integer('tax_amount')->default(0);
             $table->integer('total')->default(0);
             $table->integer('discount')->default(0);
+            $table->string('discount_type', 10)->default('percent');
             $table->integer('amount_paid')->default(0);
             $table->text('notes')->nullable();
             $table->text('payment_terms')->nullable();

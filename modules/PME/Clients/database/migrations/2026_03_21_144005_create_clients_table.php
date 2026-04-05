@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('company_id');
             $table->string('name');
-            $table->string('sector')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->text('address')->nullable();
