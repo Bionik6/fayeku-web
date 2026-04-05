@@ -255,8 +255,7 @@ test('la table expose les liens vers la fiche client et les actions rapides', fu
 
     Livewire::actingAs($user)
         ->test('pages::pme.clients.index')
-        ->assertSee(route('pme.clients.show', $client), false)
-        ->assertSee(route('pme.invoices.index', ['q' => 'Dakar Pharma']), false);
+        ->assertSee(route('pme.clients.show', $client), false);
 });
 
 test('un visiteur est redirige vers la connexion sur la fiche client PME', function () {

@@ -50,6 +50,8 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
     public string $previewChannel = 'whatsapp';
 
+    public string $invoiceStatusFilter = 'all';
+
     #[Url(as: 'focus')]
     public string $focus = '';
 
@@ -171,6 +173,11 @@ public function viewInvoice(string $id): void
     public function closePreview(): void
     {
         $this->previewInvoiceId = null;
+    }
+
+    public function setInvoiceStatusFilter(string $status): void
+    {
+        $this->invoiceStatusFilter = $status;
     }
 
     public function openTimeline(string $invoiceId): void
@@ -612,7 +619,44 @@ public function viewInvoice(string $id): void
             <p class="mt-1 text-sm text-slate-500">{{ __('Historique des factures, montants restants dus et niveau de relance associé.') }}</p>
         </div>
 
-        @if (count($this->detail['invoices']) > 0)
+        @php
+            $allInvoices = collect($this->detail['invoices']);
+            $invoiceStatusCounts = $allInvoices->countBy('status_value');
+            $invoiceStatusTabs = [
+                'all'           => ['label' => 'Tous',       'dot' => null],
+                'sent'          => ['label' => 'Envoyée',    'dot' => 'bg-blue-500'],
+                'paid'          => ['label' => 'Payée',      'dot' => 'bg-accent'],
+                'overdue'       => ['label' => 'En retard',  'dot' => 'bg-rose-500'],
+                'partially_paid' => ['label' => 'Part. payée', 'dot' => 'bg-amber-500'],
+            ];
+            $filteredInvoices = $invoiceStatusFilter === 'all'
+                ? $allInvoices
+                : $allInvoices->where('status_value', $invoiceStatusFilter);
+        @endphp
+
+        @if ($allInvoices->isNotEmpty())
+            <div class="flex flex-wrap gap-2 border-b border-slate-100 px-6 py-4">
+                @foreach ($invoiceStatusTabs as $key => $tab)
+                    @php $count = $key === 'all' ? $allInvoices->count() : ($invoiceStatusCounts[$key] ?? 0); @endphp
+                    @if ($key === 'all' || $count > 0)
+                        <button
+                            wire:click="setInvoiceStatusFilter('{{ $key }}')"
+                            @class([
+                                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-semibold transition',
+                                'bg-ink text-white shadow-sm'               => $invoiceStatusFilter === $key,
+                                'bg-slate-100 text-slate-600 hover:bg-slate-200' => $invoiceStatusFilter !== $key,
+                            ])
+                        >
+                            @if ($tab['dot'])
+                                <span class="size-1.5 rounded-full {{ $tab['dot'] }}"></span>
+                            @endif
+                            {{ __($tab['label']) }}
+                            <span class="opacity-70">{{ $count }}</span>
+                        </button>
+                    @endif
+                @endforeach
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[760px] text-sm">
                     <thead>
@@ -628,7 +672,7 @@ public function viewInvoice(string $id): void
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @foreach ($this->detail['invoices'] as $invoice)
+                        @foreach ($filteredInvoices as $invoice)
                             <tr
                                 wire:key="client-invoice-{{ $invoice['id'] }}"
                                 wire:click="viewInvoice('{{ $invoice['id'] }}')"
