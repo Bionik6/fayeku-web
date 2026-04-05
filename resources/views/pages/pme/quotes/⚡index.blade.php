@@ -35,6 +35,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $selectedQuoteId = null;
 
+    public ?string $selectedInvoiceId = null;
+
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
 
@@ -81,6 +83,36 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     public function closeQuote(): void
     {
         $this->selectedQuoteId = null;
+    }
+
+    #[Computed]
+    public function selectedInvoice(): ?Invoice
+    {
+        if (! $this->selectedInvoiceId || ! $this->company) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->with(['client', 'lines'])
+            ->where('company_id', $this->company->id)
+            ->whereKey($this->selectedInvoiceId)
+            ->first();
+    }
+
+    public function viewInvoice(string $invoiceId): void
+    {
+        abort_unless($this->company, 403);
+
+        Invoice::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($invoiceId);
+
+        $this->selectedInvoiceId = $invoiceId;
+    }
+
+    public function closeInvoice(): void
+    {
+        $this->selectedInvoiceId = null;
     }
 
     public function deleteQuote(string $quoteId): void
@@ -501,7 +533,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Date émission') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Valide jusqu\'au') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Facture') }}</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -568,19 +599,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                     </span>
                                 </td>
 
-                                {{-- Facture --}}
-                                <td class="px-4 py-4" x-on:click.stop>
-                                    @if ($row['has_invoice'])
-                                        <a
-                                            href="{{ route('pme.invoices.index') }}"
-                                            wire:navigate
-                                            class="text-sm font-semibold text-primary hover:underline"
-                                        >{{ __('Ouvrir') }}</a>
-                                    @else
-                                        <span class="text-sm text-slate-400">{{ __('Aucune') }}</span>
-                                    @endif
-                                </td>
-
                                 {{-- Actions --}}
                                 <td class="px-4 py-4" x-on:click.stop>
                                     <flux:dropdown position="bottom" align="end">
@@ -594,6 +612,18 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                                 <flux:icon name="eye" class="size-4 text-slate-500" />
                                                 {{ __('Voir le devis') }}
                                             </flux:menu.item>
+
+                                            @if ($row['has_invoice'])
+                                                <flux:menu.separator />
+                                                <flux:menu.item wire:click="viewInvoice('{{ $row['invoice_id'] }}')">
+                                                    <flux:icon name="document-text" class="size-4 text-slate-500" />
+                                                    {{ __('Voir la facture') }}
+                                                </flux:menu.item>
+                                                <flux:menu.item :href="route('pme.invoices.pdf', $row['invoice_id'])" target="_blank">
+                                                    <flux:icon name="document-arrow-down" class="size-4 text-slate-500" />
+                                                    {{ __('Afficher la facture en PDF') }}
+                                                </flux:menu.item>
+                                            @endif
 
                                             @if (in_array($row['status_value'], ['draft', 'sent']))
                                                 <flux:menu.item :href="route('pme.quotes.edit', $row['id'])" wire:navigate>
@@ -680,6 +710,12 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         @endif
 
     </section>
+
+
+    {{-- Invoice detail modal --}}
+    @if ($this->selectedInvoice)
+        <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
+    @endif
 
     {{-- Quote detail modal --}}
     @if ($this->selectedQuote)

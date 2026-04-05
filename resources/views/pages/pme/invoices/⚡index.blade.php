@@ -615,6 +615,10 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                                 <flux:icon name="eye" class="size-4 text-slate-500" />
                                                 {{ __('Voir la facture') }}
                                             </flux:menu.item>
+                                            <flux:menu.item :href="route('pme.invoices.pdf', $row['id'])" target="_blank">
+                                                <flux:icon name="document-arrow-down" class="size-4 text-slate-500" />
+                                                {{ __('Afficher la facture en PDF') }}
+                                            </flux:menu.item>
                                             <flux:menu.item wire:click="openTimeline('{{ $row['id'] }}')">
                                                 <flux:icon name="clock" class="size-4 text-slate-500" />
                                                 {{ __('Voir les relances') }}

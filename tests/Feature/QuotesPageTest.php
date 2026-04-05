@@ -4,7 +4,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
+use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Enums\QuoteStatus;
+use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Models\Quote;
 use Modules\PME\Invoicing\Models\QuoteLine;
 use Modules\Shared\Models\User;
@@ -44,6 +46,28 @@ function makeQuote(Company $company, array $overrides = []): Quote
         'tax_amount' => 18_000,
         'total' => 118_000,
         'discount' => 0,
+    ], $overrides)));
+}
+
+/**
+ * Crée une facture liée à un devis.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function makeQuoteInvoice(Quote $quote, array $overrides = []): Invoice
+{
+    return Invoice::unguarded(fn () => Invoice::create(array_merge([
+        'company_id' => $quote->company_id,
+        'client_id' => $quote->client_id,
+        'quote_id' => $quote->id,
+        'reference' => 'FAC-'.fake()->unique()->numerify('###'),
+        'status' => InvoiceStatus::Sent->value,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 18_000,
+        'total' => 118_000,
+        'amount_paid' => 0,
     ], $overrides)));
 }
 
@@ -207,4 +231,96 @@ test('la modale de détail devis n\'affiche pas la réduction quand elle est nul
         ->test('pages::pme.quotes.index')
         ->call('viewQuote', $quote->id)
         ->assertDontSeeHtml('Réduction');
+});
+
+// ─── Devis converti en facture ────────────────────────────────────────────────
+
+test('rows expose has_invoice=true et invoice_id quand le devis est converti en facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company);
+    $invoice = makeQuoteInvoice($quote);
+
+    $rows = collect(
+        Livewire::actingAs($user)->test('pages::pme.quotes.index')->get('rows')
+    );
+
+    $row = $rows->firstWhere('id', $quote->id);
+
+    expect($row['has_invoice'])->toBeTrue();
+    expect($row['invoice_id'])->toBe($invoice->id);
+});
+
+test('rows expose has_invoice=false et invoice_id=null quand le devis n\'est pas converti', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company);
+
+    $rows = collect(
+        Livewire::actingAs($user)->test('pages::pme.quotes.index')->get('rows')
+    );
+
+    $row = $rows->firstWhere('id', $quote->id);
+
+    expect($row['has_invoice'])->toBeFalse();
+    expect($row['invoice_id'])->toBeNull();
+});
+
+test('viewInvoice() positionne selectedInvoiceId avec l\'id de la facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company);
+    $invoice = makeQuoteInvoice($quote);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id);
+});
+
+test('closeInvoice() remet selectedInvoiceId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company);
+    $invoice = makeQuoteInvoice($quote);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewInvoice', $invoice->id)
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+});
+
+test('la modale de facture est rendue après viewInvoice()', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company);
+    $invoice = makeQuoteInvoice($quote, ['reference' => 'FAC-MODAL-001']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSee('FAC-MODAL-001');
+});
+
+test('les options Voir la facture et PDF apparaissent dans le rendu quand le devis est facturé', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    $quote = makeQuote($company);
+    $invoice = makeQuoteInvoice($quote);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->assertSeeHtml('Voir la facture')
+        ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id));
+});
+
+test('les options Voir la facture et PDF n\'apparaissent pas quand le devis n\'est pas facturé', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+
+    makeQuote($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->assertDontSeeHtml('Voir la facture');
 });

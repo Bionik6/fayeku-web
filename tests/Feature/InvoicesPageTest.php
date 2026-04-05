@@ -846,3 +846,15 @@ test('la modale de détail n\'affiche pas la réduction quand elle est nulle', f
         ->call('viewInvoice', $invoice->id)
         ->assertDontSeeHtml('Réduction');
 });
+
+// ─── Actions dropdown ─────────────────────────────────────────────────────────
+
+test('le lien Afficher la facture en PDF est présent dans le dropdown Actions', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $invoice = makeInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id));
+});
