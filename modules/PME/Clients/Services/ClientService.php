@@ -437,15 +437,15 @@ class ClientService
             'average_late_days' => $averageLateDays,
             'late_count' => $lateCount,
             'payment_score' => $score,
-            'payment_label' => $this->paymentLabel($score),
-            'payment_tone' => $this->paymentTone($score),
+            'payment_label' => $score !== null ? $this->paymentLabel($score) : null,
+            'payment_tone' => $score !== null ? $this->paymentTone($score) : null,
             'score_explanation' => $this->scoreExplanation($score, $outstandingAmount, $lateCount, $remindersCount),
             'total_collected' => $totalCollected,
             'reminders_count' => $remindersCount,
             'is_active' => $isActive,
             'is_inactive' => ! $isActive,
-            'is_reliable' => $score >= 85 && $outstandingAmount === 0,
-            'is_watch' => $outstandingAmount > 0 || $score < 65,
+            'is_reliable' => $score !== null && $score >= 85 && $outstandingAmount === 0,
+            'is_watch' => $outstandingAmount > 0 || ($score !== null && $score < 65),
             'has_frequent_delays' => $lateCount >= 2 || $averageLateDays >= 15,
             'last_interaction_label' => $lastInteraction['label'],
             'last_interaction_detail' => $lastInteraction['detail'],
@@ -469,9 +469,9 @@ class ClientService
         int $lateCount,
         int $averageLateDays,
         int $remindersCount
-    ): int {
+    ): ?int {
         if ($invoiceCount === 0) {
-            return 60;
+            return null;
         }
 
         $outstandingRatio = $totalRevenue > 0 ? $outstandingAmount / $totalRevenue : 0;
@@ -579,8 +579,12 @@ class ClientService
         };
     }
 
-    private function scoreExplanation(int $score, int $outstandingAmount, int $lateCount, int $remindersCount): string
+    private function scoreExplanation(?int $score, int $outstandingAmount, int $lateCount, int $remindersCount): string
     {
+        if ($score === null) {
+            return 'Aucune facture enregistrée pour le moment.';
+        }
+
         if ($outstandingAmount === 0 && $lateCount === 0) {
             return 'Aucun impayé ni retard récent.';
         }

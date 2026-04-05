@@ -416,6 +416,7 @@ public function viewInvoice(string $id): void
                 <a href="{{ route('pme.clients.index') }}" wire:navigate class="text-sm font-semibold text-slate-500 transition hover:text-primary">
                     {{ __('← Retour aux clients') }}
                 </a>
+                @if ($this->detail['row']['payment_score'] !== null)
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                     <span @class([
                         'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold',
@@ -427,6 +428,7 @@ public function viewInvoice(string $id): void
                         {{ $this->detail['row']['payment_label'] }} · {{ $this->detail['row']['payment_score'] }}
                     </span>
                 </div>
+                @endif
                 <h2 class="mt-3 text-3xl font-semibold tracking-tight text-ink">{{ $this->detail['row']['name'] }}</h2>
                 <p class="mt-2 text-sm text-slate-500">
                     {{ $this->detail['row']['last_interaction_label'] }} · {{ $this->detail['row']['last_interaction_detail'] }}
@@ -579,17 +581,23 @@ public function viewInvoice(string $id): void
                 <p class="mt-1 text-sm text-slate-500">{{ __('Le score reste explicable: délai moyen, retards, impayés et fréquence de relance.') }}</p>
                 <div class="mt-5 flex items-end justify-between gap-4">
                     <div>
-                        <p class="text-4xl font-semibold tracking-tight text-ink">{{ $this->detail['row']['payment_score'] }}</p>
+                        @if ($this->detail['row']['payment_score'] !== null)
+                            <p class="text-4xl font-semibold tracking-tight text-ink">{{ $this->detail['row']['payment_score'] }}</p>
+                        @else
+                            <p class="text-4xl font-semibold tracking-tight text-slate-300">—</p>
+                        @endif
                     </div>
-                    <span @class([
-                        'inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold',
-                        'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
-                        'bg-teal-50 text-teal-700' => $this->detail['row']['payment_tone'] === 'teal',
-                        'bg-amber-50 text-amber-700' => $this->detail['row']['payment_tone'] === 'amber',
-                        'bg-rose-50 text-rose-700' => $this->detail['row']['payment_tone'] === 'rose',
-                    ])>
-                        {{ $this->detail['row']['payment_label'] }}
-                    </span>
+                    @if ($this->detail['row']['payment_label'] !== null)
+                        <span @class([
+                            'inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold',
+                            'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
+                            'bg-teal-50 text-teal-700' => $this->detail['row']['payment_tone'] === 'teal',
+                            'bg-amber-50 text-amber-700' => $this->detail['row']['payment_tone'] === 'amber',
+                            'bg-rose-50 text-rose-700' => $this->detail['row']['payment_tone'] === 'rose',
+                        ])>
+                            {{ $this->detail['row']['payment_label'] }}
+                        </span>
+                    @endif
                 </div>
                 <p class="mt-4 text-sm text-slate-600">{{ $this->detail['row']['score_explanation'] }}</p>
             </article>
