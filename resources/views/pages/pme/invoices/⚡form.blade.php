@@ -27,6 +27,7 @@ class extends Component {
 
     public string $reference = '';
 
+    #[\Livewire\Attributes\Url(as: 'client')]
     public string $clientId = '';
 
     public string $clientSearch = '';
@@ -105,6 +106,18 @@ class extends Component {
         $this->company = auth()->user()->smeCompany();
 
         abort_unless($this->company, 403);
+
+        // Pre-select client when coming from the client detail page
+        if ($this->clientId !== '' && ! ($invoice && $invoice->exists)) {
+            $client = Client::query()
+                ->where('company_id', $this->company->id)
+                ->find($this->clientId);
+            if ($client) {
+                $this->sendRecipient = $client->email ?? $client->phone ?? '';
+            } else {
+                $this->clientId = '';
+            }
+        }
 
         if ($invoice && $invoice->exists) {
             abort_unless(auth()->user()->can('update', $invoice), 403);

@@ -892,3 +892,82 @@ test('confirmSaveDraft flash un message de succès pour le toaster', function ()
 
     expect(session('success'))->toBe('Brouillon enregistré avec succès.');
 });
+
+// ─── Pré-sélection du client via paramètre URL ────────────────────────────────
+
+test('le client est pré-sélectionné quand clientId est passé via URL', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['clientId' => $client->id])
+        ->assertSet('clientId', $client->id);
+});
+
+test('sendRecipient est initialisé avec l\'email du client quand il en a un', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'email'      => 'contact@acme.sn',
+        'phone'      => '+221771234567',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['clientId' => $client->id])
+        ->assertSet('sendRecipient', 'contact@acme.sn');
+});
+
+test('sendRecipient est initialisé avec le téléphone quand le client n\'a pas d\'email', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'email'      => null,
+        'phone'      => '+221771234567',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['clientId' => $client->id])
+        ->assertSet('sendRecipient', '+221771234567');
+});
+
+test('clientId est remis à vide si le client appartient à une autre entreprise', function () {
+    ['user' => $user] = createSmeUser();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $foreignClient = Client::factory()->create(['company_id' => $otherCompany->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['clientId' => $foreignClient->id])
+        ->assertSet('clientId', '');
+});
+
+test('clientId est remis à vide si l\'identifiant ne correspond à aucun client', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['clientId' => 'id-inexistant'])
+        ->assertSet('clientId', '');
+});
+
+test('le paramètre URL client est ignoré en mode édition de facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+    $otherClient = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', [
+            'invoice'  => $invoice,
+            'clientId' => $otherClient->id,
+        ])
+        ->assertSet('clientId', $invoice->client_id);
+});
+
+test('le bouton Nouvelle facture sur la fiche client pointe vers create avec le client en paramètre', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $expectedUrl = route('pme.invoices.create', ['client' => $client->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.clients.show', ['client' => $client])
+        ->assertSee($expectedUrl, escape: false);
+});
