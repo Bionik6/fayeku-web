@@ -617,7 +617,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     > 60j
                 </span>
             </div>
@@ -632,7 +632,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     30–60j
                 </span>
             </div>
@@ -647,7 +647,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="bell" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-sm font-semibold text-primary">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-teal-50 px-2.5 py-1 text-sm font-semibold text-primary">
                     < 30j
                 </span>
             </div>
@@ -662,7 +662,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-blue-50">
                     <flux:icon name="paper-airplane" class="size-5 text-blue-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-sm font-semibold text-blue-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-blue-50 px-2.5 py-1 text-sm font-semibold text-blue-700">
                     {{ $currentMonth }}
                 </span>
             </div>
@@ -700,7 +700,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                         <div>
                             <p class="font-semibold text-ink">{{ __('Automatique') }}</p>
                             @if ($isAuto)
-                                <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">{{ __('Actif') }}</span>
+                                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">{{ __('Actif') }}</span>
                             @endif
                         </div>
                     </div>
@@ -732,7 +732,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                         <div>
                             <p class="font-semibold text-ink">{{ __('Manuel') }}</p>
                             @if (! $isAuto)
-                                <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">{{ __('Actif') }}</span>
+                                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">{{ __('Actif') }}</span>
                             @endif
                         </div>
                     </div>
@@ -877,7 +877,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                 </td>
                                 <td class="px-4 py-4 text-center">
                                     <span @class([
-                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
+                                        'inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
                                         'bg-rose-50 text-rose-700' => $row['days_overdue'] > 60,
                                         'bg-amber-50 text-amber-700' => $row['days_overdue'] >= 30 && $row['days_overdue'] <= 60,
                                         'bg-slate-100 text-slate-600' => $row['days_overdue'] < 30,
@@ -890,7 +890,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                 <td class="px-4 py-4 text-slate-600">{{ $row['next_reminder_at'] ?? '—' }}</td>
                                 <td class="px-4 py-4 text-center">
                                     <span @class([
-                                        'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                                        'inline-flex whitespace-nowrap items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
                                         'bg-blue-50 text-blue-700' => $row['mode'] === 'auto',
                                         'bg-slate-100 text-slate-600' => $row['mode'] === 'manual',
                                     ])>

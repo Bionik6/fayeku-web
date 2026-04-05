@@ -34,7 +34,7 @@
                         &nbsp;·&nbsp;
                         {{ __('Échéance le') }} {{ format_date($inv->due_at) }}
                     </p>
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
+                    <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
                         {{ $statusConfig['label'] }}
                     </span>
                 </div>

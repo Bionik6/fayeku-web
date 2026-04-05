@@ -414,7 +414,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('En attente') }}
                 </span>
             </div>
@@ -427,7 +427,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-emerald-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ __('Acceptés') }}
                 </span>
             </div>
@@ -440,7 +440,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     {{ __('Expirés') }}
                 </span>
             </div>
@@ -558,7 +558,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                 <td class="px-6 py-4 font-semibold text-ink">
                                     {{ $row['reference'] }}
                                     @if ($row['has_invoice'])
-                                        <span class="ml-1.5 inline-flex items-center rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">{{ __('Facturé') }}</span>
+                                        <span class="ml-1.5 inline-flex whitespace-nowrap items-center rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">{{ __('Facturé') }}</span>
                                     @endif
                                 </td>
 
@@ -594,7 +594,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Statut --}}
                                 <td class="px-4 py-4">
-                                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
+                                    <span class="inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
                                         {{ $statusConfig['label'] }}
                                     </span>
                                 </td>
@@ -748,7 +748,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                     {{ __('Valide jusqu\'au') }} {{ format_date($q->valid_until) }}
                                 @endif
                             </p>
-                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
+                            <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
                                 {{ $statusConfig['label'] }}
                             </span>
                         </div>

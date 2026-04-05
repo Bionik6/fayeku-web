@@ -244,7 +244,7 @@ private function hasRecipientForChannel(Invoice $invoice, ReminderChannel $chann
                         <x-app.icon :name="$kpi['icon']" class="size-5" />
                     </div>
                     <span @class([
-                        'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold',
+                        'inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-1 text-sm font-semibold',
                         'bg-emerald-50 text-emerald-700' => $kpi['tone'] === 'emerald',
                         'bg-teal-50 text-teal-700' => $kpi['tone'] === 'teal',
                         'bg-amber-50 text-amber-700' => $kpi['tone'] === 'amber',
@@ -362,7 +362,7 @@ private function hasRecipientForChannel(Invoice $invoice, ReminderChannel $chann
                                 </td>
                                 <td class="px-6 py-4">
                                     <span @class([
-                                        'inline-flex rounded-full px-2.5 py-1 text-sm font-semibold',
+                                        'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-semibold',
                                         'bg-rose-50 text-rose-700' => $row['days_overdue'] > 0,
                                         'bg-slate-100 text-slate-600' => $row['days_overdue'] === 0,
                                     ])>
@@ -371,7 +371,7 @@ private function hasRecipientForChannel(Invoice $invoice, ReminderChannel $chann
                                 </td>
                                 <td class="px-6 py-4">
                                     <span @class([
-                                        'inline-flex rounded-full px-2.5 py-1 text-sm font-semibold',
+                                        'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-semibold',
                                         'bg-emerald-50 text-emerald-700' => $row['confidence_tone'] === 'emerald',
                                         'bg-amber-50 text-amber-700' => $row['confidence_tone'] === 'amber',
                                         'bg-rose-50 text-rose-700' => $row['confidence_tone'] === 'rose',
@@ -397,7 +397,7 @@ private function hasRecipientForChannel(Invoice $invoice, ReminderChannel $chann
                                 </td>
                                 <td class="px-6 py-4">
                                     <span @class([
-                                        'inline-flex rounded-full px-2.5 py-1 text-sm font-semibold',
+                                        'inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-semibold',
                                         'bg-teal-50 text-teal-700' => $row['status_tone'] === 'teal',
                                         'bg-amber-50 text-amber-700' => $row['status_tone'] === 'amber',
                                         'bg-rose-50 text-rose-700' => $row['status_tone'] === 'rose',

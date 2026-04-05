@@ -308,7 +308,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="users" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Actifs') }}
                 </span>
             </div>
@@ -321,7 +321,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-primary/8">
                     <flux:icon name="banknotes" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ $this->currentPeriodLabel }}
                 </span>
             </div>
@@ -340,7 +340,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="sparkles" class="size-5 text-emerald-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ $this->summary['best_payer']['score_label'] ?? __('À définir') }}
                 </span>
             </div>
@@ -358,7 +358,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="shield-exclamation" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     {{ $this->summary['watch_client']['score_label'] ?? __('Stable') }}
                 </span>
             </div>

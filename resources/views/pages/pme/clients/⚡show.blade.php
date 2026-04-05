@@ -419,7 +419,7 @@ public function viewInvoice(string $id): void
                 @if ($this->detail['row']['payment_score'] !== null)
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                     <span @class([
-                        'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold',
+                        'inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-1 text-sm font-semibold',
                         'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
                         'bg-teal-50 text-teal-700' => $this->detail['row']['payment_tone'] === 'teal',
                         'bg-amber-50 text-amber-700' => $this->detail['row']['payment_tone'] === 'amber',
@@ -454,7 +454,7 @@ public function viewInvoice(string $id): void
                 <div class="flex size-10 items-center justify-center rounded-xl bg-primary/8">
                     <flux:icon name="banknotes" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Cumul') }}
                 </span>
             </div>
@@ -473,7 +473,7 @@ public function viewInvoice(string $id): void
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-emerald-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ __('Encaissé') }}
                 </span>
             </div>
@@ -492,7 +492,7 @@ public function viewInvoice(string $id): void
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-circle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     {{ __('Ouvert') }}
                 </span>
             </div>
@@ -509,7 +509,7 @@ public function viewInvoice(string $id): void
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('Paiement') }}
                 </span>
             </div>
@@ -589,7 +589,7 @@ public function viewInvoice(string $id): void
                     </div>
                     @if ($this->detail['row']['payment_label'] !== null)
                         <span @class([
-                            'inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold',
+                            'inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold',
                             'bg-emerald-50 text-emerald-700' => $this->detail['row']['payment_tone'] === 'emerald',
                             'bg-teal-50 text-teal-700' => $this->detail['row']['payment_tone'] === 'teal',
                             'bg-amber-50 text-amber-700' => $this->detail['row']['payment_tone'] === 'amber',
@@ -699,7 +699,7 @@ public function viewInvoice(string $id): void
                                 </td>
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium ring-1 ring-inset',
+                                        'inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-1 text-sm font-medium ring-1 ring-inset',
                                         'bg-emerald-50 text-emerald-700 ring-emerald-200' => $invoice['status_tone'] === 'emerald',
                                         'bg-amber-50 text-amber-700 ring-amber-200' => $invoice['status_tone'] === 'amber',
                                         'bg-rose-50 text-rose-700 ring-rose-200' => $invoice['status_tone'] === 'rose',
@@ -768,7 +768,7 @@ public function viewInvoice(string $id): void
                         <div class="flex flex-col items-end gap-1.5">
                             <p class="font-semibold text-ink">{{ format_money($quote['total']) }}</p>
                             <span @class([
-                                'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
+                                'inline-flex whitespace-nowrap items-center rounded-full px-2 py-1 text-xs font-medium',
                                 'bg-gray-50 text-gray-600 inset-ring inset-ring-gray-500/10' => $quote['status_tone'] === 'gray',
                                 'bg-blue-50 text-blue-700 inset-ring inset-ring-blue-700/10' => $quote['status_tone'] === 'blue',
                                 'bg-green-50 text-green-700 inset-ring inset-ring-green-600/20' => $quote['status_tone'] === 'green',
@@ -934,7 +934,7 @@ public function viewInvoice(string $id): void
                                     {{ __('Valide jusqu\'au') }} {{ format_date($q->valid_until) }}
                                 @endif
                             </p>
-                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
+                            <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
                                 {{ $statusConfig['label'] }}
                             </span>
                         </div>

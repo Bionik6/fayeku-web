@@ -253,7 +253,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="document-text" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Ce mois') }}
                 </span>
             </div>
@@ -274,7 +274,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ __('Encaissé') }}
                 </span>
             </div>
@@ -301,7 +301,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('En attente') }}
                 </span>
             </div>
@@ -322,7 +322,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-rose-50 px-2.5 py-1 text-sm font-semibold text-rose-700">
                     &gt; 30j
                 </span>
             </div>
@@ -447,7 +447,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                             </div>
                             <div class="flex shrink-0 flex-col items-end gap-1">
                                 <p class="text-sm font-semibold text-ink">{{ format_money($inv['total']) }}</p>
-                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
+                                <span class="inline-flex whitespace-nowrap items-center rounded-full px-2 py-0.5 text-sm font-semibold ring-1 ring-inset {{ $statusConfig['class'] }}">
                                     {{ $statusConfig['label'] }}
                                 </span>
                             </div>
@@ -505,7 +505,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                 <td class="px-4 py-4 text-slate-500">{{ $row['last_reminder_label'] }}</td>
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
+                                        'inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
                                         'bg-rose-50 text-rose-700 ring-rose-600/20'    => $row['is_critical'],
                                         'bg-amber-50 text-amber-700 ring-amber-600/20' => ! $row['is_critical'],
                                     ])>
