@@ -7,6 +7,7 @@ use Modules\PME\Clients\Models\Client;
 use Modules\PME\Invoicing\Enums\QuoteStatus;
 use Modules\PME\Invoicing\Models\Quote;
 use Modules\PME\Invoicing\Models\QuoteLine;
+use Modules\PME\Invoicing\Services\InvoiceService;
 use Modules\Shared\Models\User;
 
 uses(RefreshDatabase::class);
@@ -232,4 +233,148 @@ test('saveDraft direct (sans modale) reste accessible pour les appels internes',
         ->assertNoRedirect();
 
     expect(Quote::query()->where('company_id', $company->id)->first())->not->toBeNull();
+});
+
+// ─── Discount type (alignement facture) ──────────────────────────────────────
+
+test('la page de création de devis initialise discountType à percent', function () {
+    ['user' => $user] = createSmeUserForQuoteForm();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->assertSet('discountType', 'percent');
+});
+
+test('changer discountType à fixed remet la remise à 0', function () {
+    ['user' => $user] = createSmeUserForQuoteForm();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->set('discount', 15)
+        ->set('discountType', 'fixed')
+        ->assertSet('discount', 0);
+});
+
+test('le devis est sauvegardé avec discountType percent', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->set('clientId', $client->id)
+        ->set('discountType', 'percent')
+        ->set('discount', 10)
+        ->set('lines.0.description', 'Prestation')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $quote = Quote::query()->where('company_id', $company->id)->first();
+    expect($quote->discount_type)->toBe('percent')
+        ->and($quote->discount)->toBe(10)
+        ->and($quote->subtotal)->toBe(100_000)
+        ->and($quote->total)->toBe(106_200); // 100k - 10% = 90k + 18% = 106.2k
+});
+
+test('le devis est sauvegardé avec discountType fixed', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->set('clientId', $client->id)
+        ->set('discountType', 'fixed')
+        ->set('discount', 5_000)
+        ->set('lines.0.description', 'Prestation')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $quote = Quote::query()->where('company_id', $company->id)->first();
+    expect($quote->discount_type)->toBe('fixed')
+        ->and($quote->discount)->toBe(5_000)
+        ->and($quote->subtotal)->toBe(100_000)
+        ->and($quote->total)->toBe(112_100); // 100k - 5k = 95k + 18% = 112.1k
+});
+
+test('la page d\'édition de devis charge le discountType existant', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $quote = Quote::unguarded(fn () => Quote::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'DEV-FIXED-001',
+        'currency' => 'XOF',
+        'status' => QuoteStatus::Draft->value,
+        'issued_at' => now(),
+        'valid_until' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 17_100,
+        'total' => 112_100,
+        'discount' => 5_000,
+        'discount_type' => 'fixed',
+    ]));
+
+    QuoteLine::query()->create([
+        'quote_id' => $quote->id,
+        'description' => 'Prestation',
+        'quantity' => 1,
+        'unit_price' => 100_000,
+        'tax_rate' => 18,
+        'total' => 100_000,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form', ['quote' => $quote])
+        ->assertSet('discountType', 'fixed')
+        ->assertSet('discount', 5_000);
+});
+
+test('taxMode fonctionne de la même façon sur facture et devis', function () {
+    ['user' => $user] = createSmeUserForQuoteForm();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->set('taxMode', '0')
+        ->assertSet('taxRate', 0)
+        ->set('taxMode', '18')
+        ->assertSet('taxRate', 18)
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', 25)
+        ->assertSet('taxRate', 25);
+});
+
+test('les totaux du devis correspondent aux totaux de la facture pour les mêmes données', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    // Save as quote
+    $quoteComponent = Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->set('clientId', $client->id)
+        ->set('discountType', 'percent')
+        ->set('discount', 10)
+        ->set('taxMode', '18')
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 2)
+        ->set('lines.0.unit_price', 50_000)
+        ->call('saveDraft');
+
+    $quote = Quote::query()->where('company_id', $company->id)->first();
+
+    // Same data with invoice service
+    $invoiceService = new InvoiceService;
+    $invoiceTotals = $invoiceService->calculateInvoiceTotals(
+        [['quantity' => 2, 'unit_price' => 50_000]],
+        18,
+        10,
+        'percent'
+    );
+
+    expect($quote->subtotal)->toBe($invoiceTotals['subtotal'])
+        ->and($quote->tax_amount)->toBe($invoiceTotals['tax_amount'])
+        ->and($quote->total)->toBe($invoiceTotals['total']);
 });

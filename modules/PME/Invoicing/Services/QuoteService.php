@@ -44,12 +44,15 @@ class QuoteService
     /**
      * Calculate quote-level totals from lines + global discount + global tax rate.
      *
+     * Order: subtotal → discount → discountedSubtotal → TVA → total
+     *
      * @param  array<int, array{quantity: int, unit_price: int}>  $lines
      * @param  int  $taxRate  Global tax rate percentage (e.g. 18)
-     * @param  int  $discount  Global discount percentage (e.g. 10)
+     * @param  int  $discount  Discount value — percentage (e.g. 10) or fixed amount in smallest unit
+     * @param  string  $discountType  'percent' or 'fixed'
      * @return array{subtotal: int, discount_amount: int, discounted_subtotal: int, tax_amount: int, total: int}
      */
-    public function calculateQuoteTotals(array $lines, int $taxRate = 0, int $discount = 0): array
+    public function calculateQuoteTotals(array $lines, int $taxRate = 0, int $discount = 0, string $discountType = 'percent'): array
     {
         $subtotal = 0;
 
@@ -57,7 +60,14 @@ class QuoteService
             $subtotal += $this->calculateLineTotal($line);
         }
 
-        $discountAmount = $discount > 0 ? (int) round($subtotal * $discount / 100) : 0;
+        if ($discount <= 0) {
+            $discountAmount = 0;
+        } elseif ($discountType === 'fixed') {
+            $discountAmount = min($discount, $subtotal);
+        } else {
+            $discountAmount = (int) round($subtotal * $discount / 100);
+        }
+
         $discountedSubtotal = $subtotal - $discountAmount;
         $taxAmount = $taxRate > 0 ? (int) round($discountedSubtotal * $taxRate / 100) : 0;
 
@@ -80,9 +90,10 @@ class QuoteService
     {
         $taxRate = (int) ($data['tax_rate'] ?? 0);
         $discount = (int) ($data['discount'] ?? 0);
+        $discountType = $data['discount_type'] ?? 'percent';
 
-        return DB::transaction(function () use ($company, $data, $lines, $taxRate, $discount) {
-            $totals = $this->calculateQuoteTotals($lines, $taxRate, $discount);
+        return DB::transaction(function () use ($company, $data, $lines, $taxRate, $discount, $discountType) {
+            $totals = $this->calculateQuoteTotals($lines, $taxRate, $discount, $discountType);
 
             $quote = Quote::query()->create([
                 'company_id' => $company->id,
@@ -96,6 +107,7 @@ class QuoteService
                 'tax_amount' => $totals['tax_amount'],
                 'total' => $totals['total'],
                 'discount' => $discount,
+                'discount_type' => $discountType,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -115,9 +127,10 @@ class QuoteService
     {
         $taxRate = (int) ($data['tax_rate'] ?? 0);
         $discount = (int) ($data['discount'] ?? 0);
+        $discountType = $data['discount_type'] ?? 'percent';
 
-        return DB::transaction(function () use ($quote, $data, $lines, $taxRate, $discount) {
-            $totals = $this->calculateQuoteTotals($lines, $taxRate, $discount);
+        return DB::transaction(function () use ($quote, $data, $lines, $taxRate, $discount, $discountType) {
+            $totals = $this->calculateQuoteTotals($lines, $taxRate, $discount, $discountType);
 
             $quote->update([
                 'client_id' => $data['client_id'],
@@ -128,6 +141,7 @@ class QuoteService
                 'tax_amount' => $totals['tax_amount'],
                 'total' => $totals['total'],
                 'discount' => $discount,
+                'discount_type' => $discountType,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -208,6 +222,7 @@ class QuoteService
                 'tax_amount' => $quote->tax_amount,
                 'total' => $quote->total,
                 'discount' => $quote->discount ?? 0,
+                'discount_type' => $quote->discount_type ?? 'percent',
                 'amount_paid' => 0,
                 'notes' => $quote->notes,
             ]);

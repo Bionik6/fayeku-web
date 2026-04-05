@@ -19,7 +19,7 @@ class Quote extends Model
     protected $fillable = [
         'company_id', 'client_id', 'reference', 'currency', 'status',
         'issued_at', 'valid_until',
-        'subtotal', 'tax_amount', 'total', 'discount', 'notes',
+        'subtotal', 'tax_amount', 'total', 'discount', 'discount_type', 'notes',
     ];
 
     protected $casts = [
