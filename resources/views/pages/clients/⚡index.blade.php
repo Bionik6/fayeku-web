@@ -491,7 +491,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Dernière facture --}}
                                 <td class="px-4 py-4 text-slate-600">{{ $row['last_invoice_label'] }}</td>
                                 {{-- Factures impayées --}}
-                                <td class="px-4 py-4">
+                                <td class="whitespace-nowrap px-4 py-4">
                                     @if ($row['unpaid_count'] > 0)
                                         <span @class([
                                             'font-semibold',
@@ -501,15 +501,15 @@ new #[Title('Clients')] class extends Component {
                                             {{ $row['unpaid_count'] }} {{ $row['unpaid_count'] > 1 ? 'factures' : 'facture' }}
                                         </span>
                                     @else
-                                        <span class="text-slate-500">0</span>
+                                        <span class="font-semibold text-slate-500">—</span>
                                     @endif
                                 </td>
                                 {{-- Montant en attente --}}
-                                <td class="px-4 py-4 font-semibold text-ink">
+                                <td class="whitespace-nowrap px-4 py-4">
                                     @if ($row['pending_amount'] > 0)
-                                        {{ format_money($row['pending_amount'], compact: true) }}
+                                        <span class="font-semibold text-ink">{{ format_money($row['pending_amount'], compact: true) }}</span>
                                     @else
-                                        <span class="text-slate-500">—</span>
+                                        <span class="font-semibold text-slate-500">—</span>
                                     @endif
                                 </td>
                                 {{-- Taux recouvrement --}}

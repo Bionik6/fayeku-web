@@ -349,7 +349,7 @@ new #[Title('Clients')] class extends Component {
 
     public string $exportPeriod = '';
 
-    public string $exportFormat = 'sage100';
+    public string $exportFormat = 'excel';
 
     /** @return array<int, array{value: string, label: string, type: string}> */
     #[Computed]
@@ -436,7 +436,7 @@ new #[Title('Clients')] class extends Component {
     public function mountExportModal(): void
     {
         $this->exportPeriod = now()->format('Y-m');
-        $this->exportFormat = 'sage100';
+        $this->exportFormat = 'excel';
         unset($this->exportInvoiceCount);
     }
 
@@ -881,9 +881,9 @@ new #[Title('Clients')] class extends Component {
                 <label class="text-sm/6 font-medium text-slate-700">{{ __('Format') }}</label>
                 <div class="mt-3 flex items-center space-x-10">
                     @foreach ([
+                        'excel'  => 'Excel',
                         'sage100' => 'Sage 100',
                         'ebp'    => 'EBP',
-                        'excel'  => 'Excel',
                     ] as $value => $label)
                         <div class="flex items-center">
                             <input

@@ -20,7 +20,7 @@ new #[Title('Export groupé')] class extends Component {
     // ─── Modal state ──────────────────────────────────────────────────────
     public string $exportPeriod = '';
 
-    public string $exportFormat = 'sage100';
+    public string $exportFormat = 'excel';
 
     public string $clientSelection = 'all';
 
@@ -133,7 +133,7 @@ new #[Title('Export groupé')] class extends Component {
     public function mountExportModal(): void
     {
         $this->exportPeriod = now()->format('Y-m');
-        $this->exportFormat = 'sage100';
+        $this->exportFormat = 'excel';
         $this->clientSelection = 'all';
         $this->selectedClientIds = [];
         unset($this->exportInvoiceCount);
@@ -242,7 +242,7 @@ new #[Title('Export groupé')] class extends Component {
         $this->clientSelection = 'manual';
         $this->selectedClientIds = [$companyId];
         $this->exportPeriod = now()->format('Y-m');
-        $this->exportFormat = 'sage100';
+        $this->exportFormat = 'excel';
         unset($this->exportInvoiceCount);
         unset($this->selectedClientsCount);
 
@@ -570,9 +570,9 @@ new #[Title('Export groupé')] class extends Component {
                 <label class="text-sm/6 font-medium text-slate-700">{{ __('Format') }}</label>
                 <div class="mt-3 flex items-center space-x-10">
                     @foreach ([
+                        'excel'  => 'Excel',
                         'sage100' => 'Sage 100',
                         'ebp'    => 'EBP',
-                        'excel'  => 'Excel',
                     ] as $value => $label)
                         <div class="flex items-center">
                             <input
