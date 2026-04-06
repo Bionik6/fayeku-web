@@ -698,16 +698,16 @@ new #[Title('Clients')] class extends Component {
         <div class="border-t border-slate-100 px-6 py-4">
             <div class="flex flex-wrap items-center gap-2">
                 @foreach ([
-                    ''        => ['label' => __('CA facturé'),          'count' => $this->invoiceCounts['month'],   'badge_active' => 'bg-white/20 text-white',          'badge_inactive' => 'bg-slate-100 text-slate-600'],
-                    'paid'    => ['label' => __('Total encaissé'),      'count' => $this->invoiceCounts['paid'],    'badge_active' => 'bg-white/20 text-white',          'badge_inactive' => 'bg-emerald-100 text-emerald-700'],
-                    'pending' => ['label' => __('Factures en attente'), 'count' => $this->invoiceCounts['pending'], 'badge_active' => 'bg-white/20 text-white',          'badge_inactive' => 'bg-rose-100 text-rose-600'],
+                    ''        => ['label' => __('CA facturé'),          'count' => $this->invoiceCounts['month'],   'active_class' => 'bg-primary text-white',       'badge_active' => 'bg-white/20 text-white', 'badge_inactive' => 'bg-slate-100 text-slate-600'],
+                    'paid'    => ['label' => __('Total encaissé'),      'count' => $this->invoiceCounts['paid'],    'active_class' => 'bg-emerald-600 text-white',   'badge_active' => 'bg-white/20 text-white', 'badge_inactive' => 'bg-emerald-100 text-emerald-700'],
+                    'pending' => ['label' => __('Factures en attente'), 'count' => $this->invoiceCounts['pending'], 'active_class' => 'bg-rose-500 text-white',      'badge_active' => 'bg-white/20 text-white', 'badge_inactive' => 'bg-rose-100 text-rose-600'],
                 ] as $key => $tab)
                     @php $isActive = $invoiceFilter === $key; @endphp
                     <button
                         wire:click="{{ $key === '' ? 'filterByBilledMonth' : ($key === 'paid' ? 'filterByPaid' : 'filterByPending') }}"
                         @class([
                             'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                            'bg-primary text-white'                                                                          => $isActive,
+                            $tab['active_class']                                                                             => $isActive,
                             'border border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'    => ! $isActive,
                         ])
                     >
