@@ -277,6 +277,26 @@ new #[Title('Clients')] class extends Component {
         };
     }
 
+    /**
+     * Compteurs par onglet de filtre.
+     *
+     * @return array{month: int, paid: int, pending: int}
+     */
+    #[Computed]
+    public function invoiceCounts(): array
+    {
+        $all = collect($this->allInvoices);
+
+        return [
+            'month'   => $all->filter(
+                fn ($inv) => $inv->issued_at->year === $this->selectedYear()
+                    && $inv->issued_at->month === $this->selectedMonth()
+            )->count(),
+            'paid'    => $all->filter(fn ($inv) => $inv->status === InvoiceStatus::Paid)->count(),
+            'pending' => $this->stats['pending_count'],
+        ];
+    }
+
     /** Facture sélectionnée pour la modale de détail. */
     #[Computed]
     public function selectedInvoice(): ?Invoice
@@ -529,7 +549,7 @@ new #[Title('Clients')] class extends Component {
             x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
             @class([
                 'app-shell-panel p-5 cursor-pointer transition',
-                'ring-2 ring-primary' => $invoiceFilter === '',
+                'ring-2 ring-slate-400' => $invoiceFilter === '',
             ])
         >
             <div class="flex items-start justify-between">
@@ -552,7 +572,7 @@ new #[Title('Clients')] class extends Component {
             x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
             @class([
                 'app-shell-panel p-5 cursor-pointer transition',
-                'ring-2 ring-primary' => $invoiceFilter === 'paid',
+                'ring-2 ring-emerald-500' => $invoiceFilter === 'paid',
             ])
         >
             <div class="flex items-start justify-between">
@@ -575,7 +595,8 @@ new #[Title('Clients')] class extends Component {
             x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
             @class([
                 'app-shell-panel p-5 cursor-pointer transition',
-                'ring-2 ring-primary' => $invoiceFilter === 'pending',
+                'ring-2 ring-rose-500'  => $invoiceFilter === 'pending' && $this->statusValue === 'critique',
+                'ring-2 ring-amber-500' => $invoiceFilter === 'pending' && $this->statusValue !== 'critique',
             ])
         >
             <div class="flex items-start justify-between">
@@ -639,15 +660,7 @@ new #[Title('Clients')] class extends Component {
 
         {{-- En-tête section --}}
         <div class="flex flex-col gap-3 p-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center">
-                <h3 class="text-xl font-semibold tracking-tight text-ink">{{ $this->invoiceSectionTitle }}</h3>
-                @if ($invoiceFilter !== '')
-                    <button wire:click="filterByBilledMonth" class="ml-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-200 transition">
-                        <flux:icon name="x-mark" class="size-3" />
-                        {{ __('Réinitialiser') }}
-                    </button>
-                @endif
-            </div>
+            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ $this->invoiceSectionTitle }}</h3>
 
             <div class="flex items-center gap-2">
                 {{-- Par page --}}
@@ -675,6 +688,34 @@ new #[Title('Clients')] class extends Component {
                         </select>
                     </x-select-native>
                 @endif
+            </div>
+        </div>
+
+        {{-- Filtres --}}
+        <div class="border-t border-slate-100 px-6 py-4">
+            <div class="flex flex-wrap items-center gap-2">
+                @foreach ([
+                    ''        => ['label' => __('CA facturé'),          'count' => $this->invoiceCounts['month'],   'badge_active' => 'bg-white/20 text-white',          'badge_inactive' => 'bg-slate-100 text-slate-600'],
+                    'paid'    => ['label' => __('Total encaissé'),      'count' => $this->invoiceCounts['paid'],    'badge_active' => 'bg-white/20 text-white',          'badge_inactive' => 'bg-emerald-100 text-emerald-700'],
+                    'pending' => ['label' => __('Factures en attente'), 'count' => $this->invoiceCounts['pending'], 'badge_active' => 'bg-white/20 text-white',          'badge_inactive' => 'bg-rose-100 text-rose-600'],
+                ] as $key => $tab)
+                    @php $isActive = $invoiceFilter === $key; @endphp
+                    <button
+                        wire:click="{{ $key === '' ? 'filterByBilledMonth' : ($key === 'paid' ? 'filterByPaid' : 'filterByPending') }}"
+                        @class([
+                            'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
+                            'bg-primary text-white'                                                                          => $isActive,
+                            'border border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'    => ! $isActive,
+                        ])
+                    >
+                        {{ $tab['label'] }}
+                        <span @class([
+                            'rounded-full px-1.5 py-px text-xs font-bold',
+                            $tab['badge_active']   => $isActive,
+                            $tab['badge_inactive'] => ! $isActive,
+                        ])>{{ $tab['count'] }}</span>
+                    </button>
+                @endforeach
             </div>
         </div>
 
