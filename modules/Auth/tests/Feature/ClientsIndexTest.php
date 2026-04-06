@@ -205,9 +205,9 @@ test('statusCounts retourne les bons totaux non filtrés', function () {
 
     expect($component->get('statusCounts'))->toBe([
         'all' => 3,
-        'a_jour' => 1,
-        'attente' => 1,
-        'critique' => 1,
+        'current' => 1,
+        'watch' => 1,
+        'critical' => 1,
     ]);
 });
 
@@ -223,11 +223,11 @@ test('statusCounts ne tient pas compte des filtres actifs', function () {
 
     $component = Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->call('setFilterStatus', 'critique');
+        ->call('setFilterStatus', 'critical');
 
     // Même avec le filtre critique actif, statusCounts.all reste 2
     expect($component->get('statusCounts')['all'])->toBe(2);
-    expect($component->get('statusCounts')['a_jour'])->toBe(1);
+    expect($component->get('statusCounts')['current'])->toBe(1);
 });
 
 // ─── Filtrage par statut ───────────────────────────────────────────────────────
@@ -249,11 +249,11 @@ test('setFilterStatus("critique") ne retourne que les clients critiques', functi
 
     $component = Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->call('setFilterStatus', 'critique');
+        ->call('setFilterStatus', 'critical');
 
     $rows = $component->get('rows');
     expect($rows)->toHaveCount(1);
-    expect($rows[0]['status'])->toBe('critique');
+    expect($rows[0]['status'])->toBe('critical');
 });
 
 test('setFilterStatus("a_jour") ne retourne que les clients sains', function () {
@@ -273,11 +273,11 @@ test('setFilterStatus("a_jour") ne retourne que les clients sains', function () 
 
     $component = Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->call('setFilterStatus', 'a_jour');
+        ->call('setFilterStatus', 'current');
 
     $rows = $component->get('rows');
     expect($rows)->toHaveCount(1);
-    expect($rows[0]['status'])->toBe('a_jour');
+    expect($rows[0]['status'])->toBe('current');
 });
 
 test('setFilterStatus change le filtre actif', function () {
@@ -285,8 +285,8 @@ test('setFilterStatus change le filtre actif', function () {
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->call('setFilterStatus', 'a_jour')
-        ->assertSet('filterStatus', 'a_jour');
+        ->call('setFilterStatus', 'current')
+        ->assertSet('filterStatus', 'current');
 });
 
 // ─── Filtrage par plan ────────────────────────────────────────────────────────
@@ -468,9 +468,9 @@ test('le tri par statut met les critiques en premier par défaut', function () {
         ->test('pages::clients.index')
         ->get('rows');
 
-    expect($rows[0]['status'])->toBe('critique');
-    expect($rows[1]['status'])->toBe('attente');
-    expect($rows[2]['status'])->toBe('a_jour');
+    expect($rows[0]['status'])->toBe('critical');
+    expect($rows[1]['status'])->toBe('watch');
+    expect($rows[2]['status'])->toBe('current');
 });
 
 // ─── Affichage complet (pas de pagination) ────────────────────────────────────
@@ -509,8 +509,8 @@ test('#[Url] — filterStatus est persisté via assertSet', function () {
 
     Livewire::actingAs($user)
         ->test('pages::clients.index')
-        ->call('setFilterStatus', 'critique')
-        ->assertSet('filterStatus', 'critique');
+        ->call('setFilterStatus', 'critical')
+        ->assertSet('filterStatus', 'critical');
 });
 
 test('#[Url] — filterPlan est persisté via assertSet', function () {

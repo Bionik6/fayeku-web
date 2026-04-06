@@ -134,7 +134,7 @@ test('le badge statut à surveiller est affiché quand une facture reste ouverte
     $component = Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme]);
 
-    expect($component->get('statusValue'))->toBe('a_surveiller');
+    expect($component->get('statusValue'))->toBe('watch');
     $component->assertSee('À surveiller');
 });
 
@@ -151,7 +151,7 @@ test('le badge statut critique est affiché quand une facture est overdue > 60j'
     $component = Livewire::actingAs($user)
         ->test('pages::clients.show', ['company' => $sme]);
 
-    expect($component->get('statusValue'))->toBe('critique');
+    expect($component->get('statusValue'))->toBe('critical');
     $component->assertSee('Critique');
 });
 

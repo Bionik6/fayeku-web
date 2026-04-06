@@ -68,18 +68,16 @@ new #[Title('Dashboard')] class extends Component
             ->get()
             ->groupBy('company_id');
 
+        $portfolioService = app(PortfolioService::class);
         $criticalIds = [];
         $watchIds = [];
 
         foreach ($smeIds as $smeId) {
-            $invoices = $allInvoices->get($smeId, collect());
-            $overdueInvoices = $invoices->filter(fn ($inv) => $inv->status === InvoiceStatus::Overdue);
-            $criticalOverdue = $overdueInvoices->filter(fn ($inv) => $inv->due_at && $inv->due_at->lt(now()->subDays(60)));
-            $latestIssued = $invoices->sortByDesc('issued_at')->first();
+            $status = $portfolioService->clientStatus($allInvoices->get($smeId, collect()));
 
-            if ($criticalOverdue->isNotEmpty()) {
+            if ($status === 'critical') {
                 $criticalIds[] = $smeId;
-            } elseif ($overdueInvoices->isNotEmpty() || ($latestIssued && $latestIssued->issued_at->lt(now()->subDays(30)))) {
+            } elseif ($status === 'watch') {
                 $watchIds[] = $smeId;
             }
         }
@@ -189,6 +187,7 @@ new #[Title('Dashboard')] class extends Component
             ->get()
             ->keyBy('id');
 
+        $portfolioService = app(PortfolioService::class);
         $portfolio = [];
 
         foreach ($smeIds as $smeId) {
@@ -221,15 +220,7 @@ new #[Title('Dashboard')] class extends Component
                 $lastInvoiceLabel = '—';
             }
 
-            $hasCritical = $invoices->filter(
-                fn ($inv) => $inv->status === InvoiceStatus::Overdue && $inv->due_at && $inv->due_at->lt(now()->subDays(60))
-            )->isNotEmpty();
-
-            $status = match (true) {
-                $hasCritical => 'critique',
-                $unpaidInvoices->isNotEmpty() => 'attente',
-                default => 'a_jour',
-            };
+            $status = $portfolioService->clientStatus($invoices);
 
             $nameParts = collect(explode(' ', $company->name));
             $initials = $nameParts->map(fn ($w) => strtoupper($w[0] ?? ''))->take(2)->join('');
@@ -247,7 +238,7 @@ new #[Title('Dashboard')] class extends Component
             ];
         }
 
-        usort($portfolio, fn ($a, $b) => ['critique' => 0, 'attente' => 1, 'a_jour' => 2][$a['status']] <=> ['critique' => 0, 'attente' => 1, 'a_jour' => 2][$b['status']]);
+        usort($portfolio, fn ($a, $b) => ['critical' => 0, 'watch' => 1, 'current' => 2][$a['status']] <=> ['critical' => 0, 'watch' => 1, 'current' => 2][$b['status']]);
 
         return array_slice($portfolio, 0, 10);
     }
@@ -586,8 +577,8 @@ new #[Title('Dashboard')] class extends Component
                                     @if ($row['unpaid_count'] > 0)
                                         <span @class([
                                             'font-semibold',
-                                            'text-rose-500'  => $row['status'] === 'critique',
-                                            'text-amber-500' => $row['status'] === 'attente',
+                                            'text-rose-500'  => $row['status'] === 'critical',
+                                            'text-amber-500' => $row['status'] === 'watch',
                                         ])>{{ $row['unpaid_count'] }}</span>
                                     @else
                                         <span class="text-slate-500">0</span>
@@ -611,18 +602,18 @@ new #[Title('Dashboard')] class extends Component
                                 <td class="px-4 py-4">
                                     <span @class([
                                         'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
-                                        'bg-rose-50 text-rose-700 ring-rose-600/20'    => $row['status'] === 'critique',
-                                        'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'attente',
-                                        'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'a_jour',
+                                        'bg-rose-50 text-rose-700 ring-rose-600/20'    => $row['status'] === 'critical',
+                                        'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'watch',
+                                        'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'current',
                                     ])>
                                         <span @class([
                                             'size-1.5 rounded-full',
-                                            'bg-rose-500'  => $row['status'] === 'critique',
-                                            'bg-amber-500' => $row['status'] === 'attente',
-                                            'bg-green-500' => $row['status'] === 'a_jour',
+                                            'bg-rose-500'  => $row['status'] === 'critical',
+                                            'bg-amber-500' => $row['status'] === 'watch',
+                                            'bg-green-500' => $row['status'] === 'current',
                                         ])></span>
-                                        @if ($row['status'] === 'critique') Critique
-                                        @elseif ($row['status'] === 'attente') Attente
+                                        @if ($row['status'] === 'critical') Critique
+                                        @elseif ($row['status'] === 'watch') Attente
                                         @else À jour @endif
                                     </span>
                                 </td>

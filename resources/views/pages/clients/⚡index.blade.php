@@ -62,7 +62,7 @@ new #[Title('Clients')] class extends Component {
             ));
         }
 
-        $statusOrder = ['critique' => 0, 'attente' => 1, 'a_jour' => 2];
+        $statusOrder = ['critical' => 0, 'watch' => 1, 'current' => 2];
 
         usort($raw, function (array $a, array $b) use ($statusOrder): int {
             $cmp = match ($this->sortBy) {
@@ -88,9 +88,9 @@ new #[Title('Clients')] class extends Component {
 
         return [
             'all'      => count($raw),
-            'a_jour'   => count(array_filter($raw, fn (array $r) => $r['status'] === 'a_jour')),
-            'attente'  => count(array_filter($raw, fn (array $r) => $r['status'] === 'attente')),
-            'critique' => count(array_filter($raw, fn (array $r) => $r['status'] === 'critique')),
+            'current'   => count(array_filter($raw, fn (array $r) => $r['status'] === 'current')),
+            'watch'  => count(array_filter($raw, fn (array $r) => $r['status'] === 'watch')),
+            'critical' => count(array_filter($raw, fn (array $r) => $r['status'] === 'critical')),
         ];
     }
 
@@ -128,7 +128,7 @@ new #[Title('Clients')] class extends Component {
 
         return [
             'pending_amount_total' => array_sum(array_column($raw, 'pending_amount')),
-            'critical_clients' => count(array_filter($raw, fn (array $row) => $row['status'] === 'critique')),
+            'critical_clients' => count(array_filter($raw, fn (array $row) => $row['status'] === 'critical')),
             'average_recovery_rate' => $totalInvoiced > 0
                 ? (int) round($totalCollected / $totalInvoiced * 100)
                 : 100,
@@ -161,7 +161,8 @@ new #[Title('Clients')] class extends Component {
             return $this->portfolioCache = [];
         }
 
-        $smeIds = app(PortfolioService::class)->activeSmeIds($this->firm);
+        $portfolioService = app(PortfolioService::class);
+        $smeIds = $portfolioService->activeSmeIds($this->firm);
 
         if ($smeIds->isEmpty()) {
             return [];
@@ -212,17 +213,7 @@ new #[Title('Clients')] class extends Component {
                 $lastInvoiceLabel = '—';
             }
 
-            $hasCritical = $invoices->filter(
-                fn ($inv) => $inv->status === InvoiceStatus::Overdue
-                    && $inv->due_at
-                    && $inv->due_at->lt(now()->subDays(60))
-            )->isNotEmpty();
-
-            $status = match (true) {
-                $hasCritical => 'critique',
-                $unpaidInvoices->isNotEmpty() => 'attente',
-                default => 'a_jour',
-            };
+            $status = $portfolioService->clientStatus($invoices);
 
             $planSlug = strtolower($company->subscription?->plan_slug ?? $company->plan ?? '');
             $planLabel = $planSlug !== '' ? ucfirst($planSlug) : '—';
@@ -261,8 +252,8 @@ new #[Title('Clients')] class extends Component {
                 <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Clients') }}</h2>
                 <p class="mt-1 text-sm text-slate-500">
                     {{ $this->statusCounts['all'] }} {{ $this->statusCounts['all'] > 1 ? 'clients suivis' : 'client suivi' }}
-                    · {{ $this->statusCounts['critique'] }} {{ $this->statusCounts['critique'] > 1 ? 'clients critiques' : 'client critique' }}
-                    · {{ $this->statusCounts['attente'] }} {{ __('à surveiller') }}
+                    · {{ $this->statusCounts['critical'] }} {{ $this->statusCounts['critical'] > 1 ? 'clients critiques' : 'client critique' }}
+                    · {{ $this->statusCounts['watch'] }} {{ __('à surveiller') }}
                 </p>
             </div>
 
@@ -328,9 +319,9 @@ new #[Title('Clients')] class extends Component {
         <div class="flex flex-wrap items-center gap-2">
             @foreach ([
                 'all'      => ['label' => 'Tous',       'dot' => null,        'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                'a_jour'   => ['label' => 'À jour',     'dot' => 'bg-accent', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                'attente'  => ['label' => 'À surveiller',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',  'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                'critique' => ['label' => 'Critiques',  'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',   'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'current'   => ['label' => 'À jour',     'dot' => 'bg-accent', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'watch'  => ['label' => 'À surveiller',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',  'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'critical' => ['label' => 'Critiques',  'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',   'badgeInactive' => 'bg-rose-100 text-rose-700'],
             ] as $key => $tab)
                 <button
                     wire:click="setFilterStatus('{{ $key }}')"
@@ -473,7 +464,7 @@ new #[Title('Clients')] class extends Component {
                                 @click="Livewire.navigate('{{ route('clients.show', $row['id']) }}')"
                                 @class([
                                     'cursor-pointer transition hover:bg-slate-50/90',
-                                    'bg-rose-50/30 hover:bg-rose-50/60' => $row['status'] === 'critique',
+                                    'bg-rose-50/30 hover:bg-rose-50/60' => $row['status'] === 'critical',
                                 ])
                             >
                                 {{-- Client --}}
@@ -504,8 +495,8 @@ new #[Title('Clients')] class extends Component {
                                     @if ($row['unpaid_count'] > 0)
                                         <span @class([
                                             'font-semibold',
-                                            'text-rose-500' => $row['status'] === 'critique',
-                                            'text-amber-500' => $row['status'] === 'attente',
+                                            'text-rose-500' => $row['status'] === 'critical',
+                                            'text-amber-500' => $row['status'] === 'watch',
                                         ])>
                                             {{ $row['unpaid_count'] }} {{ $row['unpaid_count'] > 1 ? 'factures' : 'facture' }}
                                         </span>
@@ -534,17 +525,17 @@ new #[Title('Clients')] class extends Component {
                                 <td class="px-4 py-4">
                                     <span @class([
                                         'inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
-                                        'bg-rose-50 text-rose-700 ring-rose-600/20'   => $row['status'] === 'critique',
-                                        'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'attente',
-                                        'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'a_jour',
+                                        'bg-rose-50 text-rose-700 ring-rose-600/20'   => $row['status'] === 'critical',
+                                        'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'watch',
+                                        'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'current',
                                     ])>
                                         <span class="size-1.5 rounded-full
-                                            @if ($row['status'] === 'critique') bg-rose-500
-                                            @elseif ($row['status'] === 'attente') bg-amber-500
+                                            @if ($row['status'] === 'critical') bg-rose-500
+                                            @elseif ($row['status'] === 'watch') bg-amber-500
                                             @else bg-green-500 @endif
                                         "></span>
-                                        @if ($row['status'] === 'critique') Critique
-                                        @elseif ($row['status'] === 'attente') À surveiller
+                                        @if ($row['status'] === 'critical') Critique
+                                        @elseif ($row['status'] === 'watch') À surveiller
                                         @else À jour @endif
                                     </span>
                                 </td>

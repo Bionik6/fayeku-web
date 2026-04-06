@@ -134,14 +134,18 @@ test('criticalCount : PME avec facture overdue > 60 jours', function () {
         ->assertSet('upToDateCount', 1);
 });
 
-test('watchCount : PME sans facture depuis 30 jours', function () {
+test('watchCount : PME avec facture partiellement payée ou overdue récente', function () {
     ['user' => $user, 'smes' => $smes] = createFirmWithSmes(2);
 
-    // Facture ancienne → inactif
-    createInvoice($smes[0], ['issued_at' => now()->subDays(45)]);
+    // Facture partiellement payée → attente
+    createInvoice($smes[0], [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'due_at' => now()->subDays(10),
+        'amount_paid' => 20_000,
+    ]);
 
-    // Facture récente → à jour
-    createInvoice($smes[1], ['issued_at' => now()->subDays(5)]);
+    // Facture payée (même ancienne) → à jour
+    createInvoice($smes[1], ['issued_at' => now()->subDays(45)]);
 
     Livewire::actingAs($user)
         ->test('pages::dashboard.index')
@@ -401,7 +405,7 @@ test('portfolio trie les clients critiques en premier', function () {
         ->test('pages::dashboard.index')
         ->get('portfolio');
 
-    expect(collect($portfolio)->first()['status'])->toBe('critique');
+    expect(collect($portfolio)->first()['status'])->toBe('critical');
 });
 
 test('portfolio affiche le tableau dans la vue', function () {

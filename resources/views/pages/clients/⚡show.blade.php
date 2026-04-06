@@ -221,7 +221,7 @@ new #[Title('Clients')] class extends Component {
         );
 
         if ($hasCritical) {
-            return 'critique';
+            return 'critical';
         }
 
         $hasPending = $all->some(fn ($inv) => in_array($inv->status, [
@@ -230,15 +230,15 @@ new #[Title('Clients')] class extends Component {
             InvoiceStatus::PartiallyPaid,
         ]));
 
-        return $hasPending ? 'a_surveiller' : 'a_jour';
+        return $hasPending ? 'watch' : 'current';
     }
 
     #[Computed]
     public function statusLabel(): string
     {
         return match ($this->statusValue) {
-            'critique' => 'Critique',
-            'a_surveiller' => 'À surveiller',
+            'critical' => 'Critique',
+            'watch' => 'À surveiller',
             default => 'À jour',
         };
     }
@@ -524,15 +524,15 @@ new #[Title('Clients')] class extends Component {
 
                 <span @class([
                     'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold',
-                    'border-rose-200 bg-rose-50 text-rose-700'      => $this->statusValue === 'critique',
-                    'border-amber-200 bg-amber-50 text-amber-700'   => $this->statusValue === 'a_surveiller',
-                    'border-green-200 bg-green-50 text-green-700' => $this->statusValue === 'a_jour',
+                    'border-rose-200 bg-rose-50 text-rose-700'      => $this->statusValue === 'critical',
+                    'border-amber-200 bg-amber-50 text-amber-700'   => $this->statusValue === 'watch',
+                    'border-green-200 bg-green-50 text-green-700' => $this->statusValue === 'current',
                 ])>
                     <span @class([
                         'size-2 rounded-full',
-                        'bg-rose-500'  => $this->statusValue === 'critique',
-                        'bg-amber-400' => $this->statusValue === 'a_surveiller',
-                        'bg-green-500' => $this->statusValue === 'a_jour',
+                        'bg-rose-500'  => $this->statusValue === 'critical',
+                        'bg-amber-400' => $this->statusValue === 'watch',
+                        'bg-green-500' => $this->statusValue === 'current',
                     ])></span>
                     {{ $this->statusLabel }}
                 </span>
@@ -595,29 +595,29 @@ new #[Title('Clients')] class extends Component {
             x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
             @class([
                 'app-shell-panel p-5 cursor-pointer transition',
-                'ring-2 ring-rose-500'  => $invoiceFilter === 'pending' && $this->statusValue === 'critique',
-                'ring-2 ring-amber-500' => $invoiceFilter === 'pending' && $this->statusValue !== 'critique',
+                'ring-2 ring-rose-500'  => $invoiceFilter === 'pending' && $this->statusValue === 'critical',
+                'ring-2 ring-amber-500' => $invoiceFilter === 'pending' && $this->statusValue !== 'critical',
             ])
         >
             <div class="flex items-start justify-between">
                 <div @class([
                     'flex size-10 items-center justify-center rounded-xl',
-                    'bg-rose-50'   => $this->statusValue === 'critique',
-                    'bg-amber-50'  => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
+                    'bg-rose-50'   => $this->statusValue === 'critical',
+                    'bg-amber-50'  => $this->statusValue !== 'critical' && $this->stats['pending_amount'] > 0,
                     'bg-slate-100' => $this->stats['pending_amount'] === 0,
                 ])>
                     <flux:icon name="exclamation-circle" @class([
                         'size-5',
-                        'text-rose-500'   => $this->statusValue === 'critique',
-                        'text-amber-500'  => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
+                        'text-rose-500'   => $this->statusValue === 'critical',
+                        'text-amber-500'  => $this->statusValue !== 'critical' && $this->stats['pending_amount'] > 0,
                         'text-slate-500'  => $this->stats['pending_amount'] === 0,
                     ]) />
                 </div>
                 @if ($this->stats['pending_count'] > 0)
                     <span @class([
                         'inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold',
-                        'bg-rose-50 text-rose-700'   => $this->statusValue === 'critique',
-                        'bg-amber-50 text-amber-700' => $this->statusValue !== 'critique',
+                        'bg-rose-50 text-rose-700'   => $this->statusValue === 'critical',
+                        'bg-amber-50 text-amber-700' => $this->statusValue !== 'critical',
                     ])>
                         {{ $this->stats['pending_count'] }} {{ $this->stats['pending_count'] > 1 ? __('factures') : __('facture') }}
                     </span>
@@ -630,8 +630,8 @@ new #[Title('Clients')] class extends Component {
             <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Montant en attente') }}</p>
             <p @class([
                 'mt-1 text-2xl font-bold tracking-tight',
-                'text-rose-500'  => $this->statusValue === 'critique',
-                'text-amber-500' => $this->statusValue !== 'critique' && $this->stats['pending_amount'] > 0,
+                'text-rose-500'  => $this->statusValue === 'critical',
+                'text-amber-500' => $this->statusValue !== 'critical' && $this->stats['pending_amount'] > 0,
                 'text-ink'       => $this->stats['pending_amount'] === 0,
             ])>
                 {{ format_money($this->stats['pending_amount']) }}
