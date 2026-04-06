@@ -348,7 +348,7 @@ new #[Title('Commissions')] class extends Component
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="banknotes" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ $currentMonth }}
                 </span>
             </div>
@@ -365,7 +365,7 @@ new #[Title('Commissions')] class extends Component
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="user-group" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Portefeuille') }}
                 </span>
             </div>
@@ -379,7 +379,7 @@ new #[Title('Commissions')] class extends Component
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="chart-bar" class="size-5 text-amber-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ now()->year }}
                 </span>
             </div>
@@ -396,7 +396,7 @@ new #[Title('Commissions')] class extends Component
                 <div class="flex size-10 items-center justify-center rounded-xl bg-sky-50">
                     <flux:icon name="arrow-trending-up" class="size-5 text-sky-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700">
                     {{ __('Prévision') }}
                 </span>
             </div>
@@ -557,11 +557,17 @@ new #[Title('Commissions')] class extends Component
                                         };
                                     @endphp
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-sm font-semibold',
-                                        'bg-emerald-50 text-emerald-700' => $commission->status === 'paid',
-                                        'bg-amber-50 text-amber-700' => $commission->status === 'pending',
-                                        'bg-slate-100 text-slate-600' => ! in_array($commission->status, ['paid', 'pending']),
+                                        'inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
+                                        'bg-emerald-50 text-emerald-700 ring-emerald-600/20' => $commission->status === 'paid',
+                                        'bg-amber-50 text-amber-700 ring-amber-600/20' => $commission->status === 'pending',
+                                        'bg-slate-100 text-slate-600 ring-slate-500/20' => ! in_array($commission->status, ['paid', 'pending']),
                                     ])>
+                                        <span @class([
+                                            'size-1.5 rounded-full',
+                                            'bg-emerald-500' => $commission->status === 'paid',
+                                            'bg-amber-500' => $commission->status === 'pending',
+                                            'bg-slate-400' => ! in_array($commission->status, ['paid', 'pending']),
+                                        ])></span>
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
@@ -641,11 +647,13 @@ new #[Title('Commissions')] class extends Component
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     @if ($payment->status === 'paid')
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                                        <span class="inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset bg-emerald-50 text-emerald-700 ring-emerald-600/20">
+                                            <span class="size-1.5 rounded-full bg-emerald-500"></span>
                                             {{ ucfirst($payment->payment_method ?? 'Wave') }} ✓
                                         </span>
                                     @else
-                                        <span class="rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                                        <span class="inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset bg-amber-50 text-amber-700 ring-amber-600/20">
+                                            <span class="size-1.5 rounded-full bg-amber-500"></span>
                                             {{ __('À venir') }}
                                         </span>
                                     @endif

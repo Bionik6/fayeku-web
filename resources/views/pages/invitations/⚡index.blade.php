@@ -304,7 +304,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-teal-50">
                     <flux:icon name="paper-airplane" class="size-5 text-primary" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Depuis jan.') }} {{ now()->year }}
                 </span>
             </div>
@@ -318,7 +318,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="clock" class="size-5 text-amber-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ $this->pendingCount }} PME
                 </span>
             </div>
@@ -332,7 +332,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="check-circle" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ format_month(now()) }}
                 </span>
             </div>
@@ -346,7 +346,7 @@ new #[Title('Invitations')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-sky-50">
                     <flux:icon name="chart-bar" class="size-5 text-sky-600" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700">
                     %
                 </span>
             </div>
@@ -437,6 +437,7 @@ new #[Title('Invitations')] class extends Component {
                             @php
                                 $displayStatus = match (true) {
                                     $invitation->status === 'accepted' => 'activated',
+                                    $invitation->status === 'registering' => 'registering',
                                     $invitation->status === 'expired' => 'expired',
                                     default => 'sent',
                                 };
@@ -461,13 +462,22 @@ new #[Title('Invitations')] class extends Component {
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-sm font-semibold',
-                                        'bg-blue-50 text-blue-600' => $displayStatus === 'sent',
-                                        'bg-emerald-50 text-emerald-700' => $displayStatus === 'activated',
-                                        'bg-rose-50 text-rose-700' => $displayStatus === 'expired',
+                                        'inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
+                                        'bg-blue-50 text-blue-600 ring-blue-600/20' => $displayStatus === 'sent',
+                                        'bg-green-50 text-green-700 ring-green-600/20' => $displayStatus === 'registering',
+                                        'bg-emerald-50 text-emerald-700 ring-emerald-600/20' => $displayStatus === 'activated',
+                                        'bg-rose-50 text-rose-700 ring-rose-600/20' => $displayStatus === 'expired',
                                     ])>
+                                        <span @class([
+                                            'size-1.5 rounded-full',
+                                            'bg-blue-500' => $displayStatus === 'sent',
+                                            'bg-green-500' => $displayStatus === 'registering',
+                                            'bg-emerald-500' => $displayStatus === 'activated',
+                                            'bg-rose-500' => $displayStatus === 'expired',
+                                        ])></span>
                                         {{ match ($displayStatus) {
                                             'activated' => __('Activée'),
+                                            'registering' => __('Nouvelle inscription'),
                                             'expired' => __('Expirée'),
                                             default => __('Envoyée'),
                                         } }}
