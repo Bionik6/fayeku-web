@@ -265,7 +265,7 @@
                             <div class="group relative hidden lg:block">
                                 <button
                                     type="button"
-                                    class="inline-flex size-10 items-center justify-center rounded-xl bg-white text-slate-500 transition hover:text-primary"
+                                    class="inline-flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
                                     data-app-shell-collapse
                                     aria-label="{{ __('Afficher/Masquer la barre de navigation') }}"
                                 >
