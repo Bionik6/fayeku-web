@@ -487,7 +487,7 @@ new #[Title('Invitations')] class extends Component {
                                                     {{ $invitation->last_reminder_at ? format_date($invitation->last_reminder_at) : __('Aucune') }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5">
-                                    @php $btnBase = 'inline-flex w-32 items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition'; @endphp
+                                    @php $btnBase = 'inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm font-semibold transition'; @endphp
                                     @if ($displayStatus === 'sent')
                                         <button
                                             type="button"
