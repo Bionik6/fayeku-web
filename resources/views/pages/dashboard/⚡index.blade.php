@@ -573,22 +573,22 @@ new #[Title('Dashboard')] class extends Component
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-slate-600">{{ $row['last_invoice_label'] }}</td>
-                                <td class="px-4 py-4">
+                                <td class="whitespace-nowrap px-4 py-4">
                                     @if ($row['unpaid_count'] > 0)
                                         <span @class([
                                             'font-semibold',
                                             'text-rose-500'  => $row['status'] === 'critical',
                                             'text-amber-500' => $row['status'] === 'watch',
-                                        ])>{{ $row['unpaid_count'] }}</span>
+                                        ])>{{ $row['unpaid_count'] }} {{ $row['unpaid_count'] > 1 ? __('factures') : __('facture') }}</span>
                                     @else
-                                        <span class="text-slate-500">0</span>
+                                        <span class="font-semibold text-slate-500">—</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-4 font-semibold text-ink whitespace-nowrap">
+                                <td class="whitespace-nowrap px-4 py-4">
                                     @if ($row['pending_amount'] > 0)
-                                        {{ format_money($row['pending_amount'], compact: true) }}
+                                        <span class="font-semibold text-ink">{{ format_money($row['pending_amount'], compact: true) }}</span>
                                     @else
-                                        <span class="text-slate-500">—</span>
+                                        <span class="font-semibold text-slate-500">—</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4">
