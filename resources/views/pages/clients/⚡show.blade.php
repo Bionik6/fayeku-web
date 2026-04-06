@@ -33,6 +33,8 @@ new #[Title('Clients')] class extends Component {
 
     #[Url] public int $perPage = 20;
 
+    #[Url] public string $invoiceFilter = '';
+
     // Invoice detail modal
     public ?string $selectedInvoiceId = null;
 
@@ -103,21 +105,33 @@ new #[Title('Clients')] class extends Component {
     }
 
     /**
-     * Factures du mois sélectionné, avec client, lignes et compteur de relances.
+     * Factures filtrées : par mois par défaut, ou selon invoiceFilter ('paid' / 'pending').
      *
      * @return Collection<int, Invoice>
      */
     #[Computed]
     public function invoices(): Collection
     {
-        return Invoice::query()
+        $query = Invoice::query()
             ->where('company_id', $this->company->id)
-            ->whereYear('issued_at', $this->selectedYear())
-            ->whereMonth('issued_at', $this->selectedMonth())
             ->with(['client', 'lines'])
             ->withCount('reminders')
-            ->orderByDesc('issued_at')
-            ->get();
+            ->orderByDesc('issued_at');
+
+        match ($this->invoiceFilter) {
+            'paid'    => $query->where('status', InvoiceStatus::Paid),
+            'pending' => $query->whereIn('status', [
+                InvoiceStatus::Sent,
+                InvoiceStatus::Certified,
+                InvoiceStatus::Overdue,
+                InvoiceStatus::PartiallyPaid,
+            ]),
+            default   => $query
+                ->whereYear('issued_at', $this->selectedYear())
+                ->whereMonth('issued_at', $this->selectedMonth()),
+        };
+
+        return $query->get();
     }
 
     /**
@@ -252,6 +266,17 @@ new #[Title('Clients')] class extends Component {
             ?? format_month(now()->setYear($this->selectedYear())->setMonth($this->selectedMonth()));
     }
 
+    /** Titre de la section factures selon le filtre actif. */
+    #[Computed]
+    public function invoiceSectionTitle(): string
+    {
+        return match ($this->invoiceFilter) {
+            'paid'    => __('Factures payées · Tout historique'),
+            'pending' => __('Factures en attente · Tout historique'),
+            default   => __('Factures du mois') . ' · ' . ucfirst($this->selectedPeriodLabel),
+        };
+    }
+
     /** Facture sélectionnée pour la modale de détail. */
     #[Computed]
     public function selectedInvoice(): ?Invoice
@@ -274,6 +299,30 @@ new #[Title('Clients')] class extends Component {
     public function closeInvoice(): void
     {
         $this->selectedInvoiceId = null;
+    }
+
+    public function filterByBilledMonth(): void
+    {
+        $this->invoiceFilter = '';
+        unset($this->invoices);
+    }
+
+    public function filterByPaid(): void
+    {
+        $this->invoiceFilter = $this->invoiceFilter === 'paid' ? '' : 'paid';
+        unset($this->invoices);
+    }
+
+    public function filterByPending(): void
+    {
+        $this->invoiceFilter = $this->invoiceFilter === 'pending' ? '' : 'pending';
+        unset($this->invoices);
+    }
+
+    public function updatedSelectedPeriod(): void
+    {
+        $this->invoiceFilter = '';
+        unset($this->invoices);
     }
 
     // ─── Export comptable ────────────────────────────────────────────────
@@ -475,7 +524,14 @@ new #[Title('Clients')] class extends Component {
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
 
         {{-- CA facturé --}}
-        <section class="app-shell-panel p-5">
+        <section
+            wire:click="filterByBilledMonth"
+            x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
+            @class([
+                'app-shell-panel p-5 cursor-pointer transition',
+                'ring-2 ring-primary' => $invoiceFilter === '',
+            ])
+        >
             <div class="flex items-start justify-between">
                 <div class="flex size-10 items-center justify-center rounded-xl bg-slate-100">
                     <flux:icon name="document-chart-bar" class="size-5 text-slate-600" />
@@ -491,7 +547,14 @@ new #[Title('Clients')] class extends Component {
         </section>
 
         {{-- Encaissé --}}
-        <section class="app-shell-panel p-5">
+        <section
+            wire:click="filterByPaid"
+            x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
+            @class([
+                'app-shell-panel p-5 cursor-pointer transition',
+                'ring-2 ring-primary' => $invoiceFilter === 'paid',
+            ])
+        >
             <div class="flex items-start justify-between">
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="banknotes" class="size-5 text-accent" />
@@ -507,7 +570,14 @@ new #[Title('Clients')] class extends Component {
         </section>
 
         {{-- En attente --}}
-        <section class="app-shell-panel p-5">
+        <section
+            wire:click="filterByPending"
+            x-on:click="document.getElementById('factures-client')?.scrollIntoView({ behavior: 'smooth' })"
+            @class([
+                'app-shell-panel p-5 cursor-pointer transition',
+                'ring-2 ring-primary' => $invoiceFilter === 'pending',
+            ])
+        >
             <div class="flex items-start justify-between">
                 <div @class([
                     'flex size-10 items-center justify-center rounded-xl',
@@ -569,7 +639,15 @@ new #[Title('Clients')] class extends Component {
 
         {{-- En-tête section --}}
         <div class="flex flex-col gap-3 p-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ __('Factures du mois') }} · {{ ucfirst($this->selectedPeriodLabel) }}</h3>
+            <div class="flex items-center">
+                <h3 class="text-xl font-semibold tracking-tight text-ink">{{ $this->invoiceSectionTitle }}</h3>
+                @if ($invoiceFilter !== '')
+                    <button wire:click="filterByBilledMonth" class="ml-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-200 transition">
+                        <flux:icon name="x-mark" class="size-3" />
+                        {{ __('Réinitialiser') }}
+                    </button>
+                @endif
+            </div>
 
             <div class="flex items-center gap-2">
                 {{-- Par page --}}
@@ -584,17 +662,19 @@ new #[Title('Clients')] class extends Component {
                     </select>
                 </x-select-native>
 
-                {{-- Sélecteur de mois --}}
-                <x-select-native>
-                    <select
-                        wire:model.live="selectedPeriod"
-                        class="col-start-1 row-start-1 appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                    >
-                        @foreach ($this->availableMonths as $m)
-                            <option value="{{ $m['value'] }}">{{ $m['label'] }}</option>
-                        @endforeach
-                    </select>
-                </x-select-native>
+                @if ($invoiceFilter === '')
+                    {{-- Sélecteur de mois --}}
+                    <x-select-native>
+                        <select
+                            wire:model.live="selectedPeriod"
+                            class="col-start-1 row-start-1 appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                        >
+                            @foreach ($this->availableMonths as $m)
+                                <option value="{{ $m['value'] }}">{{ $m['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </x-select-native>
+                @endif
             </div>
         </div>
 
@@ -691,7 +771,11 @@ new #[Title('Clients')] class extends Component {
                     @empty
                         <tr>
                             <td colspan="10" class="px-6 py-10 text-center text-sm text-slate-500">
-                                {{ __('Aucune facture ce mois.') }}
+                                {{ match ($invoiceFilter) {
+                                    'paid'    => __('Aucune facture payée.'),
+                                    'pending' => __('Aucune facture en attente.'),
+                                    default   => __('Aucune facture ce mois.'),
+                                } }}
                             </td>
                         </tr>
                     @endforelse
