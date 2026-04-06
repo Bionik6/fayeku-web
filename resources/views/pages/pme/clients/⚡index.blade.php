@@ -537,7 +537,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                     <td class="px-4 py-4">
                                         @if ($row['payment_score'] !== null)
                                             <span @class([
-                                                'inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset',
+                                                'inline-flex whitespace-nowrap items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset',
                                                 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' => $row['payment_tone'] === 'emerald',
                                                 'bg-teal-50 text-teal-700 ring-teal-600/20' => $row['payment_tone'] === 'teal',
                                                 'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['payment_tone'] === 'amber',
