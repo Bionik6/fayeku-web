@@ -360,8 +360,10 @@ new #[Title('Invitations')] class extends Component {
     {{-- ─── Tableau principal ────────────────────────────────────────────── --}}
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-2">
-            <h3 class="text-lg font-bold text-ink">{{ __('Suivi des invitations') }}</h3>
-            <p class="mt-0.5 text-sm text-slate-500">{{ __('Consultez l\'état de chaque invitation envoyée à vos clients PME.') }}</p>
+            <x-section-header
+                :title="__('Suivi des invitations')"
+                :subtitle="__('Consultez l\'état de chaque invitation envoyée à vos clients PME.')"
+            />
         </div>
 
         {{-- Search + filters --}}

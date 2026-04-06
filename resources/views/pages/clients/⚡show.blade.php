@@ -660,7 +660,10 @@ new #[Title('Clients')] class extends Component {
 
         {{-- En-tête section --}}
         <div class="flex flex-col gap-3 p-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <h3 class="text-xl font-semibold tracking-tight text-ink">{{ $this->invoiceSectionTitle }}</h3>
+            <x-section-header
+                :title="$this->invoiceSectionTitle"
+                :subtitle="__('Toutes les factures émises pour ce client sur la période sélectionnée.')"
+            />
 
             <div class="flex items-center gap-2">
                 {{-- Par page --}}

@@ -252,8 +252,10 @@ new #[Title('Commissions')] class extends Component
 
     {{-- ─── Statut partenaire ──────────────────────────────────────────── --}}
     <section class="app-shell-panel p-6">
-        <h3 class="text-lg font-bold text-ink">{{ __('Votre niveau partenaire') }}</h3>
-        <p class="mt-1 text-sm text-slate-500">{{ __('Votre statut évolue selon le nombre de clients référés actifs sur Fayeku.') }}</p>
+        <x-section-header
+            :title="__('Votre niveau partenaire')"
+            :subtitle="__('Votre statut évolue selon le nombre de clients référés actifs sur Fayeku.')"
+        />
 
         {{-- Tiers comparison --}}
         <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -411,12 +413,10 @@ new #[Title('Commissions')] class extends Component
     {{-- ─── Détail des commissions ─────────────────────────────────────── --}}
     <section class="app-shell-panel">
         <div class="flex items-center justify-between px-6 pt-6 pb-2">
-            <div>
-                <h3 class="text-lg font-bold text-ink">
-                    {{ __('Commissions du mois') }} · {{ $currentMonth }}
-                </h3>
-                <p class="mt-0.5 text-sm text-slate-500">{{ __('Chaque ligne correspond à un client référé éligible à commission.') }}</p>
-            </div>
+            <x-section-header
+                :title="__('Commissions du mois') . ' · ' . $currentMonth"
+                :subtitle="__('Chaque ligne correspond à un client référé éligible à commission.')"
+            />
             @if ($this->monthTotal > 0)
                 <span class="text-sm font-bold text-accent">
                     @if ($this->hasActiveFilters)
@@ -609,8 +609,10 @@ new #[Title('Commissions')] class extends Component
     {{-- ─── Historique des versements ──────────────────────────────────── --}}
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
-            <h3 class="text-lg font-bold text-ink">{{ __('Historique des versements') }}</h3>
-            <p class="mt-0.5 text-sm text-slate-500">{{ __('Retrouvez ici tous les paiements de commissions effectués sur votre compte.') }}</p>
+            <x-section-header
+                :title="__('Historique des versements')"
+                :subtitle="__('Retrouvez ici tous les paiements de commissions effectués sur votre compte.')"
+            />
         </div>
 
         @if ($this->payments->isEmpty())

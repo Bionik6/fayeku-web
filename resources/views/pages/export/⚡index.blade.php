@@ -357,8 +357,10 @@ new #[Title('Export groupé')] class extends Component {
     {{-- ─── Historique des exports ─────────────────────────────────────── --}}
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
-            <h2 class="text-lg font-bold text-ink">{{ __('Historique des exports') }}</h2>
-            <p class="mt-1 text-sm text-slate-500">{{ __('Retrouvez les derniers exports générés pour votre cabinet.') }}</p>
+            <x-section-header
+                :title="__('Historique des exports')"
+                :subtitle="__('Retrouvez les derniers exports générés pour votre cabinet.')"
+            />
         </div>
 
         @if ($this->exportHistories->isEmpty())
@@ -495,8 +497,10 @@ new #[Title('Export groupé')] class extends Component {
     {{-- ─── Plan de comptes (Sage 100) ─────────────────────────────────── --}}
     <section class="app-shell-panel">
         <div class="px-6 pt-6 pb-4">
-            <h2 class="text-lg font-bold text-ink">{{ __('Plan de comptes (Sage 100)') }}</h2>
-            <p class="mt-1 text-sm text-slate-500">{{ __('Comptes utilisés pour générer les écritures du fichier exporté.') }}</p>
+            <x-section-header
+                :title="__('Plan de comptes (Sage 100)')"
+                :subtitle="__('Comptes utilisés pour générer les écritures du fichier exporté.')"
+            />
         </div>
 
         <div class="overflow-x-auto">
