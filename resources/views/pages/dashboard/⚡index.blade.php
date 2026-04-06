@@ -282,7 +282,7 @@ new #[Title('Dashboard')] class extends Component
     </section>
 
     {{-- 5 Stat cards --}}
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <section class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-5">
 
         {{-- Clients actifs --}}
         <article class="app-shell-stat-card">

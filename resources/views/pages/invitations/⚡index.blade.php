@@ -296,7 +296,7 @@ new #[Title('Invitations')] class extends Component {
     </section>
 
     {{-- ─── KPI Cards ──────────────────────────────────────────────────── --}}
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
 
         {{-- Invitations envoyées --}}
         <article class="app-shell-stat-card">

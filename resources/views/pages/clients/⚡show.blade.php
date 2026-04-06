@@ -541,7 +541,7 @@ new #[Title('Clients')] class extends Component {
     </section>
 
     {{-- ─── Stat cards ───────────────────────────────────────────────────── --}}
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
 
         {{-- CA facturé --}}
         <section
