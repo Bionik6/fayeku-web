@@ -539,10 +539,10 @@ new #[Title('Dashboard')] class extends Component
                         <tr class="border-y border-slate-100 bg-slate-50/80">
                             <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Offre') }}</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Dernière facture') }}</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Impayés') }}</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Montant en attente') }}</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Taux de recouvrement') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Dernière facture') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Impayés') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Montant en attente') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Taux de recouvrement') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                         </tr>
                     </thead>
@@ -584,7 +584,7 @@ new #[Title('Dashboard')] class extends Component
                                         <span class="text-slate-500">0</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-4 font-semibold text-ink">
+                                <td class="px-4 py-4 font-semibold text-ink whitespace-nowrap">
                                     @if ($row['pending_amount'] > 0)
                                         {{ format_money($row['pending_amount'], compact: true) }}
                                     @else
