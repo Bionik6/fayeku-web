@@ -872,10 +872,10 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                             <tr wire:key="coll-{{ $row['id'] }}" class="transition hover:bg-slate-50/50">
                                 <td class="px-4 py-4 font-medium text-ink">{{ $row['reference'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $row['client_name'] }}</td>
-                                <td class="px-4 py-4 text-right font-semibold tabular-nums text-ink">
+                                <td class="px-4 py-4 text-right font-semibold tabular-nums text-ink whitespace-nowrap">
                                     {{ format_money($row['remaining'], compact: true) }}
                                 </td>
-                                <td class="px-4 py-4 text-center">
+                                <td class="px-4 py-4 text-center whitespace-nowrap">
                                     <span @class([
                                         'inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
                                         'bg-rose-50 text-rose-700' => $row['days_overdue'] > 60,

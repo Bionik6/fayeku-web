@@ -726,13 +726,13 @@ new #[Title('Clients')] class extends Component {
                     <tr class="border-y border-slate-100 bg-slate-50/80">
                         <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client final') }}</th>
-                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant HT') }}</th>
-                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('TVA') }}</th>
-                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
-                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Émise le') }}</th>
-                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Échéance') }}</th>
-                        <th class="px-4 py-3 text-center text-sm font-semibold text-slate-500">{{ __('Retard') }}</th>
-                        <th class="px-4 py-3 text-center text-sm font-semibold text-slate-500">{{ __('Relances') }}</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Montant HT') }}</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('TVA') }}</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Montant TTC') }}</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Émise le') }}</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Échéance') }}</th>
+                        <th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Retard') }}</th>
+                        <th class="px-4 py-3 text-center text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Relances') }}</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Statut') }}</th>
                     </tr>
                 </thead>
@@ -777,22 +777,22 @@ new #[Title('Clients')] class extends Component {
                             <td class="px-4 py-4 text-slate-700">
                                 {{ $invoice->client?->name ?? '—' }}
                             </td>
-                            <td class="px-4 py-4 text-right text-slate-600">
+                            <td class="px-4 py-4 text-right text-slate-600 whitespace-nowrap">
                                 {{ format_money($invoice->subtotal, compact: true) }}
                             </td>
-                            <td class="px-4 py-4 text-right text-slate-500">
+                            <td class="px-4 py-4 text-right text-slate-500 whitespace-nowrap">
                                 {{ format_money($invoice->tax_amount, compact: true) }}
                             </td>
-                            <td class="px-4 py-4 text-right font-semibold text-ink">
+                            <td class="px-4 py-4 text-right font-semibold text-ink whitespace-nowrap">
                                 {{ format_money($invoice->total, compact: true) }}
                             </td>
-                            <td class="px-4 py-4 text-slate-600">
+                            <td class="px-4 py-4 text-slate-600 whitespace-nowrap">
                                 {{ format_date($invoice->issued_at) }}
                             </td>
-                            <td class="px-4 py-4 text-slate-600">
+                            <td class="px-4 py-4 text-slate-600 whitespace-nowrap">
                                 {{ format_date($invoice->due_at) }}
                             </td>
-                            <td class="px-4 py-4 text-center">
+                            <td class="px-4 py-4 text-center whitespace-nowrap">
                                 <span class="font-semibold {{ $delayClass }}">{{ $delayDays }} j</span>
                             </td>
                             <td class="px-4 py-4 text-center text-slate-600">

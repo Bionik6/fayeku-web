@@ -571,17 +571,17 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                 </td>
 
                                 {{-- Montant TTC --}}
-                                <td class="px-4 py-4 text-right font-semibold text-ink">
+                                <td class="px-4 py-4 text-right font-semibold text-ink whitespace-nowrap">
                                     {{ format_money($row['total'], $row['currency'], compact: true) }}
                                 </td>
 
                                 {{-- Date émission --}}
-                                <td class="px-4 py-4 text-slate-500">
+                                <td class="px-4 py-4 text-slate-500 whitespace-nowrap">
                                     {{ format_date($row['issued_at']) }}
                                 </td>
 
                                 {{-- Échéance --}}
-                                <td class="px-4 py-4">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     @if ($row['due_at'])
                                         @if ($row['is_overdue'])
                                             <span class="font-bold text-rose-500">
