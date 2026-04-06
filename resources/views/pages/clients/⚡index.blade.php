@@ -286,7 +286,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-rose-50">
                     <flux:icon name="banknotes" class="size-5 text-rose-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-500">
                     {{ __('Portefeuille') }}
                 </span>
             </div>
@@ -299,7 +299,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-amber-50">
                     <flux:icon name="exclamation-triangle" class="size-5 text-amber-500" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
                     {{ __('Critiques') }}
                 </span>
             </div>
@@ -312,7 +312,7 @@ new #[Title('Clients')] class extends Component {
                 <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
                     <flux:icon name="chart-bar" class="size-5 text-accent" />
                 </div>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
                     {{ $currentMonth }}
                 </span>
             </div>
@@ -488,7 +488,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Offre --}}
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
+                                        'inline-flex whitespace-nowrap items-center rounded-full px-2.5 py-0.5 text-sm font-semibold',
                                         'bg-teal-100 text-teal-700' => $row['plan_slug'] === 'essentiel',
                                         'bg-violet-100 text-violet-700' => $row['plan_slug'] === 'basique',
                                         'bg-amber-100 text-amber-700' => $row['plan_slug'] === 'premium',
@@ -533,7 +533,7 @@ new #[Title('Clients')] class extends Component {
                                 {{-- Statut --}}
                                 <td class="px-4 py-4">
                                     <span @class([
-                                        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
+                                        'inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset',
                                         'bg-rose-50 text-rose-700 ring-rose-600/20'   => $row['status'] === 'critique',
                                         'bg-amber-50 text-amber-700 ring-amber-600/20' => $row['status'] === 'attente',
                                         'bg-green-50 text-green-700 ring-green-600/20' => $row['status'] === 'a_jour',
