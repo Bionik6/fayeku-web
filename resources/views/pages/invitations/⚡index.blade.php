@@ -442,7 +442,16 @@ new #[Title('Invitations')] class extends Component {
                                     default => 'sent',
                                 };
                             @endphp
-                            <tr wire:key="inv-{{ $invitation->id }}" class="transition hover:bg-slate-50/50">
+                            <tr
+                                wire:key="inv-{{ $invitation->id }}"
+                                @class([
+                                    'transition hover:bg-slate-50/50',
+                                    'cursor-pointer' => $displayStatus === 'activated' && $invitation->sme_company_id,
+                                ])
+                                @if ($displayStatus === 'activated' && $invitation->sme_company_id)
+                                    x-on:click="Livewire.navigate('{{ route('clients.show', $invitation->sme_company_id) }}')"
+                                @endif
+                            >
                                 <td class="whitespace-nowrap px-6 py-3.5">
                                     <div class="font-medium text-ink">{{ $invitation->invitee_company_name ?? '—' }}</div>
                                     @if ($displayStatus === 'activated' && $invitation->accepted_at)
@@ -491,7 +500,7 @@ new #[Title('Invitations')] class extends Component {
                                     @if ($displayStatus === 'sent')
                                         <button
                                             type="button"
-                                            wire:click="remindInvitation('{{ $invitation->id }}')"
+                                            wire:click.stop="remindInvitation('{{ $invitation->id }}')"
                                             class="{{ $btnBase }} border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
                                         >
                                             {{ __('Relancer') }}
@@ -499,21 +508,11 @@ new #[Title('Invitations')] class extends Component {
                                     @elseif ($displayStatus === 'expired')
                                         <button
                                             type="button"
-                                            wire:click="resendInvitation('{{ $invitation->id }}')"
+                                            wire:click.stop="resendInvitation('{{ $invitation->id }}')"
                                             class="{{ $btnBase }} border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                                         >
                                             {{ __('Renvoyer') }}
                                         </button>
-                                    @elseif ($displayStatus === 'activated' && $invitation->sme_company_id)
-                                        <a
-                                            href="{{ route('clients.show', $invitation->sme_company_id) }}"
-                                            wire:navigate
-                                            class="{{ $btnBase }} border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
-                                        >
-                                            {{ __('Voir le client') }}
-                                        </a>
-                                    @else
-                                        <span class="{{ $btnBase }} cursor-default border-slate-200 bg-slate-50 text-slate-400">—</span>
                                     @endif
                                 </td>
                             </tr>
