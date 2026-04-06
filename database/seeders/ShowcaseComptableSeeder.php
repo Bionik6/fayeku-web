@@ -430,18 +430,29 @@ class ShowcaseComptableSeeder extends Seeder
             'tambacounda_mining' => CommissionService::calculate(10_000),
         ];
 
+        // 14 clients dont la commission du mois courant est déjà versée
+        $paidThisMonth = [
+            'dakar_telecom', 'biomed_west', 'sene_batiment', 'oryx_energy',
+            'afridata_consulting', 'sunu_digital', 'mbour_hotels', 'thies_constructions',
+            'almadies_immo', 'sicap_media', 'plateau_finance',
+            'sebikhotane', 'keur_massar', 'louga_services',
+        ];
+
         foreach ($amounts as $key => $amount) {
             if (! isset($smes[$key])) {
                 continue;
             }
 
-            // Mois courant — pending
+            $isPaid = in_array($key, $paidThisMonth, strict: true);
+
+            // Mois courant — versée ou en attente selon le client
             Commission::create([
                 'accountant_firm_id' => $firm->id,
                 'sme_company_id' => $smes[$key]->id,
                 'amount' => $amount,
                 'period_month' => now()->startOfMonth(),
-                'status' => 'pending',
+                'status' => $isPaid ? 'paid' : 'pending',
+                'paid_at' => $isPaid ? now()->subDays(rand(1, 5)) : null,
             ]);
 
             // 5 mois d'historique payés
