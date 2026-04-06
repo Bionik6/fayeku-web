@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             DemoAccountsSeeder::class,
             DashboardDemoSeeder::class,
             PmeDashboardSeeder::class,
+            ShowcaseComptableSeeder::class,
+            ShowcasePmeSeeder::class,
         ]);
     }
 }

@@ -11,6 +11,7 @@
     <body class="min-h-screen bg-page text-ink antialiased">
         @php
             $user = auth()->user();
+            $accountantFirm = $user->accountantFirm();
 
             $primaryNavigation = [
                 [
@@ -301,7 +302,7 @@
                                 </div>
                                 <div class="hidden min-w-0 sm:block">
                                     <p class="truncate text-sm font-semibold text-ink">{{ $user->full_name }}</p>
-                                    <p class="truncate text-xs text-slate-500">{{ __('Cabinet Fayeku') }}</p>
+                                    <p class="truncate text-xs text-slate-500">{{ $accountantFirm?->name ?? __('Mon cabinet') }}</p>
                                 </div>
                             </div>
                         </div>
