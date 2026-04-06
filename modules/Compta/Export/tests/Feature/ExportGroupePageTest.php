@@ -155,7 +155,7 @@ test('mountExportModal initialise les valeurs par défaut', function () {
         ->test('pages::export.index')
         ->call('mountExportModal')
         ->assertSet('exportPeriod', now()->format('Y-m'))
-        ->assertSet('exportFormat', 'sage100')
+        ->assertSet('exportFormat', 'excel')
         ->assertSet('clientSelection', 'all')
         ->assertSet('selectedClientIds', []);
 });
