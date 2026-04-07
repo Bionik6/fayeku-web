@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Factories\Support\SenegalFaker;
+use Database\Seeders\Concerns\GeneratesDemoTaxIds;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Modules\Auth\Models\Company;
@@ -21,6 +22,8 @@ use Modules\Shared\Models\User;
 
 class PmeDashboardSeeder extends Seeder
 {
+    use GeneratesDemoTaxIds;
+
     private Company $company;
 
     public function run(): void
@@ -331,7 +334,7 @@ class PmeDashboardSeeder extends Seeder
             'phone' => $phone,
             'email' => $email,
             'address' => SenegalFaker::address(),
-            'tax_id' => 'SN'.strtoupper(\fake()->numerify('##########')),
+            'tax_id' => $this->demoTaxId(),
         ]);
     }
 
