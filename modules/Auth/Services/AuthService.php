@@ -18,7 +18,16 @@ class AuthService
     public static function normalizePhone(string $phone, string $countryCode): string
     {
         $prefix = config("fayeku.countries.{$countryCode}.prefix", '');
+        $prefixDigits = preg_replace('/\D+/', '', $prefix) ?? '';
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
+
+        if ($prefixDigits !== '' && str_starts_with($digits, $prefixDigits)) {
+            return $prefix.ltrim(substr($digits, strlen($prefixDigits)), '0');
+        }
+
+        if (str_starts_with(trim($phone), '+')) {
+            return '+'.ltrim($digits, '0');
+        }
 
         return $prefix.ltrim($digits, '0');
     }

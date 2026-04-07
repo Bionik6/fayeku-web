@@ -41,6 +41,21 @@ test('accountant user is redirected to compta dashboard after login', function (
     $this->assertAuthenticatedAs($user);
 });
 
+test('user can login with an already international formatted phone number', function () {
+    $user = User::factory()->accountantFirm()->create([
+        'phone' => '+221771234567',
+    ]);
+
+    $response = $this->post(route('auth.login.submit'), [
+        'phone' => '+221 77 123 45 67',
+        'password' => 'password',
+        'country_code' => 'SN',
+    ]);
+
+    $response->assertRedirect(route('dashboard'));
+    $this->assertAuthenticatedAs($user);
+});
+
 test('user cannot login with wrong password', function () {
     User::factory()->create([
         'phone' => '+221771234567',
