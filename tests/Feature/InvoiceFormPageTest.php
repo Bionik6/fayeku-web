@@ -908,8 +908,8 @@ test('sendRecipient est initialisé avec l\'email du client quand il en a un', f
     ['user' => $user, 'company' => $company] = createSmeUser();
     $client = Client::factory()->create([
         'company_id' => $company->id,
-        'email'      => 'contact@acme.sn',
-        'phone'      => '+221771234567',
+        'email' => 'contact@acme.sn',
+        'phone' => '+221771234567',
     ]);
 
     Livewire::actingAs($user)
@@ -921,8 +921,8 @@ test('sendRecipient est initialisé avec le téléphone quand le client n\'a pas
     ['user' => $user, 'company' => $company] = createSmeUser();
     $client = Client::factory()->create([
         'company_id' => $company->id,
-        'email'      => null,
-        'phone'      => '+221771234567',
+        'email' => null,
+        'phone' => '+221771234567',
     ]);
 
     Livewire::actingAs($user)
@@ -955,7 +955,7 @@ test('le paramètre URL client est ignoré en mode édition de facture', functio
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form', [
-            'invoice'  => $invoice,
+            'invoice' => $invoice,
             'clientId' => $otherClient->id,
         ])
         ->assertSet('clientId', $invoice->client_id);

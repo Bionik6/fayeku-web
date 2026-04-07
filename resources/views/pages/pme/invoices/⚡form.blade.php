@@ -73,8 +73,6 @@ class extends Component {
 
     public string $clientName = '';
 
-    public string $clientSector = '';
-
     public string $clientPhone = '';
 
     public string $clientPhoneCountry = 'SN';
@@ -210,7 +208,6 @@ class extends Component {
                 'name',
                 'email',
                 'phone',
-                'sector'
             ])->toArray();
     }
 
@@ -587,7 +584,6 @@ class extends Component {
 
         $validated = $this->validate([
             'clientName'    => ['required', 'string', 'max:255'],
-            'clientSector'  => ['nullable', 'string', 'max:100'],
             'clientPhone'   => ['nullable', 'string', 'max:30'],
             'clientEmail'   => ['nullable', 'email', 'max:255'],
             'clientTaxId'   => ['nullable', 'string', 'max:100'],
@@ -600,7 +596,6 @@ class extends Component {
         $client = Client::query()->create([
             'company_id' => $this->company->id,
             'name'       => trim($validated['clientName']),
-            'sector'     => $this->emptyToNull($validated['clientSector'] ?? ''),
             'phone'      => $this->normalizePhone($validated['clientPhone'] ?? ''),
             'email'      => $this->emptyToNull($validated['clientEmail'] ?? ''),
             'tax_id'     => $this->emptyToNull($validated['clientTaxId'] ?? ''),
@@ -737,7 +732,6 @@ class extends Component {
     private function resetClientForm(): void
     {
         $this->clientName = '';
-        $this->clientSector = '';
         $this->clientPhone = '';
         $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
         $this->clientEmail = '';
@@ -860,7 +854,7 @@ class extends Component {
                                             class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-slate-50">
                                         <div>
                                             <p class="font-medium text-ink">{{ $c['name'] }}</p>
-                                            <p class="text-sm text-slate-600">{{ $c['email'] ?? $c['phone'] ?? $c['sector'] ?? '' }}</p>
+                                            <p class="text-sm text-slate-600">{{ $c['email'] ?? $c['phone'] ?? '' }}</p>
                                         </div>
                                     </button>
                                 @endforeach
@@ -1290,42 +1284,6 @@ class extends Component {
                                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
                                 @error('clientName') <p
                                         class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Secteur') }}</label>
-                                <x-select-native>
-                                    <select wire:model="clientSector"
-                                            class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
-                                        <option value="">{{ __('Choisir un secteur…') }}</option>
-                                        <option>Agriculture, Élevage &amp; Pêche</option>
-                                        <option>Agroalimentaire &amp; Transformation
-                                        </option>
-                                        <option>Commerce de gros</option>
-                                        <option>Commerce de détail &amp; Distribution
-                                        </option>
-                                        <option>Bâtiment &amp; Travaux Publics</option>
-                                        <option>Transport &amp; Logistique</option>
-                                        <option>Télécommunications</option>
-                                        <option>Technologies de l'information &amp;
-                                            Communication
-                                        </option>
-                                        <option>Industrie manufacturière</option>
-                                        <option>Énergie, Mines &amp; Pétrole</option>
-                                        <option>Santé &amp; Pharmacie</option>
-                                        <option>Éducation &amp; Formation</option>
-                                        <option>Immobilier &amp; Foncier</option>
-                                        <option>Finance, Banque &amp; Assurance</option>
-                                        <option>Hôtellerie &amp; Restauration</option>
-                                        <option>Tourisme &amp; Loisirs</option>
-                                        <option>Artisanat &amp; Arts</option>
-                                        <option>Médias &amp; Communication</option>
-                                        <option>Textile, Habillement &amp; Cuir</option>
-                                        <option>Services aux entreprises &amp; Conseil
-                                        </option>
-                                        <option>Environnement &amp; Eau</option>
-                                        <option value="Autre">{{ __('Autre') }}</option>
-                                    </select>
-                                </x-select-native>
                             </div>
                             <div
                                     wire:ignore

@@ -62,8 +62,6 @@ class extends Component {
 
     public string $clientName = '';
 
-    public string $clientSector = '';
-
     public string $clientPhone = '';
 
     public string $clientPhoneCountry = 'SN';
@@ -178,7 +176,6 @@ class extends Component {
                 'name',
                 'email',
                 'phone',
-                'sector'
             ])->toArray();
     }
 
@@ -483,7 +480,6 @@ class extends Component {
 
         $validated = $this->validate([
             'clientName'    => ['required', 'string', 'max:255'],
-            'clientSector'  => ['nullable', 'string', 'max:100'],
             'clientPhone'   => ['nullable', 'string', 'max:30'],
             'clientEmail'   => ['nullable', 'email', 'max:255'],
             'clientTaxId'   => ['nullable', 'string', 'max:100'],
@@ -496,7 +492,6 @@ class extends Component {
         $client = Client::query()->create([
             'company_id' => $this->company->id,
             'name'       => trim($validated['clientName']),
-            'sector'     => $this->emptyToNull($validated['clientSector'] ?? ''),
             'phone'      => $this->normalizePhone($validated['clientPhone'] ?? ''),
             'email'      => $this->emptyToNull($validated['clientEmail'] ?? ''),
             'tax_id'     => $this->emptyToNull($validated['clientTaxId'] ?? ''),
@@ -619,7 +614,6 @@ class extends Component {
     private function resetClientForm(): void
     {
         $this->clientName = '';
-        $this->clientSector = '';
         $this->clientPhone = '';
         $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
         $this->clientEmail = '';
@@ -752,7 +746,7 @@ class extends Component {
                                             class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-slate-50">
                                         <div>
                                             <p class="font-medium text-ink">{{ $c['name'] }}</p>
-                                            <p class="text-sm text-slate-600">{{ $c['email'] ?? $c['phone'] ?? $c['sector'] ?? '' }}</p>
+                                            <p class="text-sm text-slate-600">{{ $c['email'] ?? $c['phone'] ?? '' }}</p>
                                         </div>
                                     </button>
                                 @endforeach
