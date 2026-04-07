@@ -347,6 +347,71 @@ test('taxMode fonctionne de la même façon sur facture et devis', function () {
         ->assertSet('taxRate', 25);
 });
 
+// ─── Téléphone client (x-phone-input) ───────────────────────────────────────
+
+test('clientPhoneCountries contient tous les pays de config au montage (devis)', function () {
+    ['user' => $user] = createSmeUserForQuoteForm();
+
+    $component = Livewire::actingAs($user)->test('pages::pme.quotes.form');
+
+    $expected = collect(config('fayeku.phone_countries'))->map(fn ($c) => $c['label'])->all();
+
+    expect($component->get('clientPhoneCountries'))->toBe($expected);
+});
+
+test('clientPhoneCountry est initialisé au code pays de la compagnie (devis)', function () {
+    $user = User::factory()->create(['profile_type' => 'sme']);
+    $company = Company::factory()->create(['type' => 'sme', 'country_code' => 'CI']);
+    $company->users()->attach($user->id, ['role' => 'owner']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->call('openClientModal')
+        ->assertSet('clientPhoneCountry', 'CI');
+});
+
+test('openClientModal réinitialise clientPhone et clientPhoneCountry (devis)', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->set('clientPhone', '+221771234567')
+        ->set('clientPhoneCountry', 'CI')
+        ->call('openClientModal')
+        ->assertSet('clientPhone', '')
+        ->assertSet('clientPhoneCountry', $company->country_code ?? 'SN');
+});
+
+test('saveClient normalise un numéro SN sans préfixe (devis)', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->call('openClientModal')
+        ->set('clientName', 'Kane Agro')
+        ->set('clientPhoneCountry', 'SN')
+        ->set('clientPhone', '771234567')
+        ->call('saveClient')
+        ->assertHasNoErrors();
+
+    expect(Client::query()->where('company_id', $company->id)->first()->phone)
+        ->toBe('+221771234567');
+});
+
+test('saveClient stocke null quand clientPhone est vide (devis)', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.form')
+        ->call('openClientModal')
+        ->set('clientName', 'Ndiaye Transport')
+        ->set('clientPhone', '')
+        ->call('saveClient')
+        ->assertHasNoErrors();
+
+    expect(Client::query()->where('company_id', $company->id)->first()->phone)->toBeNull();
+});
+
 test('les totaux du devis correspondent aux totaux de la facture pour les mêmes données', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
     $client = Client::factory()->create(['company_id' => $company->id]);
