@@ -436,7 +436,7 @@ class DashboardDemoSeeder extends Seeder
                 'phone' => SenegalFaker::phone(),
                 'email' => SenegalFaker::email($firstName, $lastName),
                 'address' => SenegalFaker::address(),
-                'tax_id' => 'SN'.strtoupper(fake()->numerify('##########')),
+                'tax_id' => 'SN'.strtoupper(\fake()->numerify('##########')),
             ]);
             $clientId = $client->id;
         }

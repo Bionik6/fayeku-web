@@ -331,7 +331,7 @@ class PmeDashboardSeeder extends Seeder
             'phone' => $phone,
             'email' => $email,
             'address' => SenegalFaker::address(),
-            'tax_id' => 'SN'.strtoupper(fake()->numerify('##########')),
+            'tax_id' => 'SN'.strtoupper(\fake()->numerify('##########')),
         ]);
     }
 
