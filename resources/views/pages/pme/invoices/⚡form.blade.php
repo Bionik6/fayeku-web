@@ -77,6 +77,9 @@ class extends Component {
 
     public string $clientPhoneCountry = 'SN';
 
+    /** @var array<string, string> */
+    public array $clientPhoneCountries = [];
+
     public string $clientEmail = '';
 
     public string $clientTaxId = '';
@@ -180,6 +183,10 @@ class extends Component {
             $this->dueAt = now()->addDays(30)->format('Y-m-d');
             $this->lines = [$this->emptyLine()];
         }
+
+        $this->clientPhoneCountries = collect(config('fayeku.phone_countries'))
+            ->map(fn ($c) => $c['label'])
+            ->all();
 
         $this->currencyJs = CurrencyService::jsConfig($this->currency);
     }
@@ -1285,38 +1292,18 @@ class extends Component {
                                 @error('clientName') <p
                                         class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
-                            <div
-                                    wire:ignore
-                                    x-data="{
-                                    iti: null,
-                                    init() {
-                                        this.iti = window.intlTelInput(this.$refs.phoneInput, {
-                                            initialCountry: '{{ strtolower($clientPhoneCountry) }}',
-                                            preferredCountries: ['sn', 'ci', 'fr', 'ml', 'bf', 'gn', 'tg', 'bj', 'ne', 'cm'],
-                                            separateDialCode: true,
-                                            utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@26/build/js/utils.js',
-                                            containerClass: 'iti--fayeku w-full',
-                                        });
-                                        this.$refs.phoneInput.addEventListener('countrychange', () => {
-                                            const data = this.iti.getSelectedCountryData();
-                                            $wire.clientPhoneCountry = data.iso2.toUpperCase();
-                                        });
-                                    },
-                                    syncPhone() {
-                                        const number = this.iti.getNumber();
-                                        $wire.clientPhone = number || '';
-                                    },
-                                    destroy() { if (this.iti) this.iti.destroy(); }
-                                }"
-                            >
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Téléphone / WhatsApp') }}</label>
-                                <input
-                                        x-ref="phoneInput"
-                                        type="tel"
-                                        @input="syncPhone()"
-                                        @blur="syncPhone()"
-                                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                            <div>
+                                <x-phone-input
+                                    :label="__('Téléphone / WhatsApp')"
+                                    country-name="clientPhoneCountry"
+                                    :country-value="$clientPhoneCountry"
+                                    country-model="clientPhoneCountry"
+                                    phone-name="clientPhone"
+                                    :phone-value="$clientPhone"
+                                    phone-model="clientPhone"
+                                    :countries="$clientPhoneCountries"
                                 />
+                                @error('clientPhone') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Email') }}</label>

@@ -66,6 +66,9 @@ class extends Component {
 
     public string $clientPhoneCountry = 'SN';
 
+    /** @var array<string, string> */
+    public array $clientPhoneCountries = [];
+
     public string $clientEmail = '';
 
     public string $clientTaxId = '';
@@ -149,6 +152,10 @@ class extends Component {
             $this->validUntil = now()->addDays(30)->format('Y-m-d');
             $this->lines = [$this->emptyLine()];
         }
+
+        $this->clientPhoneCountries = collect(config('fayeku.phone_countries'))
+            ->map(fn ($c) => $c['label'])
+            ->all();
 
         $this->currencyJs = CurrencyService::jsConfig($this->currency);
     }
@@ -1143,9 +1150,17 @@ class extends Component {
                                         class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Téléphone') }}</label>
-                                <input wire:model="clientPhone" type="tel"
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
+                                <x-phone-input
+                                    :label="__('Téléphone / WhatsApp')"
+                                    country-name="clientPhoneCountry"
+                                    :country-value="$clientPhoneCountry"
+                                    country-model="clientPhoneCountry"
+                                    phone-name="clientPhone"
+                                    :phone-value="$clientPhone"
+                                    phone-model="clientPhone"
+                                    :countries="$clientPhoneCountries"
+                                />
+                                @error('clientPhone') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Adresse') }}</label>
