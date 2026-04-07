@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('dismissed_alerts', function (Blueprint $table) {
-            $table->ulid('id')->primary();
+            $table->string('id')->primary();
             $table->string('user_id');
             $table->string('alert_key');
             $table->timestamp('dismissed_at');

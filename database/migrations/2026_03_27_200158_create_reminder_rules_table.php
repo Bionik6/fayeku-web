@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reminder_rules', function (Blueprint $table) {
-            $table->ulid('id')->primary();
+            $table->string('id')->primary();
             $table->string('company_id');
             $table->string('name');
             $table->integer('trigger_days');
