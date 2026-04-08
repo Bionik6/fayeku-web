@@ -329,29 +329,21 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
             <div class="flex flex-wrap items-center gap-2">
                 @foreach ([
-                    'all' => ['label' => 'Tous', 'count' => $this->segmentCounts['all']],
-                    'reliable' => ['label' => 'Bons payeurs', 'count' => $this->segmentCounts['reliable']],
-                    'watch' => ['label' => 'À surveiller', 'count' => $this->segmentCounts['watch']],
-                    'frequent_delays' => ['label' => 'Retards fréquents', 'count' => $this->segmentCounts['frequent_delays']],
-                    'inactive' => ['label' => 'Inactifs', 'count' => $this->segmentCounts['inactive']],
-                    'big_accounts' => ['label' => 'Gros comptes', 'count' => $this->segmentCounts['big_accounts']],
+                    'all'             => ['label' => 'Tous',             'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                    'reliable'        => ['label' => 'Bons payeurs',     'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                    'watch'           => ['label' => 'À surveiller',     'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                    'frequent_delays' => ['label' => 'Retards fréquents','activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                    'inactive'        => ['label' => 'Inactifs',         'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                    'big_accounts'    => ['label' => 'Gros comptes',     'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
                 ] as $value => $tab)
-                    <button
-                        type="button"
+                    <x-ui.filter-chip
                         wire:click="$set('segment', '{{ $value }}')"
-                        @class([
-                            'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
-                            'bg-primary text-white shadow-sm' => $segment === $value,
-                            'border border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary' => $segment !== $value,
-                        ])
-                    >
-                        {{ $tab['label'] }}
-                        <span @class([
-                            'rounded-full px-2 py-0.5 text-sm font-bold',
-                            'bg-white/20 text-white' => $segment === $value,
-                            'bg-slate-100 text-slate-500' => $segment !== $value,
-                        ])>{{ $tab['count'] }}</span>
-                    </button>
+                        :label="$tab['label']"
+                        :active="$segment === $value"
+                        :activeClass="$tab['activeClass']"
+                        :badgeInactive="$tab['badgeInactive']"
+                        :count="$this->segmentCounts[$value]"
+                    />
                 @endforeach
             </div>
 

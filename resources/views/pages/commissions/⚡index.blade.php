@@ -436,28 +436,19 @@ new #[Title('Commissions')] class extends Component
             <div class="flex flex-wrap items-center gap-2">
                 @foreach ([
                     'all'     => ['label' => 'Tous',       'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'pending' => ['label' => 'En attente', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',  'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                    'pending' => ['label' => 'En attente', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
                     'paid'    => ['label' => 'Versées',    'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
                 ] as $key => $tab)
                     @php $isActive = ($key === 'all' && $filterStatus === '') || $filterStatus === $key; @endphp
-                    <button
+                    <x-ui.filter-chip
                         wire:click="setFilterStatus('{{ $key }}')"
-                        @class([
-                            'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                            $tab['activeClass']                                                                            => $isActive,
-                            'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => ! $isActive,
-                        ])
-                    >
-                        @if ($tab['dot'])
-                            <span @class(['size-2 rounded-full', 'bg-white' => $isActive, $tab['dot'] => ! $isActive])></span>
-                        @endif
-                        {{ $tab['label'] }}
-                        <span @class([
-                            'rounded-full px-1.5 py-px text-sm font-bold',
-                            'bg-white/20 text-white' => $isActive,
-                            $tab['badgeInactive']    => ! $isActive,
-                        ])>{{ $this->statusCounts[$key] }}</span>
-                    </button>
+                        :label="$tab['label']"
+                        :dot="$tab['dot']"
+                        :active="$isActive"
+                        :activeClass="$tab['activeClass']"
+                        :badgeInactive="$tab['badgeInactive']"
+                        :count="$this->statusCounts[$key]"
+                    />
                 @endforeach
             </div>
 

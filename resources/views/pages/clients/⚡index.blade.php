@@ -318,29 +318,20 @@ new #[Title('Clients')] class extends Component {
         <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les clients') }}</p>
         <div class="flex flex-wrap items-center gap-2">
             @foreach ([
-                'all'      => ['label' => 'Tous',       'dot' => null,        'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                'current'   => ['label' => 'À jour',     'dot' => 'bg-accent', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                'watch'  => ['label' => 'À surveiller',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',  'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                'critical' => ['label' => 'Critiques',  'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',   'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'all'      => ['label' => 'Tous',          'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'current'  => ['label' => 'À jour',        'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'watch'    => ['label' => 'À surveiller',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'critical' => ['label' => 'Critiques',     'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
             ] as $key => $tab)
-                <button
+                <x-ui.filter-chip
                     wire:click="setFilterStatus('{{ $key }}')"
-                    @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                        $tab['activeClass']                                                                              => $filterStatus === $key,
-                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary'   => $filterStatus !== $key,
-                    ])
-                >
-                    @if ($tab['dot'])
-                        <span @class(['size-2 rounded-full', 'bg-white' => $filterStatus === $key, $tab['dot'] => $filterStatus !== $key])></span>
-                    @endif
-                    {{ $tab['label'] }}
-                    <span @class([
-                        'rounded-full px-1.5 py-px text-sm font-bold',
-                        'bg-white/20 text-white'       => $filterStatus === $key,
-                        $tab['badgeInactive']           => $filterStatus !== $key,
-                    ])>{{ $this->statusCounts[$key] }}</span>
-                </button>
+                    :label="$tab['label']"
+                    :dot="$tab['dot']"
+                    :active="$filterStatus === $key"
+                    :activeClass="$tab['activeClass']"
+                    :badgeInactive="$tab['badgeInactive']"
+                    :count="$this->statusCounts[$key]"
+                />
             @endforeach
         </div>
 

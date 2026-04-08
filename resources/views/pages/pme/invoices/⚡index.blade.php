@@ -462,35 +462,25 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
         {{-- Filtre Statut --}}
         <div class="mt-3 flex flex-wrap gap-2">
-            @php
-                $statusTabs = [
-                    'all'           => ['label' => 'Tous',       'dot' => null],
-                    'draft'         => ['label' => 'Brouillon',  'dot' => 'bg-slate-400'],
-                    'sent'          => ['label' => 'Envoyée',    'dot' => 'bg-blue-500'],
-                    'paid'          => ['label' => 'Payée',      'dot' => 'bg-accent'],
-                    'overdue'       => ['label' => 'En retard',  'dot' => 'bg-rose-500'],
-                    'partially_paid' => ['label' => 'Part. payée', 'dot' => 'bg-amber-500'],
-                ];
-            @endphp
-            @foreach ($statusTabs as $key => $tab)
-                @php $count = $key === 'all' ? ($this->statusCounts['all'] ?? 0) : ($this->statusCounts[$key] ?? 0); @endphp
+            @foreach ([
+                'all'            => ['label' => 'Tous',         'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'draft'          => ['label' => 'Brouillon',    'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                'sent'           => ['label' => 'Envoyée',      'dot' => 'bg-blue-500',  'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
+                'paid'           => ['label' => 'Payée',        'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'overdue'        => ['label' => 'En retard',    'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'partially_paid' => ['label' => 'Part. payée',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+            ] as $key => $tab)
+                @php $count = $this->statusCounts[$key] ?? 0; @endphp
                 @if ($key === 'all' || $count > 0)
-                    <button
+                    <x-ui.filter-chip
                         wire:click="setStatusFilter('{{ $key }}')"
-                        @class([
-                            'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-semibold transition',
-                            'bg-ink text-white shadow-sm'                                                  => $statusFilter === $key,
-                            'bg-slate-100 text-slate-600 hover:bg-slate-200'                               => $statusFilter !== $key,
-                        ])
-                    >
-                        @if ($tab['dot'])
-                            <span class="size-1.5 rounded-full {{ $tab['dot'] }}"></span>
-                        @endif
-                        {{ __($tab['label']) }}
-                        @if ($key !== 'all')
-                            <span class="opacity-70">{{ $count }}</span>
-                        @endif
-                    </button>
+                        :label="__($tab['label'])"
+                        :dot="$tab['dot']"
+                        :active="$statusFilter === $key"
+                        :activeClass="$tab['activeClass']"
+                        :badgeInactive="$tab['badgeInactive']"
+                        :count="$count"
+                    />
                 @endif
             @endforeach
         </div>

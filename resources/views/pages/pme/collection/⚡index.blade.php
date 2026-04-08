@@ -810,30 +810,20 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
         {{-- Filtres par âge --}}
         <div class="flex flex-wrap gap-2">
             @foreach ([
-                'all'      => ['label' => 'Toutes',    'dot' => null],
-                'critical' => ['label' => 'Critiques', 'dot' => 'bg-rose-500'],
-                'late'     => ['label' => 'En retard', 'dot' => 'bg-amber-500'],
-                'pending'  => ['label' => 'En attente','dot' => 'bg-teal-500'],
+                'all'      => ['label' => 'Toutes',     'dot' => null,           'activeClass' => 'bg-primary text-white',   'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'critical' => ['label' => 'Critiques',  'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',  'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'late'     => ['label' => 'En retard',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'pending'  => ['label' => 'En attente', 'dot' => 'bg-blue-400',  'activeClass' => 'bg-blue-500 text-white',  'badgeInactive' => 'bg-blue-100 text-blue-700'],
             ] as $key => $tab)
-                @php $count = $this->counts[$key] ?? 0; @endphp
-                <button
+                <x-ui.filter-chip
                     wire:click="setAgeFilter('{{ $key }}')"
-                    @class([
-                        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                        'bg-primary text-white shadow-sm' => $ageFilter === $key,
-                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30' => $ageFilter !== $key,
-                    ])
-                >
-                    @if ($tab['dot'])
-                        <span class="size-1.5 rounded-full {{ $tab['dot'] }}"></span>
-                    @endif
-                    {{ __($tab['label']) }}
-                    <span @class([
-                        'inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-sm font-bold min-w-[1.25rem]',
-                        'bg-white/20 text-white' => $ageFilter === $key,
-                        'bg-slate-100 text-slate-600' => $ageFilter !== $key,
-                    ])>{{ $count }}</span>
-                </button>
+                    :label="__($tab['label'])"
+                    :dot="$tab['dot']"
+                    :active="$ageFilter === $key"
+                    :activeClass="$tab['activeClass']"
+                    :badgeInactive="$tab['badgeInactive']"
+                    :count="$this->counts[$key] ?? 0"
+                />
             @endforeach
         </div>
 
