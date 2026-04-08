@@ -804,7 +804,7 @@ class extends Component {
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Référence') }}
                             <span class="text-rose-500">*</span></label>
-                        <input wire:model.blur="reference" type="text"
+                        <input wire:model.live.debounce.300ms="reference" type="text"
                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
                         @error('reference') <p
                                 class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
