@@ -220,24 +220,14 @@ test('la periode limite le chiffre d affaires retenu dans la ligne client', func
     expect($row['period_revenue'])->toBe(400_000);
 });
 
-test('saveClient cree un client, normalise le telephone et redirige vers la fiche', function () {
+test('client-created redirige vers la fiche client depuis la page index', function () {
     ['user' => $user, 'company' => $company] = createSmePortfolioOwner();
+    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'Nouvelle Cliente']);
 
-    $component = Livewire::actingAs($user)
+    Livewire::actingAs($user)
         ->test('pages::pme.clients.index')
-        ->set('clientName', 'Nouvelle Cliente')
-        ->set('clientPhone', '77 123 45 67')
-        ->set('clientEmail', 'contact@nouvelle.sn')
-        ->set('clientTaxId', 'SN123456')
-        ->set('clientAddress', 'Dakar Plateau')
-        ->call('saveClient');
-
-    $client = Client::query()->where('company_id', $company->id)->first();
-
-    expect($client)->not->toBeNull()
-        ->and($client->phone)->toBe('+221771234567');
-
-    $component->assertRedirect(route('pme.clients.show', $client));
+        ->dispatch('client-created', id: $client->id, name: $client->name)
+        ->assertRedirect(route('pme.clients.show', $client));
 });
 
 test('la table expose les liens vers la fiche client et les actions rapides', function () {

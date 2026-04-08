@@ -347,24 +347,16 @@ test('les erreurs de validation se réinitialisent quand on corrige les champs',
         ->assertHasNoErrors(['lines.0.description']);
 });
 
-// ─── Client creation inline ─────────────────────────────────────────────────
+// ─── Client creation (shared modal) ─────────────────────────────────────────
 
-test('on peut créer un client depuis le formulaire facture', function () {
+test('client-created sélectionne le nouveau client dans le formulaire facture', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
-        ->call('openClientModal')
-        ->assertSet('showClientModal', true)
-        ->set('clientName', 'Dakar Pharma')
-        ->set('clientPhone', '+221771234567')
-        ->set('clientEmail', 'contact@dakarpharma.sn')
-        ->call('saveClient')
-        ->assertSet('showClientModal', false);
-
-    $client = Client::query()->where('company_id', $company->id)->where('name', 'Dakar Pharma')->first();
-
-    expect($client)->not->toBeNull();
+        ->dispatch('client-created', id: $client->id, name: $client->name)
+        ->assertSet('clientId', $client->id);
 });
 
 // ─── Send flow ───────────────────────────────────────────────────────────────
@@ -971,99 +963,4 @@ test('le bouton Nouvelle facture sur la fiche client pointe vers create avec le 
     Livewire::actingAs($user)
         ->test('pages::pme.clients.show', ['client' => $client])
         ->assertSee($expectedUrl, escape: false);
-});
-
-// ─── Téléphone client (x-phone-input) ───────────────────────────────────────
-
-test('clientPhoneCountries contient tous les pays de config au montage', function () {
-    ['user' => $user] = createSmeUser();
-
-    $component = Livewire::actingAs($user)->test('pages::pme.invoices.form');
-
-    $expected = collect(config('fayeku.phone_countries'))->map(fn ($c) => $c['label'])->all();
-
-    expect($component->get('clientPhoneCountries'))->toBe($expected);
-});
-
-test('clientPhoneCountry est initialisé au code pays de la compagnie', function () {
-    $user = User::factory()->create(['profile_type' => 'sme']);
-    $company = Company::factory()->create(['type' => 'sme', 'country_code' => 'CI']);
-    $company->users()->attach($user->id, ['role' => 'owner']);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('openClientModal')
-        ->assertSet('clientPhoneCountry', 'CI');
-});
-
-test('openClientModal réinitialise clientPhone et clientPhoneCountry', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->set('clientPhone', '+221771234567')
-        ->set('clientPhoneCountry', 'CI')
-        ->call('openClientModal')
-        ->assertSet('clientPhone', '')
-        ->assertSet('clientPhoneCountry', $company->country_code ?? 'SN');
-});
-
-test('saveClient normalise un numéro SN sans préfixe', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('openClientModal')
-        ->set('clientName', 'Diallo Tech')
-        ->set('clientPhoneCountry', 'SN')
-        ->set('clientPhone', '771234567')
-        ->call('saveClient')
-        ->assertHasNoErrors();
-
-    expect(Client::query()->where('company_id', $company->id)->first()->phone)
-        ->toBe('+221771234567');
-});
-
-test('saveClient normalise un numéro CI sans préfixe', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('openClientModal')
-        ->set('clientName', 'Kouassi BTP')
-        ->set('clientPhoneCountry', 'CI')
-        ->set('clientPhone', '0712345678')
-        ->call('saveClient')
-        ->assertHasNoErrors();
-
-    expect(Client::query()->where('company_id', $company->id)->first()->phone)
-        ->toBe('+2250712345678');
-});
-
-test('saveClient conserve un numéro déjà internationalisé (+221...)', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('openClientModal')
-        ->set('clientName', 'Fall Logistics')
-        ->set('clientPhoneCountry', 'SN')
-        ->set('clientPhone', '+221771234567')
-        ->call('saveClient')
-        ->assertHasNoErrors();
-
-    expect(Client::query()->where('company_id', $company->id)->first()->phone)
-        ->toBe('+221771234567');
-});
-
-test('saveClient échoue si clientPhone est vide', function () {
-    ['user' => $user] = createSmeUser();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('openClientModal')
-        ->set('clientName', 'Sow Import')
-        ->set('clientPhone', '')
-        ->call('saveClient')
-        ->assertHasErrors(['clientPhone']);
 });

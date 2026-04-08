@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Modules\Auth\Models\Company;
@@ -64,27 +65,9 @@ class extends Component {
 
     public bool $showCancelModal = false;
 
-    public bool $showClientModal = false;
-
     public bool $showSendModal = false;
 
     public bool $showSaveDraftModal = false;
-
-
-    public string $clientName = '';
-
-    public string $clientPhone = '';
-
-    public string $clientPhoneCountry = 'SN';
-
-    /** @var array<string, string> */
-    public array $clientPhoneCountries = [];
-
-    public string $clientEmail = '';
-
-    public string $clientTaxId = '';
-
-    public string $clientAddress = '';
 
     public string $sendChannel = 'email';
 
@@ -183,10 +166,6 @@ class extends Component {
             $this->dueAt = now()->addDays(30)->format('Y-m-d');
             $this->lines = [$this->emptyLine()];
         }
-
-        $this->clientPhoneCountries = collect(config('fayeku.phone_countries'))
-            ->map(fn ($c) => $c['label'])
-            ->all();
 
         $this->currencyJs = CurrencyService::jsConfig($this->currency);
     }
@@ -578,40 +557,10 @@ class extends Component {
         $this->redirect(route('pme.invoices.index'), navigate: true);
     }
 
-    public function openClientModal(): void
+    #[On('client-created')]
+    public function onClientCreated(string $id): void
     {
-        $this->resetValidation();
-        $this->resetClientForm();
-        $this->showClientModal = true;
-    }
-
-    public function saveClient(): void
-    {
-        abort_unless($this->company && auth()->user()->can('create', Client::class), 403);
-
-        $validated = $this->validate([
-            'clientName'    => ['required', 'string', 'max:255'],
-            'clientPhone'   => ['required', 'string', 'max:30'],
-            'clientEmail'   => ['nullable', 'email', 'max:255'],
-            'clientTaxId'   => ['nullable', 'string', 'max:100'],
-            'clientAddress' => ['nullable', 'string', 'max:500'],
-        ], [
-            'clientName.required'  => __('Le nom du client est requis.'),
-            'clientPhone.required' => __('Le numéro de téléphone est requis.'),
-            'clientEmail.email'    => __("L'adresse email doit être valide."),
-        ]);
-
-        $client = Client::query()->create([
-            'company_id' => $this->company->id,
-            'name'       => trim($validated['clientName']),
-            'phone'      => $this->normalizePhone($validated['clientPhone'] ?? ''),
-            'email'      => $this->emptyToNull($validated['clientEmail'] ?? ''),
-            'tax_id'     => $this->emptyToNull($validated['clientTaxId'] ?? ''),
-            'address'    => $this->emptyToNull($validated['clientAddress'] ?? ''),
-        ]);
-
-        $this->showClientModal = false;
-        $this->selectClient($client->id);
+        $this->selectClient($id);
     }
 
     private function validateForm(): void
@@ -713,39 +662,6 @@ class extends Component {
         return $trimmed === '' ? null : $trimmed;
     }
 
-    private function normalizePhone(string $phone): ?string
-    {
-        $digits = preg_replace('/\D+/', '', $phone);
-
-        if ($digits === '' || $digits === null) {
-            return null;
-        }
-
-        if (str_starts_with($phone, '+')) {
-            return '+' . $digits;
-        }
-
-        $prefix = match ($this->clientPhoneCountry) {
-            'CI' => '225',
-            default => '221',
-        };
-
-        if (str_starts_with($digits, $prefix)) {
-            return '+' . $digits;
-        }
-
-        return '+' . $prefix . $digits;
-    }
-
-    private function resetClientForm(): void
-    {
-        $this->clientName = '';
-        $this->clientPhone = '';
-        $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
-        $this->clientEmail = '';
-        $this->clientTaxId = '';
-        $this->clientAddress = '';
-    }
 }; ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-6 pb-24 lg:pb-6"
@@ -869,7 +785,7 @@ class extends Component {
                             </div>
                         @endif
                     </div>
-                    <button type="button" wire:click="openClientModal"
+                    <button type="button" wire:click="$dispatch('open-create-client-modal')"
                             class="mt-3 inline-flex items-center text-sm font-medium text-primary transition hover:text-primary-strong">
                         <svg class="mr-1.5 size-4" fill="none" stroke="currentColor"
                              stroke-width="1.5" viewBox="0 0 24 24">
@@ -1261,87 +1177,7 @@ class extends Component {
         </div>
     </div>
 
-    {{-- Client creation modal --}}
-    @if ($showClientModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-             wire:click.self="$set('showClientModal', false)" x-data
-             @keydown.escape.window="$wire.set('showClientModal', false)">
-            <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <form wire:submit="saveClient">
-                    <div class="flex items-start justify-between border-b border-slate-100 px-7 py-6">
-                        <div>
-                            <h2 class="text-lg font-semibold text-ink">{{ __('Nouveau client') }}</h2>
-                            <p class="mt-1 text-sm text-slate-700">{{ __('Créez un client sans quitter votre facture.') }}</p>
-                        </div>
-                        <button type="button" wire:click="$set('showClientModal', false)"
-                                class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-700">
-                            <svg class="size-5" fill="none" stroke="currentColor"
-                                 stroke-width="1.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M6 18 18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="max-h-[70vh] overflow-y-auto px-7 py-6">
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Nom du client') }}
-                                    <span class="text-rose-500">*</span></label>
-                                <input wire:model="clientName" type="text" required
-                                       autofocus
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                                @error('clientName') <p
-                                        class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <x-phone-input
-                                    :label="__('Téléphone / WhatsApp')"
-                                    country-name="clientPhoneCountry"
-                                    :country-value="$clientPhoneCountry"
-                                    country-model="clientPhoneCountry"
-                                    phone-name="clientPhone"
-                                    :phone-value="$clientPhone"
-                                    phone-model="clientPhone"
-                                    :countries="$clientPhoneCountries"
-                                    container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
-                                    text-size="text-sm"
-                                    placeholder-class="placeholder:text-slate-500"
-                                    required
-                                />
-                                @error('clientPhone') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Email') }}</label>
-                                <input wire:model="clientEmail" type="email"
-                                       placeholder="contact@client.sn"
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                                @error('clientEmail') <p
-                                        class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Identifiant fiscal') }}</label>
-                                <input wire:model="clientTaxId" type="text"
-                                       placeholder="NINEA / RCCM / NCC"
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Adresse') }}</label>
-                                <input wire:model="clientAddress" type="text"
-                                       placeholder="{{ __('Rue, quartier, ville…') }}"
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                        <button type="button" wire:click="$set('showClientModal', false)"
-                                class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
-                        <button type="submit"
-                                class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong">{{ __('Créer le client') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
+    <livewire:create-client-modal :company="$company" />
 
     {{-- Send modal --}}
     @if ($showSendModal)
