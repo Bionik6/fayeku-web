@@ -29,30 +29,20 @@
                 @endif
 
                 <div class="space-y-4">
-                    {{-- Row 1: Type + Désignation --}}
-                    <div class="flex flex-col gap-4 md:flex-row md:items-start md:gap-3">
-                        <div class="md:w-36 md:shrink-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Type') }}</label>
-                            <select wire:model="lines.{{ $index }}.type"
-                                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10">
-                                @foreach (\Modules\PME\Invoicing\Enums\InvoiceLineType::cases() as $type)
-                                    <option value="{{ $type->value }}">{{ $type->label() }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }}
-                                <span class="text-rose-500">*</span></label>
-                            <input wire:model.blur="lines.{{ $index }}.description"
-                                   type="text"
-                                   placeholder="{{ __('Ex : Ciment, prestation…') }}"
-                                   class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                            @error("lines.{$index}.description") <p
-                                    class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                        </div>
+                    {{-- Row 1: Désignation --}}
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }}
+                            <span class="text-rose-500">*</span></label>
+                        <input wire:model.blur="lines.{{ $index }}.description"
+                               type="text"
+                               placeholder="{{ __('Ex : Ciment, prestation…') }}"
+                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
+                        @error("lines.{$index}.description") <p
+                                class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Row 2: Qté / P.U. / Total --}}
+
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         {{-- Quantité --}}
                         <div>

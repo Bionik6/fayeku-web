@@ -123,7 +123,6 @@ class extends Component {
 
             $this->lines = $quote->lines->map(fn($line) => [
                 'description' => $line->description,
-                'type'        => $line->type?->value ?? 'service',
                 'quantity'    => $line->quantity,
                 'unit_price'  => $line->unit_price,
             ])->toArray();
@@ -522,7 +521,6 @@ class extends Component {
     {
         return collect($this->lines)->map(fn(array $line) => [
             'description' => $line['description'],
-            'type'        => $line['type'] ?? 'service',
             'quantity'    => (int) $line['quantity'],
             'unit_price'  => (int) $line['unit_price'],
         ])->toArray();
@@ -532,7 +530,6 @@ class extends Component {
     {
         return [
             'description' => '',
-            'type'        => 'service',
             'quantity'    => 1,
             'unit_price'  => 0,
         ];
