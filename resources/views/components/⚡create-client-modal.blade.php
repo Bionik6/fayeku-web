@@ -162,6 +162,9 @@ new class extends Component {
                             :phone-value="$clientPhone"
                             phone-model="clientPhone"
                             :countries="$clientPhoneCountries"
+                            container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
+                            text-size="text-sm"
+                            placeholder-class="placeholder:text-slate-500"
                             required
                         />
                         @error('clientPhone') <p class="-mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
