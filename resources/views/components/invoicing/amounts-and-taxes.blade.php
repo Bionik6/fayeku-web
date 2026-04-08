@@ -13,24 +13,18 @@
 
             <div class="mb-3 flex gap-6">
                 <label class="flex cursor-pointer items-center gap-2">
-                    <input type="radio" wire:model.live="taxMode" value="0" class="peer sr-only">
-                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                        <span class="size-1.5 rounded-full bg-white"></span>
-                    </span>
+                    <input type="radio" wire:model.live="taxMode" value="0"
+                           class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
                     <span class="text-sm text-slate-700">{{ __('Sans TVA') }}</span>
                 </label>
                 <label class="flex cursor-pointer items-center gap-2">
-                    <input type="radio" wire:model.live="taxMode" value="18" class="peer sr-only">
-                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                        <span class="size-1.5 rounded-full bg-white"></span>
-                    </span>
+                    <input type="radio" wire:model.live="taxMode" value="18"
+                           class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
                     <span class="text-sm text-slate-700">18 %</span>
                 </label>
                 <label class="flex cursor-pointer items-center gap-2">
-                    <input type="radio" wire:model.live="taxMode" value="custom" class="peer sr-only">
-                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                        <span class="size-1.5 rounded-full bg-white"></span>
-                    </span>
+                    <input type="radio" wire:model.live="taxMode" value="custom"
+                           class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
                     <span class="text-sm text-slate-700">{{ __('Taux personnalisé') }}</span>
                 </label>
             </div>
@@ -53,17 +47,13 @@
 
             <div class="mb-3 flex gap-6">
                 <label class="flex cursor-pointer items-center gap-2">
-                    <input type="radio" wire:model.live="discountType" value="percent" class="peer sr-only">
-                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                        <span class="size-1.5 rounded-full bg-white"></span>
-                    </span>
+                    <input type="radio" wire:model.live="discountType" value="percent"
+                           class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
                     <span class="text-sm text-slate-700">{{ __('Pourcentage') }}</span>
                 </label>
                 <label class="flex cursor-pointer items-center gap-2">
-                    <input type="radio" wire:model.live="discountType" value="fixed" class="peer sr-only">
-                    <span class="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                        <span class="size-1.5 rounded-full bg-white"></span>
-                    </span>
+                    <input type="radio" wire:model.live="discountType" value="fixed"
+                           class="relative size-4 appearance-none rounded-full border border-slate-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
                     <span class="text-sm text-slate-700">{{ __('Montant fixe') }}</span>
                 </label>
             </div>
