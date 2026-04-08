@@ -173,7 +173,7 @@
                             <ul class="max-h-52 overflow-y-auto py-1">
                                 <template x-for="c in filtered" :key="c.code">
                                     <li
-                                        @mousedown.prevent="selectCountry(c.code)"
+                                        @click="selectCountry(c.code)"
                                         class="cursor-pointer px-3 py-2 text-sm hover:bg-slate-50"
                                         :class="{ 'bg-primary/5 font-medium text-primary': c.code === country }"
                                     >
