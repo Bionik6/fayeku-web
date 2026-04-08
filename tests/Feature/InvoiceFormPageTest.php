@@ -357,6 +357,7 @@ test('on peut créer un client depuis le formulaire facture', function () {
         ->call('openClientModal')
         ->assertSet('showClientModal', true)
         ->set('clientName', 'Dakar Pharma')
+        ->set('clientPhone', '+221771234567')
         ->set('clientEmail', 'contact@dakarpharma.sn')
         ->call('saveClient')
         ->assertSet('showClientModal', false);
@@ -1055,8 +1056,8 @@ test('saveClient conserve un numéro déjà internationalisé (+221...)', functi
         ->toBe('+221771234567');
 });
 
-test('saveClient stocke null quand clientPhone est vide', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
+test('saveClient échoue si clientPhone est vide', function () {
+    ['user' => $user] = createSmeUser();
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
@@ -1064,7 +1065,5 @@ test('saveClient stocke null quand clientPhone est vide', function () {
         ->set('clientName', 'Sow Import')
         ->set('clientPhone', '')
         ->call('saveClient')
-        ->assertHasNoErrors();
-
-    expect(Client::query()->where('company_id', $company->id)->first()->phone)->toBeNull();
+        ->assertHasErrors(['clientPhone']);
 });

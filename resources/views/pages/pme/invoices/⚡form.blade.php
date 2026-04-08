@@ -591,13 +591,14 @@ class extends Component {
 
         $validated = $this->validate([
             'clientName'    => ['required', 'string', 'max:255'],
-            'clientPhone'   => ['nullable', 'string', 'max:30'],
+            'clientPhone'   => ['required', 'string', 'max:30'],
             'clientEmail'   => ['nullable', 'email', 'max:255'],
             'clientTaxId'   => ['nullable', 'string', 'max:100'],
             'clientAddress' => ['nullable', 'string', 'max:500'],
         ], [
-            'clientName.required' => __('Le nom du client est requis.'),
-            'clientEmail.email'   => __("L'adresse email doit être valide."),
+            'clientName.required'  => __('Le nom du client est requis.'),
+            'clientPhone.required' => __('Le numéro de téléphone est requis.'),
+            'clientEmail.email'    => __("L'adresse email doit être valide."),
         ]);
 
         $client = Client::query()->create([
@@ -1302,6 +1303,10 @@ class extends Component {
                                     :phone-value="$clientPhone"
                                     phone-model="clientPhone"
                                     :countries="$clientPhoneCountries"
+                                    container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
+                                    text-size="text-sm"
+                                    placeholder-class="placeholder:text-slate-500"
+                                    required
                                 />
                                 @error('clientPhone') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                             </div>

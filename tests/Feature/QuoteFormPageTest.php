@@ -398,8 +398,8 @@ test('saveClient normalise un numéro SN sans préfixe (devis)', function () {
         ->toBe('+221771234567');
 });
 
-test('saveClient stocke null quand clientPhone est vide (devis)', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForQuoteForm();
+test('saveClient échoue si clientPhone est vide (devis)', function () {
+    ['user' => $user] = createSmeUserForQuoteForm();
 
     Livewire::actingAs($user)
         ->test('pages::pme.quotes.form')
@@ -407,9 +407,7 @@ test('saveClient stocke null quand clientPhone est vide (devis)', function () {
         ->set('clientName', 'Ndiaye Transport')
         ->set('clientPhone', '')
         ->call('saveClient')
-        ->assertHasNoErrors();
-
-    expect(Client::query()->where('company_id', $company->id)->first()->phone)->toBeNull();
+        ->assertHasErrors(['clientPhone']);
 });
 
 test('les totaux du devis correspondent aux totaux de la facture pour les mêmes données', function () {
