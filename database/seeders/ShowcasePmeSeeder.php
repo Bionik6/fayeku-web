@@ -299,9 +299,9 @@ class ShowcasePmeSeeder extends Seeder
 
         // ── Factures impayées en retard ────────────────────────────────────────
 
-        // Critique J+55 — LafargeHolcim
+        // Critique J+65 — LafargeHolcim
         $facLafarge = $this->invoice($lafarge, 'FYK-FAC-KD0501', InvoiceStatus::Overdue, 2_800_000,
-            issuedAt: '2026-01-25', dueAt: '2026-02-10', paidAt: null,
+            issuedAt: '2026-01-25', dueAt: '2026-02-05', paidAt: null,
             lines: [
                 ['Migration ERP Sage X3 — Phase 2 : recettage & déploiement', 1, 2_200_000],
                 ['Formation utilisateurs clés (8 jours)', 8, 75_000],
@@ -340,13 +340,13 @@ class ShowcasePmeSeeder extends Seeder
             'channel' => ReminderChannel::Sms,
             'status' => ReminderStatus::Pending,
             'sent_at' => null,
-            'message_body' => 'KAAY DIGITAL : facture KD0501 de 3 304 000 F impayée depuis 55 jours. Contactez-nous au +221776200001.',
+            'message_body' => 'KAAY DIGITAL : facture KD0501 de 3 304 000 F impayée depuis 65 jours. Contactez-nous au +221776200001.',
             'recipient_phone' => '+221338600007',
         ]);
 
-        // Attention J+38 — SENELEC
+        // Critique J+61 — SENELEC
         $facSenelec = $this->invoice($senelec, 'FYK-FAC-KD0502', InvoiceStatus::Overdue, 680_000,
-            issuedAt: '2026-02-15', dueAt: '2026-02-28', paidAt: null,
+            issuedAt: '2026-02-15', dueAt: '2026-02-09', paidAt: null,
             lines: [
                 ['Maintenance applicative Q1 2026 — portail client SENELEC', 1, 520_000],
                 ['Correction de 4 anomalies critiques (niveau P1)', 4, 40_000],
@@ -371,9 +371,9 @@ class ShowcasePmeSeeder extends Seeder
             'recipient_phone' => '+221338600011',
         ]);
 
-        // Attention J+22 — AUCHAN
+        // En retard J+35 — AUCHAN
         $facAuchan = $this->invoice($auchan, 'FYK-FAC-KD0503', InvoiceStatus::Overdue, 550_000,
-            issuedAt: '2026-03-01', dueAt: '2026-03-15', paidAt: null,
+            issuedAt: '2026-03-01', dueAt: '2026-03-07', paidAt: null,
             lines: [
                 ['Dashboard reporting ventes & stocks AUCHAN', 1, 420_000],
                 ['Intégration flux EDI fournisseurs (3 fournisseurs)', 3, 43_333],
@@ -446,6 +446,47 @@ class ShowcasePmeSeeder extends Seeder
             lines: [
                 ['Refonte site web institutionnel Kirène (design + développement)', 1, 380_000],
                 ['Optimisation SEO et intégration Google Analytics 4', 1, 100_000],
+            ]
+        );
+
+        // ── Avril 2026 — 5 factures émises (échéances Mai & Juin) ─────────────
+        $this->invoice($cbao, 'FYK-FAC-KD0606', InvoiceStatus::Sent, 1_400_000,
+            issuedAt: '2026-04-02', dueAt: '2026-05-02', paidAt: null,
+            lines: [
+                ['Développement module Open Banking CBAO (API PSD2)', 1, 1_100_000],
+                ['Documentation et certification sécurité (ISO 27001)', 1, 300_000],
+            ]
+        );
+
+        $this->invoice($wari, 'FYK-FAC-KD0607', InvoiceStatus::Sent, 980_000,
+            issuedAt: '2026-04-05', dueAt: '2026-05-05', paidAt: null,
+            lines: [
+                ['Refonte UI/UX de l\'application Wari Mobile', 1, 750_000],
+                ['Tests utilisateurs et itérations (sprint 3)', 1, 230_000],
+            ]
+        );
+
+        $this->invoice($orange, 'FYK-FAC-KD0608', InvoiceStatus::Sent, 1_600_000,
+            issuedAt: '2026-04-09', dueAt: '2026-05-09', paidAt: null,
+            lines: [
+                ['Développement plateforme IoT pour compteurs intelligents Orange', 1, 1_300_000],
+                ['Intégration avec le réseau 5G et API de gestion', 1, 300_000],
+            ]
+        );
+
+        $this->invoice($adie, 'FYK-FAC-KD0609', InvoiceStatus::Sent, 2_200_000,
+            issuedAt: '2026-04-01', dueAt: '2026-06-01', paidAt: null,
+            lines: [
+                ['Développement système de gestion des identités numériques nationales', 1, 1_800_000],
+                ['Intégration biométrique et interopérabilité des registres', 1, 400_000],
+            ]
+        );
+
+        $this->invoice($planInternational, 'FYK-FAC-KD0610', InvoiceStatus::Sent, 850_000,
+            issuedAt: '2026-04-05', dueAt: '2026-06-04', paidAt: null,
+            lines: [
+                ['Plateforme de collecte de données terrain — 12 régions du Sénégal', 1, 650_000],
+                ['Formation data stewards et tableau de bord de supervision', 1, 200_000],
             ]
         );
 
