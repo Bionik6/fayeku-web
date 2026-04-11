@@ -194,59 +194,56 @@ new #[Title('Alertes')] class extends Component {
     </section>
 
     {{-- ─── Liste des alertes ──────────────────────────────────────────── --}}
-    <section class="app-shell-panel">
-
-        {{-- Filtres --}}
-        <div class="px-6 py-5">
-            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les alertes') }}</p>
-            <div class="flex flex-wrap gap-2">
-
-                {{-- Filtres par criticité --}}
-                @foreach ([
-                    'all'      => ['label' => 'Toutes',       'count' => $this->counts['all'],      'activeClass' => 'bg-primary text-white',     'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'critical' => ['label' => 'Critiques',    'count' => $this->counts['critical'], 'activeClass' => 'bg-rose-500 text-white',    'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                    'watch'    => ['label' => 'À surveiller', 'count' => $this->counts['watch'],    'activeClass' => 'bg-amber-500 text-white',   'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                    'new'      => ['label' => 'Nouvelles',    'count' => $this->counts['new'],      'activeClass' => 'bg-emerald-600 text-white', 'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                ] as $key => $tab)
-                    <button
-                        wire:click="setFilter('{{ $key }}')"
-                        @class([
-                            'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                            $tab['activeClass']                                                                            => ! $showDismissed && $filter === $key,
-                            'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => $showDismissed || $filter !== $key,
-                        ])
-                    >
-                        {{ $tab['label'] }}
-                        <span @class([
-                            'rounded-full px-1.5 py-px text-sm font-bold',
-                            $tab['badgeActive']   => ! $showDismissed && $filter === $key,
-                            $tab['badgeInactive'] => $showDismissed || $filter !== $key,
-                        ])>{{ $tab['count'] }}</span>
-                    </button>
-                @endforeach
-
-                {{-- Onglet Archivées --}}
+    <x-ui.table-panel
+        :title="__('Alertes clients')"
+        :description="__('Suivez les impayés critiques, les clients à surveiller et les nouvelles inscriptions.')"
+        :filterLabel="__('Filtrer les alertes')"
+    >
+        <x-slot:filters>
+            {{-- Filtres par criticité --}}
+            @foreach ([
+                'all'      => ['label' => 'Toutes',       'count' => $this->counts['all'],      'activeClass' => 'bg-primary text-white',     'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'critical' => ['label' => 'Critiques',    'count' => $this->counts['critical'], 'activeClass' => 'bg-rose-500 text-white',    'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'watch'    => ['label' => 'À surveiller', 'count' => $this->counts['watch'],    'activeClass' => 'bg-amber-500 text-white',   'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'new'      => ['label' => 'Nouvelles',    'count' => $this->counts['new'],      'activeClass' => 'bg-emerald-600 text-white', 'badgeActive' => 'bg-white/20 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+            ] as $key => $tab)
                 <button
-                    wire:click="$set('showDismissed', {{ $showDismissed ? 'false' : 'true' }})"
+                    wire:click="setFilter('{{ $key }}')"
                     @class([
                         'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                        'bg-slate-500 text-white'                                                                      => $showDismissed,
-                        'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-600' => ! $showDismissed,
+                        $tab['activeClass']                                                                            => ! $showDismissed && $filter === $key,
+                        'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => $showDismissed || $filter !== $key,
                     ])
                 >
-                    <flux:icon name="archive-box" class="size-3.5" />
-                    {{ __('Archivées') }}
-                    @if ($this->counts['dismissed'] > 0)
-                        <span @class([
-                            'rounded-full px-1.5 py-px text-sm font-bold',
-                            'bg-white/20 text-white'      => $showDismissed,
-                            'bg-slate-100 text-slate-500' => ! $showDismissed,
-                        ])>{{ $this->counts['dismissed'] }}</span>
-                    @endif
+                    {{ $tab['label'] }}
+                    <span @class([
+                        'rounded-full px-1.5 py-px text-sm font-bold',
+                        $tab['badgeActive']   => ! $showDismissed && $filter === $key,
+                        $tab['badgeInactive'] => $showDismissed || $filter !== $key,
+                    ])>{{ $tab['count'] }}</span>
                 </button>
+            @endforeach
 
-            </div>
-        </div>
+            {{-- Onglet Archivées --}}
+            <button
+                wire:click="$set('showDismissed', {{ $showDismissed ? 'false' : 'true' }})"
+                @class([
+                    'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition',
+                    'bg-slate-500 text-white'                                                                      => $showDismissed,
+                    'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-600' => ! $showDismissed,
+                ])
+            >
+                <flux:icon name="archive-box" class="size-3.5" />
+                {{ __('Archivées') }}
+                @if ($this->counts['dismissed'] > 0)
+                    <span @class([
+                        'rounded-full px-1.5 py-px text-sm font-bold',
+                        'bg-white/20 text-white'      => $showDismissed,
+                        'bg-slate-100 text-slate-500' => ! $showDismissed,
+                    ])>{{ $this->counts['dismissed'] }}</span>
+                @endif
+            </button>
+        </x-slot:filters>
 
         @if (count($this->alerts) > 0)
             <div class="divide-y divide-slate-100 border-t border-slate-100">
@@ -352,7 +349,7 @@ new #[Title('Alertes')] class extends Component {
                 <p class="mt-1 text-sm text-slate-500">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
             </div>
         @endif
-    </section>
+    </x-ui.table-panel>
 
     {{-- ─── Modale détail facture ─────────────────────────────────────────── --}}
     @if ($this->selectedInvoice)

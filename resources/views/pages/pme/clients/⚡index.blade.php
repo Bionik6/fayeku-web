@@ -287,10 +287,32 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
         </section>
     @endif
 
-    <section class="app-shell-panel overflow-hidden">
+    <x-ui.table-panel
+        :title="__('Mes clients')"
+        :description="__('Vue portefeuille enrichie par la facturation, les paiements et les relances.')"
+        :filterLabel="__('Filtrer les clients')"
+    >
+        <x-slot:filters>
+            @foreach ([
+                'all'             => ['label' => 'Tous',              'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'reliable'        => ['label' => 'Bons payeurs',      'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'watch'           => ['label' => 'À surveiller',      'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'frequent_delays' => ['label' => 'Retards fréquents', 'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'inactive'        => ['label' => 'Inactifs',          'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                'big_accounts'    => ['label' => 'Gros comptes',      'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+            ] as $value => $tab)
+                <x-ui.filter-chip
+                    wire:click="$set('segment', '{{ $value }}')"
+                    :label="$tab['label']"
+                    :active="$segment === $value"
+                    :activeClass="$tab['activeClass']"
+                    :badgeInactive="$tab['badgeInactive']"
+                    :count="$this->segmentCounts[$value]"
+                />
+            @endforeach
+        </x-slot:filters>
 
-        {{-- Filtres --}}
-        <div class="px-5 py-4 md:px-6">
+        <x-slot:search>
             <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
                 <div class="relative flex-1">
                     <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -329,30 +351,10 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 </div>
             </div>
 
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-                @foreach ([
-                    'all'             => ['label' => 'Tous',              'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'reliable'        => ['label' => 'Bons payeurs',      'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                    'watch'           => ['label' => 'À surveiller',      'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                    'frequent_delays' => ['label' => 'Retards fréquents', 'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                    'inactive'        => ['label' => 'Inactifs',          'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
-                    'big_accounts'    => ['label' => 'Gros comptes',      'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                ] as $value => $tab)
-                    <x-ui.filter-chip
-                        wire:click="$set('segment', '{{ $value }}')"
-                        :label="$tab['label']"
-                        :active="$segment === $value"
-                        :activeClass="$tab['activeClass']"
-                        :badgeInactive="$tab['badgeInactive']"
-                        :count="$this->segmentCounts[$value]"
-                    />
-                @endforeach
-            </div>
-
             <div class="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm text-slate-600">
                 {{ __('Le score paiement combine le délai moyen, les retards, les montants impayés et la fréquence de relance.') }}
             </div>
-        </div>
+        </x-slot:search>
 
         @if ($this->segmentCounts['all'] === 0)
             <div class="flex flex-col items-center justify-center border-t border-slate-100 p-16 text-center">
@@ -464,7 +466,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                 </div>
             @endif
         @endif
-    </section>
+    </x-ui.table-panel>
 
     <livewire:create-client-modal :company="$company" />
 

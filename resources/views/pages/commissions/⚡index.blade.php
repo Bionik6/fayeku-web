@@ -488,12 +488,12 @@ new #[Title('Commissions')] class extends Component
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
     {{-- Bloc 5. Commissions du mois                                        --}}
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
-    <section class="app-shell-panel">
-        <div class="flex items-center justify-between px-6 pt-6 pb-2">
-            <x-section-header
-                :title="__('Commissions du mois') . ' · ' . $currentMonth"
-                :subtitle="__('Chaque ligne correspond à une PME référée éligible à commission pour la période sélectionnée.')"
-            />
+    <x-ui.table-panel
+        :title="__('Commissions du mois') . ' · ' . $currentMonth"
+        :description="__('Chaque ligne correspond à une PME référée éligible à commission pour la période sélectionnée.')"
+        :filterLabel="__('Filtrer les commissions')"
+    >
+        <x-slot:action>
             @if ($this->monthTotal > 0)
                 <span class="shrink-0 text-sm font-bold text-accent">
                     @if ($this->hasActiveFilters)
@@ -503,32 +503,29 @@ new #[Title('Commissions')] class extends Component
                     @endif
                 </span>
             @endif
-        </div>
+        </x-slot:action>
 
-        {{-- Filtres --}}
-        <div class="border-t border-slate-100 px-6 py-5">
-            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les commissions') }}</p>
+        <x-slot:filters>
+            @foreach ([
+                'all'     => ['label' => 'Tous',       'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'pending' => ['label' => 'En attente', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'paid'    => ['label' => 'Versées',    'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+            ] as $key => $tab)
+                @php $isActive = ($key === 'all' && $filterStatus === '') || $filterStatus === $key; @endphp
+                <x-ui.filter-chip
+                    wire:click="setFilterStatus('{{ $key }}')"
+                    :label="$tab['label']"
+                    :dot="$tab['dot']"
+                    :active="$isActive"
+                    :activeClass="$tab['activeClass']"
+                    :badgeInactive="$tab['badgeInactive']"
+                    :count="$this->statusCounts[$key]"
+                />
+            @endforeach
+        </x-slot:filters>
 
-            <div class="flex flex-wrap items-center gap-2">
-                @foreach ([
-                    'all'     => ['label' => 'Tous',       'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'pending' => ['label' => 'En attente', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                    'paid'    => ['label' => 'Versées',    'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                ] as $key => $tab)
-                    @php $isActive = ($key === 'all' && $filterStatus === '') || $filterStatus === $key; @endphp
-                    <x-ui.filter-chip
-                        wire:click="setFilterStatus('{{ $key }}')"
-                        :label="$tab['label']"
-                        :dot="$tab['dot']"
-                        :active="$isActive"
-                        :activeClass="$tab['activeClass']"
-                        :badgeInactive="$tab['badgeInactive']"
-                        :count="$this->statusCounts[$key]"
-                    />
-                @endforeach
-            </div>
-
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <x-slot:search>
+            <div class="flex flex-col gap-3 sm:flex-row">
                 <div class="relative flex-1">
                     <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -552,7 +549,7 @@ new #[Title('Commissions')] class extends Component
                     </select>
                 </x-select-native>
             </div>
-        </div>
+        </x-slot:search>
 
         @if ($this->monthCommissions->isEmpty())
             <div class="px-6 pb-6">
@@ -682,18 +679,15 @@ new #[Title('Commissions')] class extends Component
                 @endif
             @endif
         @endif
-    </section>
+    </x-ui.table-panel>
 
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
     {{-- Bloc 6. Historique des versements                                  --}}
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
-    <section class="app-shell-panel">
-        <div class="px-6 pt-6 pb-4">
-            <x-section-header
-                :title="__('Historique des versements')"
-                :subtitle="__('Retrouvez ici tous les paiements de commissions effectués sur votre compte.')"
-            />
-        </div>
+    <x-ui.table-panel
+        :title="__('Historique des versements')"
+        :description="__('Retrouvez ici tous les paiements de commissions effectués sur votre compte.')"
+    >
 
         @if ($this->payments->isEmpty())
             <div class="px-6 pb-6">
@@ -750,7 +744,7 @@ new #[Title('Commissions')] class extends Component
                 </table>
             </div>
         @endif
-    </section>
+    </x-ui.table-panel>
 
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
     {{-- Bloc 7. FAQ programme partenaire                                   --}}

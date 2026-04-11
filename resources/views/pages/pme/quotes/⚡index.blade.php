@@ -451,35 +451,37 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     </section>
 
     {{-- Bloc C+D -- Filtres + Table --}}
-    <section class="app-shell-panel overflow-hidden">
+    <x-ui.table-panel
+        :title="__('Devis')"
+        :description="__('Gérez vos devis clients et convertissez-les en factures.')"
+        :filterLabel="__('Filtrer par statut')"
+    >
+        <x-slot:filters>
+            @foreach ([
+                'all'      => ['label' => 'Tous',      'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'draft'    => ['label' => 'Brouillon', 'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                'sent'     => ['label' => 'Envoyé',    'dot' => 'bg-blue-500',  'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
+                'accepted' => ['label' => 'Accepté',   'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'declined' => ['label' => 'Refusé',    'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                'expired'  => ['label' => 'Expiré',    'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+            ] as $key => $tab)
+                @php $count = $this->statusCounts[$key] ?? 0; @endphp
+                @if ($key === 'all' || $count > 0)
+                    <x-ui.filter-chip
+                        wire:click="setStatusFilter('{{ $key }}')"
+                        :label="__($tab['label'])"
+                        :dot="$tab['dot']"
+                        :active="$statusFilter === $key"
+                        :activeClass="$tab['activeClass']"
+                        :badgeInactive="$tab['badgeInactive']"
+                        :count="$count"
+                    />
+                @endif
+            @endforeach
+        </x-slot:filters>
 
-        {{-- Filtres --}}
-        <div class="px-5 py-4 md:px-6 md:py-5">
-            <div class="flex flex-wrap gap-2">
-                @foreach ([
-                    'all'      => ['label' => 'Tous',      'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'draft'    => ['label' => 'Brouillon', 'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
-                    'sent'     => ['label' => 'Envoyé',    'dot' => 'bg-blue-500',  'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
-                    'accepted' => ['label' => 'Accepté',   'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                    'declined' => ['label' => 'Refusé',    'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                    'expired'  => ['label' => 'Expiré',    'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
-                ] as $key => $tab)
-                    @php $count = $this->statusCounts[$key] ?? 0; @endphp
-                    @if ($key === 'all' || $count > 0)
-                        <x-ui.filter-chip
-                            wire:click="setStatusFilter('{{ $key }}')"
-                            :label="__($tab['label'])"
-                            :dot="$tab['dot']"
-                            :active="$statusFilter === $key"
-                            :activeClass="$tab['activeClass']"
-                            :badgeInactive="$tab['badgeInactive']"
-                            :count="$count"
-                        />
-                    @endif
-                @endforeach
-            </div>
-
-            <div class="mt-3 flex flex-wrap gap-3">
+        <x-slot:search>
+            <div class="flex flex-wrap gap-3">
                 <div class="relative min-w-48 flex-1">
                     <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -503,7 +505,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     </select>
                 </x-select-native>
             </div>
-        </div>
+        </x-slot:search>
 
         @php
             $rows = $this->rows;
@@ -697,7 +699,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             </div>
         @endif
 
-    </section>
+    </x-ui.table-panel>
 
 
     {{-- Invoice detail modal --}}

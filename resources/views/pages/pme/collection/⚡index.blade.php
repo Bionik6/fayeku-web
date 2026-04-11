@@ -805,10 +805,12 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     {{-- ============================================= --}}
     {{-- E. TABLEAU FACTURES A RELANCER                --}}
     {{-- ============================================= --}}
-    <section class="app-shell-panel p-4 md:p-5">
-
-        {{-- Filtres par âge --}}
-        <div class="flex flex-wrap gap-2">
+    <x-ui.table-panel
+        :title="__('Factures à relancer')"
+        :description="__('Factures en retard classées par ancienneté. Cliquez sur une ligne pour envoyer une relance.')"
+        :filterLabel="__('Filtrer par ancienneté')"
+    >
+        <x-slot:filters>
             @foreach ([
                 'all'      => ['label' => 'Toutes',     'dot' => null,           'activeClass' => 'bg-primary text-white',   'badgeInactive' => 'bg-slate-100 text-slate-500'],
                 'critical' => ['label' => 'Critiques',  'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',  'badgeInactive' => 'bg-rose-100 text-rose-700'],
@@ -825,24 +827,25 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                     :count="$this->counts[$key] ?? 0"
                 />
             @endforeach
-        </div>
+        </x-slot:filters>
 
-        {{-- Recherche --}}
-        <div class="mt-3 flex flex-wrap gap-3">
-            <div class="relative flex-1 min-w-48">
-                <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-                <input
-                    wire:model.live.debounce.300ms="search"
-                    type="search"
-                    placeholder="{{ __('Référence, client…') }}"
-                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
-                />
+        <x-slot:search>
+            <div class="flex flex-wrap gap-3">
+                <div class="relative min-w-48 flex-1">
+                    <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                    <input
+                        wire:model.live.debounce.300ms="search"
+                        type="search"
+                        placeholder="{{ __('Référence, client…') }}"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    />
+                </div>
             </div>
-        </div>
+        </x-slot:search>
 
         {{-- Table --}}
         @if (count($this->invoiceRows) > 0)
-            <div class="mt-4 overflow-x-auto">
+            <div class="overflow-x-auto border-t border-slate-100">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/80">
@@ -924,7 +927,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                 <p class="mt-1 text-sm text-slate-600">{{ __('Tous vos clients sont à jour. Beau travail !') }}</p>
             </div>
         @endif
-    </section>
+    </x-ui.table-panel>
 
     {{-- ============================================= --}}
     {{-- F. SLIDE-OVER : APERCU WHATSAPP               --}}

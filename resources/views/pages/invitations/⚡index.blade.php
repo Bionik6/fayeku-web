@@ -451,40 +451,35 @@ new #[Title('Invitations')] class extends Component
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
     {{-- Bloc 5. Tableau de suivi des invitations                           --}}
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
-    <section id="invitations-table" class="app-shell-panel">
-        <div class="px-6 pt-6 pb-2">
-            <x-section-header
-                :title="__('Suivi des invitations')"
-                :subtitle="__('Consultez l\'état de chaque invitation envoyée à vos clients PME.')"
-            />
-        </div>
+    <x-ui.table-panel
+        id="invitations-table"
+        :title="__('Suivi des invitations')"
+        :description="__('Consultez l\'état de chaque invitation envoyée à vos clients PME.')"
+        :filterLabel="__('Filtrer les invitations')"
+    >
+        <x-slot:filters>
+            @foreach ([
+                'all'       => ['label' => 'Tout',       'dot' => null,           'activeClass' => 'bg-primary text-white',       'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                'to_remind' => ['label' => 'À relancer', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',     'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                'activated' => ['label' => 'Activées',   'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white',   'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                'expired'   => ['label' => 'Expirées',   'dot' => 'bg-rose-400',  'activeClass' => 'bg-rose-600 text-white',      'badgeInactive' => 'bg-rose-100 text-rose-700'],
+            ] as $key => $tab)
+                @php $isActive = ($key === 'all' && $statusFilter === 'all') || $statusFilter === $key; @endphp
+                <x-ui.filter-chip
+                    wire:click="setFilter('{{ $key }}')"
+                    wire:key="filter-{{ $key }}"
+                    :label="$tab['label']"
+                    :dot="$tab['dot']"
+                    :active="$isActive"
+                    :activeClass="$tab['activeClass']"
+                    :badgeInactive="$tab['badgeInactive']"
+                    :count="$this->statusCounts[$key]"
+                />
+            @endforeach
+        </x-slot:filters>
 
-        {{-- Filtres --}}
-        <div class="border-t border-slate-100 px-6 py-5">
-            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les invitations') }}</p>
-
-            <div class="flex flex-wrap items-center gap-2">
-                @foreach ([
-                    'all'       => ['label' => 'Tout',       'dot' => null,           'activeClass' => 'bg-primary text-white',       'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                    'to_remind' => ['label' => 'À relancer', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',     'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                    'activated' => ['label' => 'Activées',   'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white',   'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                    'expired'   => ['label' => 'Expirées',   'dot' => 'bg-rose-400',  'activeClass' => 'bg-rose-600 text-white',      'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                ] as $key => $tab)
-                    @php $isActive = ($key === 'all' && $statusFilter === 'all') || $statusFilter === $key; @endphp
-                    <x-ui.filter-chip
-                        wire:click="setFilter('{{ $key }}')"
-                        wire:key="filter-{{ $key }}"
-                        :label="$tab['label']"
-                        :dot="$tab['dot']"
-                        :active="$isActive"
-                        :activeClass="$tab['activeClass']"
-                        :badgeInactive="$tab['badgeInactive']"
-                        :count="$this->statusCounts[$key]"
-                    />
-                @endforeach
-            </div>
-
-            <div class="relative mt-4">
+        <x-slot:search>
+            <div class="relative">
                 <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
@@ -495,7 +490,7 @@ new #[Title('Invitations')] class extends Component
                     class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                 />
             </div>
-        </div>
+        </x-slot:search>
 
         @if ($this->invitations->isEmpty())
             <div class="px-6 pb-8 pt-4 text-center">
@@ -629,7 +624,7 @@ new #[Title('Invitations')] class extends Component
                 </table>
             </div>
         @endif
-    </section>
+    </x-ui.table-panel>
 
     {{-- ─── Modale : Inviter une PME ───────────────────────────────────────── --}}
     <livewire:invite-pme-modal />
