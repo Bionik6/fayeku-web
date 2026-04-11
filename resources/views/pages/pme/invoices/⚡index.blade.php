@@ -457,62 +457,60 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     </section>
 
-    {{-- Bloc C — Filtres --}}
-    <section class="app-shell-panel p-4 md:p-5">
-
-        {{-- Filtre Statut --}}
-        <div class="mt-3 flex flex-wrap gap-2">
-            @foreach ([
-                'all'            => ['label' => 'Tous',         'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                'draft'          => ['label' => 'Brouillon',    'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
-                'sent'           => ['label' => 'Envoyée',      'dot' => 'bg-blue-500',  'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
-                'paid'           => ['label' => 'Payée',        'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                'overdue'        => ['label' => 'En retard',    'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                'partially_paid' => ['label' => 'Part. payée',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
-            ] as $key => $tab)
-                @php $count = $this->statusCounts[$key] ?? 0; @endphp
-                @if ($key === 'all' || $count > 0)
-                    <x-ui.filter-chip
-                        wire:click="setStatusFilter('{{ $key }}')"
-                        :label="__($tab['label'])"
-                        :dot="$tab['dot']"
-                        :active="$statusFilter === $key"
-                        :activeClass="$tab['activeClass']"
-                        :badgeInactive="$tab['badgeInactive']"
-                        :count="$count"
-                    />
-                @endif
-            @endforeach
-        </div>
-
-        {{-- Recherche + Période --}}
-        <div class="mt-3 flex flex-wrap gap-3">
-            <div class="relative flex-1 min-w-48">
-                <flux:icon name="magnifying-glass" class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-                <input
-                    wire:model.live.debounce.300ms="search"
-                    type="search"
-                    placeholder="{{ __('Référence, client…') }}"
-                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-2.5 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
-                />
-            </div>
-            <x-select-native>
-                <select
-                    wire:model.live="period"
-                    class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pr-8 text-sm text-slate-700 focus:border-primary/50 focus:outline-none"
-                >
-                    <option value="">{{ __('Toutes les périodes') }}</option>
-                    @foreach ($this->availablePeriods as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-            </x-select-native>
-        </div>
-
-    </section>
-
-    {{-- Bloc D — Table --}}
+    {{-- Bloc C+D — Filtres + Table --}}
     <section class="app-shell-panel overflow-hidden">
+
+        {{-- Filtres --}}
+        <div class="px-5 py-4 md:px-6 md:py-5">
+            <div class="flex flex-wrap gap-2">
+                @foreach ([
+                    'all'            => ['label' => 'Tous',        'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                    'draft'          => ['label' => 'Brouillon',   'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                    'sent'           => ['label' => 'Envoyée',     'dot' => 'bg-blue-500',  'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
+                    'paid'           => ['label' => 'Payée',       'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                    'overdue'        => ['label' => 'En retard',   'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                    'partially_paid' => ['label' => 'Part. payée', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                ] as $key => $tab)
+                    @php $count = $this->statusCounts[$key] ?? 0; @endphp
+                    @if ($key === 'all' || $count > 0)
+                        <x-ui.filter-chip
+                            wire:click="setStatusFilter('{{ $key }}')"
+                            :label="__($tab['label'])"
+                            :dot="$tab['dot']"
+                            :active="$statusFilter === $key"
+                            :activeClass="$tab['activeClass']"
+                            :badgeInactive="$tab['badgeInactive']"
+                            :count="$count"
+                        />
+                    @endif
+                @endforeach
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-3">
+                <div class="relative min-w-48 flex-1">
+                    <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    <input
+                        wire:model.live.debounce.300ms="search"
+                        type="search"
+                        placeholder="{{ __('Référence, client…') }}"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    />
+                </div>
+                <x-select-native>
+                    <select
+                        wire:model.live="period"
+                        class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-slate-700 focus:border-primary/50 focus:outline-none"
+                    >
+                        <option value="">{{ __('Toutes les périodes') }}</option>
+                        @foreach ($this->availablePeriods as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </x-select-native>
+            </div>
+        </div>
 
         @php
             $rows = $this->rows;
@@ -520,7 +518,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         @endphp
 
         @if (count($rows) > 0)
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto border-t border-slate-100">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/80">
