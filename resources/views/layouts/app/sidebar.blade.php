@@ -44,17 +44,17 @@
                     'navigate' => true,
                 ],
                 [
-                    'label' => __('Commissions'),
-                    'icon' => 'commissions',
-                    'href' => route('commissions.index'),
-                    'current' => request()->routeIs('commissions.*'),
-                    'navigate' => true,
-                ],
-                [
                     'label' => __('Invitations'),
                     'icon' => 'invitations',
                     'href' => route('invitations.index'),
                     'current' => request()->routeIs('invitations.*'),
+                    'navigate' => true,
+                ],
+                [
+                    'label' => __('Commissions'),
+                    'icon' => 'commissions',
+                    'href' => route('commissions.index'),
+                    'current' => request()->routeIs('commissions.*'),
                     'navigate' => true,
                 ],
             ];

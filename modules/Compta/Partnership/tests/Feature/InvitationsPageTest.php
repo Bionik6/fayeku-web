@@ -1,9 +1,11 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Modules\Auth\Models\AccountantCompany;
 use Modules\Auth\Models\Company;
+use Modules\Compta\Partnership\Models\Commission;
 use Modules\Compta\Partnership\Models\PartnerInvitation;
 use Modules\Compta\Partnership\Services\InvitationService;
 use Modules\Shared\Interfaces\WhatsAppProviderInterface;
@@ -67,6 +69,25 @@ test('le composant invitations affiche les sections principales', function () {
         ->assertSee('Inviter une PME');
 });
 
+test('la section développer votre portefeuille est visible', function () {
+    ['user' => $user] = invTestCreateFirm();
+
+    Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->assertSee('Développez votre portefeuille partenaire')
+        ->assertSee('Partager votre lien partenaire')
+        ->assertSee('Invitations en attente');
+});
+
+test('la section revenus partenaire affiche le lien vers les commissions', function () {
+    ['user' => $user] = invTestCreateFirm();
+
+    Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->assertSee('Revenus partenaire ce mois-ci')
+        ->assertSee('Voir mes commissions');
+});
+
 // ─── KPIs ────────────────────────────────────────────────────────────────────
 
 test('les KPIs affichent les bons compteurs', function () {
@@ -100,6 +121,69 @@ test('les KPIs affichent les bons compteurs', function () {
     expect($component->get('pendingCount'))->toBe(1);
     expect($component->get('activatedThisMonth'))->toBe(1);
     expect($component->get('conversionRate'))->toBe(50);
+});
+
+// ─── Pont vers Commissions ────────────────────────────────────────────────────
+
+test('commissionMonthTotal retourne le total des commissions du mois en cours', function () {
+    ['user' => $user, 'firm' => $firm, 'smes' => $smes] = invTestCreateFirm(1);
+
+    Commission::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $smes[0]->id,
+        'amount' => 15_000,
+        'period_month' => now()->startOfMonth(),
+        'status' => 'pending',
+    ]);
+
+    Commission::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $smes[0]->id,
+        'amount' => 8_000,
+        'period_month' => now()->subMonth()->startOfMonth(),
+        'status' => 'paid',
+        'paid_at' => now()->subDays(10),
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::invitations.index');
+
+    expect($component->get('commissionMonthTotal'))->toBe(15_000);
+});
+
+test('commissionMonthTotal vaut 0 sans commissions ce mois', function () {
+    ['user' => $user] = invTestCreateFirm();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::invitations.index');
+
+    expect($component->get('commissionMonthTotal'))->toBe(0);
+});
+
+// ─── Événement invitation-sent ────────────────────────────────────────────────
+
+test('onInvitationSent rafraîchit la liste des invitations', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::invitations.index');
+
+    expect($component->get('totalSent'))->toBe(0);
+
+    PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'new-token',
+        'invitee_company_name' => 'New Co',
+        'invitee_name' => 'New Contact',
+        'invitee_phone' => '+221770000010',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+    ]);
+
+    $component->dispatch('invitation-sent');
+
+    expect($component->get('totalSent'))->toBe(1);
+    expect($component->get('pendingCount'))->toBe(1);
 });
 
 // ─── Filtres ─────────────────────────────────────────────────────────────────
@@ -164,6 +248,40 @@ test('le filtre activés fonctionne', function () {
     expect($component->get('invitations')->first()->invitee_company_name)->toBe('Active Co');
 });
 
+test('le filtre à relancer affiche les invitations de plus de 2 jours', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    // Ancienne invitation (> 2 jours) → doit apparaître
+    $old = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'token-old',
+        'invitee_company_name' => 'Old Pending Co',
+        'invitee_name' => 'Contact Old',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+    ]);
+    DB::table('partner_invitations')
+        ->where('id', $old->id)
+        ->update(['created_at' => now()->subDays(5)]);
+
+    // Invitation récente (< 2 jours) → ne doit PAS apparaître
+    PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'token-new',
+        'invitee_company_name' => 'New Pending Co',
+        'invitee_name' => 'Contact New',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::invitations.index')
+        ->call('setFilter', 'to_remind');
+
+    expect($component->get('invitations'))->toHaveCount(1);
+    expect($component->get('invitations')->first()->invitee_company_name)->toBe('Old Pending Co');
+});
+
 // ─── Recherche ───────────────────────────────────────────────────────────────
 
 test('la recherche filtre par nom d\'entreprise', function () {
@@ -189,65 +307,10 @@ test('la recherche filtre par nom d\'entreprise', function () {
 
     $component = Livewire::actingAs($user)
         ->test('pages::invitations.index')
-        ->set('search', 'Dakar');
+        ->set('inviteSearch', 'Dakar');
 
     expect($component->get('invitations'))->toHaveCount(1);
     expect($component->get('invitations')->first()->invitee_company_name)->toBe('Dakar Import');
-});
-
-// ─── Envoi invitation ───────────────────────────────────────────────────────
-
-test('sendInvitation crée une invitation', function () {
-    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
-
-    Livewire::actingAs($user)
-        ->test('pages::invitations.index')
-        ->set('inviteCompanyName', 'Transport Ngor SARL')
-        ->set('inviteContactName', 'Moussa Diallo')
-        ->set('inviteCountryCode', 'SN')
-        ->set('invitePhone', '770000099')
-        ->set('invitePlan', 'essentiel')
-        ->call('sendInvitation')
-        ->assertHasNoErrors();
-
-    $invitation = PartnerInvitation::where('accountant_firm_id', $firm->id)->first();
-    expect($invitation)->not->toBeNull();
-    expect($invitation->invitee_company_name)->toBe('Transport Ngor SARL');
-    expect($invitation->invitee_name)->toBe('Moussa Diallo');
-    expect($invitation->recommended_plan)->toBe('essentiel');
-    expect($invitation->status)->toBe('pending');
-});
-
-test('sendInvitation valide les champs requis', function () {
-    ['user' => $user] = invTestCreateFirm();
-
-    Livewire::actingAs($user)
-        ->test('pages::invitations.index')
-        ->call('sendInvitation')
-        ->assertHasErrors(['inviteCompanyName', 'inviteContactName', 'invitePhone']);
-});
-
-test('sendInvitation détecte les doublons', function () {
-    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
-
-    PartnerInvitation::create([
-        'accountant_firm_id' => $firm->id,
-        'token' => 'existing-token',
-        'invitee_phone' => '+221770000099',
-        'invitee_name' => 'Existing',
-        'status' => 'pending',
-        'channel' => 'whatsapp',
-    ]);
-
-    Livewire::actingAs($user)
-        ->test('pages::invitations.index')
-        ->set('inviteCompanyName', 'New Co')
-        ->set('inviteContactName', 'New Contact')
-        ->set('inviteCountryCode', 'SN')
-        ->set('invitePhone', '770000099')
-        ->set('invitePlan', 'basique')
-        ->call('sendInvitation')
-        ->assertHasErrors('invitePhone');
 });
 
 // ─── Relance ────────────────────────────────────────────────────────────────
@@ -301,91 +364,7 @@ test('resendInvitation réinitialise une invitation expirée', function () {
     expect($invitation->expires_at)->not->toBeNull();
 });
 
-// ─── Bloc priorité ──────────────────────────────────────────────────────────
-
-test('les compteurs de priorité sont corrects', function () {
-    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
-
-    // Non ouvert
-    PartnerInvitation::create([
-        'accountant_firm_id' => $firm->id,
-        'token' => 'p1',
-        'invitee_name' => 'A',
-        'status' => 'pending',
-        'channel' => 'whatsapp',
-    ]);
-
-    // Registering
-    PartnerInvitation::create([
-        'accountant_firm_id' => $firm->id,
-        'token' => 'p2',
-        'invitee_name' => 'B',
-        'status' => 'registering',
-        'channel' => 'whatsapp',
-    ]);
-
-    PartnerInvitation::create([
-        'accountant_firm_id' => $firm->id,
-        'token' => 'p3',
-        'invitee_name' => 'C',
-        'status' => 'registering',
-        'channel' => 'whatsapp',
-    ]);
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::invitations.index');
-
-    $priority = $component->get('priorityItems');
-    expect($priority['not_opened'])->toBe(1);
-    expect($priority['incomplete'])->toBe(2);
-    expect($priority['pending_validation'])->toBe(0);
-});
-
 // ─── WhatsApp ──────────────────────────────────────────────────────────────
-
-test('sendInvitation envoie un message WhatsApp', function () {
-    $mock = Mockery::mock(WhatsAppProviderInterface::class);
-    $mock->shouldReceive('send')
-        ->once()
-        ->withArgs(fn (string $phone, string $msg) => $phone === '+221770000099'
-            && str_contains($msg, 'Moussa Diallo')
-            && str_contains($msg, '/join/')
-        )
-        ->andReturn(true);
-    app()->instance(WhatsAppProviderInterface::class, $mock);
-
-    ['user' => $user] = invTestCreateFirm();
-
-    Livewire::actingAs($user)
-        ->test('pages::invitations.index')
-        ->set('inviteCompanyName', 'WA Test Co')
-        ->set('inviteContactName', 'Moussa Diallo')
-        ->set('inviteCountryCode', 'SN')
-        ->set('invitePhone', '770000099')
-        ->set('invitePlan', 'essentiel')
-        ->call('sendInvitation')
-        ->assertDispatched('toast', type: 'success');
-});
-
-test('sendInvitation affiche un warning si WhatsApp échoue', function () {
-    $mock = Mockery::mock(WhatsAppProviderInterface::class);
-    $mock->shouldReceive('send')->once()->andReturn(false);
-    app()->instance(WhatsAppProviderInterface::class, $mock);
-
-    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
-
-    Livewire::actingAs($user)
-        ->test('pages::invitations.index')
-        ->set('inviteCompanyName', 'Fail Co')
-        ->set('inviteContactName', 'Fail Contact')
-        ->set('inviteCountryCode', 'SN')
-        ->set('invitePhone', '770000088')
-        ->set('invitePlan', 'basique')
-        ->call('sendInvitation')
-        ->assertDispatched('toast', type: 'warning');
-
-    expect(PartnerInvitation::where('accountant_firm_id', $firm->id)->count())->toBe(1);
-});
 
 test('le message essentiel contient la promotion 2 mois offerts', function () {
     ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
