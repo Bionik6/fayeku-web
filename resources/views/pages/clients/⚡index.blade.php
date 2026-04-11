@@ -312,61 +312,60 @@ new #[Title('Clients')] class extends Component {
         </article>
     </section>
 
-    {{-- Onglets statut + filtres --}}
-    <section class="app-shell-panel p-5">
-        {{-- Onglets de filtre --}}
-        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les clients') }}</p>
-        <div class="flex flex-wrap items-center gap-2">
-            @foreach ([
-                'all'      => ['label' => 'Tous',          'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                'current'  => ['label' => 'À jour',        'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                'watch'    => ['label' => 'À surveiller',  'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
-                'critical' => ['label' => 'Critiques',     'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
-            ] as $key => $tab)
-                <x-ui.filter-chip
-                    wire:click="setFilterStatus('{{ $key }}')"
-                    :label="$tab['label']"
-                    :dot="$tab['dot']"
-                    :active="$filterStatus === $key"
-                    :activeClass="$tab['activeClass']"
-                    :badgeInactive="$tab['badgeInactive']"
-                    :count="$this->statusCounts[$key]"
-                />
-            @endforeach
-        </div>
-
-        {{-- Recherche + filtre plan --}}
-        <div class="mt-4 flex flex-col gap-3 sm:flex-row">
-            <div class="relative flex-1">
-                <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-                <input
-                    wire:model.live.debounce.300ms="search"
-                    type="text"
-                    placeholder="{{ __('Rechercher une entreprise...') }}"
-                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                />
-            </div>
-
-            <x-select-native>
-                <select
-                    wire:model.live="filterPlan"
-                    class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 sm:w-48"
-                >
-                    <option value="">{{ __('Toutes les offres') }}</option>
-                    @foreach ($this->availablePlans as $slug => $label)
-                        <option value="{{ $slug }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-            </x-select-native>
-        </div>
-    </section>
-
     {{-- Tableau --}}
     <section class="app-shell-panel overflow-hidden">
+
+        {{-- Filtres --}}
+        <div class="px-6 py-5">
+            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Filtrer les clients') }}</p>
+            <div class="flex flex-wrap items-center gap-2">
+                @foreach ([
+                    'all'      => ['label' => 'Tous',         'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                    'current'  => ['label' => 'À jour',       'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                    'watch'    => ['label' => 'À surveiller', 'dot' => 'bg-amber-400', 'activeClass' => 'bg-amber-500 text-white',   'badgeInactive' => 'bg-amber-100 text-amber-700'],
+                    'critical' => ['label' => 'Critiques',    'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                ] as $key => $tab)
+                    <x-ui.filter-chip
+                        wire:click="setFilterStatus('{{ $key }}')"
+                        :label="$tab['label']"
+                        :dot="$tab['dot']"
+                        :active="$filterStatus === $key"
+                        :activeClass="$tab['activeClass']"
+                        :badgeInactive="$tab['badgeInactive']"
+                        :count="$this->statusCounts[$key]"
+                    />
+                @endforeach
+            </div>
+
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+                <div class="relative flex-1">
+                    <svg class="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    <input
+                        wire:model.live.debounce.300ms="search"
+                        type="text"
+                        placeholder="{{ __('Rechercher une entreprise...') }}"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                    />
+                </div>
+
+                <x-select-native>
+                    <select
+                        wire:model.live="filterPlan"
+                        class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 sm:w-48"
+                    >
+                        <option value="">{{ __('Toutes les offres') }}</option>
+                        @foreach ($this->availablePlans as $slug => $label)
+                            <option value="{{ $slug }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </x-select-native>
+            </div>
+        </div>
+
         @if (count($this->rows) > 0)
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto border-t border-slate-100">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/80">
