@@ -179,7 +179,13 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             ->with('lines')
             ->findOrFail($quoteId);
 
-        $invoice = app(QuoteService::class)->convertToInvoice($quote, $this->company);
+        try {
+            $invoice = app(QuoteService::class)->convertToInvoice($quote, $this->company);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
 
         $this->redirect(route('pme.invoices.edit', $invoice), navigate: true);
     }

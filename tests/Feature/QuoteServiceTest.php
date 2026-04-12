@@ -1,12 +1,17 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
+use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Enums\QuoteStatus;
+use Modules\PME\Invoicing\Events\QuoteAccepted;
+use Modules\PME\Invoicing\Models\Invoice;
 use Modules\PME\Invoicing\Models\Quote;
 use Modules\PME\Invoicing\Services\InvoiceService;
 use Modules\PME\Invoicing\Services\QuoteService;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 uses(RefreshDatabase::class);
 
@@ -383,6 +388,225 @@ test('canEdit returns false for accepted quotes', function () {
 });
 
 // ─── convertToInvoice ─────────────────────────────────────────────────────────
+
+test('convertToInvoice aborts with 409 when quote was already converted', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-DUP01',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service A', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->convertToInvoice($quote, $company);
+
+    // Second call must throw a 409
+    $service->convertToInvoice($quote, $company);
+})->throws(HttpException::class);
+
+test('convertToInvoice 409 carries the expected message', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-DUP02',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service B', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->convertToInvoice($quote, $company);
+
+    try {
+        $service->convertToInvoice($quote, $company);
+    } catch (HttpException $e) {
+        expect($e->getStatusCode())->toBe(409)
+            ->and($e->getMessage())->toBe('Ce devis a déjà été converti en facture.');
+
+        return;
+    }
+
+    $this->fail('Expected HttpException was not thrown.');
+});
+
+test('convertToInvoice does not create a second invoice on duplicate call', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-DUP03',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service C', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->convertToInvoice($quote, $company);
+
+    try {
+        $service->convertToInvoice($quote, $company);
+    } catch (HttpException) {
+        // expected
+    }
+
+    expect(Invoice::query()->where('quote_id', $quote->id)->count())->toBe(1);
+});
+
+test('convertToInvoice creates a draft invoice with all quote data', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-INV01',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+        'notes' => 'Note de test',
+    ], [
+        ['description' => 'Service D', 'quantity' => 2, 'unit_price' => 50_000],
+    ]);
+
+    $invoice = $service->convertToInvoice($quote, $company);
+
+    expect($invoice)->toBeInstanceOf(Invoice::class)
+        ->and($invoice->status)->toBe(InvoiceStatus::Draft)
+        ->and($invoice->quote_id)->toBe($quote->id)
+        ->and($invoice->client_id)->toBe($quote->client_id)
+        ->and($invoice->company_id)->toBe($company->id)
+        ->and($invoice->currency)->toBe('XOF')
+        ->and($invoice->subtotal)->toBe($quote->subtotal)
+        ->and($invoice->tax_amount)->toBe($quote->tax_amount)
+        ->and($invoice->total)->toBe($quote->total)
+        ->and($invoice->notes)->toBe('Note de test')
+        ->and($invoice->amount_paid)->toBe(0);
+});
+
+test('convertToInvoice copies all lines from the quote', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-LIN01',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Ligne 1', 'quantity' => 2, 'unit_price' => 30_000],
+        ['description' => 'Ligne 2', 'quantity' => 1, 'unit_price' => 20_000],
+    ]);
+
+    $invoice = $service->convertToInvoice($quote, $company);
+
+    expect($invoice->lines)->toHaveCount(2)
+        ->and($invoice->lines->first()->description)->toBe('Ligne 1')
+        ->and($invoice->lines->first()->quantity)->toBe(2)
+        ->and($invoice->lines->first()->unit_price)->toBe(30_000)
+        ->and($invoice->lines->last()->description)->toBe('Ligne 2');
+});
+
+test('convertToInvoice marks a Sent quote as Accepted', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-ACC02',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service E', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->markAsSent($quote);
+    $service->convertToInvoice($quote->fresh(), $company);
+
+    expect($quote->fresh()->status)->toBe(QuoteStatus::Accepted);
+});
+
+test('convertToInvoice does not change status of a Draft quote', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-DRF02',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service F', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->convertToInvoice($quote, $company);
+
+    expect($quote->fresh()->status)->toBe(QuoteStatus::Draft);
+});
+
+test('convertToInvoice dispatches QuoteAccepted event', function () {
+    Event::fake([QuoteAccepted::class]);
+
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new QuoteService;
+
+    $quote = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-DEV-EVT01',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'valid_until' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service G', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->convertToInvoice($quote, $company);
+
+    Event::assertDispatched(QuoteAccepted::class);
+});
 
 test('convertToInvoice copies discount_type from quote to invoice', function () {
     $company = Company::factory()->create(['type' => 'sme']);
