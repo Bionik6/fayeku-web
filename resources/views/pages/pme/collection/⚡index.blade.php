@@ -40,7 +40,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
     public int $remindersThisMonth = 0;
 
-    /* ---------- Config modal ---------- */
+    /* ---------- Config — état sauvegardé (UI principale) ---------- */
     public bool $showConfigModal = false;
 
     public bool $configEnabled = false;
@@ -61,6 +61,26 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
     /** @var array<int, int> */
     public array $configRuleDays = [3, 7, 15, 30];
+
+    /* ---------- Config — brouillon modal (non persisté avant Enregistrer) ---------- */
+    public bool $draftEnabled = false;
+
+    public string $draftMode = 'manual';
+
+    public string $draftChannel = 'whatsapp';
+
+    public string $draftTone = 'cordial';
+
+    public int $draftHourStart = 8;
+
+    public int $draftHourEnd = 18;
+
+    public bool $draftExcludeWeekends = true;
+
+    public bool $draftAttachPdf = true;
+
+    /** @var array<int, int> */
+    public array $draftRuleDays = [3, 7, 15, 30];
 
     /* ---------- Slide-over states ---------- */
     public ?string $previewInvoiceId = null;
@@ -251,6 +271,17 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     public function openConfigModal(): void
     {
         $this->loadConfigFromCompany();
+
+        $this->draftEnabled        = $this->configEnabled;
+        $this->draftMode           = $this->configMode;
+        $this->draftChannel        = $this->configChannel;
+        $this->draftTone           = $this->configTone;
+        $this->draftHourStart      = $this->configHourStart;
+        $this->draftHourEnd        = $this->configHourEnd;
+        $this->draftExcludeWeekends = $this->configExcludeWeekends;
+        $this->draftAttachPdf      = $this->configAttachPdf;
+        $this->draftRuleDays       = $this->configRuleDays;
+
         $this->showConfigModal = true;
     }
 
@@ -258,30 +289,45 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     {
         abort_unless($this->company, 403);
 
-        $this->validate([
-            'configMode' => 'required|in:auto,manual',
-            'configChannel' => 'required|in:whatsapp,sms,email',
-            'configTone' => 'required|in:cordial,ferme,urgent',
-            'configHourStart' => 'required|integer|min:0|max:23',
-            'configHourEnd' => 'required|integer|min:0|max:23|gte:configHourStart',
-            'configRuleDays' => 'required|array|min:1',
-            'configRuleDays.*' => 'integer|min:1|max:90',
-        ]);
+        if ($this->draftEnabled) {
+            $this->validate([
+                'draftMode'       => 'required|in:auto,manual',
+                'draftChannel'    => 'required|in:whatsapp,sms,email',
+                'draftTone'       => 'required|in:cordial,ferme,urgent',
+                'draftHourStart'  => 'required|integer|min:0|max:23',
+                'draftHourEnd'    => 'required|integer|min:0|max:23|gte:draftHourStart',
+                'draftRuleDays'   => 'required|array|min:1',
+                'draftRuleDays.*' => 'integer|min:1|max:90',
+            ]);
+        }
 
         $this->company->update([
             'reminder_settings' => [
-                'enabled' => $this->configEnabled,
-                'mode' => $this->configMode,
-                'default_channel' => $this->configChannel,
-                'default_tone' => $this->configTone,
-                'send_hour_start' => $this->configHourStart,
-                'send_hour_end' => $this->configHourEnd,
-                'exclude_weekends' => $this->configExcludeWeekends,
-                'attach_pdf' => $this->configAttachPdf,
+                'enabled'          => $this->draftEnabled,
+                'mode'             => $this->draftMode,
+                'default_channel'  => $this->draftChannel,
+                'default_tone'     => $this->draftTone,
+                'send_hour_start'  => $this->draftHourStart,
+                'send_hour_end'    => $this->draftHourEnd,
+                'exclude_weekends' => $this->draftExcludeWeekends,
+                'attach_pdf'       => $this->draftAttachPdf,
             ],
         ]);
 
-        $this->syncReminderRules();
+        $this->configEnabled        = $this->draftEnabled;
+        $this->configMode           = $this->draftMode;
+        $this->configChannel        = $this->draftChannel;
+        $this->configTone           = $this->draftTone;
+        $this->configHourStart      = $this->draftHourStart;
+        $this->configHourEnd        = $this->draftHourEnd;
+        $this->configExcludeWeekends = $this->draftExcludeWeekends;
+        $this->configAttachPdf      = $this->draftAttachPdf;
+        $this->configRuleDays       = $this->draftRuleDays;
+
+        if ($this->draftEnabled) {
+            $this->syncReminderRules();
+        }
+
         $this->showConfigModal = false;
         $this->dispatch('toast', type: 'success', title: __('Configuration sauvegardée.'));
     }
@@ -370,14 +416,14 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
     public function toggleRuleDay(int $day): void
     {
-        if (in_array($day, $this->configRuleDays)) {
-            $this->configRuleDays = array_values(array_filter(
-                $this->configRuleDays,
+        if (in_array($day, $this->draftRuleDays)) {
+            $this->draftRuleDays = array_values(array_filter(
+                $this->draftRuleDays,
                 fn ($d) => $d !== $day
             ));
         } else {
-            $this->configRuleDays[] = $day;
-            sort($this->configRuleDays);
+            $this->draftRuleDays[] = $day;
+            sort($this->draftRuleDays);
         }
     }
 
@@ -432,12 +478,16 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
         $settings = $this->company->reminder_settings ?? Company::defaultReminderSettings();
 
+        $validModes    = ['auto', 'manual'];
+        $validChannels = ['whatsapp', 'sms', 'email'];
+        $validTones    = ['cordial', 'ferme', 'urgent'];
+
         $this->configEnabled = (bool) ($settings['enabled'] ?? false);
-        $this->configMode = $settings['mode'] ?? 'manual';
-        $this->configChannel = $settings['default_channel'] ?? 'whatsapp';
-        $this->configTone = $settings['default_tone'] ?? 'cordial';
-        $this->configHourStart = (int) ($settings['send_hour_start'] ?? 8);
-        $this->configHourEnd = (int) ($settings['send_hour_end'] ?? 18);
+        $this->configMode = in_array($settings['mode'] ?? '', $validModes) ? $settings['mode'] : 'manual';
+        $this->configChannel = in_array($settings['default_channel'] ?? '', $validChannels) ? $settings['default_channel'] : 'whatsapp';
+        $this->configTone = in_array($settings['default_tone'] ?? '', $validTones) ? $settings['default_tone'] : 'cordial';
+        $this->configHourStart = min(23, max(0, (int) ($settings['send_hour_start'] ?? 8)));
+        $this->configHourEnd = min(23, max(0, (int) ($settings['send_hour_end'] ?? 18)));
         $this->configExcludeWeekends = (bool) ($settings['exclude_weekends'] ?? true);
         $this->configAttachPdf = (bool) ($settings['attach_pdf'] ?? true);
 
@@ -576,6 +626,45 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             'closing' => $toneClosing[$tone] ?? $toneClosing['cordial'],
         ];
     }
+
+    /**
+     * Preview message for the config modal, using placeholder data.
+     *
+     * @return array{greeting: string, body: string, closing: string}
+     */
+    public function buildConfigPreviewMessage(): array
+    {
+        $clientName = 'Jean Dupont';
+        $reference = 'FAC-2026-001';
+        $amount = '500 000';
+        $dueDate = format_date(now()->subDays(15));
+
+        $toneGreetings = [
+            'cordial' => "Bonjour {$clientName},",
+            'ferme' => "Bonjour {$clientName},",
+            'urgent' => "{$clientName},",
+        ];
+
+        $toneBody = [
+            'cordial' => "Nous souhaitons vous rappeler que la facture {$reference} d'un montant de {$amount} FCFA, échue le {$dueDate}, reste en attente de règlement.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.",
+            'ferme' => "La facture {$reference} d'un montant de {$amount} FCFA est en retard de paiement depuis le {$dueDate}.\n\nNous vous demandons de procéder au règlement dans les plus brefs délais.",
+            'urgent' => "URGENT : La facture {$reference} ({$amount} FCFA) est impayée depuis le {$dueDate}. Malgré nos précédentes relances, aucun règlement n'a été effectué.\n\nNous vous prions de régulariser cette situation immédiatement.",
+        ];
+
+        $toneClosing = [
+            'cordial' => 'Cordialement,',
+            'ferme' => 'Dans l\'attente de votre règlement,',
+            'urgent' => 'En espérant une action immédiate de votre part,',
+        ];
+
+        $tone = $this->draftTone;
+
+        return [
+            'greeting' => $toneGreetings[$tone] ?? $toneGreetings['cordial'],
+            'body' => $toneBody[$tone] ?? $toneBody['cordial'],
+            'closing' => $toneClosing[$tone] ?? $toneClosing['cordial'],
+        ];
+    }
 }; ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
@@ -584,7 +673,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     {{-- A. HEADER                                     --}}
     {{-- ============================================= --}}
     <section class="app-shell-panel overflow-hidden">
-        <div class="flex flex-col gap-4 p-6 lg:flex-row lg:items-start lg:justify-between">
+        <div class="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">{{ __('Recouvrement') }}</p>
                 <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Relances & impayés') }}</h2>
@@ -592,31 +681,15 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                     {{ $this->totalPendingCount }} {{ __('factures en attente') }} · {{ format_money($this->totalPendingAmount) }} {{ __('à encaisser') }}
                 </p>
             </div>
-            <div class="flex shrink-0 flex-wrap items-center gap-3">
-                {{-- Toggle global --}}
-                <button
-                    wire:click="toggleGlobalReminders"
-                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition
-                        {{ $configEnabled
-                            ? 'border-accent/30 bg-accent/10 text-accent'
-                            : 'border-slate-200 bg-white text-slate-600' }}"
-                >
-                    <span class="relative flex size-5 items-center rounded-full transition
-                        {{ $configEnabled ? 'bg-accent' : 'bg-slate-300' }}">
-                        <span class="absolute size-3 rounded-full bg-white transition-all
-                            {{ $configEnabled ? 'left-[0.45rem]' : 'left-[0.15rem]' }}"></span>
-                    </span>
-                    {{ __('Relances activées') }}
-                </button>
-
-                <button
-                    wire:click="openConfigModal"
-                    class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
-                >
-                    <flux:icon name="cog-6-tooth" class="size-4" />
-                    {{ __('Configurer les règles') }}
-                </button>
-            </div>
+            @if ($configEnabled)
+            <button
+                wire:click="openConfigModal"
+                class="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+            >
+                <flux:icon name="cog-6-tooth" class="size-4" />
+                {{ __('Configurer les règles') }}
+            </button>
+            @endif
         </div>
     </section>
 
@@ -687,6 +760,28 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     {{-- ============================================= --}}
     {{-- C + D. MODE DE RELANCE & REGLES (côte à côte) --}}
     {{-- ============================================= --}}
+
+    @if (! $configEnabled)
+        {{-- Placeholder relances désactivées --}}
+        <section class="app-shell-panel flex flex-col items-center justify-center gap-6 px-8 py-14 text-center">
+            <div class="flex size-16 items-center justify-center rounded-2xl bg-slate-100">
+                <flux:icon name="bell-slash" class="size-8 text-slate-400" />
+            </div>
+            <div>
+                <p class="text-lg font-semibold text-ink">{{ __('Relances désactivées') }}</p>
+                <p class="mt-1 max-w-md text-sm text-slate-500">
+                    {{ __('Activez les relances pour rappeler automatiquement vos clients lorsque leurs factures sont en retard.') }}
+                </p>
+            </div>
+            <button
+                wire:click="openConfigModal"
+                class="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+            >
+                <flux:icon name="bell" class="size-4" />
+                {{ __('Activer les relances') }}
+            </button>
+        </section>
+    @else
     <section class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
         {{-- C. MODE DE RELANCE --}}
@@ -764,14 +859,9 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
         {{-- D. REGLES DE RELANCE (design cards) --}}
         <div class="app-shell-panel flex flex-col">
-            <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                <div>
-                    <h3 class="font-semibold text-ink">{{ __('Règles de relance') }}</h3>
-                    <p class="mt-0.5 text-sm text-slate-600">{{ __('Résumé de la configuration actuellement appliquée sur votre société.') }}</p>
-                </div>
-                <button wire:click="openConfigModal" class="text-sm font-semibold text-primary hover:underline">
-                    {{ __('Modifier') }}
-                </button>
+            <div class="border-b border-slate-100 px-5 py-4">
+                <h3 class="font-semibold text-ink">{{ __('Règles de relance') }}</h3>
+                <p class="mt-0.5 text-sm text-slate-600">{{ __('Résumé de la configuration actuellement appliquée sur votre société.') }}</p>
             </div>
             <div class="flex-1 p-5">
                 <div class="grid grid-cols-2 gap-3">
@@ -814,6 +904,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
         </div>
 
     </section>
+    @endif {{-- $configEnabled --}}
 
     {{-- ============================================= --}}
     {{-- E. TABLEAU FACTURES A RELANCER                --}}
@@ -1005,40 +1096,41 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                             <p class="text-sm text-slate-600">{{ __('Activer ou désactiver globalement les relances automatiques.') }}</p>
                         </div>
                         <button
-                            wire:click="$toggle('configEnabled')"
+                            wire:click="$toggle('draftEnabled')"
                             class="relative flex h-7 w-12 items-center rounded-full transition
-                                {{ $configEnabled ? 'bg-accent' : 'bg-slate-300' }}"
+                                {{ $draftEnabled ? 'bg-accent' : 'bg-slate-300' }}"
                         >
                             <span class="absolute size-5 rounded-full bg-white shadow transition-all
-                                {{ $configEnabled ? 'left-[1.4rem]' : 'left-1' }}"></span>
+                                {{ $draftEnabled ? 'left-[1.4rem]' : 'left-1' }}"></span>
                         </button>
                     </div>
 
+                    @if ($draftEnabled)
                     {{-- Mode auto/manuel --}}
                     <div>
                         <p class="text-sm font-semibold text-ink">{{ __('Mode de relance') }}</p>
                         <div class="mt-2 grid grid-cols-2 gap-3">
                             <button
-                                wire:click="$set('configMode', 'auto')"
+                                wire:click="$set('draftMode', 'auto')"
                                 @class([
                                     'rounded-xl border-2 p-4 text-left transition',
-                                    'border-primary bg-primary/5' => $configMode === 'auto',
-                                    'border-slate-200' => $configMode !== 'auto',
+                                    'border-primary bg-primary/5' => $draftMode === 'auto',
+                                    'border-slate-200' => $draftMode !== 'auto',
                                 ])
                             >
-                                <flux:icon name="bolt" @class(['size-5', 'text-primary' => $configMode === 'auto', 'text-slate-500' => $configMode !== 'auto']) />
+                                <flux:icon name="bolt" @class(['size-5', 'text-primary' => $draftMode === 'auto', 'text-slate-500' => $draftMode !== 'auto']) />
                                 <p class="mt-2 text-sm font-semibold text-ink">{{ __('Automatique') }}</p>
                                 <p class="mt-0.5 text-sm text-slate-600">{{ __('Envoi selon le calendrier') }}</p>
                             </button>
                             <button
-                                wire:click="$set('configMode', 'manual')"
+                                wire:click="$set('draftMode', 'manual')"
                                 @class([
                                     'rounded-xl border-2 p-4 text-left transition',
-                                    'border-primary bg-primary/5' => $configMode === 'manual',
-                                    'border-slate-200' => $configMode !== 'manual',
+                                    'border-primary bg-primary/5' => $draftMode === 'manual',
+                                    'border-slate-200' => $draftMode !== 'manual',
                                 ])
                             >
-                                <flux:icon name="hand-raised" @class(['size-5', 'text-primary' => $configMode === 'manual', 'text-slate-500' => $configMode !== 'manual']) />
+                                <flux:icon name="hand-raised" @class(['size-5', 'text-primary' => $draftMode === 'manual', 'text-slate-500' => $draftMode !== 'manual']) />
                                 <p class="mt-2 text-sm font-semibold text-ink">{{ __('Manuel') }}</p>
                                 <p class="mt-0.5 text-sm text-slate-600">{{ __('Validation avant envoi') }}</p>
                             </button>
@@ -1054,8 +1146,8 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                     wire:click="toggleRuleDay({{ $day }})"
                                     @class([
                                         'rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                                        'bg-primary text-white shadow-sm' => in_array($day, $configRuleDays),
-                                        'bg-slate-100 text-slate-600 hover:bg-slate-200' => ! in_array($day, $configRuleDays),
+                                        'bg-primary text-white shadow-sm' => in_array($day, $draftRuleDays),
+                                        'bg-slate-100 text-slate-600 hover:bg-slate-200' => ! in_array($day, $draftRuleDays),
                                     ])
                                 >
                                     J+{{ $day }}
@@ -1074,11 +1166,11 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                 'email' => ['label' => 'Email', 'icon' => 'envelope'],
                             ] as $channelKey => $channelData)
                                 <button
-                                    wire:click="$set('configChannel', '{{ $channelKey }}')"
+                                    wire:click="$set('draftChannel', '{{ $channelKey }}')"
                                     @class([
                                         'inline-flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition',
-                                        'border-primary bg-primary/5 text-primary' => $configChannel === $channelKey,
-                                        'border-slate-200 text-slate-600' => $configChannel !== $channelKey,
+                                        'border-primary bg-primary/5 text-primary' => $draftChannel === $channelKey,
+                                        'border-slate-200 text-slate-600' => $draftChannel !== $channelKey,
                                     ])
                                 >
                                     <flux:icon name="{{ $channelData['icon'] }}" class="size-4" />
@@ -1092,12 +1184,31 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                     <div>
                         <p class="text-sm font-semibold text-ink">{{ __('Ton par défaut') }}</p>
                         <x-select-native>
-                            <select wire:model="configTone" class="col-start-1 row-start-1 mt-2 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pr-8 text-sm">
+                            <select wire:model.live="draftTone" class="col-start-1 row-start-1 mt-2 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pr-8 text-sm">
                                 <option value="cordial">{{ __('Cordial — Poli et professionnel') }}</option>
                                 <option value="ferme">{{ __('Ferme — Direct et clair') }}</option>
                                 <option value="urgent">{{ __('Urgent — Insistant et prioritaire') }}</option>
                             </select>
                         </x-select-native>
+                    </div>
+
+                    {{-- Aperçu du message --}}
+                    @php $preview = $this->buildConfigPreviewMessage(); @endphp
+                    <div class="rounded-2xl bg-mist p-4">
+                        <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">{{ __('Aperçu du message') }}</p>
+                        <div class="max-w-sm rounded-2xl rounded-tl-sm bg-white p-4 shadow-sm">
+                            <p class="text-sm font-medium text-slate-800">{{ $preview['greeting'] }}</p>
+                            <p class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ $preview['body'] }}</p>
+                            <p class="mt-2 text-sm text-slate-600">{{ $preview['closing'] }}</p>
+                            <p class="text-sm text-slate-600">{{ $company->name }}</p>
+                            @if ($draftAttachPdf)
+                                <div class="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
+                                    <flux:icon name="document" class="size-4 text-rose-500" />
+                                    <span class="text-sm font-medium text-slate-600">{{ __('Facture') }}.pdf</span>
+                                </div>
+                            @endif
+                            <p class="mt-2 text-right text-[10px] text-slate-400">{{ now()->format('H:i') }}</p>
+                        </div>
                     </div>
 
                     {{-- Horaires d'envoi --}}
@@ -1106,13 +1217,13 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                         <div class="mt-2 flex items-center gap-3">
                             <div class="flex items-center gap-2">
                                 <label class="text-sm text-slate-600">{{ __('De') }}</label>
-                                <input wire:model="configHourStart" type="number" min="0" max="23"
+                                <input wire:model="draftHourStart" type="number" min="0" max="23"
                                     class="w-20 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-center text-sm" />
                                 <span class="text-sm text-slate-600">h</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-sm text-slate-600">{{ __('à') }}</label>
-                                <input wire:model="configHourEnd" type="number" min="0" max="23"
+                                <input wire:model="draftHourEnd" type="number" min="0" max="23"
                                     class="w-20 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-center text-sm" />
                                 <span class="text-sm text-slate-600">h</span>
                             </div>
@@ -1126,12 +1237,12 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                             <p class="text-sm text-slate-600">{{ __('Ne pas envoyer de relances le samedi et dimanche.') }}</p>
                         </div>
                         <button
-                            wire:click="$toggle('configExcludeWeekends')"
+                            wire:click="$toggle('draftExcludeWeekends')"
                             class="relative flex h-7 w-12 items-center rounded-full transition
-                                {{ $configExcludeWeekends ? 'bg-primary' : 'bg-slate-300' }}"
+                                {{ $draftExcludeWeekends ? 'bg-primary' : 'bg-slate-300' }}"
                         >
                             <span class="absolute size-5 rounded-full bg-white shadow transition-all
-                                {{ $configExcludeWeekends ? 'left-[1.4rem]' : 'left-1' }}"></span>
+                                {{ $draftExcludeWeekends ? 'left-[1.4rem]' : 'left-1' }}"></span>
                         </button>
                     </div>
 
@@ -1142,14 +1253,16 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                             <p class="text-sm text-slate-600">{{ __('Attacher automatiquement le PDF de la facture à chaque relance.') }}</p>
                         </div>
                         <button
-                            wire:click="$toggle('configAttachPdf')"
+                            wire:click="$toggle('draftAttachPdf')"
                             class="relative flex h-7 w-12 items-center rounded-full transition
-                                {{ $configAttachPdf ? 'bg-primary' : 'bg-slate-300' }}"
+                                {{ $draftAttachPdf ? 'bg-primary' : 'bg-slate-300' }}"
                         >
                             <span class="absolute size-5 rounded-full bg-white shadow transition-all
-                                {{ $configAttachPdf ? 'left-[1.4rem]' : 'left-1' }}"></span>
+                                {{ $draftAttachPdf ? 'left-[1.4rem]' : 'left-1' }}"></span>
                         </button>
                     </div>
+
+                    @endif {{-- $draftEnabled --}}
 
                 </div>
 
