@@ -526,6 +526,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                         <tr class="border-b border-slate-100 bg-slate-50/80">
                             <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant HT') }}</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Date émission') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Échéance') }}</th>
@@ -560,8 +561,13 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                     <span class="font-semibold text-ink">{{ $row['client_name'] }}</span>
                                 </td>
 
+                                {{-- Montant HT --}}
+                                <td class="whitespace-nowrap px-4 py-4 text-right text-slate-500">
+                                    {{ format_money($row['subtotal'], $row['currency'], compact: true) }}
+                                </td>
+
                                 {{-- Montant TTC --}}
-                                <td class="px-4 py-4 text-right font-semibold text-ink whitespace-nowrap">
+                                <td class="whitespace-nowrap px-4 py-4 text-right font-semibold text-ink">
                                     {{ format_money($row['total'], $row['currency'], compact: true) }}
                                 </td>
 
