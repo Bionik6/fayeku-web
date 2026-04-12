@@ -7,12 +7,12 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
-use Modules\PME\Invoicing\Enums\QuoteStatus;
-use Modules\PME\Invoicing\Models\Quote;
-use Modules\PME\Invoicing\Services\CurrencyService;
-use Modules\PME\Invoicing\Services\QuoteService;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Enums\PME\QuoteStatus;
+use App\Models\PME\Quote;
+use App\Services\PME\CurrencyService;
+use App\Services\PME\QuoteService;
 
 new #[Title('Devis')]
 #[Layout('layouts::pme')]

@@ -2,22 +2,22 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ReminderChannel;
+use App\Models\Auth\Company;
+use App\Models\Auth\Subscription;
+use App\Models\PME\Client;
+use App\Models\PME\Invoice;
+use App\Models\PME\InvoiceLine;
+use App\Models\PME\Quote;
+use App\Models\PME\QuoteLine;
+use App\Models\PME\Reminder;
+use App\Models\Shared\User;
 use Database\Factories\Support\SenegalFaker;
 use Database\Seeders\Concerns\GeneratesDemoTaxIds;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Modules\Auth\Models\Company;
-use Modules\Auth\Models\Subscription;
-use Modules\PME\Clients\Models\Client;
-use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Models\Reminder;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Enums\QuoteStatus;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\InvoiceLine;
-use Modules\PME\Invoicing\Models\Quote;
-use Modules\PME\Invoicing\Models\QuoteLine;
-use Modules\Shared\Models\User;
 
 class PmeDashboardSeeder extends Seeder
 {

@@ -67,7 +67,7 @@
                 @else
                     <div class="min-w-0 flex-1"
                          x-data="{
-                             raw: {{ min((int) ($discount ?? 0), \Modules\PME\Invoicing\Services\CurrencyService::maxAmount($currency)) }},
+                             raw: {{ min((int) ($discount ?? 0), \App\Services\PME\CurrencyService::maxAmount($currency)) }},
                              formatted: '',
                              get noDecimals() { return $wire.currencyJs.decimals === 0; },
                              get maxRaw() { return $wire.currencyJs.maxAmount; },

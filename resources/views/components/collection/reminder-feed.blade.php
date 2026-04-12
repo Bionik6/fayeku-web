@@ -6,9 +6,9 @@
 ])
 
 <?php
-use Modules\PME\Collection\Enums\ReminderChannel;
+use App\Enums\PME\ReminderChannel;
 
-/** @var \Modules\PME\Invoicing\Models\Invoice|null $invoice */
+/** @var \App\Models\PME\Invoice|null $invoice */
 $items = collect($reminders ?? $invoice?->reminders?->sortBy('created_at') ?? []);
 
 // Build a flat ordered list of typed feed items for a single pass loop.

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\PME\Client;
 use Database\Factories\Support\SenegalFaker;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\PME\Clients\Models\Client;
 
 /**
  * @extends Factory<Client>

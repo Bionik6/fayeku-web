@@ -141,322 +141,110 @@ writing code. Never guess what a framework feature does — search first.
 
 ---
 
-## 4. Architecture: Modular Monolith
+## 4. Architecture: Domain-Organized Monolith
 
 ### 4.1 Core Principles
 
-- **One deployable application, multiple self-contained modules.**
+- **One deployable application, standard Laravel structure with domain subdirectories.**
   No microservices. No separate deployments. No separate repositories.
-- **Modules live in `modules/` at the project root**, outside of `app/`.
-  Each module is autoloaded via a `psr-4` entry in `composer.json`.
-- **Each module owns everything it needs:** routes, controllers, Livewire components,
-  models, migrations, services, events, listeners, jobs, tests, views, and its
-  service provider.
-- **Cross-module communication uses Events for side effects and direct Service
-  injection for queries.** Module A can call a public Service class from Module B.
-  Module A must never import a Model from Module B directly.
-- **Shared code lives in `modules/Shared/`.** Anything used by more than one module
-  goes there.
+- **All code lives in `app/`** with domain subdirectories: `PME/`, `Compta/`, `Auth/`, `Shared/`.
+  Each domain groups its Models, Services, Controllers, Enums, Policies, etc. under the
+  standard Laravel directories (e.g. `app/Models/PME/`, `app/Services/Compta/`).
+- **Cross-domain communication uses Events for side effects and direct Service
+  injection for queries.** Domain A can call a public Service class from Domain B.
+- **Shared code lives in `app/*/Shared/` subdirectories.** Anything used by more than one domain
+  goes there (e.g. `app/Models/Shared/User.php`, `app/Services/Shared/OtpService.php`).
 - **No circular dependencies.** Both `PME` and `Compta` may depend on `Shared`.
   `PME` and `Compta` must never depend on each other directly.
 
-### 4.2 Composer Autoloading
+### 4.2 Directory Structure
 
-```json
-{
-    "autoload": {
-        "psr-4": {
-            "App\\": "app/",
-            "Modules\\": "modules/"
-        }
-    }
-}
-```
-
-Run `composer dump-autoload` after adding a new module.
-
-### 4.3 Directory Structure
+Code is organized within the standard `app/` directory using domain subdirectories.
 
 ```
-modules/
-├── Shared/
-│   ├── Models/
-│   │   ├── User.php
-│   │   └── Country.php
-│   ├── Services/
-│   │   ├── OtpService.php
-│   │   ├── SmsService.php
-│   │   └── WhatsAppService.php
-│   ├── Interfaces/
-│   │   ├── SmsProviderInterface.php
-│   │   ├── WhatsAppProviderInterface.php
-│   │   ├── PdfGeneratorInterface.php
-│   │   └── PayoutInterface.php
-│   ├── Traits/
-│   │   └── HasUlid.php
-│   ├── Middleware/
-│   │   ├── EnsureProfileType.php
-│   │   └── EnsurePhoneVerified.php
-│   ├── Providers/
-│   │   └── SharedServiceProvider.php
-│   └── database/
-│       └── migrations/
-│
-├── Auth/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── RegisterController.php
-│   │   │   ├── LoginController.php
-│   │   │   ├── LogoutController.php
-│   │   │   └── OtpController.php
-│   │   └── Requests/
-│   │       ├── RegisterRequest.php
-│   │       ├── LoginRequest.php
-│   │       └── VerifyOtpRequest.php
-│   ├── Livewire/
-│   │   ├── RegisterForm.php
-│   │   ├── LoginForm.php
-│   │   └── OtpVerification.php
-│   ├── Services/
-│   │   └── AuthService.php
-│   ├── database/
-│   │   └── migrations/
-│   │       ├── xxxx_create_users_table.php
-│   │       ├── xxxx_create_companies_table.php
-│   │       ├── xxxx_create_company_user_table.php
-│   │       └── xxxx_create_otp_codes_table.php
-│   ├── routes/
-│   │   ├── web.php
-│   │   └── api.php
-│   ├── resources/views/
-│   ├── tests/
-│   │   ├── Feature/
-│   │   └── Unit/
-│   └── Providers/
-│       └── AuthModuleServiceProvider.php
-│
-├── PME/
-│   ├── Invoicing/
-│   │   ├── Http/
-│   │   │   ├── Controllers/
-│   │   │   └── Requests/
-│   │   ├── Livewire/
-│   │   │   ├── InvoiceList.php
-│   │   │   ├── InvoiceForm.php
-│   │   │   ├── InvoiceShow.php
-│   │   │   ├── QuoteList.php
-│   │   │   └── QuoteForm.php
-│   │   ├── Models/
-│   │   │   ├── Invoice.php
-│   │   │   ├── InvoiceLine.php
-│   │   │   ├── Quote.php
-│   │   │   └── QuoteLine.php
-│   │   ├── Services/
-│   │   │   ├── InvoiceService.php
-│   │   │   ├── QuoteService.php
-│   │   │   └── PdfService.php
-│   │   ├── Enums/
-│   │   │   ├── InvoiceStatus.php
-│   │   │   └── QuoteStatus.php
-│   │   ├── Events/
-│   │   │   ├── InvoiceCreated.php
-│   │   │   ├── InvoicePaid.php
-│   │   │   ├── InvoiceMarkedOverdue.php
-│   │   │   └── QuoteAccepted.php
-│   │   ├── Listeners/
-│   │   │   └── NotifyAccountantOnNewInvoice.php
-│   │   ├── Policies/
-│   │   │   ├── InvoicePolicy.php
-│   │   │   └── QuotePolicy.php
-│   │   ├── database/migrations/
-│   │   ├── resources/views/
-│   │   ├── routes/
-│   │   │   ├── web.php
-│   │   │   └── api.php
-│   │   ├── tests/
-│   │   └── Providers/
-│   │       └── InvoicingServiceProvider.php
-│   │
-│   ├── Clients/
-│   │   ├── Http/
-│   │   │   ├── Controllers/
-│   │   │   └── Requests/
-│   │   ├── Livewire/
-│   │   │   ├── ClientList.php
-│   │   │   ├── ClientForm.php
-│   │   │   └── ClientShow.php
-│   │   ├── Models/
-│   │   │   └── Client.php
-│   │   ├── Services/
-│   │   │   └── ClientService.php
-│   │   ├── Policies/
-│   │   │   └── ClientPolicy.php
-│   │   ├── database/migrations/
-│   │   ├── resources/views/
-│   │   ├── routes/
-│   │   ├── tests/
-│   │   └── Providers/
-│   │       └── ClientsServiceProvider.php
-│   │
-│   ├── Collection/
-│   │   ├── Http/
-│   │   │   ├── Controllers/
-│   │   │   └── Requests/
-│   │   ├── Livewire/
-│   │   │   ├── CollectionDashboard.php
-│   │   │   ├── ReminderList.php
-│   │   │   └── ReminderForm.php
-│   │   ├── Models/
-│   │   │   ├── Reminder.php
-│   │   │   └── ReminderRule.php
-│   │   ├── Services/
-│   │   │   ├── ReminderService.php          # orchestrator — channel-agnostic
-│   │   │   ├── WhatsAppReminderService.php  # channel implementation
-│   │   │   ├── SmsReminderService.php       # channel implementation
-│   │   │   └── EmailReminderService.php     # channel implementation
-│   │   ├── Interfaces/
-│   │   │   └── ReminderChannelInterface.php # shared contract for all three
-│   │   ├── Enums/
-│   │   │   ├── ReminderChannel.php          # whatsapp | sms | email
-│   │   │   ├── ReminderMode.php             # auto | manual
-│   │   │   └── ReminderStatus.php
-│   │   ├── Jobs/
-│   │   │   └── SendReminderJob.php          # single job, channel resolved at runtime
-│   │   ├── Policies/
-│   │   │   └── ReminderPolicy.php
-│   │   ├── database/migrations/
-│   │   ├── resources/views/
-│   │   ├── routes/
-│   │   ├── tests/
-│   │   └── Providers/
-│   │       └── CollectionServiceProvider.php
-│   │
-│   ├── Treasury/
-│   │   ├── Http/Controllers/
-│   │   ├── Livewire/
-│   │   │   ├── TreasuryDashboard.php
-│   │   │   └── CashForecast.php
-│   │   ├── Services/
-│   │   │   ├── TreasuryService.php
-│   │   │   └── ForecastService.php
-│   │   ├── database/migrations/
-│   │   ├── resources/views/
-│   │   ├── routes/
-│   │   ├── tests/
-│   │   └── Providers/
-│   │       └── TreasuryServiceProvider.php
-│   │
-│   └── Providers/
-│       └── PmeModuleServiceProvider.php
-│
-└── Compta/
-    ├── Portfolio/
-    │   ├── Http/
-    │   │   ├── Controllers/
-    │   │   └── Requests/
-    │   ├── Livewire/
-    │   │   ├── CockpitDashboard.php
-    │   │   ├── ClientPortfolio.php
-    │   │   └── ClientSheet.php
-    │   ├── Services/
-    │   │   └── PortfolioService.php
-    │   ├── database/migrations/
-    │   ├── resources/views/
-    │   ├── routes/
-    │   ├── tests/
-    │   └── Providers/
-    │       └── PortfolioServiceProvider.php
-    │
-    ├── Export/
-    │   ├── Http/
-    │   │   ├── Controllers/
-    │   │   └── Requests/
-    │   ├── Livewire/
-    │   │   └── ExportForm.php
-    │   ├── Services/
-    │   │   ├── ExportService.php
-    │   │   ├── SageExporter.php
-    │   │   ├── EbpExporter.php
-    │   │   └── ExcelExporter.php
-    │   ├── Interfaces/
-    │   │   └── AccountingExporterInterface.php
-    │   ├── Enums/
-    │   │   └── ExportFormat.php
-    │   ├── Jobs/
-    │   │   └── GenerateExportJob.php
-    │   ├── database/migrations/
-    │   ├── resources/views/
-    │   ├── routes/
-    │   ├── tests/
-    │   └── Providers/
-    │       └── ExportServiceProvider.php
-    │
-    ├── Partnership/
-    │   ├── Http/
-    │   │   ├── Controllers/
-    │   │   └── Requests/
-    │   ├── Livewire/
-    │   │   ├── CommissionDashboard.php
-    │   │   └── InviteClientForm.php
-    │   ├── Models/
-    │   │   ├── PartnerInvitation.php
-    │   │   └── Commission.php
-    │   ├── Services/
-    │   │   ├── CommissionService.php
-    │   │   └── InvitationService.php
-    │   ├── Enums/
-    │   │   └── PartnerTier.php
-    │   ├── Jobs/
-    │   │   └── SendPartnerInvitationJob.php
-    │   ├── database/migrations/
-    │   ├── resources/views/
-    │   ├── routes/
-    │   ├── tests/
-    │   └── Providers/
-    │       └── PartnershipServiceProvider.php
-    │
-    ├── Compliance/
-    │   ├── Http/Controllers/
-    │   ├── Services/
-    │   │   ├── ComplianceService.php       # orchestrator — routes to correct connector
-    │   │   ├── FneConnector.php            # Côte d'Ivoire FNE — LIVE, API available
-    │   │   └── DgidConnector.php           # Sénégal DGID — stub, API not yet published
-    │   ├── Interfaces/
-    │   │   └── FiscalConnectorInterface.php
-    │   ├── Enums/
-    │   │   └── FiscalCountry.php           # SN | CI
-    │   ├── DTOs/
-    │   │   ├── FneInvoicePayload.php       # maps Fayeku invoice → FNE API request body
-    │   │   └── FneCertifiedInvoice.php     # maps FNE API response → Fayeku fields
-    │   ├── database/migrations/
-    │   ├── routes/
-    │   ├── tests/
-    │   └── Providers/
-    │       └── ComplianceServiceProvider.php
-    │
-    └── Providers/
-        └── ComptaModuleServiceProvider.php
+app/
+├── Models/
+│   ├── PME/          Invoice, InvoiceLine, Quote, QuoteLine, Client, Reminder, ReminderRule
+│   ├── Compta/       ExportHistory, Commission, CommissionPayment, PartnerInvitation, DismissedAlert
+│   ├── Auth/         Company, AccountantCompany, Subscription
+│   └── Shared/       User, Country
+├── Services/
+│   ├── PME/          InvoiceService, QuoteService, CurrencyService, PdfService, ClientService,
+│   │                 ReminderService, EmailReminderService, SmsReminderService, WhatsAppReminderService,
+│   │                 TreasuryService, ForecastService
+│   ├── Compta/       ExportService, EbpExporter, ExcelExporter, SageExporter, CommissionService,
+│   │                 InvitationService, PortfolioService, AlertService, ComplianceService,
+│   │                 DGIDConnector, FNEFiscalConnector
+│   ├── Auth/         AuthService
+│   └── Shared/       OtpService, QuotaService, FakeSmsProvider, FakeWhatsAppProvider, TwilioWhatsAppProvider
+├── Http/
+│   ├── Controllers/
+│   │   ├── PME/      InvoicePdfController, QuotePdfController, TreasuryExportController
+│   │   ├── Compta/   ExportDownloadController, JoinController
+│   │   └── Auth/     LoginController, RegisterController, CompanySetupController, OtpController,
+│   │                 PasswordResetController, LogoutController
+│   └── Requests/
+│       └── Auth/     CompanySetupRequest, LoginRequest, RegisterRequest, VerifyOtpRequest, etc.
+├── Enums/
+│   ├── PME/          InvoiceStatus, QuoteStatus, LineType, ReminderChannel, ReminderMode, ReminderStatus
+│   ├── Compta/       ExportFormat, PartnerTier, CertificationAuthority, FiscalCountry
+│   └── Shared/       QuotaType
+├── Policies/PME/     InvoicePolicy, QuotePolicy, ClientPolicy, ReminderPolicy
+├── Events/PME/       InvoiceCreated, InvoiceMarkedOverdue, InvoicePaid, QuoteAccepted
+├── Listeners/PME/    NotifyAccountantOnNewInvoice
+├── Mail/PME/         InvoiceMail
+├── Jobs/PME/         SendReminderJob
+├── Interfaces/
+│   ├── PME/          ReminderChannelInterface
+│   ├── Compta/       AccountingExporterInterface, FiscalConnectorInterface
+│   └── Shared/       SmsProviderInterface, WhatsAppProviderInterface, PdfGeneratorInterface,
+│                     PayoutInterface, EmailReminderInterface
+├── DTOs/Compta/      FiscalCertification, FneInvoicePayload
+├── Exceptions/Shared/ QuotaExceededException
+├── Middleware/        EnsurePhoneVerified, EnsureProfileType
+├── Traits/Shared/     HasUlid
+├── Providers/
+│   ├── PME/          PmeModuleServiceProvider
+│   ├── Compta/       ComptaModuleServiceProvider
+│   ├── Auth/         AuthModuleServiceProvider
+│   └── Shared/       SharedServiceProvider
+├── Livewire/         Sidebar components, actions
+└── helpers.php
+
+database/migrations/   All migrations (flat, auto-discovered by Laravel)
+routes/                web.php, api.php, auth-web.php, auth-api.php, pme-web.php, pme-api.php, compta-web.php
+
+tests/
+├── Feature/
+│   ├── PME/          Invoices, quotes, clients, collection, treasury tests
+│   ├── Compta/       Export, partnership, portfolio, compliance tests
+│   ├── Auth/         Login, registration, OTP, dashboard, sidebar tests
+│   └── Shared/       Access control, support, settings tests
+└── Unit/
+    ├── Compta/       CommissionCalculationTest
+    └── Shared/       HelpersTest
 ```
 
 ---
 
-## 5. Module Registration
+## 5. Provider Registration
 
 ```php
 // bootstrap/providers.php
 return [
     App\Providers\AppServiceProvider::class,
-    Modules\Shared\Providers\SharedServiceProvider::class,
-    Modules\Auth\Providers\AuthModuleServiceProvider::class,
-    Modules\PME\Providers\PmeModuleServiceProvider::class,
-    Modules\Compta\Providers\ComptaModuleServiceProvider::class,
+    App\Providers\FortifyServiceProvider::class,
+    App\Providers\Shared\SharedServiceProvider::class,
+    App\Providers\Auth\AuthModuleServiceProvider::class,
+    App\Providers\PME\PmeModuleServiceProvider::class,
+    App\Providers\Compta\ComptaModuleServiceProvider::class,
 ];
 ```
 
-Each parent provider registers its children:
+Each parent provider registers its sub-providers:
 
 ```php
-// modules/PME/Providers/PmeModuleServiceProvider.php
+// app/Providers/PME/PmeModuleServiceProvider.php
 class PmeModuleServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -469,17 +257,18 @@ class PmeModuleServiceProvider extends ServiceProvider
 }
 ```
 
-Each submodule provider loads its own routes, migrations, and views:
+Routes are loaded from the central `routes/` directory:
 
 ```php
+// app/Providers/Auth/AuthModuleServiceProvider.php
 public function boot(): void
 {
-    $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
-    $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
-    $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-    $this->loadViewsFrom(__DIR__ . '/../resources/views', 'invoicing');
+    $this->loadRoutesFrom(base_path('routes/auth-web.php'));
+    $this->loadRoutesFrom(base_path('routes/auth-api.php'));
 }
 ```
+
+Migrations live in `database/migrations/` (auto-discovered by Laravel).
 
 ---
 
@@ -701,7 +490,7 @@ protected $policies = [
 ### 6.2 Policy Pattern — SME Resource
 
 ```php
-// modules/PME/Invoicing/Policies/InvoicePolicy.php
+// app/Policies/PME/InvoicePolicy.php
 class InvoicePolicy
 {
     public function view(User $user, Invoice $invoice): bool
@@ -911,7 +700,7 @@ All quota checks and consumption **must go through `QuotaService`**.
 No controller or Livewire component checks quotas directly.
 
 ```php
-// modules/Shared/Services/QuotaService.php
+// app/Services/Shared/QuotaService.php
 
 class QuotaService
 {
@@ -959,7 +748,7 @@ class QuotaService
 **Usage pattern in a service:**
 
 ```php
-// modules/PME/Collection/Services/ReminderService.php
+// app/Services/PME/ReminderService.php
 
 /**
  * Send a reminder via the chosen channel.
@@ -1000,7 +789,7 @@ private function resolveChannel(ReminderChannel $channel): ReminderChannelInterf
 The `ReminderChannelInterface` defines the contract:
 
 ```php
-// modules/PME/Collection/Interfaces/ReminderChannelInterface.php
+// app/Interfaces/PME/ReminderChannelInterface.php
 interface ReminderChannelInterface
 {
     public function send(Invoice $invoice): Reminder;
@@ -1010,7 +799,7 @@ interface ReminderChannelInterface
 ### 7.6 Quota Types Enum
 
 ```php
-// modules/Shared/Enums/QuotaType.php
+// app/Enums/Shared/QuotaType.php
 enum QuotaType: string
 {
     case Reminders  = 'reminders';
@@ -1023,7 +812,7 @@ enum QuotaType: string
 ### 7.7 Plan Seeder
 
 `plan_definitions` is seeded once at setup and never modified by application code.
-Create a `PlanDefinitionSeeder` in `modules/Shared/database/seeders/`.
+Create a `PlanDefinitionSeeder` in `database/seeders/`.
 
 ```php
 // Basique
@@ -1071,7 +860,7 @@ for `quota_type = 'reminders'` by creating a new row for the new `period_start`.
 It does not touch `addon_purchases.credits_remaining` — those carry over.
 
 ```php
-// modules/Shared/Jobs/ResetMonthlyQuotasJob.php
+// app/Jobs/Shared/ResetMonthlyQuotasJob.php
 // Scheduled in AppServiceProvider: Schedule::job(ResetMonthlyQuotasJob::class)->monthly();
 ```
 
@@ -1141,7 +930,7 @@ fne_raw_response    JSONB NULL          -- full API response snapshot for audit
 **`FiscalConnectorInterface` contract:**
 
 ```php
-// modules/Compta/Compliance/Interfaces/FiscalConnectorInterface.php
+// app/Interfaces/Compta/FiscalConnectorInterface.php
 interface FiscalConnectorInterface
 {
     /**
@@ -1161,7 +950,7 @@ interface FiscalConnectorInterface
 **`FneConnector` key mapping (Fayeku → FNE API):**
 
 ```php
-// modules/Compta/Compliance/Services/FneConnector.php
+// app/Services/Compta/FNEFiscalConnector.php
 // Maps a Fayeku Invoice model to the FNE API request payload.
 
 [
@@ -1196,7 +985,7 @@ interface FiscalConnectorInterface
 **`DgidConnector` (Senegal) — stub only:**
 
 ```php
-// modules/Compta/Compliance/Services/DgidConnector.php
+// app/Services/Compta/DGIDConnector.php
 class DgidConnector implements FiscalConnectorInterface
 {
     public function certify(Invoice $invoice): FiscalCertification
@@ -1221,7 +1010,7 @@ this file is updated. The stub exists so the architecture is ready.
 **`ComplianceService` — country routing:**
 
 ```php
-// modules/Compta/Compliance/Services/ComplianceService.php
+// app/Services/Compta/ComplianceService.php
 class ComplianceService
 {
     /** @param FiscalConnectorInterface[] $connectors */
@@ -1296,8 +1085,8 @@ ULIDs are 26-character uppercase strings, lexicographically sortable, performant
 on PostgreSQL indexes.
 
 ```php
-// modules/Shared/Traits/HasUlid.php
-namespace Modules\Shared\Traits;
+// app/Traits/Shared/HasUlid.php
+namespace App\Traits\Shared;
 
 use Illuminate\Support\Str;
 
@@ -1442,8 +1231,8 @@ Route::middleware(['api', 'auth:sanctum', 'verified.phone'])
 // bootstrap/app.php
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
-        'profile'        => \Modules\Shared\Middleware\EnsureProfileType::class,
-        'verified.phone' => \Modules\Shared\Middleware\EnsurePhoneVerified::class,
+        'profile'        => \App\Middleware\EnsureProfileType::class,
+        'verified.phone' => \App\Middleware\EnsurePhoneVerified::class,
     ]);
 })
 ```
@@ -1497,7 +1286,7 @@ Route::middleware(['api', 'auth:sanctum', 'verified.phone'])
 ### 10.4 Blade Views
 
 ```
-modules/PME/Invoicing/resources/views/
+resources/views/pages/pme/invoices/
 ├── index.blade.php
 ├── create.blade.php
 ├── show.blade.php
@@ -1524,12 +1313,12 @@ return view('invoicing::partials.status-badge');
    or through the explicit `accountant_company` relationship.
 
 ```php
-// Canonical model — modules/PME/Invoicing/Models/Invoice.php
+// Canonical model — app/Models/PME/Invoice.php
 
-namespace Modules\PME\Invoicing\Models;
+namespace App\Models\PME;
 
-use Modules\Shared\Traits\HasUlid;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
+use App\Traits\Shared\HasUlid;
+use App\Enums\PME\InvoiceStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -1565,12 +1354,12 @@ class Invoice extends Model
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Auth\Models\Company::class);
+        return $this->belongsTo(\App\Models\Auth\Company::class);
     }
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(\Modules\PME\Clients\Models\Client::class);
+        return $this->belongsTo(\App\Models\PME\Client::class);
     }
 
     public function lines(): HasMany
@@ -1626,12 +1415,12 @@ on any component.
 - State must be server-side. Validate and authorize in actions as you would in HTTP requests.
 
 ```php
-// modules/PME/Invoicing/Livewire/InvoiceForm.php
+// app/Livewire/PME/InvoiceForm.php
 
-namespace Modules\PME\Invoicing\Livewire;
+namespace App\Livewire\PME;
 
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Services\InvoiceService;
+use App\Models\PME\Invoice;
+use App\Services\PME\InvoiceService;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -1713,7 +1502,7 @@ it('registers an SME user, creates company, and sends OTP', function () {
         'profile_type'          => 'sme',
     ])->assertCreated();
 
-    expect(\Modules\Shared\Models\User::first()->phone)->toBe('+221771234567');
+    expect(\App\Models\Shared\User::first()->phone)->toBe('+221771234567');
     $this->assertDatabaseHas('companies', ['name' => 'Sow BTP SARL', 'type' => 'sme']);
     $this->assertDatabaseHas('otp_codes', ['phone' => '+221771234567']);
 });
@@ -1884,7 +1673,7 @@ FNE_TEST_URL=http://54.247.95.108/ws
 16. Every model uses `HasUlid`.
 17. `$fillable` is always explicit. `$guarded = []` is forbidden.
 18. Money columns are always `int`. Float is forbidden for money.
-19. Namespace is `Modules\`, not `App\Modules\`.
+19. Namespace is `App\` with domain subdirectories (e.g. `App\Models\PME\Invoice`, `App\Services\Compta\ExportService`).
 20. Always use explicit return type declarations on all methods.
 21. Use PHP 8 constructor property promotion.
 22. Avoid `DB::`; prefer `Model::query()`. Use eager loading to prevent N+1 queries.

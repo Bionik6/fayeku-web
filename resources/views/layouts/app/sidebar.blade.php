@@ -79,7 +79,7 @@
             $clientRouteCompany = request()->route('company');
 
             $headerBreadcrumbs = match (true) {
-                request()->routeIs('clients.show') && $clientRouteCompany instanceof \Modules\Auth\Models\Company => [
+                request()->routeIs('clients.show') && $clientRouteCompany instanceof \App\Models\Auth\Company => [
                     'segments' => [
                         __('Tableau de bord'),
                         __('Clients'),

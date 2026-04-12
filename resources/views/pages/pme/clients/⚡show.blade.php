@@ -5,14 +5,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
-use Modules\PME\Clients\Services\ClientService;
-use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Services\ReminderService;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\Quote;
-use Modules\PME\Invoicing\Services\QuoteService;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Services\PME\ClientService;
+use App\Enums\PME\ReminderChannel;
+use App\Services\PME\ReminderService;
+use App\Models\PME\Invoice;
+use App\Models\PME\Quote;
+use App\Services\PME\QuoteService;
 
 new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public Client $client;
@@ -927,11 +927,11 @@ public function viewInvoice(string $id): void
             $q = $this->selectedQuote;
             $client = $q->client;
             $statusConfig = match ($q->status) {
-                \Modules\PME\Invoicing\Enums\QuoteStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
-                \Modules\PME\Invoicing\Enums\QuoteStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
-                \Modules\PME\Invoicing\Enums\QuoteStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
-                \Modules\PME\Invoicing\Enums\QuoteStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700'],
-                \Modules\PME\Invoicing\Enums\QuoteStatus::Expired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500'],
+                \App\Enums\PME\QuoteStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+                \App\Enums\PME\QuoteStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
+                \App\Enums\PME\QuoteStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
+                \App\Enums\PME\QuoteStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700'],
+                \App\Enums\PME\QuoteStatus::Expired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500'],
                 default => ['label' => ucfirst($q->status->value), 'class' => 'bg-slate-100 text-slate-600'],
             };
         @endphp
@@ -1085,7 +1085,7 @@ public function viewInvoice(string $id): void
                                 </div>
                             </dl>
 
-                            @if (in_array($q->status, [\Modules\PME\Invoicing\Enums\QuoteStatus::Sent, \Modules\PME\Invoicing\Enums\QuoteStatus::Accepted]) && ! $q->invoice)
+                            @if (in_array($q->status, [\App\Enums\PME\QuoteStatus::Sent, \App\Enums\PME\QuoteStatus::Accepted]) && ! $q->invoice)
                                 <div class="mt-6">
                                     <button
                                         wire:click="confirmConvert('{{ $q->id }}')"

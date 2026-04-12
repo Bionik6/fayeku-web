@@ -3,10 +3,10 @@
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\Auth\Services\AuthService;
-use Modules\Compta\Partnership\Models\PartnerInvitation;
-use Modules\Compta\Partnership\Services\InvitationService;
+use App\Models\Auth\Company;
+use App\Services\Auth\AuthService;
+use App\Models\Compta\PartnerInvitation;
+use App\Services\Compta\InvitationService;
 
 new class extends Component {
     public ?Company $firm = null;

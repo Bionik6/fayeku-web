@@ -2,23 +2,23 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PME\InvoiceStatus;
+use App\Models\Auth\AccountantCompany;
+use App\Models\Auth\Company;
+use App\Models\Auth\Subscription;
+use App\Models\Compta\Commission;
+use App\Models\Compta\CommissionPayment;
+use App\Models\Compta\PartnerInvitation;
+use App\Models\PME\Client;
+use App\Models\PME\Invoice;
+use App\Models\PME\InvoiceLine;
+use App\Models\Shared\User;
+use App\Services\Compta\CommissionService;
 use Database\Factories\Support\SenegalFaker;
 use Database\Seeders\Concerns\GeneratesDemoTaxIds;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Modules\Auth\Models\AccountantCompany;
-use Modules\Auth\Models\Company;
-use Modules\Auth\Models\Subscription;
-use Modules\Compta\Partnership\Models\Commission;
-use Modules\Compta\Partnership\Models\CommissionPayment;
-use Modules\Compta\Partnership\Models\PartnerInvitation;
-use Modules\Compta\Partnership\Services\CommissionService;
-use Modules\PME\Clients\Models\Client;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\InvoiceLine;
-use Modules\Shared\Models\User;
 
 /**
  * Showcase seed — Comptable profile

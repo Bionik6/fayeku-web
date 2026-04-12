@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\PME\Invoice;
+use App\Models\PME\InvoiceLine;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\InvoiceLine;
 
 /**
  * @extends Factory<InvoiceLine>

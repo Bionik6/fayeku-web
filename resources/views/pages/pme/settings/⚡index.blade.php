@@ -7,8 +7,8 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\Auth\Services\AuthService;
+use App\Models\Auth\Company;
+use App\Services\Auth\AuthService;
 
 new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
     public string $activeSection = 'profile';

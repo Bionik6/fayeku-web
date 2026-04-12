@@ -1,5 +1,5 @@
 @php
-    use Modules\PME\Invoicing\Services\CurrencyService;
+    use App\Services\PME\CurrencyService;
 @endphp
 <!DOCTYPE html>
 <html lang="fr">

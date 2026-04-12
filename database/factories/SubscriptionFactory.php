@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Auth\Company;
+use App\Models\Auth\Subscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Auth\Models\Company;
-use Modules\Auth\Models\Subscription;
 
 /**
  * @extends Factory<Subscription>

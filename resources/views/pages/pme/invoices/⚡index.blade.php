@@ -5,10 +5,10 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Models\Invoice;
+use App\Models\Auth\Company;
+use App\Enums\PME\ReminderChannel;
+use App\Enums\PME\InvoiceStatus;
+use App\Models\PME\Invoice;
 
 new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
     #[Url(as: 'statut')]
@@ -323,7 +323,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                 $this->company->name,
             ])) ?: null;
 
-            app(\Modules\PME\Collection\Services\ReminderService::class)
+            app(\App\Services\PME\ReminderService::class)
                 ->send($invoice, $this->company, $channel, $messageBody, isManual: true);
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));

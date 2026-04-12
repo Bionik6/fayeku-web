@@ -1,8 +1,8 @@
 <?php
 
+use App\Services\PME\CurrencyService;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
-use Modules\PME\Invoicing\Services\CurrencyService;
 
 if (! function_exists('format_date')) {
     /**
@@ -143,6 +143,18 @@ if (! function_exists('format_phone')) {
     }
 }
 
+if (! function_exists('format_amount')) {
+    /**
+     * Compact currency formatting with symbol (e.g. "1 560 000F", "€40,00", "$40.00").
+     *
+     * Shorthand for format_money($amount, $currency, compact: true).
+     */
+    function format_amount(int|float $amount, string $currency = 'XOF'): string
+    {
+        return format_money($amount, $currency, compact: true);
+    }
+}
+
 if (! function_exists('format_money')) {
     /**
      * Format an amount for display using the currency's configuration.
@@ -164,7 +176,7 @@ if (! function_exists('format_money')) {
 
         // symbol, position ('before'|'after'), space between symbol and number
         $symbols = [
-            'XOF' => ['symbol' => 'F',    'position' => 'after',  'space' => true],
+            'XOF' => ['symbol' => 'F',    'position' => 'after',  'space' => false],
             'EUR' => ['symbol' => '€',    'position' => 'before', 'space' => false],
             'USD' => ['symbol' => '$',    'position' => 'before', 'space' => false],
             'GBP' => ['symbol' => '£',    'position' => 'before', 'space' => false],

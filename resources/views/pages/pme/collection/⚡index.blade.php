@@ -5,13 +5,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Enums\ReminderMode;
-use Modules\PME\Collection\Models\Reminder;
-use Modules\PME\Collection\Models\ReminderRule;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Models\Invoice;
+use App\Models\Auth\Company;
+use App\Enums\PME\ReminderChannel;
+use App\Enums\PME\ReminderMode;
+use App\Models\PME\Reminder;
+use App\Models\PME\ReminderRule;
+use App\Enums\PME\InvoiceStatus;
+use App\Models\PME\Invoice;
 
 new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     #[Url(as: 'q')]
@@ -506,7 +506,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
             $this->previewInvoiceId = $previousPreviewId;
 
-            app(\Modules\PME\Collection\Services\ReminderService::class)
+            app(\App\Services\PME\ReminderService::class)
                 ->send($invoice, $this->company, $channel, $messageBody, isManual: true);
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));

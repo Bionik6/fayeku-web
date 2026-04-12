@@ -6,8 +6,8 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Services\ClientService;
+use App\Models\Auth\Company;
+use App\Services\PME\ClientService;
 
 new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
     public ?Company $company = null;

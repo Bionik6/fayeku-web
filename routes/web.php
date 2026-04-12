@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\Compta\ExportDownloadController;
 use App\Http\Controllers\MarketingPageController;
+use App\Http\Controllers\PME\InvoicePdfController;
+use App\Http\Controllers\PME\QuotePdfController;
+use App\Http\Controllers\PME\TreasuryExportController;
 use Illuminate\Support\Facades\Route;
-use Modules\Compta\Export\Http\Controllers\ExportDownloadController;
-use Modules\PME\Invoicing\Http\Controllers\InvoicePdfController;
-use Modules\PME\Invoicing\Http\Controllers\QuotePdfController;
-use Modules\PME\Treasury\Http\Controllers\TreasuryExportController;
 
 Route::get('/', [MarketingPageController::class, 'home'])->name('home');
 Route::get('/pricing', [MarketingPageController::class, 'pricing'])->name('marketing.pricing');
@@ -20,15 +20,15 @@ Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defau
 
 Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix('compta')->group(function () {
     Route::redirect('/', '/compta/dashboard');
-    Route::livewire('dashboard', 'pages::dashboard.index')->name('dashboard');
-    Route::livewire('alertes', 'pages::alerts.index')->name('alerts.index');
-    Route::livewire('clients', 'pages::clients.index')->name('clients.index');
-    Route::livewire('clients/{company}', 'pages::clients.show')->name('clients.show');
-    Route::livewire('exports', 'pages::export.index')->name('export.index');
+    Route::livewire('dashboard', 'pages::compta.dashboard.index')->name('dashboard');
+    Route::livewire('alertes', 'pages::compta.alerts.index')->name('alerts.index');
+    Route::livewire('clients', 'pages::compta.clients.index')->name('clients.index');
+    Route::livewire('clients/{company}', 'pages::compta.clients.show')->name('clients.show');
+    Route::livewire('exports', 'pages::compta.export.index')->name('export.index');
     Route::get('exports/{exportHistory}/download', ExportDownloadController::class)->name('export.download');
-    Route::livewire('commissions', 'pages::commissions.index')->name('commissions.index');
-    Route::livewire('invitations', 'pages::invitations.index')->name('invitations.index');
-    Route::livewire('support', 'pages::support.index')->name('support.index');
+    Route::livewire('commissions', 'pages::compta.commissions.index')->name('commissions.index');
+    Route::livewire('invitations', 'pages::compta.invitations.index')->name('invitations.index');
+    Route::livewire('support', 'pages::compta.support.index')->name('support.index');
 });
 
 Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {

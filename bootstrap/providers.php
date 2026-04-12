@@ -1,11 +1,11 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use App\Providers\Auth\AuthModuleServiceProvider;
+use App\Providers\Compta\ComptaModuleServiceProvider;
 use App\Providers\FortifyServiceProvider;
-use Modules\Auth\Providers\AuthModuleServiceProvider;
-use Modules\Compta\Providers\ComptaModuleServiceProvider;
-use Modules\PME\Providers\PmeModuleServiceProvider;
-use Modules\Shared\Providers\SharedServiceProvider;
+use App\Providers\PME\PmeModuleServiceProvider;
+use App\Providers\Shared\SharedServiceProvider;
 
 return [
     AppServiceProvider::class,

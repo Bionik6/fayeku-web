@@ -1,10 +1,10 @@
 <?php
 
+use App\Middleware\EnsurePhoneVerified;
+use App\Middleware\EnsureProfileType;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Modules\Shared\Middleware\EnsurePhoneVerified;
-use Modules\Shared\Middleware\EnsureProfileType;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

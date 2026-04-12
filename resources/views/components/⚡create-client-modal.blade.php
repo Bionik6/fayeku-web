@@ -2,8 +2,8 @@
 
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
 
 new class extends Component {
     public ?Company $company = null;

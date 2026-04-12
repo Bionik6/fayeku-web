@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\AccountantCompany;
+use App\Models\Auth\Company;
+use App\Models\Auth\Subscription;
+use App\Models\Shared\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Modules\Auth\Models\AccountantCompany;
-use Modules\Auth\Models\Company;
-use Modules\Auth\Models\Subscription;
-use Modules\Shared\Models\User;
 
 class DemoAccountsSeeder extends Seeder
 {

@@ -10,7 +10,7 @@
 ])
 
 <?php
-use Modules\PME\Collection\Enums\ReminderChannel;
+use App\Enums\PME\ReminderChannel;
 
 $client = $invoice->client;
 $availableChannels = [];

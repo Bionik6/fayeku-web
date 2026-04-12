@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Enums\PME\InvoiceStatus;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Models\PME\Invoice;
+use App\Models\PME\InvoiceLine;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Models\InvoiceLine;
 
 /**
  * @extends Factory<Invoice>

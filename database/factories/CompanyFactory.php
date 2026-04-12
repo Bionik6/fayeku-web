@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Auth\Company;
 use Database\Factories\Support\SenegalFaker;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Auth\Models\Company;
 
 /**
  * @extends Factory<Company>

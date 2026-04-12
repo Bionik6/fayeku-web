@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Shared\User;
 use Database\Factories\Support\SenegalFaker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Modules\Shared\Models\User;
 
 /**
  * @extends Factory<User>

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Auth\Company;
+use App\Models\PME\ReminderRule;
 use Illuminate\Database\Seeder;
-use Modules\Auth\Models\Company;
-use Modules\PME\Collection\Models\ReminderRule;
 
 class ReminderRuleSeeder extends Seeder
 {

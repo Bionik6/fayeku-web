@@ -8,13 +8,13 @@
     $client = $inv->client;
 
     $statusConfig = match ($inv->status) {
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::Paid => ['label' => 'Payée', 'class' => 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'],
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::Overdue => ['label' => 'Impayée', 'class' => 'bg-rose-100 text-rose-700'],
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::PartiallyPaid => ['label' => 'Partiel', 'class' => 'bg-orange-100 text-orange-700'],
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::Sent,
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::Certified => ['label' => 'En attente', 'class' => 'bg-amber-50 text-amber-700'],
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
-        \Modules\PME\Invoicing\Enums\InvoiceStatus::Cancelled => ['label' => 'Annulée', 'class' => 'bg-slate-100 text-slate-500'],
+        \App\Enums\PME\InvoiceStatus::Paid => ['label' => 'Payée', 'class' => 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'],
+        \App\Enums\PME\InvoiceStatus::Overdue => ['label' => 'Impayée', 'class' => 'bg-rose-100 text-rose-700'],
+        \App\Enums\PME\InvoiceStatus::PartiallyPaid => ['label' => 'Partiel', 'class' => 'bg-orange-100 text-orange-700'],
+        \App\Enums\PME\InvoiceStatus::Sent,
+        \App\Enums\PME\InvoiceStatus::Certified => ['label' => 'En attente', 'class' => 'bg-amber-50 text-amber-700'],
+        \App\Enums\PME\InvoiceStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
+        \App\Enums\PME\InvoiceStatus::Cancelled => ['label' => 'Annulée', 'class' => 'bg-slate-100 text-slate-500'],
         default => ['label' => ucfirst($inv->status->value), 'class' => 'bg-slate-100 text-slate-600'],
     };
 @endphp
@@ -186,7 +186,7 @@
                             <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($inv->total, $inv->currency) }}</dd>
                         </div>
 
-                        @if ($inv->status === \Modules\PME\Invoicing\Enums\InvoiceStatus::PartiallyPaid)
+                        @if ($inv->status === \App\Enums\PME\InvoiceStatus::PartiallyPaid)
                             <div class="flex justify-between text-amber-600">
                                 <dt>{{ __('Encaissé') }}</dt>
                                 <dd class="tabular-nums font-medium">{{ format_money($inv->amount_paid, $inv->currency) }}</dd>

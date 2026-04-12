@@ -5,12 +5,12 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Services\ReminderService;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Treasury\Services\TreasuryService;
-use Modules\Shared\Exceptions\QuotaExceededException;
+use App\Models\Auth\Company;
+use App\Enums\PME\ReminderChannel;
+use App\Services\PME\ReminderService;
+use App\Models\PME\Invoice;
+use App\Services\PME\TreasuryService;
+use App\Exceptions\Shared\QuotaExceededException;
 
 new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
 {

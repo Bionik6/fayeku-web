@@ -3,10 +3,10 @@
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Models\Invoice;
+use App\Models\Auth\Company;
+use App\Enums\PME\ReminderChannel;
+use App\Enums\PME\InvoiceStatus;
+use App\Models\PME\Invoice;
 
 new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Component {
     public ?Company $company = null;

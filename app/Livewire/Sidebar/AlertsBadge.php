@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Sidebar;
 
+use App\Models\Auth\Company;
+use App\Services\Compta\AlertService;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\Compta\Portfolio\Services\AlertService;
 
 class AlertsBadge extends Component
 {

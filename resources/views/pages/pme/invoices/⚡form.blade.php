@@ -8,13 +8,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Modules\Auth\Models\Company;
-use Modules\PME\Clients\Models\Client;
-use Modules\PME\Invoicing\Enums\InvoiceStatus;
-use Modules\PME\Invoicing\Mail\InvoiceMail;
-use Modules\PME\Invoicing\Models\Invoice;
-use Modules\PME\Invoicing\Services\CurrencyService;
-use Modules\PME\Invoicing\Services\InvoiceService;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Enums\PME\InvoiceStatus;
+use App\Mail\PME\InvoiceMail;
+use App\Models\PME\Invoice;
+use App\Services\PME\CurrencyService;
+use App\Services\PME\InvoiceService;
 
 new #[Title('Facture')]
 #[Layout('layouts::pme')]
