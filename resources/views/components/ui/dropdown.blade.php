@@ -4,11 +4,12 @@
     x-data="{ open: false, top: 0, left: 0, right: 0 }"
     class="inline-block"
     @ui-dropdown-close.window="open = false"
+    @click.window="open = false"
 >
     <button
         x-ref="trigger"
         type="button"
-        @click="
+        @click.stop="
             const wasOpen = open;
             $dispatch('ui-dropdown-close');
             const rect = $refs.trigger.getBoundingClientRect();
@@ -38,7 +39,7 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            @click.outside="open = false"
+            @click.stop
             :style="{{ $align === 'right'
                 ? '`position: fixed; z-index: 9999; top: ${top}px; right: ${right}px`'
                 : '`position: fixed; z-index: 9999; top: ${top}px; left: ${left}px`' }}"
