@@ -289,7 +289,7 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 
     <x-ui.table-panel
         :title="__('Mes clients')"
-        :description="__('Vue portefeuille enrichie par la facturation, les paiements et les relances.')"
+        :description="__('Liste des clients et indicateurs associés.')"
         :filterLabel="__('Filtrer les clients')"
     >
         <x-slot:filters>

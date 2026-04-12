@@ -459,7 +459,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     {{-- Bloc C+D -- Filtres + Table --}}
     <x-ui.table-panel
         :title="__('Devis')"
-        :description="__('Gérez vos devis clients et convertissez-les en factures.')"
+        :description="__('Liste des devis envoyés et en cours.')"
         :filterLabel="__('Filtrer par statut')"
     >
         <x-slot:filters>

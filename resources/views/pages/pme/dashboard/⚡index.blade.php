@@ -217,21 +217,21 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 </p>
             </div>
 
-            <div class="flex w-full shrink-0 flex-col gap-2 lg:w-52">
+            <div class="flex shrink-0 flex-col gap-2">
                 <a
                     href="{{ route('pme.invoices.create') }}"
                     wire:navigate
-                    class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
+                    class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
                 >
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    <flux:icon name="plus" class="size-4" />
                     {{ __('Nouvelle facture') }}
                 </a>
                 <a
                     href="{{ route('pme.quotes.create') }}"
                     wire:navigate
-                    class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
                 >
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    <flux:icon name="plus" class="size-4" />
                     {{ __('Nouveau devis') }}
                 </a>
             </div>

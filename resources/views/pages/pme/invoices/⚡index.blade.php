@@ -460,7 +460,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
     {{-- Bloc C+D — Filtres + Table --}}
     <x-ui.table-panel
         :title="__('Factures')"
-        :description="__('Gérez vos factures clients.')"
+        :description="__('Liste des factures émises.')"
         :filterLabel="__('Filtrer par statut')"
     >
         <x-slot:filters>
