@@ -96,7 +96,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             ->take(5)
             ->values()
             ->map(function ($inv) {
-                $days = (int) now()->diffInDays($inv->issued_at);
+                $days = abs((int) now()->diffInDays($inv->issued_at));
                 $dateLabel = match (true) {
                     $days === 0 => "Aujourd'hui",
                     $days === 1 => 'Hier',
@@ -120,13 +120,13 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             ->take(5)
             ->values()
             ->map(function ($inv) {
-                $delayDays = $inv->due_at ? (int) now()->diffInDays($inv->due_at) : 0;
+                $delayDays = $inv->due_at ? abs((int) now()->diffInDays($inv->due_at)) : 0;
                 $isCritical = $delayDays > 60;
 
                 $lastReminder = $inv->reminders->sortByDesc('sent_at')->first();
                 $lastReminderLabel = '—';
                 if ($lastReminder && $lastReminder->sent_at) {
-                    $reminderDays = (int) now()->diffInDays($lastReminder->sent_at);
+                    $reminderDays = abs((int) now()->diffInDays($lastReminder->sent_at));
                     $channelLabel = match ($lastReminder->channel) {
                         ReminderChannel::WhatsApp => 'WhatsApp',
                         ReminderChannel::Sms => 'SMS',
@@ -217,28 +217,22 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 </p>
             </div>
 
-            <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <div class="inline-flex overflow-hidden rounded-2xl shadow-sm">
                 <a
                     href="{{ route('pme.invoices.create') }}"
                     wire:navigate
-                    class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                    class="inline-flex items-center gap-2 rounded-l-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
                 >
                     <flux:icon name="plus" class="size-4" />
                     {{ __('Nouvelle facture') }}
                 </a>
                 <a
-                    href="{{ route('pme.invoices.index') }}"
+                    href="{{ route('pme.quotes.create') }}"
                     wire:navigate
-                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                    class="inline-flex items-center gap-2 rounded-r-2xl border border-l-0 border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
                 >
+                    <flux:icon name="plus" class="size-4" />
                     {{ __('Nouveau devis') }}
-                </a>
-                <a
-                    href="{{ route('pme.treasury.index') }}"
-                    wire:navigate
-                    class="text-sm font-semibold text-slate-500 transition hover:text-primary"
-                >
-                    {{ __('Voir l\'analyse') }} →
                 </a>
             </div>
         </div>
@@ -518,22 +512,24 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                     </span>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <a
-                                            href="{{ route('pme.collection.index') }}"
-                                            wire:navigate
-                                            class="inline-flex items-center rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
-                                        >
-                                            {{ __('Relancer') }}
-                                        </a>
-                                        <a
-                                            href="{{ route('pme.invoices.index') }}"
-                                            wire:navigate
-                                            class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary"
-                                        >
-                                            {{ __('Voir') }}
-                                        </a>
-                                    </div>
+                                    <flux:dropdown position="bottom" align="end">
+                                        <button type="button" class="inline-flex items-center gap-x-1.5 rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+                                            {{ __('Actions') }}
+                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="-mr-0.5 size-4 text-slate-400">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
+                                            </svg>
+                                        </button>
+                                        <flux:menu>
+                                            <flux:menu.item :href="route('pme.collection.index')" wire:navigate>
+                                                <flux:icon name="bell-alert" class="size-4 text-slate-500" />
+                                                {{ __('Relancer') }}
+                                            </flux:menu.item>
+                                            <flux:menu.item :href="route('pme.invoices.index')" wire:navigate>
+                                                <flux:icon name="document-text" class="size-4 text-slate-500" />
+                                                {{ __('Voir la facture') }}
+                                            </flux:menu.item>
+                                        </flux:menu>
+                                    </flux:dropdown>
                                 </td>
                             </tr>
                         @endforeach
