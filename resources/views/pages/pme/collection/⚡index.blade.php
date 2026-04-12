@@ -65,6 +65,8 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     /* ---------- Slide-over states ---------- */
     public ?string $previewInvoiceId = null;
 
+    public ?string $confirmSendReminderId = null;
+
     public string $previewTone = 'cordial';
 
     public bool $previewAttachPdf = true;
@@ -315,8 +317,19 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
         $this->timelineInvoiceId = null;
     }
 
+    public function confirmSendReminder(string $id): void
+    {
+        $this->confirmSendReminderId = $id;
+    }
+
+    public function cancelSendReminder(): void
+    {
+        $this->confirmSendReminderId = null;
+    }
+
     public function sendReminder(string $invoiceId): void
     {
+        $this->confirmSendReminderId = null;
         abort_unless($this->company, 403);
 
         $invoice = Invoice::query()
@@ -910,8 +923,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                         </x-ui.dropdown-item>
                                         <x-ui.dropdown-separator />
                                         <x-ui.dropdown-item
-                                            wire:click="sendReminder('{{ $row['id'] }}')"
-                                            wire:confirm="{{ __('Envoyer une relance pour cette facture ?') }}"
+                                            wire:click="confirmSendReminder('{{ $row['id'] }}')"
                                         >
                                             <x-slot:icon>
                                                 <svg class="size-4 shrink-0 text-primary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -1159,5 +1171,15 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             </div>
         </div>
     @endif
+
+    <x-ui.confirm-modal
+        :confirm-id="$confirmSendReminderId"
+        :title="__('Envoyer une relance')"
+        :description="__('Une relance sera envoyée immédiatement au client pour cette facture.')"
+        confirm-action="sendReminder"
+        cancel-action="cancelSendReminder"
+        :confirm-label="__('Envoyer')"
+        variant="primary"
+    />
 
 </div>
