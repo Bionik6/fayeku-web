@@ -40,6 +40,8 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $selectedQuoteId = null;
 
+    public ?string $confirmConvertId = null;
+
     public ?string $previewInvoiceId = null;
 
     public ?string $timelineInvoiceId = null;
@@ -161,6 +163,16 @@ public function viewInvoice(string $id): void
         }
 
         $this->redirect(route('pme.invoices.edit', $invoice), navigate: true);
+    }
+
+    public function confirmConvert(string $id): void
+    {
+        $this->confirmConvertId = $id;
+    }
+
+    public function cancelConvert(): void
+    {
+        $this->confirmConvertId = null;
     }
 
     public function openPreview(string $invoiceId): void
@@ -711,30 +723,37 @@ public function viewInvoice(string $id): void
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-slate-600">{{ $invoice['reminders_count'] }}</td>
-                                <td class="px-4 py-4" x-on:click.stop>
-                                    <flux:dropdown position="bottom" align="end">
-                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
-                                            {{ __('Actions') }}
-                                            <flux:icon name="chevron-down" class="size-3.5" />
-                                        </button>
-                                        <flux:menu>
-                                            <flux:menu.item wire:click="viewInvoice('{{ $invoice['id'] }}')">
-                                                <flux:icon name="eye" class="size-4 text-slate-500" />
-                                                {{ __('Voir la facture') }}
-                                            </flux:menu.item>
-                                            <flux:menu.item wire:click="openTimeline('{{ $invoice['id'] }}')">
-                                                <flux:icon name="clock" class="size-4 text-slate-500" />
-                                                {{ __('Voir les relances') }}
-                                            </flux:menu.item>
-                                            @if ($invoice['is_overdue'])
-                                                <flux:menu.separator />
-                                                <flux:menu.item wire:click="openPreview('{{ $invoice['id'] }}')">
-                                                    <flux:icon name="paper-airplane" class="size-4 text-slate-500" />
-                                                    {{ __('Relancer le client') }}
-                                                </flux:menu.item>
-                                            @endif
-                                        </flux:menu>
-                                    </flux:dropdown>
+                                <td class="px-4 py-4">
+                                    <x-ui.dropdown>
+                                        <x-ui.dropdown-item wire:click="viewInvoice('{{ $invoice['id'] }}')">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Voir la facture') }}
+                                        </x-ui.dropdown-item>
+                                        <x-ui.dropdown-item wire:click="openTimeline('{{ $invoice['id'] }}')">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Voir les relances') }}
+                                        </x-ui.dropdown-item>
+                                        @if ($invoice['is_overdue'])
+                                            <x-ui.dropdown-separator />
+                                            <x-ui.dropdown-item wire:click="openPreview('{{ $invoice['id'] }}')">
+                                                <x-slot:icon>
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                                    </svg>
+                                                </x-slot:icon>
+                                                {{ __('Relancer le client') }}
+                                            </x-ui.dropdown-item>
+                                        @endif
+                                    </x-ui.dropdown>
                                 </td>
                             </tr>
                         @endforeach
@@ -1069,8 +1088,7 @@ public function viewInvoice(string $id): void
                             @if (in_array($q->status, [\Modules\PME\Invoicing\Enums\QuoteStatus::Sent, \Modules\PME\Invoicing\Enums\QuoteStatus::Accepted]) && ! $q->invoice)
                                 <div class="mt-6">
                                     <button
-                                        wire:click="convertToInvoice('{{ $q->id }}')"
-                                        wire:confirm="{{ __('Convertir ce devis en facture ?') }}"
+                                        wire:click="confirmConvert('{{ $q->id }}')"
                                         class="flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
                                     >
                                         <flux:icon name="document-arrow-up" class="mr-2 size-4" />
@@ -1112,6 +1130,40 @@ public function viewInvoice(string $id): void
             :preview-attach-pdf="$previewAttachPdf"
             :preview-channel="$previewChannel"
         />
+    @endif
+
+    {{-- Confirmation modal : convertir en facture --}}
+    @if ($confirmConvertId)
+        <div class="relative z-50" aria-labelledby="modal-convert-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-slate-500/75 transition-opacity" aria-hidden="true"></div>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-2xl bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:mx-0 sm:size-10">
+                                <svg class="size-6 text-primary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 id="modal-convert-title" class="text-base font-semibold text-slate-900">{{ __('Convertir en facture') }}</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-slate-500">{{ __('Ce devis sera converti en facture brouillon. Vous pourrez la modifier avant de l\'envoyer.') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-3">
+                            <button type="button" wire:click="convertToInvoice('{{ $confirmConvertId }}')" class="inline-flex w-full justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-strong sm:w-auto">
+                                {{ __('Convertir') }}
+                            </button>
+                            <button type="button" wire:click="cancelConvert" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">
+                                {{ __('Annuler') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
 </div>
