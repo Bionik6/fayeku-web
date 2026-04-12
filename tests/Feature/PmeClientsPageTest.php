@@ -5,7 +5,6 @@ use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Enums\ReminderStatus;
 use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Enums\QuoteStatus;
@@ -76,7 +75,7 @@ function makePortfolioReminder(Invoice $invoice, array $overrides = []): Reminde
     return Reminder::query()->create(array_merge([
         'invoice_id' => $invoice->id,
         'channel' => ReminderChannel::WhatsApp->value,
-        'status' => ReminderStatus::Sent->value,
+        'is_manual' => true,
         'sent_at' => now()->subDays(3),
         'message_body' => 'Rappel de paiement',
         'recipient_phone' => '+221771112233',

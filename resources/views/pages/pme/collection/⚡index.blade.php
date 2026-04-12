@@ -8,7 +8,6 @@ use Livewire\Component;
 use Modules\Auth\Models\Company;
 use Modules\PME\Collection\Enums\ReminderChannel;
 use Modules\PME\Collection\Enums\ReminderMode;
-use Modules\PME\Collection\Enums\ReminderStatus;
 use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Collection\Models\ReminderRule;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
@@ -508,7 +507,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             $this->previewInvoiceId = $previousPreviewId;
 
             app(\Modules\PME\Collection\Services\ReminderService::class)
-                ->send($invoice, $this->company, $channel, $messageBody);
+                ->send($invoice, $this->company, $channel, $messageBody, isManual: true);
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
         } catch (\RuntimeException $e) {

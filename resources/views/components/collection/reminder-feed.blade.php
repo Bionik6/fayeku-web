@@ -7,7 +7,6 @@
 
 <?php
 use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Enums\ReminderStatus;
 
 /** @var \Modules\PME\Invoicing\Models\Invoice|null $invoice */
 $items = collect($reminders ?? $invoice?->reminders?->sortBy('created_at') ?? []);
@@ -71,13 +70,6 @@ if ($items->isEmpty() && ! $invoice?->paid_at) {
                         default                   => ['bell', 'bg-slate-100', 'text-slate-500'],
                     };
 
-                    [$statusBg, $statusText] = match ($reminder->status) {
-                        ReminderStatus::Delivered => ['bg-accent/10', 'text-accent'],
-                        ReminderStatus::Failed    => ['bg-rose-50', 'text-rose-700'],
-                        ReminderStatus::Pending   => ['bg-amber-50', 'text-amber-700'],
-                        default                   => ['bg-blue-50', 'text-blue-700'],
-                    };
-
                     $channelLabel = match ($reminder->channel) {
                         ReminderChannel::WhatsApp => 'WhatsApp',
                         ReminderChannel::Email    => 'Email',
@@ -85,13 +77,9 @@ if ($items->isEmpty() && ! $invoice?->paid_at) {
                         default                   => ucfirst($reminder->channel?->value ?? ''),
                     };
 
-                    $statusLabel = match ($reminder->status) {
-                        ReminderStatus::Sent      => 'Envoyée',
-                        ReminderStatus::Delivered => 'Livrée',
-                        ReminderStatus::Pending   => 'En attente',
-                        ReminderStatus::Failed    => 'Échouée',
-                        default                   => '—',
-                    };
+                    $modeLabel = $reminder->is_manual ? __('Manuel') : __('Automatique');
+                    $modeBg    = $reminder->is_manual ? 'bg-slate-100' : 'bg-blue-50';
+                    $modeText  = $reminder->is_manual ? 'text-slate-600' : 'text-blue-700';
                 @endphp
                 <li wire:key="rf-{{ $reminder->id }}">
                     <div @class(['relative', 'pb-6' => ! $isLast])>
@@ -117,10 +105,10 @@ if ($items->isEmpty() && ! $invoice?->paid_at) {
                                     </div>
                                     <span @class([
                                         'mt-0.5 shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                                        $statusBg,
-                                        $statusText,
+                                        $modeBg,
+                                        $modeText,
                                     ])>
-                                        {{ $statusLabel }}
+                                        {{ $modeLabel }}
                                     </span>
                                 </div>
                                 @if ($reminder->message_body)

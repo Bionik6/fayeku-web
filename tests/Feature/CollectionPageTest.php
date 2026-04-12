@@ -422,7 +422,7 @@ test('remindersThisMonth ne compte que les relances du mois courant', function (
     $reminderData = [
         'invoice_id' => $invoice->id,
         'channel' => 'whatsapp',
-        'status' => 'sent',
+        'is_manual' => true,
         'sent_at' => now(),
     ];
 

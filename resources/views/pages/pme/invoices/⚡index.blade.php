@@ -324,7 +324,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
             ])) ?: null;
 
             app(\Modules\PME\Collection\Services\ReminderService::class)
-                ->send($invoice, $this->company, $channel, $messageBody);
+                ->send($invoice, $this->company, $channel, $messageBody, isManual: true);
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
         } catch (\RuntimeException $e) {

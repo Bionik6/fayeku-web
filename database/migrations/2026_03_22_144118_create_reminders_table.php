@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('invoice_id');
             $table->string('channel')->nullable();
-            $table->string('status')->nullable();
+            $table->boolean('is_manual')->default(true);
             $table->timestamp('sent_at')->nullable();
             $table->text('message_body')->nullable();
             $table->string('recipient_phone')->nullable();

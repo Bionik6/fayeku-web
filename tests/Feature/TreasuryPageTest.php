@@ -6,7 +6,6 @@ use Livewire\Livewire;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Enums\ReminderStatus;
 use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -278,7 +277,7 @@ test('relancer depuis la page respecte le quota basique mensuel', function () {
         Reminder::query()->create([
             'invoice_id' => $invoice->id,
             'channel' => ReminderChannel::WhatsApp,
-            'status' => ReminderStatus::Sent,
+            'is_manual' => true,
             'sent_at' => now()->subDays(1),
             'message_body' => 'Relance envoyée',
             'recipient_phone' => '+221772222222',

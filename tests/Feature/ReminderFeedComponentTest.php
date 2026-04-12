@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Blade;
 use Modules\Auth\Models\Company;
 use Modules\PME\Clients\Models\Client;
 use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Enums\ReminderStatus;
 use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Invoicing\Enums\InvoiceStatus;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -47,7 +46,7 @@ function makeReminderForFeed(Invoice $invoice, array $overrides = []): Reminder
     return Reminder::query()->create(array_merge([
         'invoice_id' => $invoice->id,
         'channel' => ReminderChannel::WhatsApp,
-        'status' => ReminderStatus::Sent,
+        'is_manual' => true,
         'sent_at' => now()->subDays(2),
         'message_body' => 'Bonjour, votre facture est en attente.',
         'recipient_phone' => '+221771112233',
@@ -146,50 +145,36 @@ it('n\'affiche pas de corps si message_body est null', function () {
         ->not->toContain('leading-relaxed');
 });
 
-// ─── Statuts ─────────────────────────────────────────────────────────────────
+// ─── Mode d'envoi ─────────────────────────────────────────────────────────────
 
-it('applique les classes bleues pour le statut sent', function () {
+it('affiche le badge "Manuel" pour une relance manuelle', function () {
     ['client' => $client] = makeCompanyAndClient();
     $invoice = makeInvoiceForFeed($client);
-    makeReminderForFeed($invoice, ['status' => ReminderStatus::Sent]);
+    makeReminderForFeed($invoice, ['is_manual' => true]);
     $invoice->load('reminders');
 
     $html = renderFeed(':reminders="$invoice->reminders"', compact('invoice'));
 
-    expect($html)->toContain('bg-blue-50')->toContain('text-blue-700')->toContain('Envoyée');
+    expect($html)
+        ->toContain('Manuel')
+        ->toContain('bg-slate-100')
+        ->toContain('text-slate-600')
+        ->not->toContain('Automatique');
 });
 
-it('applique les classes accent pour le statut delivered', function () {
+it('affiche le badge "Automatique" pour une relance automatique', function () {
     ['client' => $client] = makeCompanyAndClient();
     $invoice = makeInvoiceForFeed($client);
-    makeReminderForFeed($invoice, ['status' => ReminderStatus::Delivered]);
+    makeReminderForFeed($invoice, ['is_manual' => false]);
     $invoice->load('reminders');
 
     $html = renderFeed(':reminders="$invoice->reminders"', compact('invoice'));
 
-    expect($html)->toContain('bg-accent/10')->toContain('text-accent')->toContain('Livrée');
-});
-
-it('applique les classes rose pour le statut failed', function () {
-    ['client' => $client] = makeCompanyAndClient();
-    $invoice = makeInvoiceForFeed($client);
-    makeReminderForFeed($invoice, ['status' => ReminderStatus::Failed]);
-    $invoice->load('reminders');
-
-    $html = renderFeed(':reminders="$invoice->reminders"', compact('invoice'));
-
-    expect($html)->toContain('bg-rose-50')->toContain('text-rose-700')->toContain('Échouée');
-});
-
-it('applique les classes ambre pour le statut pending', function () {
-    ['client' => $client] = makeCompanyAndClient();
-    $invoice = makeInvoiceForFeed($client);
-    makeReminderForFeed($invoice, ['status' => ReminderStatus::Pending]);
-    $invoice->load('reminders');
-
-    $html = renderFeed(':reminders="$invoice->reminders"', compact('invoice'));
-
-    expect($html)->toContain('bg-amber-50')->toContain('text-amber-700')->toContain('En attente');
+    expect($html)
+        ->toContain('Automatique')
+        ->toContain('bg-blue-50')
+        ->toContain('text-blue-700')
+        ->not->toContain('Manuel');
 });
 
 // ─── Référence facture ────────────────────────────────────────────────────────

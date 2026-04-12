@@ -3,7 +3,6 @@
 namespace Modules\PME\Collection\Services;
 
 use Modules\PME\Collection\Enums\ReminderChannel;
-use Modules\PME\Collection\Enums\ReminderStatus;
 use Modules\PME\Collection\Interfaces\ReminderChannelInterface;
 use Modules\PME\Collection\Models\Reminder;
 use Modules\PME\Invoicing\Models\Invoice;
@@ -21,7 +20,6 @@ class WhatsAppReminderService implements ReminderChannelInterface
         return Reminder::query()->create([
             'invoice_id' => $invoice->id,
             'channel' => ReminderChannel::WhatsApp,
-            'status' => ReminderStatus::Sent,
             'sent_at' => now(),
             'message_body' => sprintf(
                 'Bonjour, la facture %s de %s FCFA reste en attente. Merci de prévoir votre règlement.',
