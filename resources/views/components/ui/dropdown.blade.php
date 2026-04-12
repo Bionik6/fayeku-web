@@ -1,7 +1,7 @@
 @props(['label' => 'Actions', 'align' => 'right'])
 
 <div
-    x-data="{ open: false, top: 0, left: 0, right: 0 }"
+    x-data="{ open: false, top: 0, bottom: 0, left: 0, right: 0, openUpward: false }"
     class="inline-block"
     @ui-dropdown-close.window="open = false"
     @click.window="open = false"
@@ -15,10 +15,13 @@
             const rect = $refs.trigger.getBoundingClientRect();
             $nextTick(() => {
                 if (!wasOpen) {
-                    top   = rect.bottom + 8;
-                    right = window.innerWidth - rect.right;
-                    left  = rect.left;
-                    open  = true;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    openUpward = spaceBelow < 320;
+                    top    = rect.bottom + 8;
+                    bottom = window.innerHeight - rect.top + 8;
+                    right  = window.innerWidth - rect.right;
+                    left   = rect.left;
+                    open   = true;
                 }
             })
         "
@@ -40,9 +43,7 @@
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
             @click.stop
-            :style="{{ $align === 'right'
-                ? '`position: fixed; z-index: 9999; top: ${top}px; right: ${right}px`'
-                : '`position: fixed; z-index: 9999; top: ${top}px; left: ${left}px`' }}"
+            :style="`position: fixed; z-index: 9999; ${openUpward ? 'bottom: ' + bottom + 'px' : 'top: ' + top + 'px'}; {{ $align === 'right' ? 'right' : 'left' }}: ${{ $align === 'right' ? '{right}' : '{left}' }}px`"
             class="w-auto min-w-44 rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
             role="menu"
             aria-orientation="vertical"
