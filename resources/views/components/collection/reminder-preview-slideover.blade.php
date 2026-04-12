@@ -15,14 +15,6 @@ use Modules\PME\Collection\Enums\ReminderChannel;
 $client = $invoice->client;
 $availableChannels = [];
 
-if ($client?->email) {
-    $availableChannels[] = [
-        'value' => ReminderChannel::Email->value,
-        'label' => 'Email',
-        'icon'  => 'envelope',
-    ];
-}
-
 if ($client?->phone) {
     $availableChannels[] = [
         'value' => ReminderChannel::WhatsApp->value,
@@ -33,6 +25,14 @@ if ($client?->phone) {
         'value' => ReminderChannel::Sms->value,
         'label' => 'SMS',
         'icon'  => 'device-phone-mobile',
+    ];
+}
+
+if ($client?->email) {
+    $availableChannels[] = [
+        'value' => ReminderChannel::Email->value,
+        'label' => 'Email',
+        'icon'  => 'envelope',
     ];
 }
 ?>
@@ -102,7 +102,7 @@ if ($client?->phone) {
                                 <p class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ $message['body'] }}</p>
                                 <p class="mt-2 text-sm text-slate-600">{{ $message['closing'] }}</p>
                                 <p class="text-sm text-slate-600">{{ $company->name }}</p>
-                                @if ($previewAttachPdf)
+                                @if ($previewAttachPdf && $previewChannel !== ReminderChannel::Sms->value)
                                     <div class="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
                                         <flux:icon name="document" class="size-4 text-rose-500" />
                                         <span class="text-sm font-medium text-slate-600">{{ $invoice->reference }}.pdf</span>
@@ -149,15 +149,17 @@ if ($client?->phone) {
                                         </select>
                                     </x-select-native>
                                 </div>
-                                <div class="flex flex-col items-start gap-1 pt-3">
-                                    <label class="text-sm font-semibold text-slate-600">{{ __('Joindre PDF') }}</label>
-                                    <button
-                                        wire:click="$toggle('previewAttachPdf')"
-                                        class="relative flex h-6 w-11 items-center rounded-full transition {{ $previewAttachPdf ? 'bg-primary' : 'bg-slate-300' }}"
-                                    >
-                                        <span class="absolute size-4 rounded-full bg-white shadow transition-all {{ $previewAttachPdf ? 'left-[1.4rem]' : 'left-1' }}"></span>
-                                    </button>
-                                </div>
+                                @if ($previewChannel !== ReminderChannel::Sms->value)
+                                    <div class="flex flex-col items-start gap-1 pt-3">
+                                        <label class="text-sm font-semibold text-slate-600">{{ __('Joindre PDF') }}</label>
+                                        <button
+                                            wire:click="$toggle('previewAttachPdf')"
+                                            class="relative flex h-6 w-11 items-center rounded-full transition {{ $previewAttachPdf ? 'bg-primary' : 'bg-slate-300' }}"
+                                        >
+                                            <span class="absolute size-4 rounded-full bg-white shadow transition-all {{ $previewAttachPdf ? 'left-[1.4rem]' : 'left-1' }}"></span>
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="flex gap-3">

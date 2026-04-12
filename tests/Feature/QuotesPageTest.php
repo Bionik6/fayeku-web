@@ -324,3 +324,28 @@ test('les options Voir la facture et PDF n\'apparaissent pas quand le devis n\'e
         ->test('pages::pme.quotes.index')
         ->assertDontSeeHtml('Voir la facture');
 });
+
+// ─── Voir le client — devis ───────────────────────────────────────────────────
+
+test('rows() inclut client_id pour chaque devis', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+    $quote = makeQuote($company);
+
+    $row = collect(
+        Livewire::actingAs($user)->test('pages::pme.quotes.index')->get('rows')
+    )->firstWhere('reference', $quote->reference);
+
+    expect($row['client_id'])->toBe($quote->client_id);
+});
+
+test('"Voir le client" est affiché dans le dropdown quand le devis a un client', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
+    $quote = makeQuote($company);
+
+    $clientUrl = route('pme.clients.show', $quote->client_id);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.index')
+        ->assertSeeHtml($clientUrl)
+        ->assertSee('Voir le client');
+});

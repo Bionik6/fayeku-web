@@ -858,3 +858,448 @@ test('le lien Afficher la facture en PDF est présent dans le dropdown Actions',
         ->test('pages::pme.invoices.index')
         ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id));
 });
+
+// ─── Aperçu de relance — openPreview() ───────────────────────────────────────
+
+test('openPreview() positionne previewInvoiceId', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSet('previewInvoiceId', null)
+        ->call('openPreview', $invoice->id)
+        ->assertSet('previewInvoiceId', $invoice->id);
+});
+
+test('openPreview() initialise le canal et le ton depuis les paramètres de la PME', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+
+    $company->update([
+        'reminder_settings' => [
+            'default_channel' => 'email',
+            'default_tone' => 'ferme',
+            'attach_pdf' => false,
+        ],
+    ]);
+
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSet('previewChannel', 'email')
+        ->assertSet('previewTone', 'ferme')
+        ->assertSet('previewAttachPdf', false);
+});
+
+test('openPreview() utilise whatsapp/cordial/true quand aucun réglage n\'est configuré', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSet('previewChannel', 'whatsapp')
+        ->assertSet('previewTone', 'cordial')
+        ->assertSet('previewAttachPdf', true);
+});
+
+test('openPreview() ferme la modale de détail et la timeline ouverts', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->set('selectedInvoiceId', $invoice->id)
+        ->set('timelineInvoiceId', $invoice->id)
+        ->call('openPreview', $invoice->id)
+        ->assertSet('selectedInvoiceId', null)
+        ->assertSet('timelineInvoiceId', null);
+});
+
+test('openPreview() lève une exception pour une facture d\'une autre PME', function () {
+    ['user' => $user] = createSmeWithCompany();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = makeInvoice($otherCompany, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $otherInvoice->id);
+})->throws(ModelNotFoundException::class);
+
+// ─── Aperçu de relance — closePreview() ──────────────────────────────────────
+
+test('closePreview() remet previewInvoiceId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSet('previewInvoiceId', $invoice->id)
+        ->call('closePreview')
+        ->assertSet('previewInvoiceId', null);
+});
+
+// ─── Aperçu de relance — previewInvoice (computed) ───────────────────────────
+
+test('previewInvoice retourne la facture correspondant à previewInvoiceId', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, [
+        'reference' => 'FAC-PREVIEW',
+        'status' => InvoiceStatus::Sent->value,
+        'amount_paid' => 0,
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id);
+
+    expect($component->get('previewInvoice'))->not->toBeNull()
+        ->and($component->get('previewInvoice')->reference)->toBe('FAC-PREVIEW');
+});
+
+test('previewInvoice retourne null quand previewInvoiceId est null', function () {
+    ['user' => $user] = createSmeWithCompany();
+
+    $component = Livewire::actingAs($user)->test('pages::pme.invoices.index');
+
+    expect($component->get('previewInvoice'))->toBeNull();
+});
+
+test('previewInvoice n\'expose pas une facture d\'une autre PME', function () {
+    ['user' => $user] = createSmeWithCompany();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = makeInvoice($otherCompany);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->set('previewInvoiceId', $otherInvoice->id);
+
+    expect($component->get('previewInvoice'))->toBeNull();
+});
+
+// ─── Aperçu de relance — buildPreviewMessage() ───────────────────────────────
+
+test('buildPreviewMessage() retourne le message cordial correct', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'Sonatel SA']);
+
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'status' => InvoiceStatus::Sent->value,
+            'reference' => 'FAC-MSG',
+            'total' => 100_000,
+            'amount_paid' => 0,
+        ]);
+
+    $msg = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->set('previewTone', 'cordial')
+        ->instance()
+        ->buildPreviewMessage();
+
+    expect($msg['greeting'])->toContain('Sonatel SA')
+        ->and($msg['body'])->toContain('FAC-MSG')
+        ->and($msg['closing'])->toBe('Cordialement,');
+});
+
+test('buildPreviewMessage() retourne le message ferme correct', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'Dakar Tech']);
+
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'status' => InvoiceStatus::Overdue->value,
+            'reference' => 'FAC-FERME',
+            'total' => 200_000,
+            'amount_paid' => 0,
+        ]);
+
+    $msg = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->set('previewTone', 'ferme')
+        ->instance()
+        ->buildPreviewMessage();
+
+    expect($msg['body'])->toContain('FAC-FERME')
+        ->and($msg['closing'])->toContain('règlement');
+});
+
+test('buildPreviewMessage() retourne le message urgent correct', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'SENELEC']);
+
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'status' => InvoiceStatus::Overdue->value,
+            'reference' => 'FAC-URGENT',
+            'total' => 500_000,
+            'amount_paid' => 0,
+        ]);
+
+    $msg = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->set('previewTone', 'urgent')
+        ->instance()
+        ->buildPreviewMessage();
+
+    expect($msg['greeting'])->toContain('SENELEC')
+        ->and($msg['body'])->toContain('URGENT')
+        ->and($msg['closing'])->toContain('immédiate');
+});
+
+test('buildPreviewMessage() retourne des chaînes vides quand previewInvoiceId est null', function () {
+    ['user' => $user] = createSmeWithCompany();
+
+    $msg = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->instance()
+        ->buildPreviewMessage();
+
+    expect($msg)->toBe(['greeting' => '', 'body' => '', 'closing' => '']);
+});
+
+// ─── Aperçu de relance — sendReminder() ──────────────────────────────────────
+
+test('sendReminder() dispatche un toast et ferme l\'aperçu', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, [
+        'status' => InvoiceStatus::Sent->value,
+        'total' => 118_000,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->call('sendReminder', $invoice->id)
+        ->assertDispatched('toast')
+        ->assertSet('previewInvoiceId', null);
+});
+
+test('sendReminder() lève une exception pour une facture d\'une autre PME', function () {
+    ['user' => $user] = createSmeWithCompany();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = makeInvoice($otherCompany, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('sendReminder', $otherInvoice->id);
+})->throws(ModelNotFoundException::class);
+
+// ─── Aperçu de relance — rendu Blade ─────────────────────────────────────────
+
+test('le slideover de relance s\'affiche quand previewInvoiceId est défini', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSee('Aperçu de la relance');
+});
+
+test('"Relancer le client" est visible dans le dropdown pour une facture envoyée', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml("openPreview('{$invoice->id}')");
+});
+
+test('"Relancer le client" est visible pour une facture en retard', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(10),
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml("openPreview('{$invoice->id}')");
+});
+
+test('"Relancer le client" n\'est pas affiché pour une facture payée', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Paid->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertDontSeeHtml("openPreview('{$invoice->id}')");
+});
+
+test('"Joindre PDF" est masqué dans le slideover quand le canal est SMS', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => '+221700000000',
+    ]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->set('previewChannel', 'sms')
+        ->assertDontSee('Joindre PDF');
+});
+
+test('"Joindre PDF" est visible quand le canal est WhatsApp', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => '+221700000000',
+    ]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->set('previewChannel', 'whatsapp')
+        ->assertSee('Joindre PDF');
+});
+
+// ─── Voir le client — factures ────────────────────────────────────────────────
+
+test('rows() inclut client_id pour chaque facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FAC-CLI-ID',
+        'status' => InvoiceStatus::Paid->value,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 18_000,
+        'total' => 118_000,
+        'amount_paid' => 118_000,
+    ]));
+
+    $row = collect(
+        Livewire::actingAs($user)->test('pages::pme.invoices.index')->get('rows')
+    )->firstWhere('reference', 'FAC-CLI-ID');
+
+    expect($row['client_id'])->toBe($client->id);
+});
+
+test('"Voir le client" est affiché dans le dropdown quand la facture a un client', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company);
+
+    $clientUrl = route('pme.clients.show', $invoice->client_id);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertSeeHtml($clientUrl)
+        ->assertSee('Voir le client');
+});
+
+// ─── Canal d'envoi — ordre et conditions ──────────────────────────────────────
+
+test('WhatsApp apparaît avant SMS dans le slideover quand le client a un téléphone', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => '+221700000000',
+        'email' => null,
+    ]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    $html = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->html();
+
+    expect(strpos($html, "'whatsapp'"))->toBeLessThan(strpos($html, "'sms'"));
+});
+
+test('Email apparaît après WhatsApp et SMS quand le client a téléphone et email', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => '+221700000000',
+        'email' => 'client@example.com',
+    ]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    $html = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->html();
+
+    $posWhatsapp = strpos($html, "'whatsapp'");
+    $posSms = strpos($html, "'sms'");
+    $posEmail = strpos($html, "'email'");
+
+    expect($posWhatsapp)->toBeLessThan($posSms)
+        ->and($posSms)->toBeLessThan($posEmail);
+});
+
+test('Email est affiché quand le client a seulement un email', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => null,
+        'email' => 'client@example.com',
+    ]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSee('Email')
+        ->assertDontSee('WhatsApp')
+        ->assertDontSee('SMS');
+});
+
+test('Email est masqué quand le client n\'a pas d\'adresse email', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => '+221700000000',
+        'email' => null,
+    ]);
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertDontSee('Email');
+});
