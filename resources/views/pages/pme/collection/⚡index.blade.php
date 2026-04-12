@@ -891,27 +891,36 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-right" x-on:click.stop>
-                                    <flux:dropdown position="bottom" align="end">
-                                        <button type="button" class="inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100">
-                                            {{ __('Actions') }}
-                                            <flux:icon name="chevron-down" class="size-3.5" />
-                                        </button>
-                                        <flux:menu>
-                                            <flux:menu.item wire:click="openPreview('{{ $row['id'] }}')">
-                                                <flux:icon name="chat-bubble-left-right" class="size-4 text-slate-500" />
-                                                {{ __('Aperçu WhatsApp') }}
-                                            </flux:menu.item>
-                                            <flux:menu.item wire:click="openTimeline('{{ $row['id'] }}')">
-                                                <flux:icon name="clock" class="size-4 text-slate-500" />
-                                                {{ __('Historique') }}
-                                            </flux:menu.item>
-                                            <flux:menu.separator />
-                                            <flux:menu.item wire:click="sendReminder('{{ $row['id'] }}')" wire:confirm="{{ __('Envoyer une relance pour cette facture ?') }}">
-                                                <flux:icon name="paper-airplane" class="size-4 text-primary" />
-                                                {{ __('Relancer maintenant') }}
-                                            </flux:menu.item>
-                                        </flux:menu>
-                                    </flux:dropdown>
+                                    <x-ui.dropdown>
+                                        <x-ui.dropdown-item wire:click="openPreview('{{ $row['id'] }}')">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V20.25a.75.75 0 0 0 1.28.53l3.58-3.58A48.458 48.458 0 0 0 11.25 17c2.115 0 4.198-.137 6.24-.402 1.608-.209 2.76-1.614 2.76-3.235V8.511Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Aperçu WhatsApp') }}
+                                        </x-ui.dropdown-item>
+                                        <x-ui.dropdown-item wire:click="openTimeline('{{ $row['id'] }}')">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Historique') }}
+                                        </x-ui.dropdown-item>
+                                        <x-ui.dropdown-separator />
+                                        <x-ui.dropdown-item
+                                            wire:click="sendReminder('{{ $row['id'] }}')"
+                                            wire:confirm="{{ __('Envoyer une relance pour cette facture ?') }}"
+                                        >
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-primary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Relancer maintenant') }}
+                                        </x-ui.dropdown-item>
+                                    </x-ui.dropdown>
                                 </td>
                             </tr>
                         @endforeach

@@ -217,21 +217,21 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 </p>
             </div>
 
-            <div class="inline-flex overflow-hidden rounded-2xl shadow-sm">
+            <div class="flex w-full shrink-0 flex-col gap-2 lg:w-52">
                 <a
                     href="{{ route('pme.invoices.create') }}"
                     wire:navigate
-                    class="inline-flex items-center gap-2 rounded-l-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong"
                 >
-                    <flux:icon name="plus" class="size-4" />
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     {{ __('Nouvelle facture') }}
                 </a>
                 <a
                     href="{{ route('pme.quotes.create') }}"
                     wire:navigate
-                    class="inline-flex items-center gap-2 rounded-r-2xl border border-l-0 border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
                 >
-                    <flux:icon name="plus" class="size-4" />
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     {{ __('Nouveau devis') }}
                 </a>
             </div>
@@ -512,24 +512,24 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                     </span>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <flux:dropdown position="bottom" align="end">
-                                        <button type="button" class="inline-flex items-center gap-x-1.5 rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
-                                            {{ __('Actions') }}
-                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="-mr-0.5 size-4 text-slate-400">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" />
-                                            </svg>
-                                        </button>
-                                        <flux:menu>
-                                            <flux:menu.item :href="route('pme.collection.index')" wire:navigate>
-                                                <flux:icon name="bell-alert" class="size-4 text-slate-500" />
-                                                {{ __('Relancer') }}
-                                            </flux:menu.item>
-                                            <flux:menu.item :href="route('pme.invoices.index')" wire:navigate>
-                                                <flux:icon name="document-text" class="size-4 text-slate-500" />
-                                                {{ __('Voir la facture') }}
-                                            </flux:menu.item>
-                                        </flux:menu>
-                                    </flux:dropdown>
+                                    <x-ui.dropdown>
+                                        <x-ui.dropdown-item :href="route('pme.collection.index')" wire:navigate>
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Relancer') }}
+                                        </x-ui.dropdown-item>
+                                        <x-ui.dropdown-item :href="route('pme.invoices.index')" wire:navigate>
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Voir la facture') }}
+                                        </x-ui.dropdown-item>
+                                    </x-ui.dropdown>
                                 </td>
                             </tr>
                         @endforeach

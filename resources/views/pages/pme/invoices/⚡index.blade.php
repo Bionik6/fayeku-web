@@ -600,63 +600,81 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
                                 {{-- Actions --}}
                                 <td class="px-4 py-4" x-on:click.stop>
-                                    <flux:dropdown position="bottom" align="end">
-                                        <button type="button"
-                                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
-                                            {{ __('Actions') }}
-                                            <flux:icon name="chevron-down" class="size-3.5" />
-                                        </button>
-                                        <flux:menu>
-                                            <flux:menu.item wire:click="viewInvoice('{{ $row['id'] }}')">
-                                                <flux:icon name="eye" class="size-4 text-slate-500" />
-                                                {{ __('Voir la facture') }}
-                                            </flux:menu.item>
-                                            <flux:menu.item :href="route('pme.invoices.pdf', $row['id'])" target="_blank">
-                                                <flux:icon name="document-arrow-down" class="size-4 text-slate-500" />
-                                                {{ __('Afficher la facture en PDF') }}
-                                            </flux:menu.item>
-                                            <flux:menu.item wire:click="openTimeline('{{ $row['id'] }}')">
-                                                <flux:icon name="clock" class="size-4 text-slate-500" />
-                                                {{ __('Voir les relances') }}
-                                                @if ($row['reminders_count'] > 0)
-                                                    <flux:badge size="sm" color="zinc" class="ml-auto">{{ $row['reminders_count'] }}</flux:badge>
-                                                @endif
-                                            </flux:menu.item>
-                                            @if (in_array($row['status_value'], ['draft', 'sent']))
-                                                <flux:menu.item :href="route('pme.invoices.edit', $row['id'])" wire:navigate>
-                                                    <flux:icon name="pencil-square" class="size-4 text-slate-500" />
-                                                    {{ __('Éditer la facture') }}
-                                                </flux:menu.item>
-                                            @endif
-
-                                            @if (in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
-                                                <flux:menu.separator />
-                                                <flux:menu.item :href="route('pme.collection.index')" wire:navigate>
-                                                    <flux:icon name="bell" class="size-4 text-slate-500" />
-                                                    {{ __('Relancer le client') }}
-                                                </flux:menu.item>
-                                            @endif
-
-                                            @if (!in_array($row['status_value'], ['paid', 'cancelled', 'draft']))
-                                                <flux:menu.separator />
-                                                <flux:menu.item wire:click="markAsPaid('{{ $row['id'] }}')"
-                                                    wire:confirm="{{ __('Marquer cette facture comme payée ?') }}">
-                                                    <flux:icon name="check-circle" class="size-4 text-slate-500" />
-                                                    {{ __('Marquer comme payée') }}
-                                                </flux:menu.item>
-                                            @endif
-
-                                            <flux:menu.separator />
-                                            <flux:menu.item
-                                                variant="danger"
-                                                wire:click="deleteInvoice('{{ $row['id'] }}')"
-                                                wire:confirm="{{ __('Supprimer définitivement cette facture ?') }}"
+                                    <x-ui.dropdown>
+                                        <x-ui.dropdown-item wire:click="viewInvoice('{{ $row['id'] }}')">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Voir la facture') }}
+                                        </x-ui.dropdown-item>
+                                        <x-ui.dropdown-item :href="route('pme.invoices.pdf', $row['id'])" target="_blank">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Afficher en PDF') }}
+                                        </x-ui.dropdown-item>
+                                        <x-ui.dropdown-item wire:click="openTimeline('{{ $row['id'] }}')" :count="$row['reminders_count']">
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Voir les relances') }}
+                                        </x-ui.dropdown-item>
+                                        @if (in_array($row['status_value'], ['draft', 'sent']))
+                                            <x-ui.dropdown-item :href="route('pme.invoices.edit', $row['id'])" wire:navigate>
+                                                <x-slot:icon>
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                    </svg>
+                                                </x-slot:icon>
+                                                {{ __('Éditer la facture') }}
+                                            </x-ui.dropdown-item>
+                                        @endif
+                                        @if (in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
+                                            <x-ui.dropdown-separator />
+                                            <x-ui.dropdown-item :href="route('pme.collection.index')" wire:navigate>
+                                                <x-slot:icon>
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0Z" />
+                                                    </svg>
+                                                </x-slot:icon>
+                                                {{ __('Relancer le client') }}
+                                            </x-ui.dropdown-item>
+                                        @endif
+                                        @if (! in_array($row['status_value'], ['paid', 'cancelled', 'draft']))
+                                            <x-ui.dropdown-separator />
+                                            <x-ui.dropdown-item
+                                                wire:click="markAsPaid('{{ $row['id'] }}')"
+                                                wire:confirm="{{ __('Marquer cette facture comme payée ?') }}"
                                             >
-                                                <flux:icon name="trash" class="size-4 text-rose-400" />
-                                                {{ __('Supprimer la facture') }}
-                                            </flux:menu.item>
-                                        </flux:menu>
-                                    </flux:dropdown>
+                                                <x-slot:icon>
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                    </svg>
+                                                </x-slot:icon>
+                                                {{ __('Marquer comme payée') }}
+                                            </x-ui.dropdown-item>
+                                        @endif
+                                        <x-ui.dropdown-separator />
+                                        <x-ui.dropdown-item
+                                            wire:click="deleteInvoice('{{ $row['id'] }}')"
+                                            wire:confirm="{{ __('Supprimer définitivement cette facture ?') }}"
+                                            :destructive="true"
+                                        >
+                                            <x-slot:icon>
+                                                <svg class="size-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                            </x-slot:icon>
+                                            {{ __('Supprimer la facture') }}
+                                        </x-ui.dropdown-item>
+                                    </x-ui.dropdown>
                                 </td>
 
                             </tr>
