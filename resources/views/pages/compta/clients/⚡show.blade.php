@@ -495,32 +495,27 @@ new #[Title('Clients')] class extends Component {
                     </button>
                 </flux:modal.trigger>
 
-                <flux:dropdown position="bottom" align="end">
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary/30 hover:text-primary"
+                <x-ui.dropdown>
+                    <x-ui.dropdown-item href="#factures-client">
+                        <x-slot:icon><x-app.icon name="invoice" class="size-4 text-slate-400" /></x-slot:icon>
+                        {{ __("Voir l'historique") }}
+                    </x-ui.dropdown-item>
+
+                    <x-ui.dropdown-separator />
+
+                    <x-ui.dropdown-item
+                        wire:click="archive"
+                        wire:confirm="{{ __('Archiver ce client ? Cette action retirera la PME de votre portefeuille actif.') }}"
+                        :destructive="true"
                     >
-                        {{ __('Actions') }}
-                        <x-app.icon name="chevron-down" class="size-3.5" />
-                    </button>
-
-                    <flux:menu>
-                        <flux:menu.item href="#factures-client">
-                            <x-app.icon name="invoice" class="size-4 text-slate-500" />
-                            {{ __('Voir l’historique') }}
-                        </flux:menu.item>
-
-                        <flux:menu.separator />
-
-                        <flux:menu.item
-                            wire:click="archive"
-                            wire:confirm="{{ __('Archiver ce client ? Cette action retirera la PME de votre portefeuille actif.') }}"
-                        >
-                            <flux:icon name="archive-box-x-mark" class="size-4 text-rose-500" />
-                            {{ __('Archiver') }}
-                        </flux:menu.item>
-                    </flux:menu>
-                </flux:dropdown>
+                        <x-slot:icon>
+                            <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                            </svg>
+                        </x-slot:icon>
+                        {{ __("Archiver") }}
+                    </x-ui.dropdown-item>
+                </x-ui.dropdown>
 
                 <span @class([
                     'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold',
