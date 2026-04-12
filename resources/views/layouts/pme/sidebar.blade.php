@@ -211,19 +211,24 @@
                                 </div>
                             @endforeach
 
-                            <div class="sidebar-nav-item relative">
-                                <flux:modal.trigger name="confirm-logout-pme" class="w-full">
-                                    <button
-                                        type="button"
-                                        class="app-shell-nav-link w-full"
-                                        title="{{ __('Déconnexion') }}"
-                                        data-test="logout-button"
-                                    >
-                                        <x-app.icon name="logout" class="app-shell-nav-icon" />
-                                        <span class="app-shell-nav-label sidebar-collapsible">{{ __('Déconnexion') }}</span>
-                                    </button>
-                                </flux:modal.trigger>
+                            <div class="sidebar-nav-item relative" x-data="{ open: false }">
+                                <button
+                                    type="button"
+                                    class="app-shell-nav-link w-full"
+                                    title="{{ __('Déconnexion') }}"
+                                    data-test="logout-button"
+                                    @click="open = true"
+                                >
+                                    <x-app.icon name="logout" class="app-shell-nav-icon" />
+                                    <span class="app-shell-nav-label sidebar-collapsible">{{ __('Déconnexion') }}</span>
+                                </button>
                                 <div class="sidebar-nav-tooltip">{{ __('Déconnexion') }}</div>
+                                <x-ui.confirm-modal
+                                    :title="__('Déconnexion')"
+                                    :description="__('Êtes-vous sûr de vouloir vous déconnecter de Fayeku PME ?')"
+                                    form-action="{{ route('auth.logout') }}"
+                                    :confirm-label="__('Se déconnecter')"
+                                />
                             </div>
                         </nav>
                     </div>
@@ -295,37 +300,6 @@
             </div>
         </div>
 
-        <flux:modal name="confirm-logout-pme" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">
-            <div class="flex w-[450px] max-w-[450px] flex-col rounded-[2rem] bg-white px-8 pt-7 pb-8 text-center">
-                <div class="flex justify-center">
-                    <div class="flex size-24 items-center justify-center rounded-full bg-rose-100/60">
-                        <div class="flex size-16 items-center justify-center rounded-full bg-white shadow-sm">
-                            <x-app.icon name="logout-modal" class="size-8 text-ink" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-5 px-3">
-                    <flux:heading size="xl" class="!font-bold !text-black">{{ __('Déconnexion') }}</flux:heading>
-                    <flux:subheading class="mt-3 !text-lg !leading-8 !text-black">{{ __('Êtes-vous sûr de vouloir vous déconnecter de Fayeku PME?') }}</flux:subheading>
-                </div>
-
-                <div class="mt-8 flex w-full gap-4 px-1">
-                    <flux:modal.close class="flex-1">
-                        <flux:button class="w-full !rounded-[1.75rem] !border-0 !px-6 !py-4 !text-lg !font-semibold !text-white hover:!bg-zinc-800 !bg-zinc-700">
-                            {{ __('Annuler') }}
-                        </flux:button>
-                    </flux:modal.close>
-
-                    <form method="POST" action="{{ route('auth.logout') }}" class="flex-1">
-                        @csrf
-                        <flux:button type="submit" variant="danger" class="w-full !rounded-[1.75rem] !border-0 !px-6 !py-4 !text-lg !font-semibold">
-                            {{ __('Se déconnecter') }}
-                        </flux:button>
-                    </form>
-                </div>
-            </div>
-        </flux:modal>
 
         <x-toast-notifications />
 

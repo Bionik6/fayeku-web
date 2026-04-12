@@ -35,6 +35,8 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     public ?string $timelineInvoiceId = null;
 
+    public ?string $confirmDeleteId = null;
+
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
 
@@ -121,8 +123,19 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         $this->timelineInvoiceId = null;
     }
 
+    public function confirmDelete(string $id): void
+    {
+        $this->confirmDeleteId = $id;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->confirmDeleteId = null;
+    }
+
     public function deleteInvoice(string $invoiceId): void
     {
+        $this->confirmDeleteId = null;
         abort_unless($this->company, 403);
 
         $invoice = Invoice::query()
@@ -663,8 +676,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                         @endif
                                         <x-ui.dropdown-separator />
                                         <x-ui.dropdown-item
-                                            wire:click="deleteInvoice('{{ $row['id'] }}')"
-                                            wire:confirm="{{ __('Supprimer définitivement cette facture ?') }}"
+                                            wire:click="confirmDelete('{{ $row['id'] }}')"
                                             :destructive="true"
                                         >
                                             <x-slot:icon>
@@ -734,5 +746,14 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
             <x-collection.reminder-feed :invoice="$this->timelineInvoice" />
         </x-ui.drawer>
     @endif
+
+    <x-ui.confirm-modal
+        :confirm-id="$confirmDeleteId"
+        :title="__('Supprimer la facture')"
+        :description="__('Cette action est irréversible. La facture sera définitivement supprimée.')"
+        confirm-action="deleteInvoice"
+        cancel-action="cancelDelete"
+        :confirm-label="__('Supprimer')"
+    />
 
 </div>
