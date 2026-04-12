@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Modules\Auth\Models\Company;
@@ -706,6 +707,235 @@ test('des horaires hors plage en base sont ramenés dans les limites au chargeme
     expect($component->get('configHourStart'))->toBe(0)
         ->and($component->get('configHourEnd'))->toBe(23);
 });
+
+// ─── invoiceRows() — structure ────────────────────────────────────────────────
+
+test('invoiceRows() inclut client_id pour chaque facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    $row = collect(
+        Livewire::actingAs($user)->test('pages::pme.collection.index')->get('invoiceRows')
+    )->firstWhere('id', $invoice->id);
+
+    expect($row['client_id'])->toBe($invoice->client_id);
+});
+
+test('invoiceRows() n\'inclut pas le champ mode', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    createOverdueInvoice($company);
+
+    $row = collect(
+        Livewire::actingAs($user)->test('pages::pme.collection.index')->get('invoiceRows')
+    )->first();
+
+    expect($row)->not->toHaveKey('mode');
+});
+
+// ─── Dropdown — affichage ─────────────────────────────────────────────────────
+
+test('le dropdown affiche les actions standard pour une facture en retard', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->assertSee('Voir la facture')
+        ->assertSee('Afficher en PDF')
+        ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id))
+        ->assertSee('Voir les relances')
+        ->assertSee('Relancer le client')
+        ->assertSee('Marquer comme payée')
+        ->assertSee('Supprimer la facture');
+});
+
+test('"Voir le client" est affiché dans le dropdown quand la facture a un client', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->assertSeeHtml(route('pme.clients.show', $invoice->client_id))
+        ->assertSee('Voir le client');
+});
+
+// ─── viewInvoice() ────────────────────────────────────────────────────────────
+
+test('viewInvoice() positionne selectedInvoiceId', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->assertSet('selectedInvoiceId', null)
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id);
+});
+
+test('viewInvoice() affiche le modal avec la référence de la facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+    $invoice->update(['reference' => 'FAC-COLL-001']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSee('FAC-COLL-001');
+});
+
+test('closeInvoice() remet selectedInvoiceId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id)
+        ->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+});
+
+test('viewInvoice() refuse une facture d\'une autre PME', function () {
+    ['user' => $user] = createSmeUserForCollection();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = createOverdueInvoice($otherCompany);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('viewInvoice', $otherInvoice->id);
+})->throws(ModelNotFoundException::class);
+
+// ─── confirmMarkPaid() / markAsPaid() ─────────────────────────────────────────
+
+test('confirmMarkPaid() positionne confirmMarkPaidId', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('confirmMarkPaid', $invoice->id)
+        ->assertSet('confirmMarkPaidId', $invoice->id);
+});
+
+test('cancelMarkPaid() remet confirmMarkPaidId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('confirmMarkPaid', $invoice->id)
+        ->call('cancelMarkPaid')
+        ->assertSet('confirmMarkPaidId', null);
+});
+
+test('markAsPaid() met à jour le statut de la facture en Payée', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company, total: 150_000);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('markAsPaid', $invoice->id);
+
+    $invoice->refresh();
+    expect($invoice->status)->toBe(InvoiceStatus::Paid)
+        ->and($invoice->amount_paid)->toBe(150_000)
+        ->and($invoice->paid_at)->not->toBeNull();
+});
+
+test('markAsPaid() retire la facture de la liste des factures à relancer', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    $component = Livewire::actingAs($user)->test('pages::pme.collection.index');
+    expect($component->get('invoiceRows'))->toHaveCount(1);
+
+    $component->call('markAsPaid', $invoice->id);
+    expect($component->get('invoiceRows'))->toHaveCount(0);
+});
+
+test('markAsPaid() dispatche un toast de succès', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('markAsPaid', $invoice->id)
+        ->assertDispatched('toast', type: 'success');
+});
+
+test('markAsPaid() refuse une facture d\'une autre PME', function () {
+    ['user' => $user] = createSmeUserForCollection();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = createOverdueInvoice($otherCompany);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('markAsPaid', $otherInvoice->id);
+
+    $otherInvoice->refresh();
+    expect($otherInvoice->status)->toBe(InvoiceStatus::Overdue);
+})->throws(ModelNotFoundException::class);
+
+// ─── confirmDelete() / deleteInvoice() ───────────────────────────────────────
+
+test('confirmDelete() positionne confirmDeleteId', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('confirmDelete', $invoice->id)
+        ->assertSet('confirmDeleteId', $invoice->id);
+});
+
+test('cancelDelete() remet confirmDeleteId à null', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('confirmDelete', $invoice->id)
+        ->call('cancelDelete')
+        ->assertSet('confirmDeleteId', null);
+});
+
+test('deleteInvoice() supprime (soft-delete) la facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('deleteInvoice', $invoice->id)
+        ->assertDispatched('toast', type: 'success', title: 'La facture a été supprimée.');
+
+    expect(Invoice::query()->find($invoice->id))->toBeNull()
+        ->and(Invoice::withTrashed()->find($invoice->id))->not->toBeNull();
+});
+
+test('deleteInvoice() retire la facture de la liste', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
+    $invoice = createOverdueInvoice($company);
+
+    $component = Livewire::actingAs($user)->test('pages::pme.collection.index');
+    expect($component->get('invoiceRows'))->toHaveCount(1);
+
+    $component->call('deleteInvoice', $invoice->id);
+    expect($component->get('invoiceRows'))->toHaveCount(0);
+});
+
+test('deleteInvoice() refuse une facture d\'une autre PME', function () {
+    ['user' => $user] = createSmeUserForCollection();
+    $otherCompany = Company::factory()->create(['type' => 'sme']);
+    $otherInvoice = createOverdueInvoice($otherCompany);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('deleteInvoice', $otherInvoice->id);
+
+    expect(Invoice::withTrashed()->find($otherInvoice->id)->deleted_at)->toBeNull();
+})->throws(ModelNotFoundException::class);
+
+// ─── saveConfig() régressions ─────────────────────────────────────────────────
 
 test('saveConfig() réussit après activation quand le ton en base était invalide', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
