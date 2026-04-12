@@ -422,9 +422,6 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
                                             <div class="font-semibold text-rose-600">
                                                 {{ format_money($row['outstanding_amount'], compact: true) }}
                                             </div>
-                                            <div class="mt-1 text-sm text-slate-500">
-                                                {{ $row['outstanding_count'] }} {{ $row['outstanding_count'] > 1 ? __('factures ouvertes') : __('facture ouverte') }}
-                                            </div>
                                         @else
                                             <span class="text-slate-500">{{ format_money(0, compact: true) }}</span>
                                         @endif

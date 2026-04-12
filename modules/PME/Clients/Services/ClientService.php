@@ -432,7 +432,6 @@ class ClientService
             'invoice_count' => $invoices->count(),
             'quote_count' => $quotes->count(),
             'outstanding_amount' => $outstandingAmount,
-            'outstanding_count' => $openInvoices->count(),
             'average_payment_days' => $averagePaymentDays,
             'average_late_days' => $averageLateDays,
             'late_count' => $lateCount,
