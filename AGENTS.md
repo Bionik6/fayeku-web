@@ -186,7 +186,7 @@ app/
 │   └── Requests/
 │       └── Auth/     CompanySetupRequest, LoginRequest, RegisterRequest, VerifyOtpRequest, etc.
 ├── Enums/
-│   ├── PME/          InvoiceStatus, QuoteStatus, LineType, ReminderChannel, ReminderMode, ReminderStatus
+│   ├── PME/          InvoiceStatus, QuoteStatus, LineType, ReminderChannel, ReminderMode
 │   ├── Compta/       ExportFormat, PartnerTier, CertificationAuthority, FiscalCountry
 │   └── Shared/       QuotaType
 ├── Policies/PME/     InvoicePolicy, QuotePolicy, ClientPolicy, ReminderPolicy
