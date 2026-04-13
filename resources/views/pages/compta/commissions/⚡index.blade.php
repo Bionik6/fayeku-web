@@ -580,8 +580,6 @@ new #[Title('Commissions')] class extends Component
                             <th class="px-6 py-3">{{ __('Taux') }}</th>
                             <th class="px-6 py-3">{{ __('Commission') }}</th>
                             <th class="px-6 py-3">{{ __('Statut') }}</th>
-                            <th class="px-6 py-3">{{ __('Source') }}</th>
-                            <th class="px-6 py-3">{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -591,8 +589,9 @@ new #[Title('Commissions')] class extends Component
                                 $planSlug = $sub?->plan_slug ?? '—';
                                 $price = $sub?->price_paid ?? 0;
                                 $rate = 15;
+                                $clientUrl = $commission->sme_company_id ? route('clients.show', $commission->sme_company_id) : null;
                             @endphp
-                            <tr class="transition hover:bg-slate-50/50">
+                            <tr @if ($clientUrl) onclick="Livewire.navigate('{{ $clientUrl }}')" @endif @class(['transition hover:bg-slate-50/50', 'cursor-pointer' => $clientUrl])>
                                 <td class="whitespace-nowrap px-6 py-3.5 font-medium text-ink">
                                     {{ $commission->smeCompany?->name ?? '—' }}
                                 </td>
@@ -634,20 +633,6 @@ new #[Title('Commissions')] class extends Component
                                         ])></span>
                                         {{ $statusLabel }}
                                     </span>
-                                </td>
-                                <td class="whitespace-nowrap px-6 py-3.5 text-slate-500">
-                                    {{ __('Lien partenaire') }}
-                                </td>
-                                <td class="whitespace-nowrap px-6 py-3.5">
-                                    @if ($commission->sme_company_id)
-                                        <a
-                                            href="{{ route('clients.show', $commission->sme_company_id) }}"
-                                            wire:navigate
-                                            class="text-sm font-medium text-primary hover:underline"
-                                        >
-                                            {{ __('Voir le client') }}
-                                        </a>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach
