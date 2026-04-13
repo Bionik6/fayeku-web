@@ -210,7 +210,7 @@ class PmeDashboardSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facAtlan->id,
             'channel' => ReminderChannel::Email,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => now()->subDays(45),
             'message_body' => 'Rappel de paiement : facture FYK-FAC-Y5E7F3 échue depuis plus de 30 jours.',
             'recipient_email' => 'direction@atlan.sn',
@@ -219,7 +219,7 @@ class PmeDashboardSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facAtlan->id,
             'channel' => ReminderChannel::WhatsApp,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => now()->subDays(15),
             'message_body' => 'Bonjour, nous revenons vers vous concernant la facture FYK-FAC-Y5E7F3 de 849 600 F toujours impayée. Merci de régulariser.',
             'recipient_phone' => '+221338200012',

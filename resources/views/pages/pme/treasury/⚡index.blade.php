@@ -73,7 +73,7 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
         }
 
         try {
-            app(ReminderService::class)->send($invoice, $this->company, $channel, isManual: true);
+            app(ReminderService::class)->send($invoice, $this->company, $channel, mode: \App\Enums\PME\ReminderMode::Manual);
             unset($this->dashboardData, $this->selectedInvoice);
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));

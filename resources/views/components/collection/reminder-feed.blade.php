@@ -77,9 +77,10 @@ if ($items->isEmpty() && ! $invoice?->paid_at) {
                         default                   => ucfirst($reminder->channel?->value ?? ''),
                     };
 
-                    $modeLabel = $reminder->is_manual ? __('Manuel') : __('Automatique');
-                    $modeBg    = $reminder->is_manual ? 'bg-slate-100' : 'bg-blue-50';
-                    $modeText  = $reminder->is_manual ? 'text-slate-600' : 'text-blue-700';
+                    $isManualMode = $reminder->mode === \App\Enums\PME\ReminderMode::Manual;
+                    $modeLabel = $isManualMode ? __('Manuel') : __('Automatique');
+                    $modeBg    = $isManualMode ? 'bg-slate-100' : 'bg-blue-50';
+                    $modeText  = $isManualMode ? 'text-slate-600' : 'text-blue-700';
                 @endphp
                 <li wire:key="rf-{{ $reminder->id }}">
                     <div @class(['relative', 'pb-6' => ! $isLast])>

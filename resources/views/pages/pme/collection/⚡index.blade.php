@@ -507,7 +507,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             $this->previewInvoiceId = $previousPreviewId;
 
             app(\App\Services\PME\ReminderService::class)
-                ->send($invoice, $this->company, $channel, $messageBody, isManual: true);
+                ->send($invoice, $this->company, $channel, $messageBody, mode: \App\Enums\PME\ReminderMode::Manual);
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
         } catch (\RuntimeException $e) {

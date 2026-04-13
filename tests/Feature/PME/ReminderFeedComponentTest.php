@@ -1,13 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Blade;
+use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\ReminderChannel;
-use App\Models\PME\Reminder;
-use App\Enums\PME\InvoiceStatus;
 use App\Models\PME\Invoice;
+use App\Models\PME\Reminder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 
 uses(RefreshDatabase::class);
 
@@ -46,7 +46,7 @@ function makeReminderForFeed(Invoice $invoice, array $overrides = []): Reminder
     return Reminder::query()->create(array_merge([
         'invoice_id' => $invoice->id,
         'channel' => ReminderChannel::WhatsApp,
-        'is_manual' => true,
+        'mode' => 'manual',
         'sent_at' => now()->subDays(2),
         'message_body' => 'Bonjour, votre facture est en attente.',
         'recipient_phone' => '+221771112233',
@@ -150,7 +150,7 @@ it('n\'affiche pas de corps si message_body est null', function () {
 it('affiche le badge "Manuel" pour une relance manuelle', function () {
     ['client' => $client] = makeCompanyAndClient();
     $invoice = makeInvoiceForFeed($client);
-    makeReminderForFeed($invoice, ['is_manual' => true]);
+    makeReminderForFeed($invoice, ['mode' => 'manual']);
     $invoice->load('reminders');
 
     $html = renderFeed(':reminders="$invoice->reminders"', compact('invoice'));
@@ -165,7 +165,7 @@ it('affiche le badge "Manuel" pour une relance manuelle', function () {
 it('affiche le badge "Automatique" pour une relance automatique', function () {
     ['client' => $client] = makeCompanyAndClient();
     $invoice = makeInvoiceForFeed($client);
-    makeReminderForFeed($invoice, ['is_manual' => false]);
+    makeReminderForFeed($invoice, ['mode' => 'auto']);
     $invoice->load('reminders');
 
     $html = renderFeed(':reminders="$invoice->reminders"', compact('invoice'));

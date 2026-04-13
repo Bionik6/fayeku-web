@@ -236,7 +236,7 @@ public function viewInvoice(string $id): void
                 $this->company->name,
             ])) ?: null;
 
-            app(ReminderService::class)->send($invoice, $this->company, $channel, $messageBody, isManual: true);
+            app(ReminderService::class)->send($invoice, $this->company, $channel, $messageBody, mode: \App\Enums\PME\ReminderMode::Manual);
 
             $this->previewInvoiceId = null;
             $this->detailCache = null;

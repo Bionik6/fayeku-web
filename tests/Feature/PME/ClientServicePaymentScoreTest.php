@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
+use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Services\PME\ClientService;
-use App\Enums\PME\ReminderChannel;
-use App\Models\PME\Reminder;
-use App\Enums\PME\InvoiceStatus;
 use App\Models\PME\Invoice;
+use App\Models\PME\Reminder;
 use App\Models\Shared\User;
+use App\Services\PME\ClientService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -166,7 +166,7 @@ test('is_watch est true pour un client avec un score inférieur à 65', function
         Reminder::query()->create([
             'invoice_id' => $invoice->id,
             'channel' => ReminderChannel::WhatsApp,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => now()->subDays(2),
             'message_body' => 'Relance test',
             'recipient_phone' => '+221771234567',

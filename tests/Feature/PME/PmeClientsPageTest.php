@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Enums\PME\ReminderChannel;
-use App\Models\PME\Reminder;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ReminderChannel;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\Quote;
+use App\Models\PME\Reminder;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -75,7 +75,7 @@ function makePortfolioReminder(Invoice $invoice, array $overrides = []): Reminde
     return Reminder::query()->create(array_merge([
         'invoice_id' => $invoice->id,
         'channel' => ReminderChannel::WhatsApp->value,
-        'is_manual' => true,
+        'mode' => 'manual',
         'sent_at' => now()->subDays(3),
         'message_body' => 'Rappel de paiement',
         'recipient_phone' => '+221771112233',

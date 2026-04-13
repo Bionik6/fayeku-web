@@ -1,15 +1,15 @@
 <?php
 
+use App\Enums\PME\InvoiceStatus;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Models\PME\Invoice;
+use App\Models\PME\Reminder;
+use App\Models\PME\ReminderRule;
+use App\Models\Shared\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Models\PME\Reminder;
-use App\Models\PME\ReminderRule;
-use App\Enums\PME\InvoiceStatus;
-use App\Models\PME\Invoice;
-use App\Models\Shared\User;
 
 uses(RefreshDatabase::class);
 
@@ -422,7 +422,7 @@ test('remindersThisMonth ne compte que les relances du mois courant', function (
     $reminderData = [
         'invoice_id' => $invoice->id,
         'channel' => 'whatsapp',
-        'is_manual' => true,
+        'mode' => 'manual',
         'sent_at' => now(),
     ];
 

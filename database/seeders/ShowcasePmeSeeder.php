@@ -310,7 +310,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facLafarge->id,
             'channel' => ReminderChannel::Email,
-            'is_manual' => false,
+            'mode' => 'auto',
             'sent_at' => now()->subDays(40),
             'message_body' => 'Rappel de paiement : la facture FYK-FAC-KD0501 d\'un montant de 3 304 000 F CFA est échue depuis 15 jours. Merci de procéder au règlement.',
             'recipient_email' => 'dsi@lafarge.sn',
@@ -319,7 +319,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facLafarge->id,
             'channel' => ReminderChannel::WhatsApp,
-            'is_manual' => false,
+            'mode' => 'auto',
             'sent_at' => now()->subDays(25),
             'message_body' => 'Bonjour, nous revenons vers vous au sujet de la facture FYK-FAC-KD0501 de 3 304 000 F CFA, impayée depuis 30 jours. Pourriez-vous nous indiquer la date prévisionnelle de règlement ?',
             'recipient_phone' => '+221338600007',
@@ -328,7 +328,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facLafarge->id,
             'channel' => ReminderChannel::Email,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => now()->subDays(10),
             'message_body' => 'Mise en demeure amiable : la facture FYK-FAC-KD0501 reste impayée depuis 45 jours. Sans retour de votre part sous 7 jours, nous serons contraints d\'engager une procédure de recouvrement.',
             'recipient_email' => 'dsi@lafarge.sn',
@@ -337,7 +337,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facLafarge->id,
             'channel' => ReminderChannel::Sms,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => null,
             'message_body' => 'KAAY DIGITAL : facture KD0501 de 3 304 000 F impayée depuis 65 jours. Contactez-nous au +221776200001.',
             'recipient_phone' => '+221338600007',
@@ -355,7 +355,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facSenelec->id,
             'channel' => ReminderChannel::Email,
-            'is_manual' => false,
+            'mode' => 'auto',
             'sent_at' => now()->subDays(25),
             'message_body' => 'Rappel de paiement : la facture FYK-FAC-KD0502 de 802 400 F CFA est échue depuis 13 jours.',
             'recipient_email' => 'it@senelec.sn',
@@ -364,7 +364,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facSenelec->id,
             'channel' => ReminderChannel::WhatsApp,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => now()->subDays(10),
             'message_body' => 'Bonjour, votre facture FYK-FAC-KD0502 de 802 400 F CFA est toujours en attente de règlement. Merci de bien vouloir la traiter en priorité.',
             'recipient_phone' => '+221338600011',
@@ -382,7 +382,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facAuchan->id,
             'channel' => ReminderChannel::Email,
-            'is_manual' => false,
+            'mode' => 'auto',
             'sent_at' => now()->subDays(10),
             'message_body' => 'Rappel de paiement : la facture FYK-FAC-KD0503 de 649 000 F CFA est échue depuis 12 jours. Nous vous remercions de bien vouloir régulariser cette situation.',
             'recipient_email' => 'dsi@auchan.sn',
@@ -401,7 +401,7 @@ class ShowcasePmeSeeder extends Seeder
         Reminder::create([
             'invoice_id' => $facTotal->id,
             'channel' => ReminderChannel::Email,
-            'is_manual' => false,
+            'mode' => 'auto',
             'sent_at' => now()->subDays(8),
             'message_body' => 'Rappel : la facture FYK-FAC-KD0504 a été partiellement réglée (800 000 F). Le solde restant de 1 088 800 F CFA est échu depuis 10 jours. Merci de compléter le paiement.',
             'recipient_email' => 'compta@totalenergies.sn',

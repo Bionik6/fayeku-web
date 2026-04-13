@@ -1,18 +1,18 @@
 <?php
 
+use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\ReminderChannel;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Models\PME\Invoice;
+use App\Models\PME\Reminder;
+use App\Models\Shared\User;
+use App\Services\PME\ForecastService;
+use App\Services\PME\InvoiceService;
+use App\Services\PME\TreasuryService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Enums\PME\ReminderChannel;
-use App\Models\PME\Reminder;
-use App\Enums\PME\InvoiceStatus;
-use App\Models\PME\Invoice;
-use App\Services\PME\InvoiceService;
-use App\Services\PME\ForecastService;
-use App\Services\PME\TreasuryService;
-use App\Models\Shared\User;
 
 uses(RefreshDatabase::class);
 
@@ -277,7 +277,7 @@ test('relancer depuis la page respecte le quota basique mensuel', function () {
         Reminder::query()->create([
             'invoice_id' => $invoice->id,
             'channel' => ReminderChannel::WhatsApp,
-            'is_manual' => true,
+            'mode' => 'manual',
             'sent_at' => now()->subDays(1),
             'message_body' => 'Relance envoyée',
             'recipient_phone' => '+221772222222',

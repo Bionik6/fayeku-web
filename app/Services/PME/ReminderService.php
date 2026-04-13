@@ -2,13 +2,14 @@
 
 namespace App\Services\PME;
 
-use Illuminate\Support\Facades\DB;
-use App\Models\Auth\Company;
 use App\Enums\PME\ReminderChannel;
+use App\Enums\PME\ReminderMode;
 use App\Interfaces\PME\ReminderChannelInterface;
-use App\Models\PME\Reminder;
+use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
+use App\Models\PME\Reminder;
 use App\Services\Shared\QuotaService;
+use Illuminate\Support\Facades\DB;
 
 class ReminderService
 {
@@ -19,14 +20,14 @@ class ReminderService
         private EmailReminderService $email,
     ) {}
 
-    public function send(Invoice $invoice, Company $company, ReminderChannel $channel, ?string $messageBody = null, bool $isManual = false): Reminder
+    public function send(Invoice $invoice, Company $company, ReminderChannel $channel, ?string $messageBody = null, ReminderMode $mode = ReminderMode::Manual): Reminder
     {
         $this->quotaService->authorize($company, 'reminders');
 
-        return DB::transaction(function () use ($invoice, $company, $channel, $messageBody, $isManual) {
+        return DB::transaction(function () use ($invoice, $company, $channel, $messageBody, $mode) {
             $reminder = $this->resolveChannel($channel)->send($invoice);
 
-            $updates = ['is_manual' => $isManual];
+            $updates = ['mode' => $mode];
 
             if ($messageBody !== null) {
                 $updates['message_body'] = $messageBody;
