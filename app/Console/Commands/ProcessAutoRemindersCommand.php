@@ -12,6 +12,7 @@ use App\Models\PME\Invoice;
 use App\Models\PME\ReminderRule;
 use App\Services\Shared\QuotaService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ProcessAutoRemindersCommand extends Command
 {
@@ -27,16 +28,22 @@ class ProcessAutoRemindersCommand extends Command
 
     public function handle(): int
     {
+        Log::info('[AutoReminders] Démarrage du traitement des relances automatiques.');
+
         $companies = Company::query()
             ->where('reminder_settings->enabled', true)
             ->where('reminder_settings->mode', 'auto')
             ->with(['reminderRules' => fn ($q) => $q->where('is_active', true)])
             ->get();
 
+        Log::info("[AutoReminders] {$companies->count()} company(s) en mode auto trouvée(s).");
+
         $dispatched = 0;
 
         foreach ($companies as $company) {
             if (! $this->isWithinSendWindow($company)) {
+                Log::debug("[AutoReminders] {$company->name} — hors fenêtre d'envoi, ignorée.");
+
                 continue;
             }
 
@@ -45,6 +52,7 @@ class ProcessAutoRemindersCommand extends Command
             }
         }
 
+        Log::info("[AutoReminders] Terminé — {$dispatched} relance(s) dispatché(es).");
         $this->info("Dispatched {$dispatched} automatic reminder(s).");
 
         return self::SUCCESS;
