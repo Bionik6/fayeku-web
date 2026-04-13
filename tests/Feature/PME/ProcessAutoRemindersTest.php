@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Bus;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->travelTo(now()->setHour(10)->setMinute(0));
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function createAutoReminderCompany(array $settingsOverrides = []): array
