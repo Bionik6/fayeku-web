@@ -1,11 +1,12 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
-use App\Models\Auth\Company;
 use App\Enums\PME\InvoiceStatus;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -178,4 +179,40 @@ test('pme dashboard uses FCFA outside tables and keeps F inside tables', functio
         ->assertSee('118 000 FCFA')
         ->assertSee('+236 000 FCFA')
         ->assertSee('354 000 F');
+});
+
+test('pme dashboard urgent overdue row actions control selected invoice and preview state', function () {
+    ['user' => $user, 'company' => $company] = createPmeDashboardUser();
+
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'phone' => '+221771234567',
+        'email' => 'client@example.com',
+    ]);
+
+    $invoice = createPmeDashboardInvoice($company, [
+        'client_id' => $client->id,
+        'reference' => 'FAC-OVERDUE-1',
+        'total' => 354_000,
+        'amount_paid' => 0,
+        'status' => InvoiceStatus::Overdue->value,
+        'issued_at' => now()->subDays(60),
+        'due_at' => now()->subDays(45),
+    ]);
+
+    $component = Livewire::actingAs($user)->test('pages::pme.dashboard.index');
+
+    $component->assertSee('Voir le client', false);
+
+    $component->call('viewInvoice', $invoice->id)
+        ->assertSet('selectedInvoiceId', $invoice->id);
+
+    $component->call('closeInvoice')
+        ->assertSet('selectedInvoiceId', null);
+
+    $component->call('openPreview', $invoice->id)
+        ->assertSet('previewInvoiceId', $invoice->id);
+
+    $component->call('closePreview')
+        ->assertSet('previewInvoiceId', null);
 });

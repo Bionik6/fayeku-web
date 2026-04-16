@@ -1014,7 +1014,7 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
     {{-- ============================================= --}}
     <x-ui.table-panel
         :title="__('Factures à relancer')"
-        :description="__('Factures en retard classées par ancienneté. Cliquez sur une ligne pour envoyer une relance.')"
+        :description="__('Factures en retard classées par ancienneté. Cliquez sur une ligne pour voir la facture.')"
         :filterLabel="__('Filtrer par ancienneté')"
     >
         <x-slot:filters>
@@ -1068,7 +1068,11 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($this->invoiceRows as $row)
-                            <tr wire:key="coll-{{ $row['id'] }}" class="transition hover:bg-slate-50/50">
+                            <tr
+                                wire:key="coll-{{ $row['id'] }}"
+                                class="cursor-pointer transition hover:bg-slate-50/50"
+                                wire:click="viewInvoice('{{ $row['id'] }}')"
+                            >
                                 <td class="px-4 py-4 font-medium text-ink">{{ $row['reference'] }}</td>
                                 <td class="px-4 py-4 text-slate-600">{{ $row['client_name'] }}</td>
                                 <td class="px-4 py-4 text-right font-semibold tabular-nums text-ink whitespace-nowrap">

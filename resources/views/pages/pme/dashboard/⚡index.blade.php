@@ -1,5 +1,6 @@
 <?php
 
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -38,6 +39,16 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
     /** @var array<int, array<string, mixed>> */
     public array $urgentOverdue = [];
+
+    public ?string $selectedInvoiceId = null;
+
+    public ?string $previewInvoiceId = null;
+
+    public string $previewTone = 'cordial';
+
+    public bool $previewAttachPdf = true;
+
+    public string $previewChannel = 'whatsapp';
 
     public function mount(): void
     {
@@ -141,6 +152,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                     'id'                  => $inv->id,
                     'reference'           => $inv->reference,
                     'client'              => $inv->client?->name ?? '—',
+                    'client_id'           => $inv->client_id,
                     'total'               => $inv->total - $inv->amount_paid,
                     'issued_at'           => format_date($inv->issued_at),
                     'delay_days'          => $delayDays,
@@ -149,6 +161,144 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 ];
             })
             ->toArray();
+    }
+
+    #[Computed]
+    public function selectedInvoice(): ?Invoice
+    {
+        if (! $this->selectedInvoiceId || ! $this->company) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->with(['client', 'lines'])
+            ->where('company_id', $this->company->id)
+            ->whereKey($this->selectedInvoiceId)
+            ->first();
+    }
+
+    public function viewInvoice(string $invoiceId): void
+    {
+        abort_unless($this->company, 403);
+
+        Invoice::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($invoiceId);
+
+        $this->selectedInvoiceId = $invoiceId;
+    }
+
+    public function closeInvoice(): void
+    {
+        $this->selectedInvoiceId = null;
+    }
+
+    #[Computed]
+    public function previewInvoice(): ?Invoice
+    {
+        if (! $this->previewInvoiceId || ! $this->company) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->with(['client', 'lines', 'reminders'])
+            ->where('company_id', $this->company->id)
+            ->whereKey($this->previewInvoiceId)
+            ->first();
+    }
+
+    public function openPreview(string $invoiceId): void
+    {
+        abort_unless($this->company, 403);
+
+        Invoice::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($invoiceId);
+
+        $this->previewInvoiceId = $invoiceId;
+        $this->previewTone = $this->company->getReminderSetting('default_tone', 'cordial');
+        $this->previewAttachPdf = (bool) $this->company->getReminderSetting('attach_pdf', true);
+        $this->previewChannel = $this->company->getReminderSetting('default_channel', 'whatsapp');
+        $this->selectedInvoiceId = null;
+        unset($this->previewInvoice);
+    }
+
+    public function closePreview(): void
+    {
+        $this->previewInvoiceId = null;
+        unset($this->previewInvoice);
+    }
+
+    public function sendReminder(string $invoiceId): void
+    {
+        abort_unless($this->company, 403);
+
+        $invoice = Invoice::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($invoiceId);
+
+        try {
+            $channel = ReminderChannel::from($this->previewChannel);
+            $msg = $this->buildPreviewMessage();
+            $messageBody = implode("\n\n", array_filter([
+                $msg['greeting'],
+                $msg['body'],
+                $msg['closing'],
+                $this->company->name,
+            ])) ?: null;
+
+            app(\App\Services\PME\ReminderService::class)
+                ->send($invoice, $this->company, $channel, $messageBody, mode: \App\Enums\PME\ReminderMode::Manual);
+
+            $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'warning', title: __('Service d\'envoi bientôt disponible. Votre relance sera envoyée prochainement.'));
+        }
+
+        $this->previewInvoiceId = null;
+        unset($this->previewInvoice);
+    }
+
+    /**
+     * @return array{greeting: string, body: string, closing: string}
+     */
+    public function buildPreviewMessage(): array
+    {
+        $inv = $this->previewInvoice;
+        if (! $inv) {
+            return ['greeting' => '', 'body' => '', 'closing' => ''];
+        }
+
+        $clientName = $inv->client?->name ?? '—';
+        $reference = $inv->reference ?? '—';
+        $remaining = format_money($inv->total - $inv->amount_paid);
+        $dueDate = format_date($inv->due_at);
+
+        $toneGreetings = [
+            'cordial' => "Bonjour {$clientName},",
+            'ferme' => "Bonjour {$clientName},",
+            'urgent' => "{$clientName},",
+        ];
+
+        $toneBody = [
+            'cordial' => "Nous souhaitons vous rappeler que la facture {$reference} d'un montant de {$remaining} FCFA, échue le {$dueDate}, reste en attente de règlement.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.",
+            'ferme' => "La facture {$reference} d'un montant de {$remaining} FCFA est en retard de paiement depuis le {$dueDate}.\n\nNous vous demandons de procéder au règlement dans les plus brefs délais.",
+            'urgent' => "URGENT : La facture {$reference} ({$remaining} FCFA) est impayée depuis le {$dueDate}. Malgré nos précédentes relances, aucun règlement n'a été effectué.\n\nNous vous prions de régulariser cette situation immédiatement.",
+        ];
+
+        $toneClosing = [
+            'cordial' => 'Cordialement,',
+            'ferme' => 'Dans l\'attente de votre règlement,',
+            'urgent' => 'En espérant une action immédiate de votre part,',
+        ];
+
+        $tone = $this->previewTone;
+
+        return [
+            'greeting' => $toneGreetings[$tone] ?? $toneGreetings['cordial'],
+            'body' => $toneBody[$tone] ?? $toneBody['cordial'],
+            'closing' => $toneClosing[$tone] ?? $toneClosing['cordial'],
+        ];
     }
 }; ?>
 
@@ -434,7 +584,11 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                 default         => ['label' => 'À facturer', 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
                             };
                         @endphp
-                        <div wire:key="activity-{{ $inv['id'] }}" class="flex items-center gap-3 py-3">
+                        <div
+                            wire:key="activity-{{ $inv['id'] }}"
+                            class="flex cursor-pointer items-center gap-3 py-3 transition hover:bg-slate-50/60"
+                            wire:click="viewInvoice('{{ $inv['id'] }}')"
+                        >
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-sm font-semibold text-ink">{{ $inv['reference'] }}</p>
                                 <p class="truncate text-sm text-slate-500">{{ $inv['client'] }} · {{ $inv['date_label'] }}</p>
@@ -482,7 +636,11 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($urgentOverdue as $row)
-                            <tr wire:key="overdue-{{ $row['id'] }}" class="transition hover:bg-slate-50/60">
+                            <tr
+                                wire:key="overdue-{{ $row['id'] }}"
+                                class="cursor-pointer transition hover:bg-slate-50/60"
+                                wire:click="viewInvoice('{{ $row['id'] }}')"
+                            >
                                 <td class="px-6 py-4 font-semibold text-ink">{{ $row['reference'] }}</td>
                                 <td class="px-4 py-4 font-semibold text-ink">{{ $row['client'] }}</td>
                                 <td class="px-4 py-4 font-semibold text-ink">{{ format_money($row['total'], compact: true) }}</td>
@@ -511,9 +669,9 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                         @if ($row['is_critical']) {{ __('Critique') }} @else {{ __('Attention') }} @endif
                                     </span>
                                 </td>
-                                <td class="px-4 py-4">
+                                <td class="px-4 py-4" x-on:click.stop>
                                     <x-ui.dropdown>
-                                        <x-ui.dropdown-item :href="route('pme.collection.index')" wire:navigate>
+                                        <x-ui.dropdown-item wire:click="openPreview('{{ $row['id'] }}')">
                                             <x-slot:icon>
                                                 <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0Z" />
@@ -521,7 +679,7 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                             </x-slot:icon>
                                             {{ __('Relancer') }}
                                         </x-ui.dropdown-item>
-                                        <x-ui.dropdown-item :href="route('pme.invoices.index')" wire:navigate>
+                                        <x-ui.dropdown-item wire:click="viewInvoice('{{ $row['id'] }}')">
                                             <x-slot:icon>
                                                 <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -529,6 +687,16 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                                             </x-slot:icon>
                                             {{ __('Voir la facture') }}
                                         </x-ui.dropdown-item>
+                                        @if ($row['client_id'])
+                                            <x-ui.dropdown-item :href="route('pme.clients.show', $row['client_id'])" wire:navigate>
+                                                <x-slot:icon>
+                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                                    </svg>
+                                                </x-slot:icon>
+                                                {{ __('Voir le client') }}
+                                            </x-ui.dropdown-item>
+                                        @endif
                                     </x-ui.dropdown>
                                 </td>
                             </tr>
@@ -558,6 +726,21 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
                 {{ __('Créer ma première facture') }}
             </a>
         </section>
+    @endif
+
+    @if ($this->selectedInvoice)
+        <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
+    @endif
+
+    @if ($previewInvoiceId && $this->previewInvoice)
+        <x-collection.reminder-preview-slideover
+            :invoice="$this->previewInvoice"
+            :message="$this->buildPreviewMessage()"
+            :company="$company"
+            :previewInvoiceId="$previewInvoiceId"
+            :previewAttachPdf="$previewAttachPdf"
+            :previewChannel="$previewChannel"
+        />
     @endif
 
 </div>

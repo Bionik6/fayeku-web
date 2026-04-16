@@ -40,13 +40,14 @@ if ($client?->email) {
 <div
     x-data="{
         open: false,
+        confirmOpen: false,
         close() {
             this.open = false;
             setTimeout(() => $wire.{{ $closeAction }}(), 500);
         },
     }"
     x-init="$nextTick(() => { open = true })"
-    @keydown.escape.window="close()"
+    @keydown.escape.window="if (confirmOpen) { confirmOpen = false } else { close() }"
     class="fixed inset-0 z-50 overflow-hidden"
     role="dialog"
     aria-modal="true"
@@ -170,8 +171,8 @@ if ($client?->email) {
                                     {{ __('Fermer') }}
                                 </button>
                                 <button
-                                    wire:click="{{ $sendAction }}('{{ $previewInvoiceId }}')"
-                                    wire:confirm="{{ __('Envoyer cette relance ?') }}"
+                                    type="button"
+                                    @click="confirmOpen = true"
                                     class="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
                                 >
                                     <flux:icon name="paper-airplane" class="mr-1 inline size-4" />
@@ -185,4 +186,78 @@ if ($client?->email) {
             </div>
         </div>
     </div>
+
+    {{-- Confirmation modal --}}
+    <template x-teleport="body">
+        <div
+            x-show="confirmOpen"
+            x-cloak
+            class="relative z-[60]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-confirm-send-title"
+        >
+            <div
+                x-show="confirmOpen"
+                x-transition:enter="ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-500/75 transition-opacity"
+                aria-hidden="true"
+            ></div>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    <div
+                        x-show="confirmOpen"
+                        x-transition:enter="ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        @click.outside="confirmOpen = false"
+                        class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
+                    >
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:mx-0 sm:size-10">
+                                    <flux:icon name="paper-airplane" class="size-6 text-primary" />
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 id="modal-confirm-send-title" class="text-base font-semibold text-slate-900">
+                                        {{ __('Envoyer cette relance ?') }}
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-slate-500">
+                                            {{ __('La relance sera envoyée à') }} {{ $invoice->client?->name ?? __('votre client') }}{{ __(' via le canal sélectionné.') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 px-4 py-3 sm:flex sm:justify-end sm:gap-3 sm:px-6">
+                            <button
+                                type="button"
+                                @click="confirmOpen = false"
+                                class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto"
+                            >
+                                {{ __('Annuler') }}
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="{{ $sendAction }}('{{ $previewInvoiceId }}')"
+                                @click="confirmOpen = false"
+                                class="inline-flex w-full justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-strong sm:w-auto"
+                            >
+                                {{ __('Envoyer maintenant') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
