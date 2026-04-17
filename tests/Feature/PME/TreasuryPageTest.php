@@ -16,6 +16,10 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->travelTo(now()->startOfWeek()->setHour(10));
+});
+
 function createSmeUserForTreasury(array $companyAttributes = []): array
 {
     $user = User::factory()->create(['profile_type' => 'sme']);

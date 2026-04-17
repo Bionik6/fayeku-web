@@ -267,6 +267,12 @@ public function viewInvoice(string $id): void
             return;
         }
 
+        if (now()->isWeekend()) {
+            $this->dispatch('toast', type: 'warning', title: __('Les relances ne peuvent être envoyées qu\'en jour ouvré (lundi au vendredi).'));
+
+            return;
+        }
+
         try {
             $channel = ReminderChannel::from($this->previewChannel);
 

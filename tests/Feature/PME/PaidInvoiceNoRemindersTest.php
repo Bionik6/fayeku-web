@@ -184,6 +184,97 @@ it('bloque sendReminder depuis la page dashboard pour une facture payée', funct
     expect(Reminder::count())->toBe(0);
 });
 
+// ─── Weekend — relances bloquées ─────────────────────────────────────────────
+
+it('ne dispatch aucune relance automatique le week-end', function () {
+    Bus::fake(SendReminderJob::class);
+    $this->travelTo(now()->startOfWeek()->addDays(5)->setHour(10)); // samedi
+
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221771112233']);
+    Invoice::factory()->forCompany($company)->withClient($client)->create([
+        'status' => InvoiceStatus::Overdue,
+        'due_at' => now()->subDays(5),
+        'reminders_enabled' => true,
+    ]);
+
+    $this->artisan('reminders:process-auto')->assertSuccessful();
+
+    Bus::assertNotDispatched(SendReminderJob::class);
+});
+
+it('bloque sendReminder manuel le samedi depuis la page recouvrement', function () {
+    $this->travelTo(now()->startOfWeek()->addDays(5)->setHour(10));
+
+    ['user' => $user, 'client' => $client, 'invoice' => $invoice] = setupSmePaidScenario([
+        'status' => InvoiceStatus::Overdue,
+        'due_at' => now()->subDays(5),
+        'paid_at' => null,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('sendReminder', $invoice->id)
+        ->assertDispatched('toast', type: 'warning', title: 'Les relances ne peuvent être envoyées qu\'en jour ouvré (lundi au vendredi).');
+
+    expect(Reminder::count())->toBe(0);
+});
+
+it('bloque sendReminder manuel le dimanche depuis la page client', function () {
+    $this->travelTo(now()->startOfWeek()->addDays(6)->setHour(10));
+
+    ['user' => $user, 'client' => $client, 'invoice' => $invoice] = setupSmePaidScenario([
+        'status' => InvoiceStatus::Overdue,
+        'due_at' => now()->subDays(5),
+        'paid_at' => null,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.clients.show', ['client' => $client])
+        ->call('sendReminder', $invoice->id)
+        ->assertDispatched('toast', type: 'warning', title: 'Les relances ne peuvent être envoyées qu\'en jour ouvré (lundi au vendredi).');
+
+    expect(Reminder::count())->toBe(0);
+});
+
+it('bloque sendReminder manuel le week-end depuis la page trésorerie', function () {
+    $this->travelTo(now()->startOfWeek()->addDays(5)->setHour(10));
+
+    ['user' => $user, 'invoice' => $invoice] = setupSmePaidScenario([
+        'status' => InvoiceStatus::Overdue,
+        'due_at' => now()->subDays(5),
+        'paid_at' => null,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.treasury.index')
+        ->call('sendReminder', $invoice->id)
+        ->assertDispatched('toast', type: 'warning', title: 'Les relances ne peuvent être envoyées qu\'en jour ouvré (lundi au vendredi).');
+
+    expect(Reminder::count())->toBe(0);
+});
+
+it('autorise sendReminder manuel en jour ouvré (lundi)', function () {
+    $this->travelTo(now()->startOfWeek()->setHour(10)); // lundi
+
+    ['user' => $user, 'invoice' => $invoice] = setupSmePaidScenario([
+        'status' => InvoiceStatus::Overdue,
+        'due_at' => now()->subDays(5),
+        'paid_at' => null,
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.collection.index')
+        ->call('sendReminder', $invoice->id)
+        ->assertDispatched('toast', type: 'success');
+
+    expect(Reminder::count())->toBe(1);
+});
+
 // ─── Parcours : impayée → relance OK → marquer payée → relance bloquée ───────
 
 it('bascule une facture de relançable à non relançable après paiement', function () {

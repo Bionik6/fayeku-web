@@ -13,6 +13,10 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->travelTo(now()->startOfWeek()->setHour(10));
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**

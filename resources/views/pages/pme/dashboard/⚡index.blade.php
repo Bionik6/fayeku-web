@@ -246,6 +246,12 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             return;
         }
 
+        if (now()->isWeekend()) {
+            $this->dispatch('toast', type: 'warning', title: __('Les relances ne peuvent être envoyées qu\'en jour ouvré (lundi au vendredi).'));
+
+            return;
+        }
+
         try {
             $channel = ReminderChannel::from($this->previewChannel);
             $msg = $this->buildPreviewMessage();
@@ -290,9 +296,9 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
         ];
 
         $toneBody = [
-            'cordial' => "Nous souhaitons vous rappeler que la facture {$reference} d'un montant de {$remaining} FCFA, échue le {$dueDate}, reste en attente de règlement.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.",
-            'ferme' => "La facture {$reference} d'un montant de {$remaining} FCFA est en retard de paiement depuis le {$dueDate}.\n\nNous vous demandons de procéder au règlement dans les plus brefs délais.",
-            'urgent' => "URGENT : La facture {$reference} ({$remaining} FCFA) est impayée depuis le {$dueDate}. Malgré nos précédentes relances, aucun règlement n'a été effectué.\n\nNous vous prions de régulariser cette situation immédiatement.",
+            'cordial' => "Nous souhaitons vous rappeler que la facture {$reference} d'un montant de {$remaining}, échue le {$dueDate}, reste en attente de règlement.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.",
+            'ferme' => "La facture {$reference} d'un montant de {$remaining} est en retard de paiement depuis le {$dueDate}.\n\nNous vous demandons de procéder au règlement dans les plus brefs délais.",
+            'urgent' => "URGENT : La facture {$reference} ({$remaining}) est impayée depuis le {$dueDate}. Malgré nos précédentes relances, aucun règlement n'a été effectué.\n\nNous vous prions de régulariser cette situation immédiatement.",
         ];
 
         $toneClosing = [

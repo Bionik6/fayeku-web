@@ -1,17 +1,21 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
+use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\ReminderChannel;
-use App\Models\PME\Reminder;
-use App\Services\PME\ReminderService;
-use App\Enums\PME\InvoiceStatus;
 use App\Models\PME\Invoice;
+use App\Models\PME\Reminder;
 use App\Models\Shared\User;
+use App\Services\PME\ReminderService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->travelTo(now()->startOfWeek()->setHour(10));
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

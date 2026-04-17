@@ -64,6 +64,12 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
             return;
         }
 
+        if (now()->isWeekend()) {
+            $this->dispatch('toast', type: 'warning', title: __('Les relances ne peuvent être envoyées qu\'en jour ouvré (lundi au vendredi).'));
+
+            return;
+        }
+
         $channel = filled($invoice->client?->phone)
             ? ReminderChannel::WhatsApp
             : ReminderChannel::Email;

@@ -12,6 +12,11 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    // Assure qu'on n'est jamais le week-end pour les tests d'envoi de relance.
+    $this->travelTo(now()->startOfWeek()->setHour(10));
+});
+
 function createSmeUserForCollection(): array
 {
     $user = User::factory()->create(['profile_type' => 'sme']);
