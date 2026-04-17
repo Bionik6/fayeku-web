@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
     Route::livewire('invoices', 'pages::pme.invoices.index')->name('pme.invoices.index');
     Route::get('invoices/{invoice}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
+    Route::livewire('invoices/{invoice}', 'pages::pme.invoices.show')->name('pme.invoices.show');
     Route::livewire('quotes/create', 'pages::pme.quotes.form')->name('pme.quotes.create');
     Route::livewire('quotes/{quote}/edit', 'pages::pme.quotes.form')->name('pme.quotes.edit');
     Route::livewire('quotes', 'pages::pme.quotes.index')->name('pme.quotes.index');
