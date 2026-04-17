@@ -37,7 +37,13 @@ class InvoiceFactory extends Factory
             'tax_amount' => $taxAmount,
             'total' => $subtotal + $taxAmount,
             'amount_paid' => 0,
+            'reminders_enabled' => true,
         ];
+    }
+
+    public function remindersDisabled(): static
+    {
+        return $this->state(['reminders_enabled' => false]);
     }
 
     public function forCompany(Company|array $company): static

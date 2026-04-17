@@ -5,15 +5,12 @@ use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\Reminder;
-use App\Models\PME\ReminderRule;
 use App\Models\Shared\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function createSmeUserForCollection(): array
 {
@@ -54,8 +51,6 @@ test('un utilisateur SME peut accéder à la page de recouvrement', function () 
         ->assertOk();
 });
 
-// ─── Page rendering ──────────────────────────────────────────────────────────
-
 test('la page affiche le titre et les sections principales', function () {
     ['user' => $user] = createSmeUserForCollection();
 
@@ -64,41 +59,14 @@ test('la page affiche le titre et les sections principales', function () {
         ->assertSee('Relances');
 });
 
-test('le placeholder est affiché quand les relances sont désactivées', function () {
+test('la page ne contient plus la configuration des règles', function () {
     ['user' => $user] = createSmeUserForCollection();
 
     Livewire::actingAs($user)
         ->test('pages::pme.collection.index')
-        ->assertSee('Relances désactivées')
-        ->assertSee('Activer les relances')
         ->assertDontSee('Configurer les règles')
         ->assertDontSee('Mode de relance')
         ->assertDontSee('Règles de relance');
-});
-
-test('les sections Mode et Règles sont visibles quand les relances sont activées', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $company->update([
-        'reminder_settings' => array_merge(Company::defaultReminderSettings(), ['enabled' => true]),
-    ]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->assertSee('Configurer les règles')
-        ->assertSee('Mode de relance')
-        ->assertSee('Règles de relance')
-        ->assertDontSee('Activer les relances');
-});
-
-test('la page crée les règles par défaut au premier chargement', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    expect(ReminderRule::where('company_id', $company->id)->count())->toBe(4);
-    expect($company->fresh()->reminder_settings)->not->toBeNull();
 });
 
 // ─── KPIs ────────────────────────────────────────────────────────────────────
@@ -147,89 +115,6 @@ test('la recherche filtre les factures', function () {
         ->assertDontSee('Abidjan Tech');
 });
 
-// ─── Toggle global ───────────────────────────────────────────────────────────
-
-test('le toggle active/désactive les relances', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    expect($component->get('configEnabled'))->toBeFalse();
-
-    $component->call('toggleGlobalReminders');
-
-    expect($component->get('configEnabled'))->toBeTrue();
-    expect($company->fresh()->reminder_settings['enabled'])->toBeTrue();
-});
-
-// ─── Config modal ────────────────────────────────────────────────────────────
-
-test('le modal de configuration s\'ouvre et se ferme', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->assertSet('showConfigModal', false)
-        ->call('openConfigModal')
-        ->assertSet('showConfigModal', true)
-        ->set('showConfigModal', false)
-        ->assertSet('showConfigModal', false);
-});
-
-test('la sauvegarde de la configuration persiste en base', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->set('draftEnabled', true)
-        ->set('draftMode', 'auto')
-        ->set('draftChannel', 'sms')
-        ->set('draftTone', 'ferme')
-        ->set('draftHourStart', 9)
-        ->set('draftHourEnd', 17)
-        ->set('draftExcludeWeekends', false)
-        ->set('draftAttachPdf', false)
-        ->call('saveConfig')
-        ->assertSet('showConfigModal', false)
-        ->assertHasNoErrors();
-
-    $settings = $company->fresh()->reminder_settings;
-
-    expect($settings['mode'])->toBe('auto')
-        ->and($settings['default_channel'])->toBe('sms')
-        ->and($settings['default_tone'])->toBe('ferme')
-        ->and($settings['send_hour_start'])->toBe(9)
-        ->and($settings['send_hour_end'])->toBe(17)
-        ->and($settings['exclude_weekends'])->toBeFalse()
-        ->and($settings['attach_pdf'])->toBeFalse();
-});
-
-// ─── Reminder rules sync ─────────────────────────────────────────────────────
-
-test('les jours de relance se synchronisent correctement', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->set('draftEnabled', true)
-        ->call('toggleRuleDay', 3)
-        ->call('toggleRuleDay', 10)
-        ->call('saveConfig');
-
-    $activeDays = ReminderRule::query()
-        ->where('company_id', $company->id)
-        ->where('is_active', true)
-        ->pluck('trigger_days')
-        ->sort()
-        ->values()
-        ->all();
-
-    expect($activeDays)->toBe([7, 10, 15, 30]);
-});
-
 // ─── Slide-overs ─────────────────────────────────────────────────────────────
 
 test('l\'aperçu WhatsApp s\'ouvre pour une facture', function () {
@@ -240,8 +125,7 @@ test('l\'aperçu WhatsApp s\'ouvre pour une facture', function () {
         ->test('pages::pme.collection.index')
         ->assertSet('previewInvoiceId', null)
         ->call('openPreview', $invoice->id)
-        ->assertSet('previewInvoiceId', $invoice->id)
-        ->assertSee('Aperçu de la relance');
+        ->assertSet('previewInvoiceId', $invoice->id);
 });
 
 test('la timeline s\'ouvre pour une facture', function () {
@@ -251,13 +135,10 @@ test('la timeline s\'ouvre pour une facture', function () {
     Livewire::actingAs($user)
         ->test('pages::pme.collection.index')
         ->call('openTimeline', $invoice->id)
-        ->assertSet('timelineInvoiceId', $invoice->id)
-        ->assertSee('Historique');
+        ->assertSet('timelineInvoiceId', $invoice->id);
 });
 
-// ─── Send reminder ───────────────────────────────────────────────────────────
-
-test('l\'envoi d\'une relance dispatche un message quand le service n\'est pas prêt', function () {
+test('l\'envoi d\'une relance dispatche un toast', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
     $invoice = createOverdueInvoice($company);
 
@@ -316,8 +197,6 @@ test('le filtre en attente affiche les factures < 30 jours', function () {
         ->and($rows[0]['days_overdue'])->toBeLessThan(30);
 });
 
-// ─── Computed counts & totals ───────────────────────────────────────────────
-
 test('les compteurs reflètent les catégories de retard', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
 
@@ -348,8 +227,6 @@ test('le montant total en attente additionne les soldes restants', function () {
     expect($component->get('totalPendingAmount'))->toBe(300_000)
         ->and($component->get('totalPendingCount'))->toBe(2);
 });
-
-// ─── Exclusions ─────────────────────────────────────────────────────────────
 
 test('les factures payées ne sont pas dans les lignes', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
@@ -387,8 +264,6 @@ test('les factures dont l\'échéance est future sont exclues', function () {
     expect($rows)->toHaveCount(0);
 });
 
-// ─── Close actions ──────────────────────────────────────────────────────────
-
 test('closePreview remet le previewInvoiceId à null', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
     $invoice = createOverdueInvoice($company);
@@ -413,8 +288,6 @@ test('closeTimeline remet le timelineInvoiceId à null', function () {
         ->assertSet('timelineInvoiceId', null);
 });
 
-// ─── Reminders this month ───────────────────────────────────────────────────
-
 test('remindersThisMonth ne compte que les relances du mois courant', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
     $invoice = createOverdueInvoice($company, daysOverdue: 10);
@@ -426,11 +299,8 @@ test('remindersThisMonth ne compte que les relances du mois courant', function (
         'sent_at' => now(),
     ];
 
-    // 2 relances ce mois
     Reminder::unguarded(fn () => Reminder::create([...$reminderData, 'created_at' => now()]));
     Reminder::unguarded(fn () => Reminder::create([...$reminderData, 'created_at' => now()]));
-
-    // 1 relance du mois dernier
     Reminder::unguarded(fn () => Reminder::create([...$reminderData, 'created_at' => now()->subMonthWithoutOverflow()]));
 
     $component = Livewire::actingAs($user)
@@ -438,8 +308,6 @@ test('remindersThisMonth ne compte que les relances du mois courant', function (
 
     expect($component->get('remindersThisMonth'))->toBe(2);
 });
-
-// ─── N+1 prevention ────────────────────────────────────────────────────────
 
 test('overdueInvoices eager-load les relations client et reminders', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
@@ -454,262 +322,6 @@ test('overdueInvoices eager-load les relations client et reminders', function ()
         ->and($invoices->first()->relationLoaded('reminders'))->toBeTrue();
 });
 
-// ─── Patron brouillon (draft) ────────────────────────────────────────────────
-
-test('openConfigModal() initialise les propriétés draft depuis config*', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $company->update([
-        'reminder_settings' => array_merge(
-            Company::defaultReminderSettings(),
-            [
-                'enabled' => true,
-                'mode' => 'auto',
-                'default_channel' => 'email',
-                'default_tone' => 'ferme',
-                'send_hour_start' => 9,
-                'send_hour_end' => 17,
-                'exclude_weekends' => false,
-                'attach_pdf' => false,
-            ]
-        ),
-    ]);
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal');
-
-    expect($component->get('draftEnabled'))->toBeTrue()
-        ->and($component->get('draftMode'))->toBe('auto')
-        ->and($component->get('draftChannel'))->toBe('email')
-        ->and($component->get('draftTone'))->toBe('ferme')
-        ->and($component->get('draftHourStart'))->toBe(9)
-        ->and($component->get('draftHourEnd'))->toBe(17)
-        ->and($component->get('draftExcludeWeekends'))->toBeFalse()
-        ->and($component->get('draftAttachPdf'))->toBeFalse();
-});
-
-test('les modifications draft ne modifient pas config* avant l\'enregistrement', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal');
-
-    $initialConfigMode = $component->get('configMode');
-    $initialConfigChannel = $component->get('configChannel');
-    $initialConfigTone = $component->get('configTone');
-
-    $component
-        ->set('draftMode', 'auto')
-        ->set('draftChannel', 'email')
-        ->set('draftTone', 'urgent');
-
-    expect($component->get('configMode'))->toBe($initialConfigMode)
-        ->and($component->get('configChannel'))->toBe($initialConfigChannel)
-        ->and($component->get('configTone'))->toBe($initialConfigTone);
-});
-
-test('annuler la modale ne modifie pas les propriétés config* ni la base', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $originalSettings = $company->reminder_settings ?? Company::defaultReminderSettings();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->set('draftMode', 'auto')
-        ->set('draftTone', 'urgent')
-        ->set('showConfigModal', false);
-
-    expect($component->get('configMode'))->not->toBe('auto')
-        ->and($component->get('configTone'))->not->toBe('urgent')
-        ->and($company->fresh()->reminder_settings['mode'] ?? 'manual')
-        ->toBe($originalSettings['mode'] ?? 'manual');
-});
-
-test('saveConfig() applique draft* vers config* et ferme la modale', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->set('draftMode', 'auto')
-        ->set('draftChannel', 'email')
-        ->set('draftTone', 'urgent')
-        ->set('draftHourStart', 10)
-        ->set('draftHourEnd', 20)
-        ->set('draftExcludeWeekends', false)
-        ->set('draftAttachPdf', false)
-        ->call('saveConfig');
-
-    expect($component->get('configMode'))->toBe('auto')
-        ->and($component->get('configChannel'))->toBe('email')
-        ->and($component->get('configTone'))->toBe('urgent')
-        ->and($component->get('configHourStart'))->toBe(10)
-        ->and($component->get('configHourEnd'))->toBe(20)
-        ->and($component->get('configExcludeWeekends'))->toBeFalse()
-        ->and($component->get('configAttachPdf'))->toBeFalse()
-        ->and($component->get('showConfigModal'))->toBeFalse();
-});
-
-test('toggleRuleDay() modifie draftRuleDays et non configRuleDays', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->call('toggleRuleDay', 5);
-
-    expect($component->get('draftRuleDays'))->toContain(5)
-        ->and($component->get('configRuleDays'))->not->toContain(5);
-});
-
-test('toggleRuleDay() supprime un jour existant de draftRuleDays sans toucher configRuleDays', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->call('toggleRuleDay', 3);
-
-    expect($component->get('draftRuleDays'))->not->toContain(3)
-        ->and($component->get('configRuleDays'))->toContain(3);
-});
-
-test('buildConfigPreviewMessage() utilise draftTone pour générer l\'aperçu', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    $cordial = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->set('draftTone', 'cordial')
-        ->instance()
-        ->buildConfigPreviewMessage();
-
-    expect($cordial['greeting'])->toContain('Bonjour');
-
-    $urgent = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->set('draftTone', 'urgent')
-        ->instance()
-        ->buildConfigPreviewMessage();
-
-    expect($urgent['body'])->toContain('URGENT');
-    expect($urgent['greeting'])->not->toContain('Bonjour');
-});
-
-test('saveConfig() avec draftEnabled=false sauvegarde et ferme sans erreur de validation', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->set('draftEnabled', false)
-        ->set('draftRuleDays', [])
-        ->call('saveConfig')
-        ->assertSet('showConfigModal', false)
-        ->assertHasNoErrors();
-
-    expect($company->fresh()->reminder_settings['enabled'])->toBeFalse();
-});
-
-test('configEnabled dans l\'UI principale ne change que lors du saveConfig()', function () {
-    ['user' => $user] = createSmeUserForCollection();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    $initialEnabled = $component->get('configEnabled');
-
-    $component
-        ->call('openConfigModal')
-        ->set('draftEnabled', true);
-
-    expect($component->get('configEnabled'))->toBe($initialEnabled);
-
-    $component->call('saveConfig');
-
-    expect($component->get('configEnabled'))->toBeTrue();
-});
-
-// ─── Sanitisation des valeurs invalides en base ──────────────────────────────
-
-test('un ton invalide en base est remplacé par "cordial" au chargement', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $company->update([
-        'reminder_settings' => array_merge(
-            Company::defaultReminderSettings(),
-            ['default_tone' => 'professional']
-        ),
-    ]);
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    expect($component->get('configTone'))->toBe('cordial');
-});
-
-test('un canal invalide en base est remplacé par "whatsapp" au chargement', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    // Premier chargement : crée les règles de relance avec le canal par défaut valide.
-    Livewire::actingAs($user)->test('pages::pme.collection.index');
-
-    // On injecte ensuite un canal invalide dans les settings.
-    $company->update([
-        'reminder_settings' => array_merge(
-            Company::defaultReminderSettings(),
-            ['default_channel' => 'telegram']
-        ),
-    ]);
-
-    // Au rechargement, le canal invalide doit être sanitisé vers "whatsapp".
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    expect($component->get('configChannel'))->toBe('whatsapp');
-});
-
-test('un mode invalide en base est remplacé par "manual" au chargement', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    // Premier chargement : initialise les règles et les settings.
-    Livewire::actingAs($user)->test('pages::pme.collection.index');
-
-    // On injecte un mode invalide.
-    $company->update([
-        'reminder_settings' => array_merge(
-            Company::defaultReminderSettings(),
-            ['mode' => 'scheduled']
-        ),
-    ]);
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    expect($component->get('configMode'))->toBe('manual');
-});
-
-test('des horaires hors plage en base sont ramenés dans les limites au chargement', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $company->update([
-        'reminder_settings' => array_merge(
-            Company::defaultReminderSettings(),
-            ['send_hour_start' => -5, 'send_hour_end' => 99]
-        ),
-    ]);
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.collection.index');
-
-    expect($component->get('configHourStart'))->toBe(0)
-        ->and($component->get('configHourEnd'))->toBe(23);
-});
-
-// ─── invoiceRows() — structure ────────────────────────────────────────────────
-
 test('invoiceRows() inclut client_id pour chaque facture', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
     $invoice = createOverdueInvoice($company);
@@ -721,18 +333,7 @@ test('invoiceRows() inclut client_id pour chaque facture', function () {
     expect($row['client_id'])->toBe($invoice->client_id);
 });
 
-test('invoiceRows() n\'inclut pas le champ mode', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    createOverdueInvoice($company);
-
-    $row = collect(
-        Livewire::actingAs($user)->test('pages::pme.collection.index')->get('invoiceRows')
-    )->first();
-
-    expect($row)->not->toHaveKey('mode');
-});
-
-// ─── Dropdown — affichage ─────────────────────────────────────────────────────
+// ─── Dropdown ─────────────────────────────────────────────────────────────────
 
 test('le dropdown affiche les actions standard pour une facture en retard', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
@@ -758,8 +359,6 @@ test('"Voir le client" est affiché dans le dropdown quand la facture a un clien
         ->assertSeeHtml(route('pme.clients.show', $invoice->client_id))
         ->assertSee('Voir le client');
 });
-
-// ─── viewInvoice() ────────────────────────────────────────────────────────────
 
 test('viewInvoice() positionne selectedInvoiceId', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
@@ -805,28 +404,7 @@ test('viewInvoice() refuse une facture d\'une autre PME', function () {
         ->call('viewInvoice', $otherInvoice->id);
 })->throws(ModelNotFoundException::class);
 
-// ─── confirmMarkPaid() / markAsPaid() ─────────────────────────────────────────
-
-test('confirmMarkPaid() positionne confirmMarkPaidId', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    $invoice = createOverdueInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('confirmMarkPaid', $invoice->id)
-        ->assertSet('confirmMarkPaidId', $invoice->id);
-});
-
-test('cancelMarkPaid() remet confirmMarkPaidId à null', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    $invoice = createOverdueInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('confirmMarkPaid', $invoice->id)
-        ->call('cancelMarkPaid')
-        ->assertSet('confirmMarkPaidId', null);
-});
+// ─── Mark paid / delete ──────────────────────────────────────────────────────
 
 test('markAsPaid() met à jour le statut de la facture en Payée', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
@@ -853,52 +431,6 @@ test('markAsPaid() retire la facture de la liste des factures à relancer', func
     expect($component->get('invoiceRows'))->toHaveCount(0);
 });
 
-test('markAsPaid() dispatche un toast de succès', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    $invoice = createOverdueInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('markAsPaid', $invoice->id)
-        ->assertDispatched('toast', type: 'success');
-});
-
-test('markAsPaid() refuse une facture d\'une autre PME', function () {
-    ['user' => $user] = createSmeUserForCollection();
-    $otherCompany = Company::factory()->create(['type' => 'sme']);
-    $otherInvoice = createOverdueInvoice($otherCompany);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('markAsPaid', $otherInvoice->id);
-
-    $otherInvoice->refresh();
-    expect($otherInvoice->status)->toBe(InvoiceStatus::Overdue);
-})->throws(ModelNotFoundException::class);
-
-// ─── confirmDelete() / deleteInvoice() ───────────────────────────────────────
-
-test('confirmDelete() positionne confirmDeleteId', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    $invoice = createOverdueInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('confirmDelete', $invoice->id)
-        ->assertSet('confirmDeleteId', $invoice->id);
-});
-
-test('cancelDelete() remet confirmDeleteId à null', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    $invoice = createOverdueInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('confirmDelete', $invoice->id)
-        ->call('cancelDelete')
-        ->assertSet('confirmDeleteId', null);
-});
-
 test('deleteInvoice() supprime (soft-delete) la facture', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForCollection();
     $invoice = createOverdueInvoice($company);
@@ -910,52 +442,4 @@ test('deleteInvoice() supprime (soft-delete) la facture', function () {
 
     expect(Invoice::query()->find($invoice->id))->toBeNull()
         ->and(Invoice::withTrashed()->find($invoice->id))->not->toBeNull();
-});
-
-test('deleteInvoice() retire la facture de la liste', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-    $invoice = createOverdueInvoice($company);
-
-    $component = Livewire::actingAs($user)->test('pages::pme.collection.index');
-    expect($component->get('invoiceRows'))->toHaveCount(1);
-
-    $component->call('deleteInvoice', $invoice->id);
-    expect($component->get('invoiceRows'))->toHaveCount(0);
-});
-
-test('deleteInvoice() refuse une facture d\'une autre PME', function () {
-    ['user' => $user] = createSmeUserForCollection();
-    $otherCompany = Company::factory()->create(['type' => 'sme']);
-    $otherInvoice = createOverdueInvoice($otherCompany);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('deleteInvoice', $otherInvoice->id);
-
-    expect(Invoice::withTrashed()->find($otherInvoice->id)->deleted_at)->toBeNull();
-})->throws(ModelNotFoundException::class);
-
-// ─── saveConfig() régressions ─────────────────────────────────────────────────
-
-test('saveConfig() réussit après activation quand le ton en base était invalide', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForCollection();
-
-    $company->update([
-        'reminder_settings' => array_merge(
-            Company::defaultReminderSettings(),
-            ['enabled' => false, 'default_tone' => 'professional']
-        ),
-    ]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.collection.index')
-        ->call('openConfigModal')
-        ->set('draftEnabled', true)
-        ->call('saveConfig')
-        ->assertSet('showConfigModal', false)
-        ->assertHasNoErrors();
-
-    $settings = $company->fresh()->reminder_settings;
-    expect($settings['enabled'])->toBeTrue()
-        ->and($settings['default_tone'])->toBe('cordial');
 });

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->text('address')->nullable();
             $table->string('tax_id')->nullable();
+            $table->string('dunning_strategy')->default('standard');
             $table->timestamps();
             $table->softDeletes();
 

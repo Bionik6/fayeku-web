@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PME\DunningStrategy;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
@@ -271,6 +272,7 @@ it('n\'affiche pas le marqueur de paiement quand la facture est impayée', funct
 
 it('affiche l\'état vide (et non le marqueur paiement) quand aucune relance et pas de paiement', function () {
     ['client' => $client] = makeCompanyAndClient();
+    $client->update(['dunning_strategy' => DunningStrategy::None]);
     $invoice = makeInvoiceForFeed($client, ['paid_at' => null, 'amount_paid' => 0]);
     $invoice->load('reminders'); // no reminders
 
@@ -303,6 +305,154 @@ it('ordonne les items : échéance → relances → paiement', function () {
 
     expect($posDueDate)->toBeLessThan($posReminder)
         ->and($posReminder)->toBeLessThan($posPayment);
+});
+
+// ─── Relances automatiques à venir ────────────────────────────────────────────
+
+it('affiche les relances à venir dérivées de la stratégie du client', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    // Standard = J+3, J+7, J+15, J+30. Due dans 1 jour → toutes à venir.
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->addDay()]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)
+        ->toContain('Relance prévue à J+3<')
+        ->toContain('Relance prévue à J+7<')
+        ->toContain('Relance prévue à J+15<')
+        ->toContain('Relance prévue à J+30<')
+        ->toContain('À venir')
+        ->toContain('opacity-80');
+});
+
+it('masque les offsets déjà envoyés dans les relances à venir', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->addDay()]);
+    // Une relance auto pour J+3 déjà envoyée.
+    makeReminderForFeed($invoice, [
+        'mode' => 'auto',
+        'day_offset' => 3,
+        'sent_at' => now()->subDay(),
+    ]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)
+        ->not->toContain('Relance prévue à J+3<')
+        ->toContain('Relance prévue à J+7<');
+});
+
+it('masque les relances à venir dont la date est passée', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    // Due il y a 10 jours → J+3 et J+7 passés, J+15 et J+30 à venir.
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->subDays(10)]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)
+        ->not->toContain('Relance prévue à J+3<')
+        ->not->toContain('Relance prévue à J+7<')
+        ->toContain('Relance prévue à J+15<')
+        ->toContain('Relance prévue à J+30<');
+});
+
+it('n\'affiche aucune relance à venir si reminders_enabled est false', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $invoice = makeInvoiceForFeed($client, [
+        'due_at' => now()->addDay(),
+        'reminders_enabled' => false,
+    ]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)
+        ->not->toContain('Relance prévue à J+')
+        ->not->toContain('À venir');
+});
+
+it('n\'affiche aucune relance à venir pour un client en stratégie None', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $client->update(['dunning_strategy' => DunningStrategy::None]);
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->addDay()]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)->not->toContain('Relance prévue à J+');
+});
+
+it('n\'affiche aucune relance à venir pour une facture payée', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $invoice = makeInvoiceForFeed($client, [
+        'due_at' => now()->addDay(),
+        'status' => InvoiceStatus::Paid->value,
+        'paid_at' => now(),
+        'amount_paid' => 300_000,
+    ]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)
+        ->not->toContain('Relance prévue à J+')
+        ->toContain('Paiement reçu');
+});
+
+it('respecte les offsets de la stratégie Soft', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $client->update(['dunning_strategy' => DunningStrategy::Soft]);
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->addDay()]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)
+        ->toContain('Relance prévue à J+7<')
+        ->toContain('Relance prévue à J+15<')
+        ->not->toContain('Relance prévue à J+3<')
+        ->not->toContain('Relance prévue à J+30<');
+});
+
+it('n\'affiche pas l\'état vide quand seules des relances à venir existent', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->addDay()]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    expect($html)->not->toContain('Aucune relance envoyée pour le moment.');
+});
+
+it('ordonne les items : échéance → relances envoyées → relances à venir', function () {
+    ['client' => $client] = makeCompanyAndClient();
+    $invoice = makeInvoiceForFeed($client, ['due_at' => now()->addDay()]);
+    makeReminderForFeed($invoice, [
+        'message_body' => 'Rappel envoyé',
+        'sent_at' => now()->subDay(),
+    ]);
+    $invoice->setRelation('client', $client->fresh());
+    $invoice->load('reminders');
+
+    $html = renderFeed(':invoice="$invoice"', compact('invoice'));
+
+    $posDueDate = strpos($html, 'Date d&#039;échéance');
+    $posSent = strpos($html, 'Rappel envoyé');
+    $posUpcoming = strpos($html, 'Relance prévue à J+');
+
+    expect($posDueDate)->toBeLessThan($posSent)
+        ->and($posSent)->toBeLessThan($posUpcoming);
 });
 
 it('affiche plusieurs relances en mode liste', function () {

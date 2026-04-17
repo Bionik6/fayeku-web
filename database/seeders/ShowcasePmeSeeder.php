@@ -13,7 +13,6 @@ use App\Models\PME\InvoiceLine;
 use App\Models\PME\Quote;
 use App\Models\PME\QuoteLine;
 use App\Models\PME\Reminder;
-use App\Models\PME\ReminderRule;
 use App\Models\Shared\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +31,6 @@ class ShowcasePmeSeeder extends Seeder
     {
         DB::transaction(function (): void {
             $this->createCompany();
-            $this->createReminderRules();
             $this->seedInvoices();
             $this->seedQuotes();
         });
@@ -74,16 +72,6 @@ class ShowcasePmeSeeder extends Seeder
             'ninea' => 'SN20260042',
             'rccm' => 'SN-DKR-2024-B-04200',
             'sector' => 'Services numériques',
-            'reminder_settings' => [
-                'enabled' => true,
-                'mode' => 'auto',
-                'default_channel' => 'whatsapp',
-                'default_tone' => 'professional',
-                'send_hour_start' => 8,
-                'send_hour_end' => 18,
-                'exclude_weekends' => true,
-                'attach_pdf' => true,
-            ],
         ]);
 
         $this->company->users()->attach($owner->id, ['role' => 'owner']);
@@ -101,26 +89,6 @@ class ShowcasePmeSeeder extends Seeder
             'cancelled_at' => null,
             'invited_by_firm_id' => null,
         ]);
-    }
-
-    private function createReminderRules(): void
-    {
-        $rules = [
-            ['name' => 'Relance J+3', 'trigger_days' => 3, 'channel' => ReminderChannel::WhatsApp],
-            ['name' => 'Relance J+7', 'trigger_days' => 7, 'channel' => ReminderChannel::Email],
-            ['name' => 'Relance J+15', 'trigger_days' => 15, 'channel' => ReminderChannel::WhatsApp],
-            ['name' => 'Relance J+30', 'trigger_days' => 30, 'channel' => ReminderChannel::Email],
-        ];
-
-        foreach ($rules as $rule) {
-            ReminderRule::query()->create([
-                'company_id' => $this->company->id,
-                'name' => $rule['name'],
-                'trigger_days' => $rule['trigger_days'],
-                'channel' => $rule['channel'],
-                'is_active' => true,
-            ]);
-        }
     }
 
     private function seedInvoices(): void

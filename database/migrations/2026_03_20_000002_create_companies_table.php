@@ -24,7 +24,6 @@ return new class extends Migration
             $table->string('sector')->nullable();
             $table->timestamp('setup_completed_at')->nullable();
             $table->string('logo_path')->nullable();
-            $table->json('reminder_settings')->nullable();
             $table->timestamps();
         });
     }

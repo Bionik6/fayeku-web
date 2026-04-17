@@ -5,6 +5,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use App\Enums\PME\DunningStrategy;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Services\PME\ClientService;
@@ -53,6 +54,10 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public string $previewChannel = 'whatsapp';
 
     public string $invoiceStatusFilter = 'all';
+
+    public bool $showDunningModal = false;
+
+    public string $draftDunningStrategy = 'standard';
 
     #[Url(as: 'focus')]
     public string $focus = '';
@@ -115,6 +120,35 @@ new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
         $this->showEditClientModal = false;
 
         $this->dispatch('toast', type: 'success', title: __('Les informations client ont été mises à jour.'));
+    }
+
+    public function openDunningModal(): void
+    {
+        abort_unless(auth()->user()->can('update', $this->client), 403);
+
+        $this->draftDunningStrategy = $this->client->dunning_strategy?->value ?? DunningStrategy::Standard->value;
+        $this->showDunningModal = true;
+    }
+
+    public function closeDunningModal(): void
+    {
+        $this->showDunningModal = false;
+    }
+
+    public function saveDunningStrategy(): void
+    {
+        abort_unless(auth()->user()->can('update', $this->client), 403);
+
+        $validated = $this->validate([
+            'draftDunningStrategy' => ['required', new \Illuminate\Validation\Rules\Enum(DunningStrategy::class)],
+        ]);
+
+        $this->client->update(['dunning_strategy' => $validated['draftDunningStrategy']]);
+        $this->client->refresh();
+        $this->detailCache = null;
+        $this->showDunningModal = false;
+
+        $this->dispatch('toast', type: 'success', title: __('Stratégie de relance mise à jour.'));
     }
 
 public function viewInvoice(string $id): void
@@ -183,9 +217,11 @@ public function viewInvoice(string $id): void
         );
 
         $this->previewInvoiceId = $invoiceId;
-        $this->previewTone = $this->company->getReminderSetting('default_tone', 'cordial');
-        $this->previewAttachPdf = (bool) $this->company->getReminderSetting('attach_pdf', true);
-        $this->previewChannel = $this->company->getReminderSetting('default_channel', 'whatsapp');
+        $this->previewTone = 'cordial';
+        $this->previewAttachPdf = true;
+        $this->previewChannel = filled($this->client->phone)
+            ? ReminderChannel::WhatsApp->value
+            : ReminderChannel::Email->value;
     }
 
     public function closePreview(): void
@@ -224,6 +260,12 @@ public function viewInvoice(string $id): void
         $invoice = Invoice::query()
             ->where('company_id', $this->client->company_id)
             ->findOrFail($invoiceId);
+
+        if (! $invoice->canReceiveReminder()) {
+            $this->dispatch('toast', type: 'warning', title: __('Cette facture ne peut plus être relancée.'));
+
+            return;
+        }
 
         try {
             $channel = ReminderChannel::from($this->previewChannel);
@@ -591,6 +633,33 @@ public function viewInvoice(string $id): void
                     <p class="mt-2 text-sm font-semibold text-ink">{{ $this->detail['contact']['address'] }}</p>
                 </div>
             </div>
+
+            @php $strategy = $this->client->dunning_strategy ?? \App\Enums\PME\DunningStrategy::Standard; @endphp
+            <div class="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Stratégie de relance') }}</h3>
+                        <p class="mt-2 text-xl font-semibold text-ink">{{ $strategy->label() }}</p>
+                        <p class="mt-1 text-sm text-slate-600">{{ $strategy->description() }}</p>
+                    </div>
+                    <button
+                        type="button"
+                        wire:click="openDunningModal"
+                        class="shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                    >
+                        {{ __('Modifier') }}
+                    </button>
+                </div>
+                <div class="mt-4 border-t border-primary/10 pt-4 text-sm text-slate-600">
+                    @if ($strategy === \App\Enums\PME\DunningStrategy::None)
+                        <flux:icon name="x-circle" class="mr-1 inline size-4 text-slate-400" />
+                        {{ __('Aucune relance automatique ne sera envoyée.') }}
+                    @else
+                        <flux:icon name="check-circle" class="mr-1 inline size-4 text-primary" />
+                        {{ __('Active sur toutes les factures impayées') }}
+                    @endif
+                </div>
+            </div>
         </article>
 
         <div class="grid gap-6">
@@ -914,6 +983,73 @@ public function viewInvoice(string $id): void
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    @if ($showDunningModal)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            wire:click.self="closeDunningModal"
+            @keydown.escape.window="$wire.closeDunningModal()"
+        >
+            <div class="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-start justify-between border-b border-slate-100 px-8 py-5">
+                    <div>
+                        <h2 class="text-lg font-semibold text-ink">{{ __('Stratégie de relance') }}</h2>
+                        <p class="mt-1 text-sm text-slate-600">{{ __('Choisissez comment Fayeku relance :name. Cette stratégie s\'applique à toutes ses factures impayées.', ['name' => $this->client->name]) }}</p>
+                    </div>
+                    <button
+                        type="button"
+                        wire:click="closeDunningModal"
+                        class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    >
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 px-8 py-6 md:grid-cols-2">
+                    @foreach (\App\Enums\PME\DunningStrategy::cases() as $option)
+                        @php $selected = $draftDunningStrategy === $option->value; @endphp
+                        <button
+                            type="button"
+                            wire:click="$set('draftDunningStrategy', '{{ $option->value }}')"
+                            @class([
+                                'rounded-2xl border-2 p-5 text-left transition',
+                                'border-primary bg-primary/5 ring-2 ring-primary/20' => $selected,
+                                'border-slate-200 hover:border-slate-300' => ! $selected,
+                            ])
+                        >
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="text-base font-semibold text-ink">{{ $option->label() }}</p>
+                                @if ($selected)
+                                    <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                                        <flux:icon name="check" class="size-4" />
+                                    </div>
+                                @endif
+                            </div>
+                            <p class="mt-2 text-sm text-slate-600">{{ $option->description() }}</p>
+                            <p class="mt-3 text-sm italic text-slate-500">{{ $option->hint() }}</p>
+                        </button>
+                    @endforeach
+                </div>
+
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-8 py-5">
+                    <button
+                        type="button"
+                        wire:click="closeDunningModal"
+                        class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                    >
+                        {{ __('Annuler') }}
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="saveDunningStrategy"
+                        class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                    >
+                        {{ __('Enregistrer') }}
+                    </button>
+                </div>
             </div>
         </div>
     @endif

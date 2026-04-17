@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
-use Livewire\Livewire;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
 use App\Enums\PME\InvoiceStatus;
 use App\Mail\PME\InvoiceMail;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\InvoiceLine;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -597,49 +597,28 @@ test('la page d\'édition charge le moyen de paiement existant', function () {
 
 // ─── Reminder schedule ──────────────────────────────────────────────────────
 
-test('les relances ont des valeurs par défaut', function () {
+test('remindersEnabled est à true par défaut', function () {
     ['user' => $user] = createSmeUser();
 
     $component = Livewire::actingAs($user)
         ->test('pages::pme.invoices.form');
 
-    expect($component->get('reminderSchedule'))->toBe(['-7', '-2', '0', '+7']);
+    expect($component->get('remindersEnabled'))->toBeTrue();
 });
 
-test('on peut activer une relance', function () {
+test('toggleReminders bascule la valeur', function () {
     ['user' => $user] = createSmeUser();
 
-    $component = Livewire::actingAs($user)
+    Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
-        ->call('toggleReminder', '+15');
-
-    expect($component->get('reminderSchedule'))->toContain('+15');
+        ->assertSet('remindersEnabled', true)
+        ->call('toggleReminders')
+        ->assertSet('remindersEnabled', false)
+        ->call('toggleReminders')
+        ->assertSet('remindersEnabled', true);
 });
 
-test('on peut désactiver une relance', function () {
-    ['user' => $user] = createSmeUser();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('toggleReminder', '-7');
-
-    expect($component->get('reminderSchedule'))->not->toContain('-7');
-});
-
-test('on peut désactiver toutes les relances', function () {
-    ['user' => $user] = createSmeUser();
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->call('toggleReminder', '-7')
-        ->call('toggleReminder', '-2')
-        ->call('toggleReminder', '0')
-        ->call('toggleReminder', '+7');
-
-    expect($component->get('reminderSchedule'))->toBeEmpty();
-});
-
-test('les relances sont sauvegardées avec la facture', function () {
+test('l\'état reminders_enabled est sauvegardé avec la facture', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
     $client = Client::factory()->create(['company_id' => $company->id]);
 
@@ -649,39 +628,23 @@ test('les relances sont sauvegardées avec la facture', function () {
         ->set('lines.0.description', 'Service')
         ->set('lines.0.quantity', 1)
         ->set('lines.0.unit_price', 10_000)
-        ->call('toggleReminder', '+15')
+        ->call('toggleReminders')
         ->call('saveDraft')
         ->assertHasNoErrors();
 
     $invoice = Invoice::query()->where('company_id', $company->id)->first();
 
-    expect($invoice->reminder_schedule)->toContain('+15')
-        ->and($invoice->reminder_schedule)->toContain('-7');
+    expect($invoice->reminders_enabled)->toBeFalse();
 });
 
-test('la page d\'édition charge les relances existantes', function () {
+test('la page d\'édition charge l\'état reminders_enabled existant', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
     $invoice = createDraftInvoice($company);
-    $invoice->update(['reminder_schedule' => ['-2', '0', '+30']]);
+    $invoice->update(['reminders_enabled' => false]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form', ['invoice' => $invoice])
-        ->assertSet('reminderSchedule', ['-2', '0', '+30']);
-});
-
-test('la validation refuse une valeur de relance invalide', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-    $client = Client::factory()->create(['company_id' => $company->id]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form')
-        ->set('clientId', $client->id)
-        ->set('lines.0.description', 'Service')
-        ->set('lines.0.quantity', 1)
-        ->set('lines.0.unit_price', 10_000)
-        ->set('reminderSchedule', ['+99'])
-        ->call('saveDraft')
-        ->assertHasErrors(['reminderSchedule.0']);
+        ->assertSet('remindersEnabled', false);
 });
 
 // ─── Cancel confirmation ────────────────────────────────────────────────────

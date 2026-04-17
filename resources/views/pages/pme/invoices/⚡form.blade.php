@@ -55,8 +55,7 @@ class extends Component {
 
     public string $paymentDetails = '';
 
-    /** @var array<int, string> */
-    public array $reminderSchedule = ['-7', '-2', '0', '+7'];
+    public bool $remindersEnabled = true;
 
     public string $dueDatePreset = '30';
 
@@ -128,12 +127,7 @@ class extends Component {
             $this->notes = $invoice->notes ?? '';
             $this->paymentMethod = $invoice->payment_method ?? '';
             $this->paymentDetails = $invoice->payment_details ?? '';
-            $this->reminderSchedule = $invoice->reminder_schedule ?? [
-                '-7',
-                '-2',
-                '0',
-                '+7'
-            ];
+            $this->remindersEnabled = (bool) $invoice->reminders_enabled;
             $this->dueDatePreset = 'custom';
 
             $firstLine = $invoice->lines->first();
@@ -407,18 +401,9 @@ class extends Component {
         $this->lines = array_values($this->lines);
     }
 
-    public function toggleReminder(string $value): void
+    public function toggleReminders(): void
     {
-        if (in_array($value, $this->reminderSchedule)) {
-            $this->reminderSchedule = array_values(array_filter($this->reminderSchedule, fn(string $v) => $v !== $value,));
-        } else {
-            $this->reminderSchedule[] = $value;
-        }
-    }
-
-    public function clearReminders(): void
-    {
-        $this->reminderSchedule = [];
+        $this->remindersEnabled = ! $this->remindersEnabled;
     }
 
     /**
@@ -586,8 +571,7 @@ class extends Component {
                 'in:wave,orange_money,cash,bank_transfer'
             ],
             'paymentDetails'      => ['nullable', 'string', 'max:1000'],
-            'reminderSchedule'    => ['nullable', 'array'],
-            'reminderSchedule.*'  => ['string', 'in:-7,-2,0,+7,+15,+30'],
+            'remindersEnabled'    => ['boolean'],
             'lines'               => ['required', 'array', 'min:1'],
             'lines.*.description' => ['required', 'string', 'max:500'],
             'lines.*.quantity'    => ['required', 'integer', 'min:1'],
@@ -628,7 +612,7 @@ class extends Component {
             'notes'             => $this->emptyToNull($this->notes),
             'payment_method'    => $this->emptyToNull($this->paymentMethod),
             'payment_details'   => $this->emptyToNull($this->paymentDetails),
-            'reminder_schedule' => $this->reminderSchedule,
+            'reminders_enabled' => $this->remindersEnabled,
         ];
     }
 
@@ -952,57 +936,65 @@ class extends Component {
             </section>
 
             {{-- Relances --}}
+            @php
+                $selectedClient = $this->selectedClient;
+                $clientStrategy = $selectedClient?->dunning_strategy;
+                $clientHasStrategy = $clientStrategy && $clientStrategy !== \App\Enums\PME\DunningStrategy::None;
+                $toggleActive = $clientHasStrategy && $remindersEnabled;
+            @endphp
             <section class="app-shell-panel p-6">
-                <div class="mb-1 flex items-center justify-between">
-                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Relances') }}</h3>
-                    @if (count($reminderSchedule) > 0)
-                        <button type="button" wire:click="clearReminders"
-                                class="text-sm font-medium text-slate-500 transition hover:text-rose-500">
-                            {{ __('Désactiver toutes') }}
-                        </button>
-                    @endif
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-teal">{{ __('Relances') }}</h3>
+                    <button
+                        type="button"
+                        wire:click="toggleReminders"
+                        @disabled(! $clientHasStrategy)
+                        class="relative flex h-7 w-12 items-center rounded-full transition disabled:opacity-40 disabled:cursor-not-allowed
+                            {{ $toggleActive ? 'bg-primary' : 'bg-slate-300' }}"
+                        aria-label="{{ __('Activer les relances') }}"
+                    >
+                        <span class="absolute size-5 rounded-full bg-white shadow transition-all
+                            {{ $toggleActive ? 'left-[1.4rem]' : 'left-1' }}"></span>
+                    </button>
                 </div>
-                <p class="mb-5 text-sm text-slate-500">{{ __('Configurez les relances automatiques envoyées au client autour de l\'échéance.') }}</p>
 
-                <div class="space-y-4">
-                    <div class="flex flex-wrap gap-2.5">
-                        @foreach ([
-                            ['-7', __('J-7')],
-                            ['-2', __('J-2')],
-                            ['0', __('Jour J')],
-                            ['+7', __('J+7')],
-                            ['+15', __('J+15')],
-                            ['+30', __('J+30')],
-                        ] as [$val, $label])
-                            <button
-                                    type="button"
-                                    wire:click="toggleReminder('{{ $val }}')"
-                                    class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ in_array($val, $reminderSchedule) ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:border-primary/30 hover:bg-slate-50' }}"
-                            >
-                                {{ $label }}
-                            </button>
-                        @endforeach
-                    </div>
-
-                    @if (count($reminderSchedule) > 0)
-                        <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                            <svg class="mr-1.5 inline size-4 text-teal" fill="none"
-                                 stroke="currentColor" stroke-width="1.5"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                            </svg>
-                            {{ __(':count relance(s) configurée(s) autour de l\'échéance.', ['count' => count($reminderSchedule)]) }}
+                <div class="mt-4">
+                    @if (! $selectedClient)
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                            {{ __('Sélectionnez un client pour voir sa stratégie de relance.') }}
                         </div>
+                    @elseif (! $clientHasStrategy)
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                            <p class="font-semibold text-ink">{{ __('Aucune relance ne sera envoyée') }}</p>
+                            <p class="mt-1">{{ __('Ce client est configuré en « Aucune relance ». Modifiez sa stratégie pour activer les relances automatiques.') }}</p>
+                        </div>
+                    @elseif ($remindersEnabled)
+                        <div class="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-4">
+                            <div class="flex items-start gap-3">
+                                <div class="flex size-6 items-center justify-center rounded-full bg-primary text-white">
+                                    <flux:icon name="check" class="size-4" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-ink">{{ __('Stratégie :label', ['label' => $clientStrategy->label()]) }}</p>
+                                    <p class="mt-0.5 text-sm text-slate-600">{{ $clientStrategy->description() }} · {{ __('selon la config de :name', ['name' => $selectedClient->name]) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 text-sm text-slate-500">
+                            {{ __('Désactivez ci-dessus pour cette facture uniquement.') }}
+                            <a href="{{ route('pme.clients.show', $selectedClient->id) }}" wire:navigate class="font-semibold text-primary">{{ __('Modifier la stratégie du client') }} →</a>
+                        </p>
                     @else
-                        <div class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                            <svg class="mr-1.5 inline size-4" fill="none"
-                                 stroke="currentColor" stroke-width="1.5"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-                            </svg>
-                            {{ __('Aucune relance configurée. Le client ne sera pas relancé automatiquement.') }}
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <div class="flex items-start gap-3">
+                                <div class="flex size-6 items-center justify-center rounded-full bg-slate-400 text-white">
+                                    <flux:icon name="x-mark" class="size-4" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-ink">{{ __('Aucune relance ne sera envoyée') }}</p>
+                                    <p class="mt-0.5 text-sm text-slate-600">{{ __('Uniquement pour cette facture. La stratégie du client reste inchangée.') }}</p>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -1106,10 +1098,10 @@ class extends Component {
                         @endif
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-slate-600">{{ __('Relances Fayeku') }}</span>
-                            @if (count($reminderSchedule) > 0)
+                            @if ($remindersEnabled && $this->selectedClient?->dunning_strategy && $this->selectedClient->dunning_strategy !== \App\Enums\PME\DunningStrategy::None)
                                 <span class="inline-flex items-center gap-1.5 text-sm font-medium text-teal">
                                     <span class="size-1.5 rounded-full bg-teal"></span>
-                                    {{ __(':count activée(s)', ['count' => count($reminderSchedule)]) }}
+                                    {{ $this->selectedClient->dunning_strategy->label() }}
                                 </span>
                             @else
                                 <span class="text-sm font-medium text-slate-500">{{ __('Désactivées') }}</span>

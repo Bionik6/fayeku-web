@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            DunningTemplateSeeder::class,
             DemoAccountsSeeder::class,
             DashboardDemoSeeder::class,
             PmeDashboardSeeder::class,

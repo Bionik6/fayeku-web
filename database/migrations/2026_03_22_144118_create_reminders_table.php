@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('invoice_id');
             $table->string('channel')->nullable();
             $table->string('mode')->default('manual');
+            $table->integer('day_offset')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->text('message_body')->nullable();
             $table->string('recipient_phone')->nullable();

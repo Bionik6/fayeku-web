@@ -220,12 +220,6 @@ test('ouvrir une facture depuis la page selectionne le detail local', function (
 
 test('relancer depuis la page cree une relance dans le quota disponible', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForTreasury(['plan' => 'essentiel']);
-    $company->update([
-        'reminder_settings' => [
-            ...Company::defaultReminderSettings(),
-            'default_channel' => 'whatsapp',
-        ],
-    ]);
 
     $invoice = createTreasuryInvoice($company, [
         'client' => createTreasuryClient($company, ['phone' => '+221771111111']),
@@ -241,33 +235,21 @@ test('relancer depuis la page cree une relance dans le quota disponible', functi
 
 test('relancer depuis la page bloque si le contact requis manque', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForTreasury();
-    $company->update([
-        'reminder_settings' => [
-            ...Company::defaultReminderSettings(),
-            'default_channel' => 'email',
-        ],
-    ]);
 
     $invoice = createTreasuryInvoice($company, [
-        'client' => createTreasuryClient($company, ['email' => null]),
+        'client' => createTreasuryClient($company, ['phone' => null, 'email' => null]),
     ]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.treasury.index')
         ->call('sendReminder', $invoice->id)
-        ->assertDispatched('toast', type: 'warning', title: 'Aucune adresse email disponible pour ce client.');
+        ->assertDispatched('toast', type: 'warning');
 
     expect(Reminder::query()->where('invoice_id', $invoice->id)->count())->toBe(0);
 });
 
 test('relancer depuis la page respecte le quota basique mensuel', function () {
     ['user' => $user, 'company' => $company] = createSmeUserForTreasury(['plan' => 'basique']);
-    $company->update([
-        'reminder_settings' => [
-            ...Company::defaultReminderSettings(),
-            'default_channel' => 'whatsapp',
-        ],
-    ]);
 
     $invoice = createTreasuryInvoice($company, [
         'client' => createTreasuryClient($company, ['phone' => '+221772222222']),

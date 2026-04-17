@@ -2,13 +2,13 @@
 
 namespace App\Services\PME;
 
+use App\Enums\PME\InvoiceStatus;
+use App\Events\PME\InvoiceCreated;
+use App\Models\Auth\Company;
+use App\Models\PME\Invoice;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Models\Auth\Company;
-use App\Enums\PME\InvoiceStatus;
-use App\Events\PME\InvoiceCreated;
-use App\Models\PME\Invoice;
 
 class InvoiceService
 {
@@ -133,7 +133,7 @@ class InvoiceService
                 'notes' => $data['notes'] ?? null,
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_details' => $data['payment_details'] ?? null,
-                'reminder_schedule' => $data['reminder_schedule'] ?? null,
+                'reminders_enabled' => $data['reminders_enabled'] ?? true,
             ]);
 
             $this->createLines($invoice, $lines, $taxRate);
@@ -172,7 +172,7 @@ class InvoiceService
                 'notes' => $data['notes'] ?? null,
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_details' => $data['payment_details'] ?? null,
-                'reminder_schedule' => $data['reminder_schedule'] ?? null,
+                'reminders_enabled' => $data['reminders_enabled'] ?? $invoice->reminders_enabled,
             ]);
 
             $invoice->lines()->delete();

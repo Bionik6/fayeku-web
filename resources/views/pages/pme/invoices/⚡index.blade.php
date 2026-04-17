@@ -135,14 +135,17 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
     {
         abort_unless($this->company, 403);
 
-        Invoice::query()
+        $invoice = Invoice::query()
+            ->with('client')
             ->where('company_id', $this->company->id)
             ->findOrFail($invoiceId);
 
         $this->previewInvoiceId = $invoiceId;
-        $this->previewTone = $this->company->getReminderSetting('default_tone', 'cordial');
-        $this->previewAttachPdf = (bool) $this->company->getReminderSetting('attach_pdf', true);
-        $this->previewChannel = $this->company->getReminderSetting('default_channel', 'whatsapp');
+        $this->previewTone = 'cordial';
+        $this->previewAttachPdf = true;
+        $this->previewChannel = filled($invoice->client?->phone)
+            ? \App\Enums\PME\ReminderChannel::WhatsApp->value
+            : \App\Enums\PME\ReminderChannel::Email->value;
         $this->selectedInvoiceId = null;
         $this->timelineInvoiceId = null;
         unset($this->previewInvoice);
@@ -312,6 +315,12 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         $invoice = Invoice::query()
             ->where('company_id', $this->company->id)
             ->findOrFail($invoiceId);
+
+        if (! $invoice->canReceiveReminder()) {
+            $this->dispatch('toast', type: 'warning', title: __('Cette facture ne peut plus être relancée.'));
+
+            return;
+        }
 
         try {
             $channel = ReminderChannel::from($this->previewChannel);

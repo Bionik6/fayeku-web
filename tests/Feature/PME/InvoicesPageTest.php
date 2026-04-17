@@ -1,15 +1,15 @@
 <?php
 
+use App\Enums\PME\InvoiceStatus;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Models\PME\Invoice;
+use App\Models\Shared\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Enums\PME\InvoiceStatus;
-use App\Models\PME\Invoice;
-use App\Models\Shared\User;
 
 uses(RefreshDatabase::class);
 
@@ -872,30 +872,10 @@ test('openPreview() positionne previewInvoiceId', function () {
         ->assertSet('previewInvoiceId', $invoice->id);
 });
 
-test('openPreview() initialise le canal et le ton depuis les paramètres de la PME', function () {
+test('openPreview() utilise WhatsApp quand le client a un téléphone', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
-
-    $company->update([
-        'reminder_settings' => [
-            'default_channel' => 'email',
-            'default_tone' => 'ferme',
-            'attach_pdf' => false,
-        ],
-    ]);
-
-    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('openPreview', $invoice->id)
-        ->assertSet('previewChannel', 'email')
-        ->assertSet('previewTone', 'ferme')
-        ->assertSet('previewAttachPdf', false);
-});
-
-test('openPreview() utilise whatsapp/cordial/true quand aucun réglage n\'est configuré', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221771112233', 'email' => 'c@example.com']);
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0, 'client_id' => $client->id]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
@@ -903,6 +883,17 @@ test('openPreview() utilise whatsapp/cordial/true quand aucun réglage n\'est co
         ->assertSet('previewChannel', 'whatsapp')
         ->assertSet('previewTone', 'cordial')
         ->assertSet('previewAttachPdf', true);
+});
+
+test('openPreview() fallback sur email quand le client n\'a pas de téléphone', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => null, 'email' => 'c@example.com']);
+    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0, 'client_id' => $client->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->call('openPreview', $invoice->id)
+        ->assertSet('previewChannel', 'email');
 });
 
 test('openPreview() ferme la modale de détail et la timeline ouverts', function () {

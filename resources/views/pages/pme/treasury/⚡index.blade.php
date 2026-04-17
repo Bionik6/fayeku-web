@@ -58,13 +58,15 @@ new #[Title('Trésorerie')] #[Layout('layouts::pme')] class extends Component
             ->where('company_id', $this->company->id)
             ->findOrFail($invoiceId);
 
-        try {
-            $channel = ReminderChannel::from(
-                $this->company->getReminderSetting('default_channel', 'whatsapp')
-            );
-        } catch (ValueError) {
-            $channel = ReminderChannel::WhatsApp;
+        if (! $invoice->canReceiveReminder()) {
+            $this->dispatch('toast', type: 'warning', title: __('Cette facture ne peut plus être relancée.'));
+
+            return;
         }
+
+        $channel = filled($invoice->client?->phone)
+            ? ReminderChannel::WhatsApp
+            : ReminderChannel::Email;
 
         if (! $this->hasRecipientForChannel($invoice, $channel)) {
             $this->dispatch('toast', type: 'warning', title: $this->missingRecipientMessage($channel));

@@ -6,6 +6,7 @@
 ])
 
 <?php
+use App\Enums\PME\DunningStrategy;
 use App\Enums\PME\ReminderChannel;
 
 /** @var \App\Models\PME\Invoice|null $invoice */
@@ -22,11 +23,47 @@ foreach ($items as $reminder) {
     $feedItems[] = ['type' => 'reminder', 'reminder' => $reminder];
 }
 
+// Upcoming automatic reminders, derived from the client's dunning strategy.
+if (
+    $invoice
+    && ! $invoice->paid_at
+    && (bool) ($invoice->reminders_enabled ?? true)
+    && $invoice->due_at
+) {
+    $strategy = $invoice->client?->dunning_strategy;
+
+    if ($strategy instanceof DunningStrategy && $strategy !== DunningStrategy::None) {
+        $alreadySent = $items
+            ->whereNotNull('day_offset')
+            ->pluck('day_offset')
+            ->map(fn ($o) => (int) $o)
+            ->all();
+
+        foreach ($strategy->offsets() as $offset) {
+            if (in_array($offset, $alreadySent, true)) {
+                continue;
+            }
+
+            $scheduledAt = $invoice->due_at->copy()->addDays($offset);
+
+            if ($scheduledAt->isPast()) {
+                continue;
+            }
+
+            $feedItems[] = [
+                'type' => 'upcoming',
+                'offset' => $offset,
+                'scheduled_at' => $scheduledAt,
+            ];
+        }
+    }
+}
+
 if ($invoice?->paid_at) {
     $feedItems[] = ['type' => 'payment'];
 }
 
-if ($items->isEmpty() && ! $invoice?->paid_at) {
+if ($items->isEmpty() && ! $invoice?->paid_at && ! collect($feedItems)->contains(fn ($i) => $i['type'] === 'upcoming')) {
     $feedItems[] = ['type' => 'empty'];
 }
 ?>
@@ -115,6 +152,32 @@ if ($items->isEmpty() && ! $invoice?->paid_at) {
                                 @if ($reminder->message_body)
                                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $reminder->message_body }}</p>
                                 @endif
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+            {{-- ── Upcoming (scheduled) reminder ──────────── --}}
+            @elseif ($item['type'] === 'upcoming')
+                <li wire:key="rf-up-{{ $item['offset'] }}">
+                    <div @class(['relative opacity-80', 'pb-6' => ! $isLast])>
+                        @if (! $isLast)
+                            <span aria-hidden="true" class="absolute top-4 left-4 -ml-px h-full w-px border-l border-dashed border-slate-300"></span>
+                        @endif
+                        <div class="relative flex items-start gap-3">
+                            <div class="flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white ring-4 ring-white">
+                                <flux:icon name="clock" class="size-4 text-slate-400" />
+                            </div>
+                            <div class="min-w-0 flex-1 pt-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-500">{{ __('Relance prévue à J+:offset', ['offset' => $item['offset']]) }}</p>
+                                        <p class="mt-0.5 text-xs text-slate-400">{{ format_date($item['scheduled_at']) }}</p>
+                                    </div>
+                                    <span class="mt-0.5 shrink-0 inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 ring-1 ring-inset ring-slate-200">
+                                        {{ __('À venir') }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

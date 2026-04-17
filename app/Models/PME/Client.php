@@ -2,16 +2,15 @@
 
 namespace App\Models\PME;
 
+use App\Enums\PME\DunningStrategy;
+use App\Models\Auth\Company;
+use App\Traits\Shared\HasUlid;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\Company;
-use App\Models\PME\Invoice;
-use App\Models\PME\Quote;
-use App\Traits\Shared\HasUlid;
 
 class Client extends Model
 {
@@ -23,7 +22,11 @@ class Client extends Model
     }
 
     protected $fillable = [
-        'company_id', 'name', 'phone', 'email', 'address', 'tax_id',
+        'company_id', 'name', 'phone', 'email', 'address', 'tax_id', 'dunning_strategy',
+    ];
+
+    protected $casts = [
+        'dunning_strategy' => DunningStrategy::class,
     ];
 
     public function company(): BelongsTo

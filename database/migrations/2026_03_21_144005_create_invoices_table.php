@@ -37,7 +37,7 @@ return new class extends Migration
             $table->text('payment_instructions')->nullable();
             $table->string('payment_method')->nullable();
             $table->string('payment_details')->nullable();
-            $table->json('reminder_schedule')->nullable();
+            $table->boolean('reminders_enabled')->default(true);
             $table->string('certification_authority')->nullable();
             $table->jsonb('certification_data')->nullable();
             $table->timestamps();

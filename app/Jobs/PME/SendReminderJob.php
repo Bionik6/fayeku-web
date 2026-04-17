@@ -22,10 +22,19 @@ class SendReminderJob implements ShouldQueue
         public readonly Company $company,
         public readonly ReminderChannel $channel,
         public readonly ReminderMode $mode = ReminderMode::Manual,
+        public readonly ?string $messageBody = null,
+        public readonly ?int $dayOffset = null,
     ) {}
 
     public function handle(ReminderService $service): void
     {
-        $service->send($this->invoice, $this->company, $this->channel, mode: $this->mode);
+        $service->send(
+            $this->invoice,
+            $this->company,
+            $this->channel,
+            $this->messageBody,
+            $this->mode,
+            $this->dayOffset,
+        );
     }
 }

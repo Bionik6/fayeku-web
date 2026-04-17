@@ -2,6 +2,8 @@
 
 namespace App\Models\Auth;
 
+use App\Models\Shared\User;
+use App\Traits\Shared\HasUlid;
 use Database\Factories\CompanyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,10 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-use App\Enums\PME\ReminderMode;
-use App\Models\PME\ReminderRule;
-use App\Models\Shared\User;
-use App\Traits\Shared\HasUlid;
 
 class Company extends Model
 {
@@ -31,7 +29,6 @@ class Company extends Model
         'ninea',
         'rccm',
         'logo_path',
-        'reminder_settings',
         'sector',
         'setup_completed_at',
     ];
@@ -52,7 +49,6 @@ class Company extends Model
     }
 
     protected $casts = [
-        'reminder_settings' => 'array',
         'setup_completed_at' => 'datetime',
     ];
 
@@ -85,44 +81,8 @@ class Company extends Model
             ->whereNull('ended_at');
     }
 
-    public function reminderRules(): HasMany
-    {
-        return $this->hasMany(ReminderRule::class);
-    }
-
     public function isSetupComplete(): bool
     {
         return $this->setup_completed_at !== null;
-    }
-
-    public function isReminderEnabled(): bool
-    {
-        return (bool) ($this->reminder_settings['enabled'] ?? false);
-    }
-
-    public function getReminderMode(): ReminderMode
-    {
-        $mode = $this->reminder_settings['mode'] ?? 'manual';
-
-        return ReminderMode::from($mode);
-    }
-
-    public function getReminderSetting(string $key, mixed $default = null): mixed
-    {
-        return $this->reminder_settings[$key] ?? $default;
-    }
-
-    public static function defaultReminderSettings(): array
-    {
-        return [
-            'enabled' => false,
-            'mode' => 'manual',
-            'default_channel' => 'whatsapp',
-            'default_tone' => 'cordial',
-            'send_hour_start' => 8,
-            'send_hour_end' => 18,
-            'exclude_weekends' => true,
-            'attach_pdf' => true,
-        ];
     }
 }

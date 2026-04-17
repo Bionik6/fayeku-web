@@ -2,26 +2,35 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\PME\DunningStrategy;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\ReminderChannel;
 use App\Enums\PME\ReminderMode;
 use App\Exceptions\Shared\QuotaExceededException;
 use App\Jobs\PME\SendReminderJob;
 use App\Models\Auth\Company;
+use App\Models\PME\DunningTemplate;
 use App\Models\PME\Invoice;
-use App\Models\PME\ReminderRule;
+use App\Services\PME\DunningTemplateRenderer;
 use App\Services\Shared\QuotaService;
+use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ProcessAutoRemindersCommand extends Command
 {
     protected $signature = 'reminders:process-auto';
 
-    protected $description = 'Dispatch automatic reminders for overdue invoices based on company rules';
+    protected $description = 'Dispatch automatic reminders for overdue invoices based on each client\'s dunning strategy';
+
+    private const SEND_HOUR_START = 8;
+
+    private const SEND_HOUR_END = 18;
 
     public function __construct(
         private readonly QuotaService $quotaService,
+        private readonly DunningTemplateRenderer $renderer,
     ) {
         parent::__construct();
     }
@@ -30,27 +39,32 @@ class ProcessAutoRemindersCommand extends Command
     {
         Log::info('[AutoReminders] Démarrage du traitement des relances automatiques.');
 
-        $companies = Company::query()
-            ->where('reminder_settings->enabled', true)
-            ->where('reminder_settings->mode', 'auto')
-            ->with(['reminderRules' => fn ($q) => $q->where('is_active', true)])
-            ->get();
+        if (! $this->isWithinSendWindow()) {
+            Log::info('[AutoReminders] Hors fenêtre d\'envoi (8h–18h hors week-ends), fin.');
+            $this->info('Outside send window.');
 
-        Log::info("[AutoReminders] {$companies->count()} company(s) en mode auto trouvée(s).");
+            return self::SUCCESS;
+        }
 
+        $templates = DunningTemplate::query()
+            ->where('active', true)
+            ->get()
+            ->keyBy('day_offset');
+
+        if ($templates->isEmpty()) {
+            Log::warning('[AutoReminders] Aucun template actif en base, rien à dispatcher.');
+
+            return self::SUCCESS;
+        }
+
+        $today = now()->startOfDay();
         $dispatched = 0;
 
-        foreach ($companies as $company) {
-            if (! $this->isWithinSendWindow($company)) {
-                Log::debug("[AutoReminders] {$company->name} — hors fenêtre d'envoi, ignorée.");
-
-                continue;
+        Company::query()->chunk(50, function ($companies) use (&$dispatched, $templates, $today) {
+            foreach ($companies as $company) {
+                $dispatched += $this->processCompany($company, $templates, $today);
             }
-
-            foreach ($company->reminderRules as $rule) {
-                $dispatched += $this->processRule($company, $rule);
-            }
-        }
+        });
 
         Log::info("[AutoReminders] Terminé — {$dispatched} relance(s) dispatché(es).");
         $this->info("Dispatched {$dispatched} automatic reminder(s).");
@@ -58,66 +72,105 @@ class ProcessAutoRemindersCommand extends Command
         return self::SUCCESS;
     }
 
-    private function processRule(Company $company, ReminderRule $rule): int
+    /**
+     * @param  Collection<int, DunningTemplate>  $templates
+     */
+    private function processCompany(Company $company, $templates, CarbonInterface $today): int
     {
-        $targetDate = now()->subDays($rule->trigger_days)->toDateString();
-
         $invoices = Invoice::query()
             ->where('company_id', $company->id)
+            ->where('reminders_enabled', true)
             ->whereIn('status', [
                 InvoiceStatus::Sent,
                 InvoiceStatus::Overdue,
                 InvoiceStatus::PartiallyPaid,
             ])
             ->whereNotNull('due_at')
-            ->whereDate('due_at', '<=', $targetDate)
-            ->whereDoesntHave('reminders', fn ($q) => $q
-                ->where('channel', $rule->channel)
-                ->where('mode', ReminderMode::Auto)
-                ->whereDate('sent_at', '>=', $targetDate)
-            )
-            ->with('client')
+            ->whereHas('client', fn ($q) => $q->where('dunning_strategy', '!=', DunningStrategy::None->value))
+            ->with(['client', 'reminders' => fn ($q) => $q->where('mode', ReminderMode::Auto)])
             ->get();
 
         $count = 0;
 
         foreach ($invoices as $invoice) {
-            if (! $this->clientHasContact($invoice, $rule->channel)) {
+            /** @var DunningStrategy $strategy */
+            $strategy = $invoice->client->dunning_strategy;
+            $daysPastDue = $invoice->due_at->startOfDay()->diffInDays($today, false);
+
+            if ($daysPastDue < 0) {
                 continue;
             }
 
-            try {
-                $this->quotaService->authorize($company, 'reminders');
-                $this->quotaService->consume($company, 'reminders');
-            } catch (QuotaExceededException) {
-                break;
-            }
+            $alreadySent = $invoice->reminders
+                ->whereNotNull('day_offset')
+                ->pluck('day_offset')
+                ->all();
 
-            SendReminderJob::dispatch($invoice, $company, $rule->channel, ReminderMode::Auto);
-            $count++;
+            foreach ($strategy->offsets() as $offset) {
+                if ($offset > $daysPastDue) {
+                    continue;
+                }
+
+                if (in_array($offset, $alreadySent, true)) {
+                    continue;
+                }
+
+                $template = $templates->get($offset);
+
+                if (! $template) {
+                    Log::debug("[AutoReminders] Template manquant pour day_offset={$offset}, ignoré.");
+
+                    continue;
+                }
+
+                $channel = $this->pickChannel($invoice);
+
+                if ($channel === null) {
+                    Log::debug("[AutoReminders] Facture {$invoice->reference} : client sans téléphone ni email, ignoré.");
+
+                    continue;
+                }
+
+                try {
+                    $this->quotaService->authorize($company, 'reminders');
+                    $this->quotaService->consume($company, 'reminders');
+                } catch (QuotaExceededException) {
+                    Log::warning("[AutoReminders] Quota dépassé pour company {$company->id}, arrêt.");
+
+                    return $count;
+                }
+
+                $body = $this->renderer->render($template, $invoice);
+
+                SendReminderJob::dispatch($invoice, $company, $channel, ReminderMode::Auto, $body, $offset);
+                $count++;
+            }
         }
 
         return $count;
     }
 
-    private function isWithinSendWindow(Company $company): bool
+    private function pickChannel(Invoice $invoice): ?ReminderChannel
+    {
+        if (filled($invoice->client?->phone)) {
+            return ReminderChannel::WhatsApp;
+        }
+
+        if (filled($invoice->client?->email)) {
+            return ReminderChannel::Email;
+        }
+
+        return null;
+    }
+
+    private function isWithinSendWindow(): bool
     {
         $now = now();
-        $start = (int) $company->getReminderSetting('send_hour_start', 8);
-        $end = (int) $company->getReminderSetting('send_hour_end', 18);
 
-        if ($company->getReminderSetting('exclude_weekends', true) && $now->isWeekend()) {
+        if ($now->isWeekend()) {
             return false;
         }
 
-        return $now->hour >= $start && $now->hour < $end;
-    }
-
-    private function clientHasContact(Invoice $invoice, ReminderChannel $channel): bool
-    {
-        return match ($channel) {
-            ReminderChannel::Email => filled($invoice->client?->email),
-            default => filled($invoice->client?->phone),
-        };
+        return $now->hour >= self::SEND_HOUR_START && $now->hour < self::SEND_HOUR_END;
     }
 }

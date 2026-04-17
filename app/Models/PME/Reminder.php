@@ -14,7 +14,7 @@ class Reminder extends Model
     use HasUlid, SoftDeletes;
 
     protected $fillable = [
-        'invoice_id', 'channel', 'mode', 'sent_at',
+        'invoice_id', 'channel', 'mode', 'day_offset', 'sent_at',
         'message_body', 'recipient_phone', 'recipient_email',
     ];
 
@@ -22,6 +22,7 @@ class Reminder extends Model
         'sent_at' => 'datetime',
         'channel' => ReminderChannel::class,
         'mode' => ReminderMode::class,
+        'day_offset' => 'integer',
     ];
 
     public function invoice(): BelongsTo
