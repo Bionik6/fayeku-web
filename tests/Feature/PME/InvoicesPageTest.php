@@ -659,23 +659,21 @@ test('les filtres statut restent visibles quand une période spécifique est cho
         ->assertSeeHtml('wire:click="setStatusFilter(\'paid\')"');
 });
 
-test('une ligne facture ouvre la modale de détail', function () {
+test('une ligne facture pointe vers la page détail via wire:navigate', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     $invoice = makeInvoice($company, [
-        'reference' => 'FAC-MODAL',
+        'reference' => 'FAC-NAV',
         'status' => InvoiceStatus::Sent->value,
         'amount_paid' => 0,
     ]);
 
-    Livewire::actingAs($user)
+    $html = (string) Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->call('viewInvoice', $invoice->id)
-        ->assertSet('selectedInvoiceId', $invoice->id)
-        ->assertSee('FAC-MODAL')
-        ->assertSee('Détail des prestations')
-        ->call('closeInvoice')
-        ->assertSet('selectedInvoiceId', null);
+        ->assertOk()
+        ->html();
+
+    expect($html)->toContain(route('pme.invoices.show', $invoice->id));
 });
 
 test('le menu Actions affiche un lien vers la page d\'édition pour les factures modifiables', function () {
@@ -770,7 +768,7 @@ test('les montants XOF sont affichés en FCFA dans la liste des factures', funct
         ->assertSeeHtml('814 000');
 });
 
-test('le modal de détail affiche les montants EUR correctement', function () {
+test('la page détail affiche les montants EUR correctement', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     $client = Client::factory()->create(['company_id' => $company->id]);
@@ -785,14 +783,14 @@ test('le modal de détail affiche les montants EUR correctement', function () {
             'total' => 814_000,
         ]);
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('viewInvoice', $invoice->id)
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
         ->assertSeeHtml('8 140,00')
         ->assertDontSeeHtml('814 000 FCFA');
 });
 
-test('le modal de détail affiche les montants XOF correctement', function () {
+test('la page détail affiche les montants XOF correctement', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     $client = Client::factory()->create(['company_id' => $company->id]);
@@ -807,16 +805,16 @@ test('le modal de détail affiche les montants XOF correctement', function () {
             'total' => 590_000,
         ]);
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('viewInvoice', $invoice->id)
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
         ->assertSeeHtml('500 000')
         ->assertSeeHtml('590 000');
 });
 
 // ─── Réduction ────────────────────────────────────────────────────────────────
 
-test('la modale de détail affiche la réduction quand elle est présente', function () {
+test('la page détail affiche la réduction quand elle est présente', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     $client = Client::factory()->create(['company_id' => $company->id]);
@@ -832,22 +830,22 @@ test('la modale de détail affiche la réduction quand elle est présente', func
             'total' => 106_200,
         ]);
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('viewInvoice', $invoice->id)
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
         ->assertSeeHtml('Réduction')
         ->assertSeeHtml('10%')
         ->assertSeeHtml('10 000');
 });
 
-test('la modale de détail n\'affiche pas la réduction quand elle est nulle', function () {
+test('la page détail n\'affiche pas la réduction quand elle est nulle', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
 
     $invoice = makeInvoice($company, ['discount' => 0, 'currency' => 'XOF']);
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('viewInvoice', $invoice->id)
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
         ->assertDontSeeHtml('Réduction');
 });
 
@@ -900,16 +898,14 @@ test('openPreview() fallback sur email quand le client n\'a pas de téléphone',
         ->assertSet('previewChannel', 'email');
 });
 
-test('openPreview() ferme la modale de détail et la timeline ouverts', function () {
+test('openPreview() ferme la timeline ouverte', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
     $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->set('selectedInvoiceId', $invoice->id)
         ->set('timelineInvoiceId', $invoice->id)
         ->call('openPreview', $invoice->id)
-        ->assertSet('selectedInvoiceId', null)
         ->assertSet('timelineInvoiceId', null);
 });
 

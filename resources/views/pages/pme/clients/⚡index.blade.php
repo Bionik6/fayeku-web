@@ -181,7 +181,10 @@ new #[Title('Clients')] #[Layout('layouts::pme')] class extends Component {
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
     @if (session('client-saved'))
-        <div x-init="$dispatch('toast', { type: 'success', title: '{{ session('client-saved') }} {{ __('a été ajouté à votre portefeuille.') }}' })"></div>
+        <div
+            x-data
+            x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: @js(session('client-saved').' '.__('a été ajouté à votre portefeuille.')) } })))"
+        ></div>
     @endif
 
     <section class="app-shell-panel overflow-hidden">

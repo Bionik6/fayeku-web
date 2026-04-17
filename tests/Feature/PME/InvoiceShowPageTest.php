@@ -81,7 +81,121 @@ test('un utilisateur d\'une autre PME ne peut pas voir la facture', function () 
         ->assertNotFound();
 });
 
-// ─── Status banner ────────────────────────────────────────────────────────────
+// ─── KPIs ─────────────────────────────────────────────────────────────────────
+
+test('la bande KPI affiche montant TTC, reste dû, relances et prochaine relance', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'total' => 100_000,
+        'amount_paid' => 40_000,
+        'due_at' => now()->addDays(5),
+    ]);
+
+    $response = $this->actingAs($user)->get(route('pme.invoices.show', $invoice));
+
+    $response->assertOk()
+        ->assertSee('Montant TTC')
+        ->assertSee('Reste dû')
+        ->assertSee('Relances')
+        ->assertSee('Prochaine relance');
+});
+
+test('sentRemindersCount reflète le nombre de relances liées', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(10),
+    ]);
+
+    Reminder::unguarded(fn () => Reminder::create([
+        'invoice_id' => $invoice->id,
+        'channel' => ReminderChannel::Email->value,
+        'mode' => 'auto',
+        'sent_at' => now()->subDays(3),
+    ]));
+    Reminder::unguarded(fn () => Reminder::create([
+        'invoice_id' => $invoice->id,
+        'channel' => ReminderChannel::WhatsApp->value,
+        'mode' => 'auto',
+        'sent_at' => now()->subDays(1),
+    ]));
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSet('sentRemindersCount', 2);
+});
+
+test('nextUpcomingReminder retourne la prochaine relance planifiée ou null', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->addDays(10),
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice]);
+
+    $next = $component->get('nextUpcomingReminder');
+
+    expect($next)->not->toBeNull();
+    expect($next)->toHaveKeys(['at', 'offset', 'days_from_now']);
+    expect($next['offset'])->toBeGreaterThan(0);
+});
+
+test('nextUpcomingReminder est null pour une facture payée', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Paid->value,
+        'amount_paid' => 118_000,
+        'paid_at' => now(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSet('nextUpcomingReminder', null);
+});
+
+// ─── Carte client ─────────────────────────────────────────────────────────────
+
+test('la carte client affiche les coordonnées et un lien « Voir la fiche client »', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'name' => 'LafargeHolcim Sénégal',
+        'email' => 'dsi@lafarge.sn',
+        'phone' => '+221338600008',
+        'address' => 'Zone Industrielle',
+        'tax_id' => 'SN2024LAF0007',
+    ]);
+
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-TEST01',
+        'currency' => 'XOF',
+        'status' => InvoiceStatus::Sent->value,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 18_000,
+        'total' => 118_000,
+        'amount_paid' => 0,
+    ]));
+
+    $response = $this->actingAs($user)->get(route('pme.invoices.show', $invoice));
+
+    $response->assertOk()
+        ->assertSee('LafargeHolcim Sénégal')
+        ->assertSee('dsi@lafarge.sn')
+        ->assertSee('SN2024LAF0007')
+        ->assertSee('Voir la fiche client')
+        ->assertSee(route('pme.clients.show', $client->id), escape: false);
+});
+
+// ─── Status chip ──────────────────────────────────────────────────────────────
 
 test('le bandeau de statut affiche le libellé localisé', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
@@ -236,6 +350,21 @@ test('sendReminderNow refuse les factures non éligibles', function () {
         ->assertDispatched('toast');
 
     expect($invoice->fresh()->reminders)->toHaveCount(0);
+});
+
+// ─── Delete invoice ──────────────────────────────────────────────────────────
+
+test('deleteInvoice supprime la facture et flashe un toast de succès', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('deleteInvoice')
+        ->assertRedirect(route('pme.invoices.index'))
+        ->assertSessionHas('success');
+
+    expect(Invoice::query()->whereKey($invoice->id)->exists())->toBeFalse();
 });
 
 // ─── Draft invoices : pas de paiement, pas de relance ────────────────────────

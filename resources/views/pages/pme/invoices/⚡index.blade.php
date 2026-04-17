@@ -32,8 +32,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
     public int $actionRequiredCount = 0;
 
-    public ?string $selectedInvoiceId = null;
-
     public ?string $timelineInvoiceId = null;
 
     public ?string $confirmDeleteId = null;
@@ -64,36 +62,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         }
 
         $this->refreshKpis();
-    }
-
-    #[Computed]
-    public function selectedInvoice(): ?Invoice
-    {
-        if (! $this->selectedInvoiceId || ! $this->company) {
-            return null;
-        }
-
-        return Invoice::query()
-            ->with(['client', 'lines'])
-            ->where('company_id', $this->company->id)
-            ->whereKey($this->selectedInvoiceId)
-            ->first();
-    }
-
-    public function viewInvoice(string $invoiceId): void
-    {
-        abort_unless($this->company, 403);
-
-        Invoice::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($invoiceId);
-
-        $this->selectedInvoiceId = $invoiceId;
-    }
-
-    public function closeInvoice(): void
-    {
-        $this->selectedInvoiceId = null;
     }
 
     #[Computed]
@@ -146,7 +114,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         $this->previewChannel = filled($invoice->client?->phone)
             ? \App\Enums\PME\ReminderChannel::WhatsApp->value
             : \App\Enums\PME\ReminderChannel::Email->value;
-        $this->selectedInvoiceId = null;
         $this->timelineInvoiceId = null;
         unset($this->previewInvoice);
     }
@@ -166,7 +133,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
             ->findOrFail($invoiceId);
 
         $this->timelineInvoiceId = $invoiceId;
-        $this->selectedInvoiceId = null;
     }
 
     public function closeTimeline(): void
@@ -195,13 +161,9 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
         $invoice->delete();
 
-        if ($this->selectedInvoiceId === $invoiceId) {
-            $this->selectedInvoiceId = null;
-        }
-
         $this->flushDocumentCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedInvoice);
+        unset($this->rows, $this->statusCounts);
 
         $this->dispatch('toast', type: 'success', title: __('La facture a été supprimée.'));
     }
@@ -305,7 +267,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 
         $this->flushDocumentCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedInvoice);
+        unset($this->rows, $this->statusCounts);
     }
 
     public function sendReminder(string $invoiceId): void
@@ -520,7 +482,10 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
     @if (session('success'))
-        <div x-init="$dispatch('toast', { type: 'success', title: '{{ session('success') }}' })"></div>
+        <div
+            x-data
+            x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: @js(session('success')) } })))"
+        ></div>
     @endif
 
 
@@ -713,7 +678,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                             <tr
                                 wire:key="inv-{{ $row['id'] }}"
                                 class="cursor-pointer transition hover:bg-slate-50/60"
-                                wire:click="viewInvoice('{{ $row['id'] }}')"
+                                x-on:click="window.Livewire.navigate('{{ route('pme.invoices.show', $row['id']) }}')"
                             >
 
                                 {{-- Référence --}}
@@ -764,7 +729,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                 {{-- Actions --}}
                                 <td class="px-4 py-4" x-on:click.stop>
                                     <x-ui.dropdown>
-                                        <x-ui.dropdown-item wire:click="viewInvoice('{{ $row['id'] }}')">
+                                        <x-ui.dropdown-item :href="route('pme.invoices.show', $row['id'])" wire:navigate>
                                             <x-slot:icon>
                                                 <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -890,10 +855,6 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         @endif
 
     </x-ui.table-panel>
-
-    @if ($this->selectedInvoice)
-        <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
-    @endif
 
     {{-- Slide-over historique des relances --}}
     @if ($timelineInvoiceId && $this->timelineInvoice)

@@ -1,5 +1,6 @@
 @props([
     'invoice',
+    'showClient' => true,
 ])
 
 @php
@@ -8,7 +9,7 @@
 @endphp
 
 <div class="space-y-6">
-    @if ($client)
+    @if ($showClient && $client)
         <div>
             <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Destinataire') }}</p>
             <div class="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4">
@@ -36,7 +37,7 @@
                 @endif
             </div>
         </div>
-    @else
+    @elseif ($showClient)
         <div class="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-700">
             {{ __('Aucun client final renseigné sur cette facture.') }}
         </div>

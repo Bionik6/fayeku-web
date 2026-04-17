@@ -396,7 +396,10 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
     @if (session('success'))
-        <div x-init="$dispatch('toast', { type: 'success', title: '{{ session('success') }}' })"></div>
+        <div
+            x-data
+            x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: @js(session('success')) } })))"
+        ></div>
     @endif
 
     {{-- Bloc A -- En-tete --}}

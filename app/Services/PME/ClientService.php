@@ -2,14 +2,14 @@
 
 namespace App\Services\PME;
 
-use Illuminate\Support\Collection;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Enums\PME\ReminderChannel;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ReminderChannel;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\Shared\User;
+use Illuminate\Support\Collection;
 
 class ClientService
 {
@@ -217,7 +217,6 @@ class ClientService
             ->firstWhere('id', $client->id);
 
         $invoices = $client->invoices
-            ->filter(fn (Invoice $invoice) => ! in_array($invoice->status, [InvoiceStatus::Draft, InvoiceStatus::Cancelled], true))
             ->sortByDesc('issued_at')
             ->values();
 
@@ -250,13 +249,15 @@ class ClientService
             ->all();
 
         $timeline = collect()
-            ->merge($invoices->map(fn (Invoice $invoice) => [
-                'invoice_id' => $invoice->id,
-                'quote_id' => null,
-                'date' => $invoice->created_at,
-                'title' => 'Facture envoyée',
-                'body' => ($invoice->reference ?? '—').' · '.format_money($invoice->total),
-            ]))
+            ->merge($invoices
+                ->filter(fn (Invoice $invoice) => $invoice->status !== InvoiceStatus::Draft)
+                ->map(fn (Invoice $invoice) => [
+                    'invoice_id' => $invoice->id,
+                    'quote_id' => null,
+                    'date' => $invoice->created_at,
+                    'title' => 'Facture envoyée',
+                    'body' => ($invoice->reference ?? '—').' · '.format_money($invoice->total),
+                ]))
             ->merge($invoices->filter(fn (Invoice $invoice) => $invoice->paid_at)->map(fn (Invoice $invoice) => [
                 'invoice_id' => $invoice->id,
                 'quote_id' => null,

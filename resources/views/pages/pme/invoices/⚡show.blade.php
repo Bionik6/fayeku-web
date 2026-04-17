@@ -100,6 +100,31 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     }
 
     #[Computed]
+    public function sentRemindersCount(): int
+    {
+        return $this->invoice->reminders->count();
+    }
+
+    /**
+     * @return array{at: \Carbon\Carbon, offset: int, days_from_now: int}|null
+     */
+    #[Computed]
+    public function nextUpcomingReminder(): ?array
+    {
+        $next = $this->invoice->timeline()->firstWhere('type', 'upcoming');
+
+        if (! $next) {
+            return null;
+        }
+
+        return [
+            'at' => $next['at'],
+            'offset' => (int) ($next['meta']['offset'] ?? 0),
+            'days_from_now' => (int) now()->startOfDay()->diffInDays($next['at']->copy()->startOfDay(), false),
+        ];
+    }
+
+    #[Computed]
     public function timelineEvents(): \Illuminate\Support\Collection
     {
         return $this->invoice->timeline();
@@ -377,7 +402,11 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $this->confirmDeleteInvoice = null;
         $this->invoice->delete();
 
-        $this->redirect(route('pme.invoices.index'), navigate: true);
+        session()->flash('success', __('La facture a été supprimée.'));
+
+        // Pas de navigate:true ici : un redirect classique garantit que le flash
+        // est bien rejoué au prochain rendu de la page cible.
+        $this->redirect(route('pme.invoices.index'));
     }
 
     public function duplicateInvoice(): void
@@ -416,9 +445,14 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <a href="{{ route('pme.invoices.index') }}" wire:navigate class="text-sm font-semibold text-slate-500 transition hover:text-primary">
                     {{ __('← Retour aux factures') }}
                 </a>
-                <h2 class="mt-3 text-3xl font-semibold tracking-tight text-ink">
-                    {{ __('Facture') }} {{ $inv->reference ?? '—' }}
-                </h2>
+                <div class="mt-3 flex flex-wrap items-center gap-3">
+                    <h2 class="text-3xl font-semibold tracking-tight text-ink">
+                        {{ __('Facture') }} {{ $inv->reference ?? '—' }}
+                    </h2>
+                    <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $status['class'] }}">
+                        {{ __($status['label']) }}
+                    </span>
+                </div>
                 <p class="mt-2 text-sm text-slate-500">
                     @if ($inv->client)
                         <a href="{{ route('pme.clients.show', $inv->client_id) }}" wire:navigate class="font-medium text-ink hover:text-primary">
@@ -427,48 +461,93 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                         ·
                     @endif
                     {{ __('Émise le') }} {{ $inv->issued_at ? format_date($inv->issued_at) : '—' }}
+                    @if ($inv->due_at)
+                        · {{ __('échéance') }} {{ format_date($inv->due_at) }}
+                        @if ($this->dueLabel)
+                            <span @class([
+                                'ml-1 font-medium',
+                                'text-rose-600' => $inv->status === InvoiceStatus::Overdue,
+                                'text-slate-500' => $inv->status !== InvoiceStatus::Overdue,
+                            ])>({{ $this->dueLabel }})</span>
+                        @endif
+                    @endif
                 </p>
             </div>
 
         </div>
     </section>
 
-    {{-- Bandeau de statut (informatif uniquement — actions dans la sidebar) --}}
-    <section class="app-shell-panel overflow-hidden">
-        <div class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-3 lg:items-center">
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Statut') }}</p>
-                <div class="mt-2">
-                    <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $status['class'] }}">
-                        {{ __($status['label']) }}
-                    </span>
-                </div>
-            </div>
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Montant TTC') }}</p>
-                <p class="mt-2 text-xl font-semibold text-ink">{{ format_money($inv->total, $inv->currency) }}</p>
-                @if ($inv->amount_paid > 0 && $inv->amount_paid < $inv->total)
-                    <p class="mt-1 text-sm text-amber-600">{{ __('Reste dû') }} : {{ format_money($remaining, $inv->currency) }}</p>
+    {{-- KPIs --}}
+    @php
+        $next = $this->nextUpcomingReminder;
+        $isOverdue = $inv->status === InvoiceStatus::Overdue;
+        $hasRemaining = $remaining > 0 && $inv->status !== InvoiceStatus::Draft;
+    @endphp
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="app-shell-stat-card">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Montant TTC') }}</p>
+            <p class="mt-2 text-3xl font-semibold tracking-tight text-ink">
+                {{ format_money($inv->total, $inv->currency) }}
+            </p>
+        </article>
+
+        <article class="app-shell-stat-card">
+            <p @class([
+                'text-sm font-semibold uppercase tracking-[0.2em]',
+                'text-rose-600' => $hasRemaining,
+                'text-slate-500' => ! $hasRemaining,
+            ])>{{ __('Reste dû') }}</p>
+            <p @class([
+                'mt-2 text-3xl font-semibold tracking-tight',
+                'text-rose-600' => $hasRemaining,
+                'text-ink' => ! $hasRemaining,
+            ])>
+                {{ format_money($remaining, $inv->currency) }}
+            </p>
+        </article>
+
+        <article class="app-shell-stat-card">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Relances') }}</p>
+            <p class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-semibold tracking-tight text-ink">{{ $this->sentRemindersCount }}</span>
+                @if ($this->sentRemindersCount > 0)
+                    <span class="text-sm text-slate-500">{{ __('envoyée(s)') }}</span>
                 @endif
-            </div>
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Échéance') }}</p>
-                <p class="mt-2 text-sm font-semibold text-ink">{{ $inv->due_at ? format_date($inv->due_at) : '—' }}</p>
-                @if ($this->dueLabel)
-                    <p @class([
-                        'mt-1 text-sm font-medium',
-                        'text-rose-600' => $inv->status === InvoiceStatus::Overdue,
-                        'text-slate-500' => $inv->status !== InvoiceStatus::Overdue,
-                    ])>{{ $this->dueLabel }}</p>
-                @endif
-            </div>
-        </div>
+            </p>
+            @if ($this->sentRemindersCount === 0)
+                <p class="mt-1 text-sm text-slate-500">{{ __('Aucune pour le moment') }}</p>
+            @endif
+        </article>
+
+        <article class="app-shell-stat-card">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Prochaine relance') }}</p>
+            @if ($next)
+                <p class="mt-2 text-xl font-semibold text-ink">
+                    @if ($next['days_from_now'] === 0)
+                        {{ __("Aujourd'hui") }}
+                    @elseif ($next['days_from_now'] === 1)
+                        {{ __('Demain') }}
+                    @else
+                        {{ __('Dans :days jours', ['days' => $next['days_from_now']]) }}
+                    @endif
+                </p>
+                <p class="mt-1 text-sm text-slate-500">
+                    {{ format_date($next['at']) }} · {{ __('Auto J+:offset', ['offset' => $next['offset']]) }}
+                </p>
+            @else
+                <p class="mt-2 text-xl font-semibold text-slate-400">—</p>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Aucune prévue') }}</p>
+            @endif
+        </article>
     </section>
 
     {{-- Corps 2 colonnes --}}
     <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {{-- Colonne gauche --}}
         <div class="flex flex-col gap-6 lg:col-span-2">
+
+            {{-- Carte client --}}
+            <x-invoices.client-card :invoice="$inv" />
 
             {{-- Aperçu facture --}}
             <article class="app-shell-panel p-6">
@@ -477,7 +556,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     <p class="mt-1 text-sm text-slate-500">{{ __('Les informations envoyées au client.') }}</p>
                 </div>
                 <div class="mt-6">
-                    <x-invoices.preview-card :invoice="$inv" />
+                    <x-invoices.preview-card :invoice="$inv" :show-client="false" />
                 </div>
             </article>
 
