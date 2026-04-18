@@ -31,6 +31,7 @@ class DunningTemplateSeeder extends Seeder
                 Je joins la facture pour rappel. Moyens de paiement : Wave, Orange Money, virement bancaire.
 
                 Merci,
+
                 {signature}
                 MSG,
 
@@ -42,6 +43,7 @@ class DunningTemplateSeeder extends Seeder
                 Pourriez-vous me faire un retour sur son traitement ? Si un point bloque, n'hésitez pas à me le signaler.
 
                 Cordialement,
+
                 {signature}
                 MSG,
 
@@ -53,6 +55,7 @@ class DunningTemplateSeeder extends Seeder
                 Merci de régulariser cette situation dans les meilleurs délais, ou de me contacter pour convenir d'un échéancier si nécessaire.
 
                 Cordialement,
+
                 {signature}
                 MSG,
 
@@ -64,6 +67,7 @@ class DunningTemplateSeeder extends Seeder
                 Merci de procéder au règlement sous 7 jours ouvrés, ou de me contacter pour discuter de la situation.
 
                 Cordialement,
+
                 {signature}
                 MSG,
         ];
