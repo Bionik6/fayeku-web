@@ -542,9 +542,9 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     </section>
 
     {{-- Corps 2 colonnes --}}
-    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {{-- Colonne gauche --}}
-        <div class="flex flex-col gap-6 lg:col-span-2">
+        <div class="flex flex-col gap-6 xl:col-span-2">
 
             {{-- Carte client --}}
             <x-invoices.client-card :invoice="$inv" />
@@ -652,11 +652,11 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         </div>
 
-        {{-- Colonne droite --}}
-        <div class="flex flex-col gap-6">
+        {{-- Colonne droite (sidebar sticky sur xl, sinon bloc centré sous le contenu) --}}
+        <div class="mx-auto flex w-full max-w-md flex-col gap-6 xl:mx-0 xl:max-w-none">
 
             {{-- Actions rapides --}}
-            <article class="app-shell-panel p-6 lg:sticky lg:top-6">
+            <article class="app-shell-panel p-6 xl:sticky xl:top-6">
                 <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
 
                 <div class="mt-4 space-y-2">
@@ -674,6 +674,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             <button type="button" wire:click="openPaymentModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
                                 <flux:icon name="banknotes" class="size-4" /> {{ __('Enregistrer un paiement') }}
                             </button>
+                        @endif
+
+                        @if ($inv->status === InvoiceStatus::Sent)
+                            <a href="{{ route('pme.invoices.edit', $inv) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                                <flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier la facture') }}
+                            </a>
                         @endif
 
                         <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50">

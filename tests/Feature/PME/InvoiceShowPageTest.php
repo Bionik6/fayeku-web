@@ -195,6 +195,65 @@ test('la carte client affiche les coordonnées et un lien « Voir la fiche clien
         ->assertSee(route('pme.clients.show', $client->id), escape: false);
 });
 
+test('le bouton « Modifier la facture » apparaît dans les actions rapides pour une facture envoyée', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Sent->value]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertSee('Modifier la facture')
+        ->assertSee(route('pme.invoices.edit', $invoice), escape: false);
+});
+
+test('le bouton « Modifier la facture » n\'apparaît pas pour une facture payée', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Paid->value,
+        'amount_paid' => 118_000,
+        'paid_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertDontSee('Modifier la facture');
+});
+
+test('la carte client affiche le délai moyen et la date de la dernière facture', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+
+    $client = Client::factory()->create(['company_id' => $company->id, 'name' => 'AUCHAN Sénégal']);
+
+    // Une facture passée payée pour calculer le délai moyen.
+    Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-PASS01',
+        'currency' => 'XOF',
+        'status' => InvoiceStatus::Paid->value,
+        'issued_at' => now()->subDays(40),
+        'paid_at' => now()->subDays(3),
+        'due_at' => now()->subDays(10),
+        'subtotal' => 100_000,
+        'tax_amount' => 0,
+        'total' => 100_000,
+        'amount_paid' => 100_000,
+    ]));
+
+    $current = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-NOW01',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $current))
+        ->assertOk()
+        ->assertSee('AUCHAN Sénégal')
+        ->assertSee('Délai moyen 37 jours')
+        ->assertSee('Dernière facture');
+});
+
 // ─── Status chip ──────────────────────────────────────────────────────────────
 
 test('le bandeau de statut affiche le libellé localisé', function () {
