@@ -285,6 +285,9 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
+    {{-- Bannière quota --}}
+    <x-shared.quota-banner :company="$this->company" />
+
     {{-- Bienvenue nouvel utilisateur --}}
     @if (session('welcome_new_user'))
         <div

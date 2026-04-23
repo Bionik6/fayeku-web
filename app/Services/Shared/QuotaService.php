@@ -2,12 +2,12 @@
 
 namespace App\Services\Shared;
 
+use App\Enums\Shared\QuotaType;
+use App\Exceptions\Shared\QuotaExceededException;
+use App\Models\Auth\Company;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use App\Models\Auth\Company;
-use App\Enums\Shared\QuotaType;
-use App\Exceptions\Shared\QuotaExceededException;
 
 class QuotaService
 {
@@ -56,6 +56,27 @@ class QuotaService
         $t = $type instanceof QuotaType ? $type->value : $type;
 
         return $this->planLimit($company, $t) === -1;
+    }
+
+    /**
+     * Retourne un snapshot de l'usage courant pour affichage UI.
+     *
+     * @return array{used: int, limit: int, addons: int, unlimited: bool, available: int, percent: ?int}
+     */
+    public function usage(Company $company, string|QuotaType $type): array
+    {
+        $t = $type instanceof QuotaType ? $type->value : $type;
+        $limit = $this->planLimit($company, $t);
+        $used = $this->currentUsage($company, $t);
+        $addons = $this->addonCredits($company, $t);
+        $unlimited = $limit === -1;
+        $totalAllowed = $unlimited ? 0 : $limit + $addons;
+        $available = $unlimited ? PHP_INT_MAX : max(0, $totalAllowed - $used);
+        $percent = $unlimited || $totalAllowed === 0
+            ? null
+            : (int) round(min(100, ($used / $totalAllowed) * 100));
+
+        return compact('used', 'limit', 'addons', 'unlimited', 'available', 'percent');
     }
 
     private function planLimit(Company $company, string $t): int

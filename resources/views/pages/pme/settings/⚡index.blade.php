@@ -534,6 +534,67 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         </form>
                     </section>
 
+                {{-- ═══ Section : Signature des relances ═══════════════════════ --}}
+                @elseif ($activeSection === 'signature')
+                    <section class="app-shell-panel px-6 py-6">
+                        <h2 class="text-base font-bold text-ink">{{ __('Personnalisez la signature de vos relances WhatsApp') }}</h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            {{ __('Par défaut, vos relances sont signées au nom de votre entreprise. Vous pouvez personnaliser la signature pour renforcer la relation avec vos clients.') }}
+                        </p>
+
+                        @if (session('signature-saved'))
+                            <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                                {{ __('Signature enregistrée avec succès.') }}
+                            </div>
+                        @endif
+
+                        <form wire:submit="saveSignature" class="mt-6 space-y-6">
+                            <div class="grid gap-6 sm:grid-cols-2">
+                                <label class="auth-label">
+                                    <span>{{ __('Votre nom (optionnel)') }}</span>
+                                    <input
+                                        wire:model.live.debounce.200ms="senderName"
+                                        type="text"
+                                        maxlength="100"
+                                        placeholder="Ex. Moussa Diop"
+                                        class="auth-input"
+                                    />
+                                    @error('senderName') <p class="auth-error">{{ $message }}</p> @enderror
+                                </label>
+                                <label class="auth-label">
+                                    <span>{{ __('Votre fonction (optionnel)') }}</span>
+                                    <input
+                                        wire:model.live.debounce.200ms="senderRole"
+                                        type="text"
+                                        maxlength="100"
+                                        placeholder="Ex. Directeur commercial"
+                                        class="auth-input"
+                                    />
+                                    @error('senderRole') <p class="auth-error">{{ $message }}</p> @enderror
+                                </label>
+                            </div>
+
+                            {{-- Aperçu de la signature --}}
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                                    {{ __('Aperçu de la signature') }}
+                                </p>
+                                <p class="mt-2 text-sm font-medium text-ink" wire:key="signature-preview-{{ $senderName }}-{{ $senderRole }}">
+                                    {{ $this->signaturePreview }}
+                                </p>
+                                <p class="mt-2 text-xs text-slate-500">
+                                    {{ __('Cette ligne apparaîtra dans vos messages WhatsApp à l\'endroit de la signature, juste avant « via Fayeku ».') }}
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-4 border-t border-slate-100 pt-6">
+                                <button type="submit" class="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                                    {{ __('Enregistrer la signature') }}
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
                 {{-- ═══ Section : Mot de passe ═══════════════════════════════ --}}
                 @elseif ($activeSection === 'password')
                     <section class="app-shell-panel px-6 py-6">

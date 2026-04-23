@@ -12,6 +12,8 @@ use App\Services\PME\InvoiceService;
 use App\Services\PME\TreasuryService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -271,6 +273,16 @@ test('relancer depuis la page respecte le quota basique mensuel', function () {
             'updated_at' => now()->subDays(1),
         ]);
     }
+
+    DB::table('quota_usage')->insert([
+        'id' => (string) Str::ulid(),
+        'company_id' => $company->id,
+        'quota_type' => 'reminders',
+        'period_start' => now()->startOfMonth()->toDateString(),
+        'used' => 20,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.treasury.index')

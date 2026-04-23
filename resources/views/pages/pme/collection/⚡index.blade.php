@@ -483,6 +483,9 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
 
+    {{-- Bannière quota --}}
+    <x-shared.quota-banner :company="$this->company" />
+
     {{-- A. HEADER --}}
     <section class="app-shell-panel overflow-hidden">
         <div class="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
