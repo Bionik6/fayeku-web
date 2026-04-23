@@ -31,18 +31,20 @@ Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix
     Route::livewire('support', 'pages::compta.support.index')->name('support.index');
 });
 
+// PDF publics — pas d'auth, résolus via le public_code (8 caractères)
+Route::get('invoices/{invoice:public_code}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
+Route::get('quotes/{quote:public_code}/pdf', QuotePdfController::class)->name('pme.quotes.pdf');
+
 Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
     Route::redirect('/', '/pme/dashboard');
     Route::livewire('dashboard', 'pages::pme.dashboard.index')->name('pme.dashboard');
     Route::livewire('invoices/create', 'pages::pme.invoices.form')->name('pme.invoices.create');
     Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
     Route::livewire('invoices', 'pages::pme.invoices.index')->name('pme.invoices.index');
-    Route::get('invoices/{invoice}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
     Route::livewire('invoices/{invoice}', 'pages::pme.invoices.show')->name('pme.invoices.show');
     Route::livewire('quotes/create', 'pages::pme.quotes.form')->name('pme.quotes.create');
     Route::livewire('quotes/{quote}/edit', 'pages::pme.quotes.form')->name('pme.quotes.edit');
     Route::livewire('quotes', 'pages::pme.quotes.index')->name('pme.quotes.index');
-    Route::get('quotes/{quote}/pdf', QuotePdfController::class)->name('pme.quotes.pdf');
     Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');
     Route::livewire('clients/{client}', 'pages::pme.clients.show')->name('pme.clients.show');
     Route::livewire('collections', 'pages::pme.collection.index')->name('pme.collection.index');

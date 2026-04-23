@@ -1,13 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\InvoiceStatus;
 use App\Models\PME\Invoice;
 use App\Models\PME\InvoiceLine;
-use App\Services\PME\PdfService;
 use App\Models\Shared\User;
+use App\Services\PME\PdfService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -46,33 +46,31 @@ function createInvoiceForPdf(Company $company): Invoice
 
 // ─── Access control ──────────────────────────────────────────────────────────
 
-test('un visiteur non authentifié est redirigé vers la connexion depuis la route PDF', function () {
+test('un visiteur non authentifie peut telecharger le PDF via le public_code', function () {
     ['company' => $company] = createSmeUserForPdf();
     $invoice = createInvoiceForPdf($company);
 
-    $this->get(route('pme.invoices.pdf', $invoice))
-        ->assertRedirect(route('login'));
-});
-
-test('un utilisateur ne peut pas accéder au PDF d\'une facture d\'une autre entreprise', function () {
-    ['user' => $user] = createSmeUserForPdf();
-    ['company' => $otherCompany] = createSmeUserForPdf();
-    $invoice = createInvoiceForPdf($otherCompany);
-
-    $this->actingAs($user)
-        ->get(route('pme.invoices.pdf', $invoice))
-        ->assertForbidden();
-});
-
-test('un utilisateur autorisé peut voir le PDF de sa facture', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForPdf();
-    $invoice = createInvoiceForPdf($company);
-
-    $response = $this->actingAs($user)
-        ->get(route('pme.invoices.pdf', $invoice));
+    $response = $this->get(route('pme.invoices.pdf', $invoice));
 
     $response->assertOk();
     expect($response->headers->get('Content-Type'))->toContain('application/pdf');
+});
+
+test('la route PDF utilise le public_code (8 caracteres alphanumeriques)', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $invoice = createInvoiceForPdf($company);
+
+    $url = route('pme.invoices.pdf', $invoice);
+
+    expect($invoice->public_code)
+        ->toMatch('/^[A-Za-z0-9]{8}$/')
+        ->and($url)->toContain('/invoices/'.$invoice->public_code.'/pdf')
+        ->and($url)->not->toContain('/pme/')
+        ->and($url)->not->toContain($invoice->id);
+});
+
+test('un public_code inconnu renvoie 404', function () {
+    $this->get('/invoices/ZZZZZZZZ/pdf')->assertNotFound();
 });
 
 // ─── PdfService ─────────────────────────────────────────────────────────────

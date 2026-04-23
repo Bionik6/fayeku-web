@@ -858,7 +858,7 @@ test('le lien Afficher la facture en PDF est présent dans le dropdown Actions',
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
-        ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id));
+        ->assertSeeHtml(route('pme.invoices.pdf', $invoice));
 });
 
 // ─── Aperçu de relance — openPreview() ───────────────────────────────────────

@@ -348,7 +348,7 @@ test('le dropdown affiche les actions standard pour une facture en retard', func
         ->test('pages::pme.collection.index')
         ->assertSee('Voir la facture')
         ->assertSee('Afficher en PDF')
-        ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id))
+        ->assertSeeHtml(route('pme.invoices.pdf', $invoice))
         ->assertSee('Voir les relances')
         ->assertSee('Relancer le client')
         ->assertSee('Marquer comme payée')

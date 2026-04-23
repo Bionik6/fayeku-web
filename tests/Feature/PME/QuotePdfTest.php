@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Enums\PME\QuoteStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\QuoteStatus;
 use App\Models\PME\Quote;
-use App\Services\PME\PdfService;
 use App\Models\Shared\User;
+use App\Services\PME\PdfService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -42,33 +42,27 @@ function createQuoteForPdf(Company $company, array $overrides = []): Quote
 
 // ─── Accès & sécurité ─────────────────────────────────────────────────────────
 
-test('un visiteur non authentifié est redirigé vers la connexion depuis la route PDF devis', function () {
+test('un visiteur non authentifie peut telecharger le PDF devis via le public_code', function () {
     ['company' => $company] = createSmeUserForQuotePdf();
     $quote = createQuoteForPdf($company);
 
-    $this->get(route('pme.quotes.pdf', $quote))
-        ->assertRedirect(route('login'));
-});
-
-test('un utilisateur ne peut pas accéder au PDF d\'un devis d\'une autre entreprise', function () {
-    ['user' => $user] = createSmeUserForQuotePdf();
-    ['company' => $otherCompany] = createSmeUserForQuotePdf();
-    $quote = createQuoteForPdf($otherCompany);
-
-    $this->actingAs($user)
-        ->get(route('pme.quotes.pdf', $quote))
-        ->assertForbidden();
-});
-
-test('un utilisateur autorisé peut voir le PDF de son devis', function () {
-    ['user' => $user, 'company' => $company] = createSmeUserForQuotePdf();
-    $quote = createQuoteForPdf($company);
-
-    $response = $this->actingAs($user)
-        ->get(route('pme.quotes.pdf', $quote));
+    $response = $this->get(route('pme.quotes.pdf', $quote));
 
     $response->assertOk();
     expect($response->headers->get('Content-Type'))->toContain('application/pdf');
+});
+
+test('la route PDF devis utilise le public_code (8 caracteres alphanumeriques)', function () {
+    ['company' => $company] = createSmeUserForQuotePdf();
+    $quote = createQuoteForPdf($company);
+
+    $url = route('pme.quotes.pdf', $quote);
+
+    expect($quote->public_code)
+        ->toMatch('/^[A-Za-z0-9]{8}$/')
+        ->and($url)->toContain('/quotes/'.$quote->public_code.'/pdf')
+        ->and($url)->not->toContain('/pme/')
+        ->and($url)->not->toContain($quote->id);
 });
 
 // ─── PdfService ──────────────────────────────────────────────────────────────

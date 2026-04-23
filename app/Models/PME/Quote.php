@@ -2,19 +2,19 @@
 
 namespace App\Models\PME;
 
+use App\Enums\PME\QuoteStatus;
+use App\Models\Auth\Company;
+use App\Traits\Shared\HasPublicCode;
+use App\Traits\Shared\HasUlid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Enums\PME\QuoteStatus;
-use App\Traits\Shared\HasUlid;
 
 class Quote extends Model
 {
-    use HasUlid, SoftDeletes;
+    use HasPublicCode, HasUlid, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'client_id', 'reference', 'currency', 'status',

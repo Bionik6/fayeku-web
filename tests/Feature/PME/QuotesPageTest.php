@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\QuoteStatus;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\Quote;
 use App\Models\PME\QuoteLine;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -312,7 +312,7 @@ test('les options Voir la facture et PDF apparaissent dans le rendu quand le dev
     Livewire::actingAs($user)
         ->test('pages::pme.quotes.index')
         ->assertSeeHtml('Voir la facture')
-        ->assertSeeHtml(route('pme.invoices.pdf', $invoice->id));
+        ->assertSeeHtml(route('pme.invoices.pdf', $invoice));
 });
 
 test('les options Voir la facture et PDF n\'apparaissent pas quand le devis n\'est pas facturé', function () {

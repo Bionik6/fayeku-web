@@ -6,6 +6,7 @@ use App\Enums\Compta\CertificationAuthority;
 use App\Enums\PME\DunningStrategy;
 use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\Company;
+use App\Traits\Shared\HasPublicCode;
 use App\Traits\Shared\HasUlid;
 use Carbon\Carbon;
 use Database\Factories\InvoiceFactory;
@@ -19,7 +20,7 @@ use Illuminate\Support\Collection;
 class Invoice extends Model
 {
     /** @use HasFactory<InvoiceFactory> */
-    use HasFactory, HasUlid, SoftDeletes;
+    use HasFactory, HasPublicCode, HasUlid, SoftDeletes;
 
     protected static function newFactory(): InvoiceFactory
     {
