@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Livewire\Livewire;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -70,13 +70,13 @@ it('shows company section by default', function () {
         ->assertSee('Mon Entreprise');
 });
 
-it('switches between all five sections', function () {
+it('switches between all six sections', function () {
     ['user' => $user] = createSmeSettingsUser();
 
     $component = Livewire::actingAs($user)
         ->test('pages::pme.settings.index');
 
-    foreach (['company', 'profile', 'password', 'plan', 'danger'] as $section) {
+    foreach (['company', 'profile', 'signature', 'password', 'plan', 'danger'] as $section) {
         $component->call('setSection', $section)
             ->assertSet('activeSection', $section);
     }
@@ -456,6 +456,96 @@ it('rejects delete without password', function () {
         ->set('deletePassword', '')
         ->call('deleteUser')
         ->assertHasErrors(['deletePassword']);
+});
+
+// ─── Signature des relances ──────────────────────────────────────────────
+
+it('loads sender_name and sender_role on mount', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['sender_name' => 'Moussa Diop', 'sender_role' => 'Directeur commercial']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->assertSet('senderName', 'Moussa Diop')
+        ->assertSet('senderRole', 'Directeur commercial');
+});
+
+it('computes signature preview live (both name and role)', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['name' => 'Khalil Softwares']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'signature')
+        ->set('senderName', 'Moussa Diop')
+        ->set('senderRole', 'Directeur commercial')
+        ->assertSee('Moussa Diop, Directeur commercial Khalil Softwares');
+});
+
+it('computes signature preview with name only', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['name' => 'Khalil Softwares']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'signature')
+        ->set('senderName', 'Moussa Diop')
+        ->set('senderRole', '')
+        ->assertSee('Moussa Diop, Khalil Softwares');
+});
+
+it('computes signature preview fallback (L\'equipe)', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['name' => 'Khalil Softwares']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'signature')
+        ->set('senderName', '')
+        ->set('senderRole', '')
+        ->assertSee("L'équipe Khalil Softwares");
+});
+
+it('saves signature (name + role)', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('senderName', '  Moussa Diop  ')
+        ->set('senderRole', 'Directeur commercial')
+        ->call('saveSignature')
+        ->assertHasNoErrors();
+
+    $company->refresh();
+
+    expect($company->sender_name)->toBe('Moussa Diop') // trimmed
+        ->and($company->sender_role)->toBe('Directeur commercial');
+});
+
+it('saves signature with null values when fields are empty', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['sender_name' => 'Old Name', 'sender_role' => 'Old Role']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('senderName', '')
+        ->set('senderRole', '')
+        ->call('saveSignature');
+
+    $company->refresh();
+
+    expect($company->sender_name)->toBeNull()
+        ->and($company->sender_role)->toBeNull();
+});
+
+it('rejects signature fields exceeding 100 characters', function () {
+    ['user' => $user] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('senderName', str_repeat('a', 101))
+        ->call('saveSignature')
+        ->assertHasErrors(['senderName']);
 });
 
 // ─── URL structure ───────────────────────────────────────────────────────

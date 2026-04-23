@@ -24,6 +24,8 @@ class Company extends Model
         'country_code',
         'phone',
         'email',
+        'sender_name',
+        'sender_role',
         'address',
         'city',
         'ninea',
@@ -84,5 +86,22 @@ class Company extends Model
     public function isSetupComplete(): bool
     {
         return $this->setup_completed_at !== null;
+    }
+
+    public function composeSenderSignature(): string
+    {
+        $name = $this->sender_name;
+        $role = $this->sender_role;
+        $companyName = $this->name;
+
+        if ($name && $role) {
+            return "{$name}, {$role} {$companyName}";
+        }
+
+        if ($name) {
+            return "{$name}, {$companyName}";
+        }
+
+        return "L'équipe {$companyName}";
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Livewire\Actions\Logout;
 use App\Models\Auth\Company;
@@ -13,6 +14,7 @@ use App\Models\Auth\Subscription;
 use App\Services\Auth\AuthService;
 
 new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
+    #[Url(as: 'section')]
     public string $activeSection = 'company';
 
     // ─── Profil de l'entreprise ─────────────────────────────────────────
@@ -30,6 +32,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
     public string $lastName = '';
     public string $userEmail = '';
 
+    // ─── Signature des relances ─────────────────────────────────────────
+    public string $senderName = '';
+    public string $senderRole = '';
+
     // ─── Sécurité ───────────────────────────────────────────────────────
     public string $currentPassword = '';
     public string $newPassword = '';
@@ -42,6 +48,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function mount(): void
     {
+        if (! in_array($this->activeSection, ['company', 'profile', 'signature', 'password', 'plan', 'danger'], true)) {
+            $this->activeSection = 'company';
+        }
+
         $user = Auth::user();
         $this->firstName = $user->first_name;
         $this->lastName = $user->last_name;
@@ -61,6 +71,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
             $this->firmCountry = $country;
             $this->firmNinea = $company->ninea ?? '';
             $this->firmRccm = $company->rccm ?? '';
+            $this->senderName = $company->sender_name ?? '';
+            $this->senderRole = $company->sender_role ?? '';
         }
     }
 
@@ -112,12 +124,22 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function setSection(string $section): void
     {
-        if (! in_array($section, ['company', 'profile', 'password', 'plan', 'danger'], true)) {
+        if (! in_array($section, ['company', 'profile', 'signature', 'password', 'plan', 'danger'], true)) {
             return;
         }
 
         $this->activeSection = $section;
         $this->resetErrorBag();
+    }
+
+    #[Computed]
+    public function signaturePreview(): string
+    {
+        $company = $this->company ?? tap(new Company, fn (Company $c) => $c->name = 'Votre entreprise');
+        $company->sender_name = trim($this->senderName) ?: null;
+        $company->sender_role = trim($this->senderRole) ?: null;
+
+        return $company->composeSenderSignature();
     }
 
     public function saveCompanyProfile(): void
@@ -149,6 +171,25 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
         }
 
         session()->flash('firm-saved', true);
+    }
+
+    public function saveSignature(): void
+    {
+        $validated = $this->validate([
+            'senderName' => ['nullable', 'string', 'max:100'],
+            'senderRole' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $company = $this->company;
+        if ($company) {
+            $company->update([
+                'sender_name' => filled($validated['senderName']) ? trim($validated['senderName']) : null,
+                'sender_role' => filled($validated['senderRole']) ? trim($validated['senderRole']) : null,
+            ]);
+            unset($this->company);
+        }
+
+        session()->flash('signature-saved', true);
     }
 
     public function saveAccount(): void
@@ -299,6 +340,19 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
                             {{ __('Mon Profil') }}
+                        </button>
+                    </li>
+                    {{-- Signature des relances --}}
+                    <li>
+                        <button type="button" wire:click="setSection('signature')" @class([
+                            'group flex w-full items-center gap-4 rounded-2xl px-3 py-3 text-[1.05rem] leading-7 font-semibold transition',
+                            'bg-primary text-white' => $activeSection === 'signature',
+                            'text-ink hover:bg-slate-100 hover:text-primary active:bg-slate-200 cursor-pointer' => $activeSection !== 'signature',
+                        ])>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" @class(['size-6 shrink-0 transition', 'text-accent' => $activeSection === 'signature', 'text-ink group-hover:text-primary' => $activeSection !== 'signature'])>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>
+                            {{ __('Signature des relances') }}
                         </button>
                     </li>
                     {{-- Mot de passe --}}
@@ -530,6 +584,78 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                     @endphp
 
                     <div class="space-y-6">
+                        {{-- ── Usage WhatsApp du mois ──────────────────────────────── --}}
+                        @php
+                            $quotaUsage = $this->company
+                                ? app(\App\Services\Shared\QuotaService::class)->usage($this->company, 'reminders')
+                                : null;
+                        @endphp
+                        @if ($quotaUsage)
+                            <section @class([
+                                'app-shell-panel px-6 py-6',
+                                'border-rose-200' => ! $quotaUsage['unlimited'] && $quotaUsage['available'] <= 0,
+                                'border-amber-200' => ! $quotaUsage['unlimited'] && $quotaUsage['available'] > 0 && ($quotaUsage['percent'] ?? 0) >= 80,
+                            ])>
+                                <div class="flex flex-wrap items-start justify-between gap-4">
+                                    <div>
+                                        <h3 class="text-base font-bold text-ink">{{ __('Usage WhatsApp ce mois-ci') }}</h3>
+                                        <p class="mt-1 text-sm text-slate-500">{{ __('Relances et notifications envoyées à vos clients via WhatsApp.') }}</p>
+                                    </div>
+                                    @if ($quotaUsage['unlimited'])
+                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                            {{ __('Illimité') }}
+                                        </span>
+                                    @elseif ($quotaUsage['available'] <= 0)
+                                        <span class="inline-flex items-center rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20">
+                                            {{ __('Épuisé') }}
+                                        </span>
+                                    @elseif (($quotaUsage['percent'] ?? 0) >= 80)
+                                        <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                            {{ __('Attention') }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                @if ($quotaUsage['unlimited'])
+                                    <p class="mt-4 text-sm text-slate-600">
+                                        {{ __('Vous disposez d\'envois WhatsApp illimités avec votre plan.') }}
+                                        <span class="font-semibold text-ink">{{ number_format($quotaUsage['used'], 0, ',', ' ') }} {{ __('message(s) envoyé(s) ce mois.') }}</span>
+                                    </p>
+                                @else
+                                    <div class="mt-5">
+                                        <div class="flex items-baseline justify-between">
+                                            <div>
+                                                <span class="text-3xl font-bold text-ink">{{ number_format($quotaUsage['used'], 0, ',', ' ') }}</span>
+                                                <span class="text-sm text-slate-500"> / {{ number_format($quotaUsage['limit'] + $quotaUsage['addons'], 0, ',', ' ') }} {{ __('messages') }}</span>
+                                            </div>
+                                            <span class="text-sm font-semibold text-slate-600">{{ $quotaUsage['percent'] ?? 0 }}%</span>
+                                        </div>
+                                        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                            <div @class([
+                                                'h-full rounded-full transition-all',
+                                                'bg-rose-500' => $quotaUsage['available'] <= 0,
+                                                'bg-amber-500' => $quotaUsage['available'] > 0 && ($quotaUsage['percent'] ?? 0) >= 80,
+                                                'bg-primary' => ($quotaUsage['percent'] ?? 0) < 80,
+                                            ]) style="width: {{ $quotaUsage['percent'] ?? 0 }}%"></div>
+                                        </div>
+                                        @if ($quotaUsage['available'] <= 0)
+                                            <p class="mt-3 text-sm text-rose-700">
+                                                {{ __('Votre quota est épuisé. Les prochaines relances et notifications ne seront plus envoyées jusqu\'à la fin du mois ou jusqu\'à un upgrade de votre plan.') }}
+                                            </p>
+                                        @elseif (($quotaUsage['percent'] ?? 0) >= 80)
+                                            <p class="mt-3 text-sm text-amber-700">
+                                                {{ __('Il vous reste :count envoi(s) ce mois.', ['count' => number_format($quotaUsage['available'], 0, ',', ' ')]) }}
+                                            </p>
+                                        @else
+                                            <p class="mt-3 text-sm text-slate-500">
+                                                {{ __('Il vous reste :count envoi(s) ce mois.', ['count' => number_format($quotaUsage['available'], 0, ',', ' ')]) }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                @endif
+                            </section>
+                        @endif
+
                         {{-- ── Bannière plan actuel ─────────────────────────────── --}}
                         <section class="app-shell-panel px-6 py-6">
                             <div class="flex flex-wrap items-start justify-between gap-4">
