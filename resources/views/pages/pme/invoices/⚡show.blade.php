@@ -228,7 +228,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         // pour que la timeline reste correctement ordonnée contre les autres événements du jour.
         $paidAt = \Carbon\Carbon::parse($validated['paymentPaidAt'])->setTimeFrom(now());
 
-        app(PaymentService::class)->record($this->invoice, [
+        $payment = app(PaymentService::class)->record($this->invoice, [
             'amount' => (int) $validated['paymentAmount'],
             'paid_at' => $paidAt,
             'method' => $validated['paymentMethod'],
@@ -240,6 +240,15 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $this->invoice = $this->invoice->fresh(['client', 'lines', 'reminders', 'payments']);
         $this->showPaymentModal = false;
         unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents);
+
+        if ($this->company) {
+            $notifier = app(\App\Services\PME\WhatsAppNotificationService::class);
+            if ((int) $this->invoice->amount_paid >= (int) $this->invoice->total) {
+                $notifier->sendInvoicePaidFull($this->invoice, $payment, $this->company);
+            } else {
+                $notifier->sendInvoicePartiallyPaid($this->invoice, $payment, $this->company);
+            }
+        }
 
         $this->dispatch('toast', type: 'success', title: __('Paiement enregistré.'));
     }

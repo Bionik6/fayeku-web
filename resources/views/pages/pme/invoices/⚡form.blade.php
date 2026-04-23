@@ -537,6 +537,12 @@ class extends Component {
         $service = app(InvoiceService::class);
         $service->markAsSent($this->invoice);
 
+        if ($this->sendChannel === 'whatsapp' && $this->invoice->company) {
+            $this->invoice->loadMissing(['client', 'company']);
+            app(\App\Services\PME\WhatsAppNotificationService::class)
+                ->sendInvoiceCreated($this->invoice, $this->invoice->company);
+        }
+
         session()->flash('success', __('Facture envoyée avec succès.'));
         $this->redirect(route('pme.invoices.index'), navigate: true);
     }

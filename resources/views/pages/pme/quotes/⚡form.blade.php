@@ -449,6 +449,12 @@ class extends Component {
         $service = app(QuoteService::class);
         $service->markAsSent($this->quote);
 
+        if ($this->sendChannel === 'whatsapp' && $this->quote->company) {
+            $this->quote->loadMissing(['client', 'company']);
+            app(\App\Services\PME\WhatsAppNotificationService::class)
+                ->sendQuoteSent($this->quote, $this->quote->company);
+        }
+
         session()->flash('success', __('Devis envoyé avec succès.'));
         $this->redirect(route('pme.quotes.index'), navigate: true);
     }
@@ -970,6 +976,8 @@ class extends Component {
                                 class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'pdf' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">{{ __('Télécharger PDF') }}</button>
                         <button type="button" wire:click="$set('sendChannel', 'email')"
                                 class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'email' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">{{ __('Email') }}</button>
+                        <button type="button" wire:click="$set('sendChannel', 'whatsapp')"
+                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'whatsapp' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">{{ __('WhatsApp') }}</button>
                     </div>
                     @if ($sendChannel === 'email')
                         <div class="space-y-4">
