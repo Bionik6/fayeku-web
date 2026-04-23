@@ -24,6 +24,7 @@ class SendReminderJob implements ShouldQueue
         public readonly ReminderMode $mode = ReminderMode::Manual,
         public readonly ?string $messageBody = null,
         public readonly ?int $dayOffset = null,
+        public readonly ?string $templateKey = null,
     ) {}
 
     public function handle(ReminderService $service): void
@@ -35,6 +36,7 @@ class SendReminderJob implements ShouldQueue
             $this->messageBody,
             $this->mode,
             $this->dayOffset,
+            $this->templateKey,
         );
     }
 }

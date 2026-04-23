@@ -326,16 +326,13 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         try {
             $channel = ReminderChannel::from($this->previewChannel);
-            $msg = $this->buildPreviewMessage();
-            $messageBody = implode("\n\n", array_filter([
-                $msg['greeting'],
-                $msg['body'],
-                $msg['closing'],
-                $this->company->name,
-            ])) ?: null;
+
+            $catalog = app(\App\Services\Shared\WhatsAppTemplateCatalog::class);
+            $templateKey = $catalog->manualReminderKeyForTone($this->previewTone);
+            $messageBody = $this->buildPreviewMessage() ?: null;
 
             app(ReminderService::class)
-                ->send($this->invoice, $this->company, $channel, $messageBody, mode: ReminderMode::Manual);
+                ->send($this->invoice, $this->company, $channel, $messageBody, mode: ReminderMode::Manual, templateKey: $templateKey);
 
             $this->invoice = $this->invoice->fresh(['client', 'lines', 'reminders', 'payments']);
             $this->previewInvoiceId = null;
@@ -347,42 +344,10 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         }
     }
 
-    /**
-     * @return array{greeting: string, body: string, closing: string}
-     */
-    public function buildPreviewMessage(): array
+    public function buildPreviewMessage(): string
     {
-        $inv = $this->invoice;
-        $clientName = $inv->client?->name ?? '—';
-        $reference = $inv->reference ?? '—';
-        $remaining = format_money((int) $inv->total - (int) $inv->amount_paid);
-        $dueDate = format_date($inv->due_at);
-
-        $toneGreetings = [
-            'cordial' => "Bonjour {$clientName},",
-            'ferme' => "Bonjour {$clientName},",
-            'urgent' => "{$clientName},",
-        ];
-
-        $toneBody = [
-            'cordial' => "Nous souhaitons vous rappeler que la facture {$reference} d'un montant de {$remaining}, échue le {$dueDate}, reste en attente de règlement.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.",
-            'ferme' => "La facture {$reference} d'un montant de {$remaining} est en retard de paiement depuis le {$dueDate}.\n\nNous vous demandons de procéder au règlement dans les plus brefs délais.",
-            'urgent' => "URGENT : La facture {$reference} ({$remaining}) est impayée depuis le {$dueDate}. Malgré nos précédentes relances, aucun règlement n'a été effectué.\n\nNous vous prions de régulariser cette situation immédiatement.",
-        ];
-
-        $toneClosing = [
-            'cordial' => 'Cordialement,',
-            'ferme' => "Dans l'attente de votre règlement,",
-            'urgent' => 'En espérant une action immédiate de votre part,',
-        ];
-
-        $tone = $this->previewTone;
-
-        return [
-            'greeting' => $toneGreetings[$tone] ?? $toneGreetings['cordial'],
-            'body' => $toneBody[$tone] ?? $toneBody['cordial'],
-            'closing' => $toneClosing[$tone] ?? $toneClosing['cordial'],
-        ];
+        return app(\App\Services\Shared\WhatsAppTemplateCatalog::class)
+            ->renderManualReminder($this->invoice, $this->company, $this->previewTone);
     }
 
     public function requestDeleteInvoice(): void

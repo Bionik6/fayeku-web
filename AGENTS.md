@@ -176,7 +176,8 @@ app/
 │   │                 InvitationService, PortfolioService, AlertService, ComplianceService,
 │   │                 DGIDConnector, FNEFiscalConnector
 │   ├── Auth/         AuthService
-│   └── Shared/       OtpService, QuotaService, FakeSmsProvider, FakeWhatsAppProvider, TwilioWhatsAppProvider
+│   └── Shared/       OtpService, QuotaService, FakeSmsProvider, FakeWhatsAppProvider,
+│                     OrangeSmsProvider, WhatsAppBusinessProvider
 ├── Http/
 │   ├── Controllers/
 │   │   ├── PME/      InvoicePdfController, QuotePdfController, TreasuryExportController
@@ -1613,15 +1614,15 @@ SESSION_LIFETIME=120
 OTP_EXPIRY_MINUTES=10
 OTP_MAX_ATTEMPTS=3
 
-# SMS — abstracted. Values: orange | twilio | infobip
-SMS_PROVIDER=orange
-ORANGE_SMS_API_KEY=
-ORANGE_SMS_SENDER_ID=Fayeku
+# SMS — Orange SMS API (Sénégal) utilisé pour les OTP
+ORANGE_SMS_CLIENT_ID=
+ORANGE_SMS_CLIENT_SECRET=
+ORANGE_SMS_SENDER_ADDRESS=   # format tel:+221XXXXXXXX
+ORANGE_SMS_SENDER_NAME=Fayeku
 
-# WhatsApp — abstracted. Values: 360dialog | meta | twilio_whatsapp
-WHATSAPP_PROVIDER=360dialog
-WHATSAPP_API_KEY=
+# WhatsApp — Meta Cloud API direct (relances + notifications)
 WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_ACCESS_TOKEN=
 
 FILESYSTEM_DISK=local
 

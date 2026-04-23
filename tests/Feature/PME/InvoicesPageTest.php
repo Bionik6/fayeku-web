@@ -994,9 +994,10 @@ test('buildPreviewMessage() retourne le message cordial correct', function () {
         ->instance()
         ->buildPreviewMessage();
 
-    expect($msg['greeting'])->toContain('Sonatel SA')
-        ->and($msg['body'])->toContain('FAC-MSG')
-        ->and($msg['closing'])->toBe('Cordialement,');
+    expect($msg)
+        ->toContain('Sonatel SA')
+        ->toContain('FAC-MSG')
+        ->toContain('Cordialement,');
 });
 
 test('buildPreviewMessage() retourne le message ferme correct', function () {
@@ -1020,8 +1021,9 @@ test('buildPreviewMessage() retourne le message ferme correct', function () {
         ->instance()
         ->buildPreviewMessage();
 
-    expect($msg['body'])->toContain('FAC-FERME')
-        ->and($msg['closing'])->toContain('règlement');
+    expect($msg)
+        ->toContain('FAC-FERME')
+        ->toContain('retard de paiement');
 });
 
 test('buildPreviewMessage() retourne le message urgent correct', function () {
@@ -1045,12 +1047,13 @@ test('buildPreviewMessage() retourne le message urgent correct', function () {
         ->instance()
         ->buildPreviewMessage();
 
-    expect($msg['greeting'])->toContain('SENELEC')
-        ->and($msg['body'])->toContain('URGENT')
-        ->and($msg['closing'])->toContain('immédiate');
+    expect($msg)
+        ->toContain('SENELEC')
+        ->toContain('URGENT')
+        ->toContain('immédiate');
 });
 
-test('buildPreviewMessage() retourne des chaînes vides quand previewInvoiceId est null', function () {
+test('buildPreviewMessage() retourne une chaine vide quand previewInvoiceId est null', function () {
     ['user' => $user] = createSmeWithCompany();
 
     $msg = Livewire::actingAs($user)
@@ -1058,7 +1061,7 @@ test('buildPreviewMessage() retourne des chaînes vides quand previewInvoiceId e
         ->instance()
         ->buildPreviewMessage();
 
-    expect($msg)->toBe(['greeting' => '', 'body' => '', 'closing' => '']);
+    expect($msg)->toBe('');
 });
 
 // ─── Aperçu de relance — sendReminder() ──────────────────────────────────────

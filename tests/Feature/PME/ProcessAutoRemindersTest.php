@@ -80,7 +80,7 @@ it('dispatches a WhatsApp reminder matching a strategy offset', function () {
         return $job->mode === ReminderMode::Auto
             && $job->channel === ReminderChannel::WhatsApp
             && $job->dayOffset === 3
-            && str_contains($job->messageBody, 'Rappel J+3');
+            && $job->templateKey === 'reminder_auto_p3';
     });
 });
 
