@@ -25,7 +25,8 @@
       "Bash(grep -E \"\\\\.\\(php|blade\\\\.php\\)$\")",
       "Bash(composer require:*)",
       "Bash(find /Volumes/Data/Business/Fayeku/Developments/fayeku-web/modules/PME -name *Client*Test* -o -name *Clients*Test*)",
-      "Bash(php -l /Volumes/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/pme/clients/⚡index.blade.php)"
+      "Bash(php -l /Volumes/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/pme/clients/⚡index.blade.php)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000)"
     ]
   },
   "enableAllProjectMcpServers": true,
