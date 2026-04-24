@@ -6,6 +6,7 @@ use App\Interfaces\Shared\SmsProviderInterface;
 use App\Interfaces\Shared\WhatsAppProviderInterface;
 use App\Services\Shared\FakeSmsProvider;
 use App\Services\Shared\FakeWhatsAppProvider;
+use App\Services\Shared\MetaTemplateFetcher;
 use App\Services\Shared\OrangeSmsProvider;
 use App\Services\Shared\OtpService;
 use App\Services\Shared\QuotaService;
@@ -21,6 +22,17 @@ class SharedServiceProvider extends ServiceProvider
         $this->app->singleton(OtpService::class);
         $this->app->singleton(QuotaService::class);
         $this->app->singleton(WhatsAppTemplateCatalog::class);
+
+        $this->app->singleton(MetaTemplateFetcher::class, function ($app) {
+            return new MetaTemplateFetcher(
+                baseUrl: config('services.whatsapp.base_url'),
+                apiVersion: config('services.whatsapp.api_version'),
+                businessAccountId: config('services.whatsapp.business_account_id'),
+                accessToken: config('services.whatsapp.access_token'),
+                cacheMinutes: (int) config('services.whatsapp.templates_cache_minutes', 60 * 24),
+                cache: $app->make(CacheRepository::class),
+            );
+        });
 
         $this->app->bind(SmsProviderInterface::class, function ($app) {
             $clientId = config('services.orange_sms.client_id');

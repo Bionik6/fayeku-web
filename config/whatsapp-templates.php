@@ -5,18 +5,20 @@
 | Fayeku — Catalogue des templates WhatsApp
 |--------------------------------------------------------------------------
 |
-| Source de vérité pour le nom Meta ET le corps exact de chaque template
-| approuvé dans Business Manager. Utilisé pour :
-|   - rendre le message_body stocké en BDD (reminders / notifications)
-|   - afficher l'aperçu dans l'UI (page Recouvrement, modal send)
-|   - construire le contenu email (fallback Resend)
+| Ce fichier expose :
+|   - `name`    → nom Meta du template (source de vérité en prod).
+|   - `subject` → sujet de l'email fallback Resend (invention locale).
+|   - `body`    → FALLBACK local uniquement. En prod, les bodies sont récupérés
+|                 à chaud depuis Meta Graph API par MetaTemplateFetcher, mis
+|                 en cache 24 h et l'aperçu / l'email utilisent la version
+|                 fraîche de Meta. Le body ci-dessous sert de filet de sécurité
+|                 (tests, dev sans credentials, API Meta injoignable).
 |
-| Les variables utilisent le format {variable_name} (brace simple) et sont
-| remplacées par strtr(). Elles matchent 1:1 les paramètres nommés du
-| template Meta ({{client_name}} côté Meta).
+| Bodies locaux = format `{variable}` (brace simple) → substitution strtr().
+| Bodies Meta   = format `{{variable}}` (brace double) → substitution strtr().
+| Les deux paths sont gérés par WhatsAppTemplateCatalog::substitute().
 |
-| IMPORTANT : si tu modifies un template dans Business Manager, mets à jour
-| le 'body' correspondant ici pour que l'aperçu et l'email restent alignés.
+| Pour forcer un refresh du cache : `php artisan whatsapp:templates:sync`.
 |
 */
 

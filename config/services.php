@@ -39,8 +39,11 @@ return [
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
         'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
         'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
         'default_language' => env('WHATSAPP_DEFAULT_LANGUAGE', 'fr'),
+        // TTL du cache local des bodies récupérés depuis Meta Graph API (en minutes).
+        'templates_cache_minutes' => (int) env('WHATSAPP_TEMPLATES_CACHE_MINUTES', 60 * 24),
         'templates' => [
             // Clé = offset en jours par rapport à l'échéance ( -3 = 3 jours avant, +7 = 7 jours après, …)
             'reminder' => [

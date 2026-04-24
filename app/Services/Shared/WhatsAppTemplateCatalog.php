@@ -8,8 +8,19 @@ use App\Services\PME\CurrencyService;
 use Carbon\CarbonInterface;
 use InvalidArgumentException;
 
+/**
+ * Résout les templates WhatsApp :
+ *   - Le nom Meta et le sujet email viennent de config/whatsapp-templates.php (référentiel local).
+ *   - Le body vient en priorité de Meta Graph API (via MetaTemplateFetcher, cache 24 h).
+ *   - Si Meta est indisponible, le body tombe en fallback sur la copie locale
+ *     de config/whatsapp-templates.php — suffisant pour que l'app fonctionne en
+ *     dev, en tests et en dégradation, tout en gardant Meta comme source de
+ *     vérité pour ce qui part réellement en WhatsApp.
+ */
 class WhatsAppTemplateCatalog
 {
+    public function __construct(private readonly MetaTemplateFetcher $fetcher) {}
+
     /**
      * Retourne le nom Meta du template (ex. "fayeku_reminder_invoice_due_manual_cordial").
      */
@@ -25,20 +36,32 @@ class WhatsAppTemplateCatalog
     }
 
     /**
-     * Rend le corps du template avec les variables substituées. Ce rendu
-     * est utilisé pour l'aperçu UI, le message stocké en BDD et le fallback email.
+     * Rend le corps du template avec les variables substituées. Sert l'aperçu
+     * UI, le message_body stocké en BDD et le fallback email.
      *
      * @param  array<string, string>  $variables
      */
-    public function render(string $key, array $variables): string
+    public function render(string $key, array $variables, ?string $language = null): string
     {
-        $body = config("whatsapp-templates.{$key}.body");
+        $metaName = $this->nameFor($key);
+        $lang = $language ?? (string) config('services.whatsapp.default_language', 'fr');
 
-        if (! is_string($body) || $body === '') {
-            throw new InvalidArgumentException("Template WhatsApp inconnu : {$key}");
+        $body = $this->fetcher->getBody($metaName, $lang);
+
+        if ($body === null || $body === '') {
+            // Fallback local : utilisé si Meta n'a pas répondu (cache froid, API down,
+            // credentials absents en dev/test). Le body local doit refléter le contenu
+            // approuvé côté Meta.
+            $body = config("whatsapp-templates.{$key}.body");
+
+            if (! is_string($body) || $body === '') {
+                throw new InvalidArgumentException("Template WhatsApp inconnu : {$key}");
+            }
+
+            return $this->substitute($body, $variables, braces: 'single');
         }
 
-        return $this->substitute($body, $variables);
+        return $this->substitute($body, $variables, braces: 'double');
     }
 
     /**
@@ -54,17 +77,19 @@ class WhatsAppTemplateCatalog
             return 'Fayeku — notification';
         }
 
-        return $this->substitute($subject, $variables);
+        return $this->substitute($subject, $variables, braces: 'single');
     }
 
     /**
      * @param  array<string, string>  $variables
      */
-    private function substitute(string $template, array $variables): string
+    private function substitute(string $template, array $variables, string $braces): string
     {
+        $open = $braces === 'double' ? '{{' : '{';
+        $close = $braces === 'double' ? '}}' : '}';
         $replacements = [];
         foreach ($variables as $name => $value) {
-            $replacements['{'.$name.'}'] = (string) $value;
+            $replacements[$open.$name.$close] = (string) $value;
         }
 
         return strtr($template, $replacements);
