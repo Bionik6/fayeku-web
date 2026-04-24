@@ -2,6 +2,7 @@
 
 namespace App\Providers\Shared;
 
+use App\Interfaces\Shared\OtpChannelInterface;
 use App\Interfaces\Shared\SmsProviderInterface;
 use App\Interfaces\Shared\WhatsAppProviderInterface;
 use App\Services\Shared\FakeSmsProvider;
@@ -10,7 +11,9 @@ use App\Services\Shared\MetaTemplateFetcher;
 use App\Services\Shared\OrangeSmsProvider;
 use App\Services\Shared\OtpService;
 use App\Services\Shared\QuotaService;
+use App\Services\Shared\SmsOtpChannel;
 use App\Services\Shared\WhatsAppBusinessProvider;
+use App\Services\Shared\WhatsAppOtpChannel;
 use App\Services\Shared\WhatsAppTemplateCatalog;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\ServiceProvider;
@@ -68,6 +71,13 @@ class SharedServiceProvider extends ServiceProvider
                 accessToken: $accessToken,
                 defaultLanguage: config('services.whatsapp.default_language'),
             );
+        });
+
+        $this->app->bind(OtpChannelInterface::class, function ($app) {
+            return match (config('fayeku.otp_channel', 'whatsapp')) {
+                'sms' => $app->make(SmsOtpChannel::class),
+                default => $app->make(WhatsAppOtpChannel::class),
+            };
         });
     }
 

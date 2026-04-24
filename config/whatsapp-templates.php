@@ -280,4 +280,24 @@ Cordialement,
 TEXT,
     ],
 
+    // ─── Authentification (OTP) ─────────────────────────────────────────────
+    //
+    // Template catégorie AUTHENTICATION côté Meta. Utilisé tant qu'Orange IAM
+    // n'a pas validé le compte SMS ; à terme, bascule vers SmsOtpChannel via
+    // OTP_CHANNEL=sms sans toucher au code.
+
+    'otp_code' => [
+        'name' => 'fayeku_otp_verification',
+        'subject' => 'Votre code Fayeku',
+        // Fallback local reproduisant la structure des templates Meta
+        // AUTHENTICATION (1 variable positionnelle + footers sécurité/expiration).
+        // Meta rend la vraie copie, celle-ci sert uniquement à l'aperçu local,
+        // au mail Resend et aux tests.
+        'body' => <<<'TEXT'
+*{{1}}* est votre code de vérification.
+
+Pour votre sécurité, ne partagez pas ce code.
+TEXT,
+    ],
+
 ];

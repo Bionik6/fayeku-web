@@ -2,13 +2,13 @@
 
 namespace App\Services\Shared;
 
+use App\Interfaces\Shared\OtpChannelInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Interfaces\Shared\SmsProviderInterface;
 
 class OtpService
 {
-    public function __construct(private SmsProviderInterface $sms) {}
+    public function __construct(private OtpChannelInterface $channel) {}
 
     public function generate(string $phone, string $purpose = 'verification'): string
     {
@@ -25,7 +25,7 @@ class OtpService
             'updated_at' => now(),
         ]);
 
-        $this->sms->send($phone, "Votre code Fayeku : {$code}");
+        $this->channel->send($phone, $code);
 
         return $code;
     }
