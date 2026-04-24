@@ -29,12 +29,10 @@
         </div>
 
         <div>
-        <div class="rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Focus PME</p>
-          <p class="mt-4 text-3xl font-semibold text-ink">Moins d’impayés. Plus de contrôle.</p>
-          <p class="mt-4 text-base leading-7 text-slate-600">Facturation pro, relances WhatsApp, historique client et dashboard trésorerie dans un seul espace.</p>
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
+            <img src="/screenshots/hero-pme-dashboard.png" alt="Dashboard Fayeku PME — KPIs facturation, trésorerie et activité récente" width="1440" height="1050" class="h-auto w-full rounded-[1.6rem]" loading="eager" />
+          </div>
         </div>
-      </div>
       </div>
     </section>
   
@@ -57,8 +55,47 @@
     </section>
 
     <section class="pb-20">
+      <div class="mx-auto w-full max-w-7xl space-y-16 px-4 sm:px-6 lg:px-8">
+
+        <div class="grid items-center gap-10 lg:grid-cols-2">
+          <div class="space-y-4">
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Facturation</p>
+            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Vos factures sont suivies en temps réel</h3>
+            <p class="text-base leading-7 text-slate-600">Créez vos factures en 30 secondes, suivez leur statut et filtrez par état. Chaque facture affiche son montant, son échéance et son statut de paiement.</p>
+          </div>
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
+            <img src="/screenshots/screen-pme-invoices.png" alt="Liste des factures Fayeku avec filtres par statut" width="1440" height="900" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
+          </div>
+        </div>
+
+        <div class="grid items-center gap-10 lg:grid-cols-2">
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft lg:order-first">
+            <img src="/screenshots/screen-pme-collections.png" alt="Dashboard recouvrement Fayeku — relances automatiques WhatsApp" width="1440" height="1100" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
+          </div>
+          <div class="space-y-4">
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Recouvrement</p>
+            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Vos relances sont automatisées</h3>
+            <p class="text-base leading-7 text-slate-600">Configurez vos règles de relance une seule fois. Fayeku envoie les messages WhatsApp au bon moment, avec le bon ton, et joint la facture PDF automatiquement.</p>
+          </div>
+        </div>
+
+        <div class="grid items-center gap-10 lg:grid-cols-2">
+          <div class="space-y-4">
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Trésorerie</p>
+            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Vous anticipez vos encaissements</h3>
+            <p class="text-base leading-7 text-slate-600">Vision à 90 jours de votre trésorerie. Montant encaissé, entrées prévues, délai moyen de paiement et montant à risque — tout est visible en un coup d'œil.</p>
+          </div>
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
+            <img src="/screenshots/screen-pme-treasury.png" alt="Prévision de trésorerie Fayeku à 90 jours" width="1440" height="900" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="pb-20">
       <div class="mx-auto grid w-full max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
-        
+
               <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-5">
                 <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
     <svg class="w-5 h-5 text-emerald-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>

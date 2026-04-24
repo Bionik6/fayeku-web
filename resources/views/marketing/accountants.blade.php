@@ -22,12 +22,10 @@
         </div>
 
         <div>
-        <div class="rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Pourquoi maintenant</p>
-          <p class="mt-4 text-3xl font-semibold text-ink">Fini la collecte chaotique. Bienvenue dans le cockpit.</p>
-          <p class="mt-4 text-base leading-7 text-slate-600">Centralisez les factures de vos clients en temps réel, exportez vers Sage en un clic, et suivez leur activité sans attendre la fin du mois.</p>
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
+            <img src="/screenshots/hero-compta-dashboard.png" alt="Cockpit Fayeku Compta — portefeuille clients, alertes et commissions" width="1440" height="1200" class="h-auto w-full rounded-[1.6rem]" loading="eager" />
+          </div>
         </div>
-      </div>
       </div>
     </section>
   
@@ -125,6 +123,50 @@
                 </article>
               
         </div>
+      </div>
+    </section>
+
+    <section class="pb-20">
+      <div class="mx-auto w-full max-w-7xl space-y-16 px-4 sm:px-6 lg:px-8">
+
+        <div class="space-y-4 mx-auto max-w-3xl text-center">
+          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Voir en action</p>
+          <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Un cockpit pensé pour votre quotidien.</h2>
+        </div>
+
+        <div class="grid items-center gap-10 lg:grid-cols-2">
+          <div class="space-y-4">
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Portefeuille</p>
+            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Tous vos clients PME en un coup d'œil</h3>
+            <p class="text-base leading-7 text-slate-600">Visualisez le statut de chaque client, le nombre de factures impayées et les alertes critiques. Filtrez par état et accédez au détail en un clic.</p>
+          </div>
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
+            <img src="/screenshots/screen-compta-clients.png" alt="Liste clients Fayeku Compta avec indicateurs de statut" width="1440" height="900" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
+          </div>
+        </div>
+
+        <div class="grid items-center gap-10 lg:grid-cols-2">
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft lg:order-first">
+            <img src="/screenshots/screen-compta-commissions.png" alt="Programme partenaire Fayeku Compta — tiers et commissions" width="1440" height="1000" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
+          </div>
+          <div class="space-y-4">
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Commissions</p>
+            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Suivez vos revenus partenaire</h3>
+            <p class="text-base leading-7 text-slate-600">Progression de tiers Partner → Gold → Platinum, commission du mois et nombre de PME actives référées. Tout est transparent.</p>
+          </div>
+        </div>
+
+        <div class="grid items-center gap-10 lg:grid-cols-2">
+          <div class="space-y-4">
+            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Alertes</p>
+            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Restez informé sans effort</h3>
+            <p class="text-base leading-7 text-slate-600">Impayés critiques, retards anormaux, clients inactifs — Fayeku Compta vous alerte en temps réel pour que vous puissiez intervenir au bon moment.</p>
+          </div>
+          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
+            <img src="/screenshots/screen-compta-alerts.png" alt="Alertes Fayeku Compta — impayés critiques et suivi client" width="1440" height="900" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
+          </div>
+        </div>
+
       </div>
     </section>
 
