@@ -883,8 +883,7 @@ test('openPreview() utilise WhatsApp quand le client a un téléphone', function
         ->test('pages::pme.invoices.index')
         ->call('openPreview', $invoice->id)
         ->assertSet('previewChannel', 'whatsapp')
-        ->assertSet('previewTone', 'cordial')
-        ->assertSet('previewAttachPdf', true);
+        ->assertSet('previewTone', 'cordial');
 });
 
 test('openPreview() fallback sur email quand le client n\'a pas de téléphone', function () {
@@ -1139,7 +1138,7 @@ test('"Relancer le client" n\'est pas affiché pour une facture payée', functio
         ->assertDontSeeHtml("openPreview('{$invoice->id}')");
 });
 
-test('"Joindre PDF" est masqué dans le slideover quand le canal est SMS', function () {
+test('la pièce jointe PDF est toujours présente dans l\'aperçu (plus de toggle "Joindre PDF")', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
     $client = Client::factory()->create([
         'company_id' => $company->id,
@@ -1153,26 +1152,7 @@ test('"Joindre PDF" est masqué dans le slideover quand le canal est SMS', funct
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
         ->call('openPreview', $invoice->id)
-        ->set('previewChannel', 'sms')
         ->assertDontSee('Joindre PDF');
-});
-
-test('"Joindre PDF" est visible quand le canal est WhatsApp', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-    $client = Client::factory()->create([
-        'company_id' => $company->id,
-        'phone' => '+221700000000',
-    ]);
-    $invoice = Invoice::factory()
-        ->forCompany($company)
-        ->withClient($client)
-        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('openPreview', $invoice->id)
-        ->set('previewChannel', 'whatsapp')
-        ->assertSee('Joindre PDF');
 });
 
 // ─── Voir le client — factures ────────────────────────────────────────────────
@@ -1215,27 +1195,7 @@ test('"Voir le client" est affiché dans le dropdown quand la facture a un clien
 
 // ─── Canal d'envoi — ordre et conditions ──────────────────────────────────────
 
-test('WhatsApp apparaît avant SMS dans le slideover quand le client a un téléphone', function () {
-    ['user' => $user, 'company' => $company] = createSmeWithCompany();
-    $client = Client::factory()->create([
-        'company_id' => $company->id,
-        'phone' => '+221700000000',
-        'email' => null,
-    ]);
-    $invoice = Invoice::factory()
-        ->forCompany($company)
-        ->withClient($client)
-        ->create(['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
-
-    $html = Livewire::actingAs($user)
-        ->test('pages::pme.invoices.index')
-        ->call('openPreview', $invoice->id)
-        ->html();
-
-    expect(strpos($html, "'whatsapp'"))->toBeLessThan(strpos($html, "'sms'"));
-});
-
-test('Email apparaît après WhatsApp et SMS quand le client a téléphone et email', function () {
+test('Email apparaît après WhatsApp quand le client a téléphone et email', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
     $client = Client::factory()->create([
         'company_id' => $company->id,
@@ -1253,11 +1213,10 @@ test('Email apparaît après WhatsApp et SMS quand le client a téléphone et em
         ->html();
 
     $posWhatsapp = strpos($html, "'whatsapp'");
-    $posSms = strpos($html, "'sms'");
     $posEmail = strpos($html, "'email'");
 
-    expect($posWhatsapp)->toBeLessThan($posSms)
-        ->and($posSms)->toBeLessThan($posEmail);
+    expect($posWhatsapp)->toBeLessThan($posEmail)
+        ->and($html)->not->toContain("'sms'");
 });
 
 test('Email est affiché quand le client a seulement un email', function () {
@@ -1277,7 +1236,7 @@ test('Email est affiché quand le client a seulement un email', function () {
         ->call('openPreview', $invoice->id)
         ->assertSee('Email')
         ->assertDontSee('WhatsApp')
-        ->assertDontSee('SMS');
+        ->assertDontSee('>SMS<');
 });
 
 test('Email est masqué quand le client n\'a pas d\'adresse email', function () {

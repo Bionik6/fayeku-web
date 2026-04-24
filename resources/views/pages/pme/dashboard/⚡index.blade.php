@@ -46,7 +46,6 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
     public string $previewTone = 'cordial';
 
-    public bool $previewAttachPdf = true;
 
     public string $previewChannel = 'whatsapp';
 
@@ -218,7 +217,6 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
 
         $this->previewInvoiceId = $invoiceId;
         $this->previewTone = 'cordial';
-        $this->previewAttachPdf = true;
         $this->previewChannel = filled($invoice->client?->phone)
             ? \App\Enums\PME\ReminderChannel::WhatsApp->value
             : \App\Enums\PME\ReminderChannel::Email->value;
@@ -722,7 +720,6 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
             :message="$this->buildPreviewMessage()"
             :company="$company"
             :previewInvoiceId="$previewInvoiceId"
-            :previewAttachPdf="$previewAttachPdf"
             :previewChannel="$previewChannel"
         />
     @endif

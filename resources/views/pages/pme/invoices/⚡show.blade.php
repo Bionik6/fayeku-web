@@ -43,7 +43,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public string $previewTone = 'cordial';
 
-    public bool $previewAttachPdf = true;
 
     public string $previewChannel = 'whatsapp';
 
@@ -306,7 +305,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         $this->previewInvoiceId = $this->invoice->id;
         $this->previewTone = 'cordial';
-        $this->previewAttachPdf = true;
         $this->previewChannel = filled($this->invoice->client?->phone)
             ? ReminderChannel::WhatsApp->value
             : ReminderChannel::Email->value;
@@ -801,7 +799,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             :message="$this->buildPreviewMessage()"
             :company="$company"
             :preview-invoice-id="$previewInvoiceId"
-            :preview-attach-pdf="$previewAttachPdf"
             :preview-channel="$previewChannel"
             close-action="closeReminderPreview"
             send-action="sendReminderNow"

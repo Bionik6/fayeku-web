@@ -32,7 +32,7 @@ return [
 
 Bonjour {client_name},
 
-{company_name} souhaite vous rappeler que la facture {invoice_number} d'un montant de {invoice_amount}, échue le {due_date}, reste en attente de règlement.
+*{company_name}* souhaite vous rappeler que la facture *{invoice_number}* d'un montant de *{invoice_amount}*, échue le *{due_date}*, reste en attente de règlement.
 
 Nous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.
 
@@ -52,7 +52,7 @@ TEXT,
 
 Bonjour {client_name},
 
-La facture {invoice_number} d'un montant de {invoice_amount}, émise par {company_name}, est en retard de paiement depuis le {due_date}.
+La facture *{invoice_number}* d'un montant de *{invoice_amount}*, émise par *{company_name}*, est en retard de paiement depuis le *{due_date}*.
 
 Nous vous demandons de procéder au règlement dans les plus brefs délais.
 
@@ -70,7 +70,7 @@ TEXT,
         'body' => <<<'TEXT'
 *Action requise — paiement en retard*
 
-URGENT : {client_name}, la facture {invoice_number} d'un montant de {invoice_amount}, émise par {company_name}, est impayée depuis le {due_date}. Malgré nos précédentes relances, aucun règlement n'a été effectué.
+URGENT : {client_name}, la facture *{invoice_number}* d'un montant de *{invoice_amount}*, émise par *{company_name}*, est impayée depuis le *{due_date}*. Malgré nos précédentes relances, aucun règlement n'a été effectué.
 
 Nous vous prions de régulariser cette situation immédiatement.
 
@@ -90,7 +90,7 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-Nous vous informons que la facture {invoice_number} d'un montant de {invoice_amount} arrive à échéance le {due_date} (dans 3 jours).
+Nous vous informons que la facture *{invoice_number}* d'un montant de *{invoice_amount}* arrive à échéance le *{due_date}* (dans 3 jours).
 
 Merci d'anticiper votre règlement.
 
@@ -104,7 +104,7 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-*{company_name}* vous informe que la facture {invoice_number} d'un montant de {invoice_amount} arrive à échéance aujourd'hui {due_date}.
+*{company_name}* vous informe que la facture *{invoice_number}* d'un montant de *{invoice_amount}* arrive à échéance aujourd'hui *{due_date}*.
 
 Merci de procéder au règlement.
 
@@ -118,7 +118,7 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-*{company_name}* constate que la facture {invoice_number} d'un montant de {invoice_amount}, échue le {due_date}, reste impayée depuis 3 jours.
+*{company_name}* constate que la facture *{invoice_number}* d'un montant de *{invoice_amount}*, échue le *{due_date}*, reste impayée depuis 3 jours.
 
 Merci de régulariser votre situation.
 
@@ -132,7 +132,7 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-*{company_name}* vous relance : la facture {invoice_number} d'un montant de {invoice_amount}, échue le {due_date}, reste impayée depuis 7 jours.
+*{company_name}* vous relance : la facture *{invoice_number}* d'un montant de *{invoice_amount}*, échue le *{due_date}*, reste impayée depuis 7 jours.
 
 Merci de régler dans les plus brefs délais.
 
@@ -146,7 +146,7 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-*{company_name}* revient vers vous : la facture {invoice_number} d'un montant de {invoice_amount}, échue le {due_date}, est en retard de 15 jours.
+*{company_name}* revient vers vous : la facture *{invoice_number}* d'un montant de *{invoice_amount}*, échue le *{due_date}*, est en retard de 15 jours.
 
 Nous vous invitons à procéder au règlement sans délai.
 
@@ -160,7 +160,7 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-Malgré nos précédents rappels, la facture {invoice_number} d'un montant de {invoice_amount}, échue le {due_date}, reste impayée depuis 30 jours.
+Malgré nos précédents rappels, la facture *{invoice_number}* d'un montant de *{invoice_amount}*, échue le *{due_date}*, reste impayée depuis 30 jours.
 
 Merci de nous contacter pour régulariser votre situation.
 
@@ -174,9 +174,9 @@ TEXT,
         'body' => <<<'TEXT'
 Bonjour {client_name},
 
-Malgré nos précédents rappels, la facture {invoice_number} d'un montant de {invoice_amount}, échue le {due_date}, reste impayée depuis 60 jours.
+Malgré nos précédents rappels, la facture *{invoice_number}* d'un montant de *{invoice_amount}*, échue le *{due_date}*, reste impayée depuis 60 jours.
 
-Nous vous demandons de prendre contact avec {company_name} dans les plus brefs délais.
+Nous vous demandons de prendre contact avec *{company_name}* dans les plus brefs délais.
 
 {sender_signature} via Fayeku
 TEXT,
@@ -192,7 +192,7 @@ TEXT,
 
 Bonjour {client_name},
 
-*{company_name}* vous informe que la facture {invoice_number} d'un montant de {invoice_amount} est désormais disponible.
+*{company_name}* vous informe que la facture *{invoice_number}* d'un montant de *{invoice_amount}* est désormais disponible.
 
 Nous vous invitons à la consulter dès que possible.
 
@@ -212,7 +212,7 @@ TEXT,
 
 Bonjour {client_name},
 
-*{company_name}* vous informe que la facture {invoice_number} d'un montant de {invoice_amount} a été émise, avec une échéance fixée au {invoice_due_date}.
+*{company_name}* vous informe que la facture *{invoice_number}* d'un montant de *{invoice_amount}* a été émise, avec une échéance fixée au *{invoice_due_date}*.
 
 Nous vous invitons à la consulter dès que possible.
 
@@ -230,7 +230,7 @@ TEXT,
 
 Bonjour {client_name},
 
-*{company_name}* confirme la réception de votre paiement de {amount_paid} le {payment_date} pour la facture {invoice_number}.
+*{company_name}* confirme la réception de votre paiement de *{amount_paid}* le *{payment_date}* pour la facture *{invoice_number}*.
 
 Solde restant dû : *{amount_remaining}*.
 
@@ -250,7 +250,7 @@ TEXT,
 
 Bonjour {client_name},
 
-*{company_name}* confirme la réception de votre paiement de {amount_paid} pour la facture {invoice_number}, reçu le {payment_date}.
+*{company_name}* confirme la réception de votre paiement de *{amount_paid}* pour la facture *{invoice_number}*, reçu le *{payment_date}*.
 
 La facture est désormais considérée comme soldée. Nous vous remercions pour votre règlement.
 
@@ -268,7 +268,7 @@ TEXT,
 
 Bonjour {client_name},
 
-*{company_name}* vous a envoyé le devis {quote_number} d'un montant de {quote_amount}, valable jusqu'au {expiry_date}.
+*{company_name}* vous a envoyé le devis *{quote_number}* d'un montant de *{quote_amount}*, valable jusqu'au *{expiry_date}*.
 
 Consultez le détail et validez le devis en cliquant sur le bouton ci-dessous.
 

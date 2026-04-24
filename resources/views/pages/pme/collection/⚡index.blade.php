@@ -52,7 +52,6 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
     public string $previewTone = 'cordial';
 
-    public bool $previewAttachPdf = true;
 
     public string $previewChannel = 'whatsapp';
 
@@ -219,7 +218,6 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
 
         $this->previewInvoiceId = $invoiceId;
         $this->previewTone = 'cordial';
-        $this->previewAttachPdf = true;
 
         $invoice = $this->overdueInvoices->firstWhere('id', $invoiceId);
         $this->previewChannel = filled($invoice?->client?->phone)
@@ -723,7 +721,6 @@ new #[Title('Recouvrement')] #[Layout('layouts::pme')] class extends Component {
             :message="$this->buildPreviewMessage()"
             :company="$company"
             :preview-invoice-id="$previewInvoiceId"
-            :preview-attach-pdf="$previewAttachPdf"
             :preview-channel="$previewChannel"
         />
     @endif
