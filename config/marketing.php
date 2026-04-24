@@ -23,9 +23,16 @@ return [
             'x' => 'https://x.com/fayeku',
         ],
         'contact' => [
-            'email' => 'hello@fayeku.sn',
+            'email' => 'contact@fayeku.sn',
             'sales_email' => 'sales@fayeku.sn',
-            'address' => 'Dakar, Sénégal',
+            'phone' => '+221 77 445 76 32',
+            'address' => 'Villa N°71, Cité Chérif Macky Sall, Guédiawaye, Sénégal',
+        ],
+        'legal' => [
+            'editor' => 'CISS IBRAHIMA',
+            'company' => 'KHALIL SOFTWARES',
+            'ninea' => '007524194',
+            'rccm' => 'SN DKR 2019 A 25527',
         ],
     ],
     'navigation' => [
@@ -255,12 +262,14 @@ return [
     'dgid_roadmap_note' => 'La Loi de Finances 2025 a institue l obligation de facturation electronique au Senegal. Des publication des modalites techniques officielles, Fayeku integrera nativement la conformite DGID dans les plans Essentiel et Entreprise, sans surcout.',
     'legal_pages' => [
         'mentions-legales' => [
-            'title' => 'Mentions legales',
-            'description' => 'Informations legales du site Fayeku.',
+            'title' => 'Mentions légales',
+            'description' => 'Informations légales du site fayeku.sn.',
             'sections' => [
-                ['title' => 'Editeur', 'body' => 'Fayeku est une plateforme SaaS B2B dediee aux PME et cabinets comptables en Afrique de l Ouest. Les mentions societaires definitives seront completees a la creation de la structure legale.'],
-                ['title' => 'Contact', 'body' => 'Pour toute question, vous pouvez ecrire a hello@fayeku.sn.'],
-                ['title' => 'Propriete intellectuelle', 'body' => 'Les contenus, marques, logos et maquettes presentes sur ce site sont proteges et ne peuvent pas etre reutilises sans autorisation.'],
+                ['title' => 'Éditeur du site', 'body' => 'Le site fayeku.sn est édité par CISS IBRAHIMA, agissant sous le nom commercial KHALIL SOFTWARES, dont le siège est situé Villa N°71, Cité Chérif Macky Sall, Guédiawaye, Sénégal.'],
+                ['title' => 'Identification', 'body' => 'NINEA : 007524194 — RCCM : SN DKR 2019 A 25527.'],
+                ['title' => 'Contact', 'body' => 'Email : contact@fayeku.sn — Téléphone : +221 77 445 76 32.'],
+                ['title' => 'Propriété intellectuelle', 'body' => 'Les contenus, marques, logos et maquettes présentés sur ce site sont protégés et ne peuvent pas être réutilisés sans autorisation.'],
+                ['title' => 'Hébergement', 'body' => 'Infrastructure cloud sécurisée à haute disponibilité. Détails disponibles sur demande à contact@fayeku.sn.'],
             ],
         ],
         'confidentialite' => [
@@ -269,7 +278,7 @@ return [
             'sections' => [
                 ['title' => 'Donnees collectees', 'body' => 'Nous collectons uniquement les informations utiles au traitement des demandes de contact, d essai ou d onboarding.'],
                 ['title' => 'Usage des donnees', 'body' => 'Ces donnees servent a vous recontacter, qualifier votre besoin et preparer votre mise en place Fayeku.'],
-                ['title' => 'Vos droits', 'body' => 'Vous pouvez demander l acces, la correction ou la suppression de vos donnees en nous ecrivant a hello@fayeku.sn.'],
+                ['title' => 'Vos droits', 'body' => 'Vous pouvez demander l acces, la correction ou la suppression de vos donnees en nous ecrivant a contact@fayeku.sn.'],
             ],
         ],
     ],

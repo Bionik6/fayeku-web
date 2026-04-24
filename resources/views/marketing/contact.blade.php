@@ -16,9 +16,11 @@
         <div class="rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft">
           <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Coordonnées</p>
           <div class="mt-4 space-y-3 text-base text-slate-600">
-            <p>Dakar, Sénégal</p>
-            <p><a href="mailto:hello@fayeku.sn" class="hover:text-primary">hello@fayeku.sn</a></p>
-            
+            <p>{{ $site['contact']['address'] }}</p>
+            <p><a href="mailto:{{ $site['contact']['email'] }}" class="hover:text-primary">{{ $site['contact']['email'] }}</a></p>
+            @if (! empty($site['contact']['phone']))
+              <p><a href="tel:{{ preg_replace('/\s+/', '', $site['contact']['phone']) }}" class="hover:text-primary">{{ $site['contact']['phone'] }}</a></p>
+            @endif
           </div>
         </div>
       </div>

@@ -37,6 +37,9 @@
             <div class="mt-4 space-y-3 text-sm text-slate-600">
                 <p>{{ $site['contact']['address'] }}</p>
                 <p><a href="mailto:{{ $site['contact']['email'] }}" class="hover:text-primary">{{ $site['contact']['email'] }}</a></p>
+                @if (! empty($site['contact']['phone']))
+                    <p><a href="tel:{{ preg_replace('/\s+/', '', $site['contact']['phone']) }}" class="hover:text-primary">{{ $site['contact']['phone'] }}</a></p>
+                @endif
                 <div class="flex gap-4 pt-2">
                     <a href="{{ $site['social']['linkedin'] }}" class="hover:text-primary">LinkedIn</a>
                     <a href="{{ $site['social']['whatsapp'] }}" class="hover:text-primary">WhatsApp</a>
@@ -46,7 +49,8 @@
         </div>
     </div>
 
-    <div class="border-t border-primary/10 px-4 py-5 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
-        &copy; {{ now()->year }} Fayeku. Tous droits réservés.
+    <div class="border-t border-primary/10 px-4 py-5 text-center text-xs leading-6 text-slate-500 sm:px-6 lg:px-8">
+        <p>&copy; {{ now()->year }} {{ $site['name'] }} — Édité par {{ $site['legal']['editor'] }} ({{ $site['legal']['company'] }}).</p>
+        <p>NINEA : {{ $site['legal']['ninea'] }} — RCCM : {{ $site['legal']['rccm'] }}.</p>
     </div>
 </footer>
