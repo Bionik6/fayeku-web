@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\Shared\WhatsAppBusinessProvider;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -97,6 +98,16 @@ test('sendTemplate retourne false et log lorsque Meta repond une erreur', functi
     ]);
 
     $ok = makeWhatsAppProvider()->sendTemplate('+221771112233', 'inexistant');
+
+    expect($ok)->toBeFalse();
+});
+
+test('send retourne false sans crasher quand Meta est injoignable (SSL, timeout, DNS)', function () {
+    Http::fake(function () {
+        throw new ConnectionException('cURL error 60: SSL certificate problem');
+    });
+
+    $ok = makeWhatsAppProvider()->send('+221770000000', 'Hello');
 
     expect($ok)->toBeFalse();
 });

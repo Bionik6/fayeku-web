@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Models\Compta\PartnerInvitation;
 use App\Services\Shared\OtpService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class OtpController extends Controller
 {
@@ -22,6 +23,7 @@ class OtpController extends Controller
 
         return view('pages.auth.verify-otp', [
             'maskedPhone' => $this->maskPhone($phone),
+            'otpExpiresAt' => $this->latestOtpExpiresAt($phone),
         ]);
     }
 
@@ -121,6 +123,18 @@ class OtpController extends Controller
         $user = auth()->user();
 
         return $user?->profile_type === 'sme' ? 'pme.dashboard' : 'dashboard';
+    }
+
+    private function latestOtpExpiresAt(string $phone, string $purpose = 'verification'): ?int
+    {
+        $record = DB::table('otp_codes')
+            ->where('phone', $phone)
+            ->where('purpose', $purpose)
+            ->whereNull('used_at')
+            ->latest('created_at')
+            ->first();
+
+        return $record ? strtotime($record->expires_at) : null;
     }
 
     private function maskPhone(string $phone): string

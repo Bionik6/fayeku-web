@@ -3,6 +3,7 @@
 namespace App\Services\Shared;
 
 use App\Interfaces\Shared\WhatsAppProviderInterface;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -116,6 +117,14 @@ class WhatsAppBusinessProvider implements WhatsAppProviderInterface
                 'type' => $payload['type'] ?? null,
                 'status' => $e->response?->status(),
                 'body' => $e->response?->body(),
+            ]);
+
+            return false;
+        } catch (ConnectionException $e) {
+            Log::error('WhatsApp Business send unreachable', [
+                'to' => $payload['to'] ?? null,
+                'type' => $payload['type'] ?? null,
+                'reason' => $e->getMessage(),
             ]);
 
             return false;

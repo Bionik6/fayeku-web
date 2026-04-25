@@ -1,8 +1,13 @@
+@php
+    $otpChannelLabel = config('fayeku.otp_channel') === 'sms' ? 'SMS' : 'WhatsApp';
+    $initialSecondsLeft = $otpExpiresAt ? max(0, $otpExpiresAt - time()) : 0;
+@endphp
+
 <x-layouts::auth :title="__('Vérification du téléphone')">
     <div class="flex flex-col gap-6">
         <x-auth-header
             :title="__('Vérification du téléphone')"
-            :description="__('Entrez le code à 6 chiffres envoyé au') . ' ' . $maskedPhone"
+            :description="__('Entrez le code à 6 chiffres envoyé via :channel au :phone', ['channel' => '<strong class=\'font-semibold text-ink\'>'.e($otpChannelLabel).'</strong>', 'phone' => e($maskedPhone)])"
         />
 
         @if (! app()->environment('production') && config('fayeku.otp_bypass_code'))
@@ -38,27 +43,32 @@
             </button>
         </form>
 
-        <div class="text-center" x-data="{ countdown: 0, canResend: true }" x-init="
-            let last = localStorage.getItem('otp_resend_at');
-            if (last) {
-                let diff = 60 - Math.floor((Date.now() - parseInt(last)) / 1000);
-                if (diff > 0) { countdown = diff; canResend = false; }
-            }
-            $watch('countdown', (val) => { if (val <= 0) canResend = true; });
-            setInterval(() => { if (countdown > 0) countdown--; }, 1000);
-        ">
-            <form method="POST" action="{{ route('auth.otp.resend') }}" x-show="canResend" @submit="
-                canResend = false;
-                countdown = 60;
-                localStorage.setItem('otp_resend_at', Date.now().toString());
-            ">
+        <div
+            class="text-center"
+            x-data="{
+                expiresAt: {{ $otpExpiresAt ? $otpExpiresAt * 1000 : 'null' }},
+                secondsLeft: {{ $initialSecondsLeft }},
+                tick() {
+                    this.secondsLeft = this.expiresAt
+                        ? Math.max(0, Math.floor((this.expiresAt - Date.now()) / 1000))
+                        : 0;
+                },
+                get formatted() {
+                    let m = Math.floor(this.secondsLeft / 60);
+                    let s = this.secondsLeft % 60;
+                    return m + ':' + s.toString().padStart(2, '0');
+                },
+            }"
+            x-init="setInterval(() => tick(), 1000);"
+        >
+            <p x-show="secondsLeft > 0" class="text-sm text-slate-500" @if ($initialSecondsLeft <= 0) style="display: none" @endif>
+                {{ __('Code valable encore') }} <span class="font-semibold text-ink" x-text="formatted">{{ sprintf('%d:%02d', intdiv($initialSecondsLeft, 60), $initialSecondsLeft % 60) }}</span>
+            </p>
+
+            <form method="POST" action="{{ route('auth.otp.resend') }}" x-show="secondsLeft <= 0" @if ($initialSecondsLeft > 0) style="display: none" @endif>
                 @csrf
                 <button type="submit" class="text-sm auth-link">{{ __('Renvoyer le code') }}</button>
             </form>
-
-            <p x-show="!canResend" class="text-sm text-slate-500">
-                {{ __('Renvoyer dans') }} <span x-text="countdown"></span>s
-            </p>
         </div>
     </div>
 </x-layouts::auth>
