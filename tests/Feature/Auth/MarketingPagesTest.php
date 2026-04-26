@@ -3,8 +3,8 @@
 dataset('marketing pages', [
     ['/', 'Facturez proprement. Contrôlez votre trésorerie.'],
     ['/entreprises', 'Une facturation simple. Une trésorerie plus claire.'],
-    ['/experts-comptables', 'Fayeku Compta: le cockpit de vos PME clientes'],
-    ['/experts-comptables/rejoindre', 'Vous êtes un cabinet d\'expertise comptable'],
+    ['/accountants', 'Fayeku Compta: le cockpit de vos PME clientes'],
+    ['/accountant/join', 'Vous êtes un cabinet d\'expertise comptable'],
     ['/pricing', 'Profitez de 2 mois d’essai sur chaque plan'],
     ['/conformite', 'Conformité fiscale: Fayeku vous prépare à l’avance.'],
     ['/contact', 'Parlons de votre mise en place Fayeku'],

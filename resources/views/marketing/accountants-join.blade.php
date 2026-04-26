@@ -35,6 +35,11 @@
       <form action="{{ route('marketing.accountants.join.store') }}" method="post" class="relative space-y-5 rounded-[2rem] border border-[#024D4D]/10 bg-white p-6 shadow-soft sm:p-8">
         @csrf
 
+        <x-auth-header
+          :title="__('Rejoindre Fayeku Compta')"
+          :description="__('Remplissez les informations ci-dessous pour soumettre votre demande d\'accès.')"
+        />
+
         {{-- Info banner --}}
         <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
           <p class="text-sm font-semibold text-teal-800">
@@ -58,14 +63,14 @@
         <div class="grid gap-4 sm:grid-cols-2">
           <label class="space-y-2 text-sm font-medium text-ink">
             <span>{{ __('Prénom') }} *</span>
-            <input type="text" name="first_name" value="{{ old('first_name') }}" placeholder="{{ __('Entrez votre prénom...') }}" class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('first_name') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
+            <input type="text" name="first_name" value="{{ old('first_name') }}" placeholder="{{ __('Entrez votre prénom...') }}" required class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('first_name') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
             @error('first_name')
               <p class="text-xs text-red-600">{{ $message }}</p>
             @enderror
           </label>
           <label class="space-y-2 text-sm font-medium text-ink">
             <span>{{ __('Nom') }} *</span>
-            <input type="text" name="last_name" value="{{ old('last_name') }}" placeholder="{{ __('Entrez votre nom') }}" class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('last_name') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
+            <input type="text" name="last_name" value="{{ old('last_name') }}" placeholder="{{ __('Entrez votre nom') }}" required class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('last_name') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
             @error('last_name')
               <p class="text-xs text-red-600">{{ $message }}</p>
             @enderror
@@ -74,8 +79,16 @@
 
         <label class="block space-y-2 text-sm font-medium text-ink">
           <span>{{ __('Nom du cabinet') }} *</span>
-          <input type="text" name="firm" value="{{ old('firm') }}" placeholder="{{ __('Nom commercial ou raison sociale') }}" class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('firm') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
+          <input type="text" name="firm" value="{{ old('firm') }}" placeholder="{{ __('Nom commercial ou raison sociale') }}" required class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('firm') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
           @error('firm')
+            <p class="text-xs text-red-600">{{ $message }}</p>
+          @enderror
+        </label>
+
+        <label class="block space-y-2 text-sm font-medium text-ink">
+          <span>{{ __('Email') }} *</span>
+          <input type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('votre@cabinet.com') }}" required class="w-full rounded-2xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('email') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}" />
+          @error('email')
             <p class="text-xs text-red-600">{{ $message }}</p>
           @enderror
         </label>
@@ -97,7 +110,7 @@
         <div class="space-y-2">
           <label class="block text-sm font-medium text-ink" for="region">{{ __('Région') }} *</label>
           <x-select-native>
-            <select id="region" name="region" class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border px-4 py-3 pr-8 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('region') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}">
+            <select id="region" name="region" required class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border px-4 py-3 pr-8 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('region') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}">
               @foreach (['Dakar', 'Thiès', 'Saint-Louis', 'Diourbel', 'Kaolack', 'Ziguinchor', 'Tambacounda', 'Autre région'] as $region)
                 <option value="{{ $region }}" @selected(old('region', 'Dakar') === $region)>{{ $region }}</option>
               @endforeach
@@ -111,7 +124,7 @@
         <div class="space-y-2">
           <label class="block text-sm font-medium text-ink" for="portfolio_size">{{ __('Combien de dossiers gérez-vous au sein de votre cabinet ?') }} *</label>
           <x-select-native>
-            <select id="portfolio_size" name="portfolio_size" class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border px-4 py-3 pr-8 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('portfolio_size') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}">
+            <select id="portfolio_size" name="portfolio_size" required class="col-start-1 row-start-1 w-full appearance-none rounded-2xl border px-4 py-3 pr-8 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('portfolio_size') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}">
               @foreach (['1 à 20 dossiers', '21 à 50 dossiers', '51 à 100 dossiers', '101 à 250 dossiers', '250+ dossiers'] as $size)
                 <option value="{{ $size }}" @selected(old('portfolio_size', '1 à 20 dossiers') === $size)>{{ $size }}</option>
               @endforeach
@@ -123,8 +136,11 @@
         </div>
 
         <label class="block space-y-2 text-sm font-medium text-ink">
-          <span>{{ __('Qu\'attendez-vous de Fayeku ?') }}</span>
-          <textarea rows="5" name="message" placeholder="{{ __('Collecte de pièces, exports, visibilité temps réel, programme partenaire...') }}" class="w-full rounded-3xl border border-slate-300 px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15">{{ old('message') }}</textarea>
+          <span>{{ __('Qu\'attendez-vous de Fayeku ?') }} *</span>
+          <textarea rows="5" name="message" required placeholder="{{ __('Collecte de pièces, exports, visibilité temps réel, programme partenaire...') }}" class="w-full rounded-3xl border px-4 py-3 text-base text-ink outline-none transition focus:ring-2 focus:ring-primary/15 {{ $errors->has('message') ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-primary' }}">{{ old('message') }}</textarea>
+          @error('message')
+            <p class="text-xs text-red-600">{{ $message }}</p>
+          @enderror
         </label>
 
         <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-[#024D4D] px-5 py-4 text-base font-semibold text-[#10B75C] transition hover:bg-[#013c3c]">

@@ -9,9 +9,9 @@ use App\Providers\Shared\SharedServiceProvider;
 
 return [
     AppServiceProvider::class,
-    FortifyServiceProvider::class,
-    SharedServiceProvider::class,
     AuthModuleServiceProvider::class,
-    PmeModuleServiceProvider::class,
     ComptaModuleServiceProvider::class,
+    FortifyServiceProvider::class,
+    PmeModuleServiceProvider::class,
+    SharedServiceProvider::class,
 ];

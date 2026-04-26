@@ -37,10 +37,9 @@ return [
     ],
     'navigation' => [
         ['href' => '/entreprises/', 'label' => 'Entreprises'],
-        ['href' => '/experts-comptables/', 'label' => 'Experts-comptables'],
+        ['href' => '/accountants/', 'label' => 'Experts-comptables'],
         ['href' => '/pricing/', 'label' => 'Tarifs'],
         ['href' => '/conformite/', 'label' => 'Conformité'],
-        ['href' => '/contact/', 'label' => 'Contact'],
     ],
     'legal_links' => [
         ['href' => '/mentions-legales/', 'label' => 'Mentions légales'],
@@ -63,8 +62,8 @@ return [
             'eyebrow' => 'Cockpit multi-clients pour cabinets',
             'subtitle' => 'Centralisez les factures de vos PME clientes, collectez les pieces, exportez vers vos outils comptables et activez un programme partenaire recurrent.',
             'proof' => 'Cabinet gratuit. PMEs invitees via votre lien : 2 mois Essentiel offerts.',
-            'primary_cta' => ['label' => 'Decouvrir Fayeku Compta', 'href' => '/experts-comptables'],
-            'secondary_cta' => ['label' => 'Voir le programme partenaire', 'href' => '/experts-comptables#partenaires'],
+            'primary_cta' => ['label' => 'Decouvrir Fayeku Compta', 'href' => '/accountants'],
+            'secondary_cta' => ['label' => 'Voir le programme partenaire', 'href' => '/accountants#partenaires'],
             'stat_title' => 'Gain de temps immediat',
             'stat_text' => 'Accedez aux factures de vos clients en temps reel, exportez en un clic, sans ressaisie manuelle.',
             'image' => '/cabinet-dashboard.svg',

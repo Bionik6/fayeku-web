@@ -12,7 +12,7 @@
           <div class="flex flex-col gap-3 sm:flex-row">
                 
                       <a
-                        href="/experts-comptables/rejoindre/"
+                        href="/accountant/join/"
                         class="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 bg-primary text-accent"
                       >
                         Devenir partenaire
@@ -214,7 +214,7 @@
                   </tbody>
                 </table>
               </div>
-              <a href="/experts-comptables/rejoindre/" class="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-accent">Devenir partenaire</a>
+              <a href="/accountant/join/" class="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-accent">Devenir partenaire</a>
             </div>
           </div>
         </div>
