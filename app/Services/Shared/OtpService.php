@@ -4,6 +4,7 @@ namespace App\Services\Shared;
 
 use App\Interfaces\Shared\OtpChannelInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OtpService
@@ -25,6 +26,15 @@ class OtpService
             'updated_at' => now(),
         ]);
 
+        if (config('fayeku.demo')) {
+            Log::info('[Demo] OTP simulé — aucun envoi externe.', [
+                'phone' => $phone,
+                'purpose' => $purpose,
+            ]);
+
+            return $code;
+        }
+
         $this->channel->send($phone, $code);
 
         return $code;
@@ -33,8 +43,9 @@ class OtpService
     public function verify(string $phone, string $code, string $purpose = 'verification'): bool
     {
         $bypassCode = config('fayeku.otp_bypass_code');
+        $bypassAllowed = app()->environment('local') || (bool) config('fayeku.demo');
 
-        if ($bypassCode && app()->environment('local') && $code === $bypassCode) {
+        if ($bypassCode && $bypassAllowed && $code === $bypassCode) {
             return true;
         }
 

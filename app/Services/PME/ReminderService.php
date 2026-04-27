@@ -10,6 +10,7 @@ use App\Models\PME\Invoice;
 use App\Models\PME\Reminder;
 use App\Services\Shared\QuotaService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReminderService
 {
@@ -29,6 +30,10 @@ class ReminderService
         ?int $dayOffset = null,
         ?string $templateKey = null,
     ): Reminder {
+        if (config('fayeku.demo')) {
+            return $this->simulateReminder($invoice, $channel, $messageBody, $mode, $dayOffset);
+        }
+
         $this->quotaService->authorize($company, 'reminders');
 
         return DB::transaction(function () use ($invoice, $company, $channel, $messageBody, $mode, $dayOffset, $templateKey) {
@@ -40,6 +45,39 @@ class ReminderService
 
             return $reminder;
         });
+    }
+
+    /**
+     * Persiste une trace de relance sans appeler le canal externe ni consommer
+     * le quota — utilisé en mode démo pour que l'historique du recouvrement
+     * reste crédible sans qu'aucun message ne parte réellement.
+     */
+    private function simulateReminder(
+        Invoice $invoice,
+        ReminderChannel $channel,
+        ?string $messageBody,
+        ReminderMode $mode,
+        ?int $dayOffset,
+    ): Reminder {
+        $invoice->loadMissing('client');
+
+        Log::info('[Demo] Relance simulée — aucun envoi externe.', [
+            'invoice_id' => $invoice->id,
+            'channel' => $channel->value,
+            'mode' => $mode->value,
+            'day_offset' => $dayOffset,
+        ]);
+
+        return Reminder::query()->create([
+            'invoice_id' => $invoice->id,
+            'channel' => $channel,
+            'mode' => $mode,
+            'day_offset' => $dayOffset,
+            'sent_at' => now(),
+            'message_body' => $messageBody,
+            'recipient_phone' => $channel !== ReminderChannel::Email ? $invoice->client?->phone : null,
+            'recipient_email' => $channel === ReminderChannel::Email ? $invoice->client?->email : null,
+        ]);
     }
 
     private function resolveChannel(ReminderChannel $channel): ReminderChannelInterface

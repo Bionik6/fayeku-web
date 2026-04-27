@@ -37,6 +37,13 @@ class ProcessAutoRemindersCommand extends Command
     {
         Log::info('[AutoReminders] Démarrage du traitement des relances automatiques.');
 
+        if (config('fayeku.demo')) {
+            Log::info('[AutoReminders] Mode démonstration actif — aucune relance dispatchée.');
+            $this->components->warn('Mode démonstration actif — aucune relance automatique dispatchée.');
+
+            return self::SUCCESS;
+        }
+
         if (! $this->isWithinSendWindow()) {
             Log::info('[AutoReminders] Hors fenêtre d\'envoi (8h–18h hors week-ends), fin.');
             $this->info('Outside send window.');

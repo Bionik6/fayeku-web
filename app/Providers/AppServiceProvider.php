@@ -24,6 +24,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureDemoMode();
+    }
+
+    /**
+     * Quand le mode démo est actif, redirige tout e-mail sortant vers le driver
+     * « log » pour éviter les envois réels sur les environnements vitrine.
+     */
+    protected function configureDemoMode(): void
+    {
+        if ((bool) config('fayeku.demo')) {
+            config(['mail.default' => 'log']);
+        }
     }
 
     /**

@@ -10,6 +10,15 @@ return [
         explode(',', (string) env('FAYEKU_ADMIN_EMAILS', ''))
     ))),
 
+    /*
+     * Mode démonstration. Quand actif :
+     *  - un bandeau « données fictives » apparaît dans les portails PME et Compta ;
+     *  - les envois WhatsApp/SMS/email externes sont court-circuités (relances,
+     *    OTP, notifications) ; les enregistrements DB associés sont conservés
+     *    pour que l'UI reflète une activité crédible pendant la démo.
+     */
+    'demo' => (bool) env('FAYEKU_DEMO_MODE', false),
+
     'otp_expiry_minutes' => (int) env('OTP_EXPIRY_MINUTES', 10),
     'otp_max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 3),
     'otp_bypass_code' => env('OTP_BYPASS_CODE'),

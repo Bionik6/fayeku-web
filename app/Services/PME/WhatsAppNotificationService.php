@@ -147,6 +147,12 @@ class WhatsAppNotificationService
             return null;
         }
 
+        if (config('fayeku.demo')) {
+            return $this->simulateNotification(
+                $notifiable, $company, $templateKey, $variables, $recipientPhone, $recipientEmail, $meta,
+            );
+        }
+
         try {
             $this->quotaService->authorize($company, 'reminders');
         } catch (QuotaExceededException) {
@@ -219,6 +225,46 @@ class WhatsAppNotificationService
         }
 
         return $this->persist($notifiable, $company, $templateKey, 'email', $body, null, $recipientEmail, $meta);
+    }
+
+    /**
+     * Persiste une trace de notification sans appeler le canal externe ni
+     * consommer le quota — utilisé en mode démo pour conserver un historique
+     * crédible côté UI sans qu'aucun message ne parte réellement.
+     *
+     * @param  array<string, string>  $variables
+     * @param  array<string, mixed>  $meta
+     */
+    private function simulateNotification(
+        Model $notifiable,
+        Company $company,
+        string $templateKey,
+        array $variables,
+        ?string $recipientPhone,
+        ?string $recipientEmail,
+        array $meta,
+    ): Notification {
+        $body = $this->catalog->render($templateKey, $variables);
+        $channel = $recipientPhone ? 'whatsapp' : 'email';
+
+        Log::info('[Demo] Notification simulée — aucun envoi externe.', [
+            'template_key' => $templateKey,
+            'notifiable' => $notifiable::class.':'.$notifiable->getKey(),
+            'channel' => $channel,
+        ]);
+
+        return Notification::query()->create([
+            'company_id' => $company->id,
+            'notifiable_type' => $notifiable::class,
+            'notifiable_id' => $notifiable->getKey(),
+            'template_key' => $templateKey,
+            'channel' => $channel,
+            'sent_at' => now(),
+            'message_body' => $body,
+            'recipient_phone' => $recipientPhone,
+            'recipient_email' => $channel === 'email' ? $recipientEmail : null,
+            'meta' => $meta !== [] ? $meta : null,
+        ]);
     }
 
     /**
