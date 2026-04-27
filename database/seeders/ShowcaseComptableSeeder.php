@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Auth\CompanyRole;
 use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
@@ -90,9 +91,9 @@ class ShowcaseComptableSeeder extends Seeder
             'invite_code' => Str::upper(Str::random(6)),
         ]);
 
-        $firm->users()->attach($owner->id, ['role' => 'owner']);
-        $firm->users()->attach($admin->id, ['role' => 'admin']);
-        $firm->users()->attach($member->id, ['role' => 'member']);
+        $firm->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
+        $firm->users()->attach($admin->id, ['role' => CompanyRole::Admin->value]);
+        $firm->users()->attach($member->id, ['role' => CompanyRole::Member->value]);
 
         return $firm;
     }
@@ -232,7 +233,7 @@ class ShowcaseComptableSeeder extends Seeder
             'phone' => $phone,
         ]);
 
-        $sme->users()->attach($owner->id, ['role' => 'owner']);
+        $sme->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
 
         Subscription::create([
             'company_id' => $sme->id,

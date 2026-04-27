@@ -115,4 +115,23 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Brand logo URL for email templates
+    |--------------------------------------------------------------------------
+    |
+    | URL publique du logo affiché dans l'en-tête des emails Fayeku. Doit être
+    | accessible depuis Internet (Gmail proxie les images via Google) — sinon
+    | l'image apparaît cassée. En local, configurer `MAIL_LOGO_URL` sur l'URL
+    | publique de prod (ex. https://fayeku.sn/apple-touch-icon.png) pour
+    | tester un rendu identique à la prod.
+    |
+    | NB : on évite volontairement les pièces jointes inline (CID) et les
+    | data: URIs en base64, car Gmail les affiche aussi en pièce jointe
+    | scannée ou les strippe pour raisons de sécurité.
+    |
+    */
+
+    'logo_url' => env('MAIL_LOGO_URL', rtrim((string) env('APP_URL', ''), '/').'/apple-touch-icon.png'),
+
 ];

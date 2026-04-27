@@ -2,14 +2,15 @@
 
 namespace App\Services\Auth;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Enums\Auth\CompanyRole;
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
 use App\Models\Compta\PartnerInvitation;
 use App\Models\Shared\User;
 use App\Services\Shared\OtpService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -88,7 +89,7 @@ class AuthService
                 'plan' => $planSlug,
             ]);
 
-            $company->users()->attach($user->id, ['role' => 'owner']);
+            $company->users()->attach($user->id, ['role' => CompanyRole::Owner->value]);
 
             Subscription::create([
                 'company_id' => $company->id,

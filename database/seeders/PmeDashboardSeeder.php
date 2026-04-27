@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Auth\CompanyRole;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\QuoteStatus;
 use App\Enums\PME\ReminderChannel;
@@ -60,7 +61,7 @@ class PmeDashboardSeeder extends Seeder
             'rccm' => 'SN-DKR-2024-B-00001',
         ]);
 
-        $this->company->users()->attach($user->id, ['role' => 'owner']);
+        $this->company->users()->attach($user->id, ['role' => CompanyRole::Owner->value]);
 
         Subscription::query()->create([
             'company_id' => $this->company->id,

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Auth\CompanyRole;
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
@@ -33,7 +34,7 @@ class DemoAccountsSeeder extends Seeder
                 'phone' => '+221338219900',
             ]);
 
-            $accountantCompany->users()->attach($accountantUser->id, ['role' => 'owner']);
+            $accountantCompany->users()->attach($accountantUser->id, ['role' => CompanyRole::Owner->value]);
 
             $pmeUser = User::query()->create([
                 'first_name' => 'Moussa',
@@ -54,7 +55,7 @@ class DemoAccountsSeeder extends Seeder
                 'phone' => '+221338219901',
             ]);
 
-            $pmeCompany->users()->attach($pmeUser->id, ['role' => 'owner']);
+            $pmeCompany->users()->attach($pmeUser->id, ['role' => CompanyRole::Owner->value]);
 
             $assistantUser = User::query()->create([
                 'first_name' => 'Fatou',
@@ -67,7 +68,7 @@ class DemoAccountsSeeder extends Seeder
                 'phone_verified_at' => now(),
             ]);
 
-            $accountantCompany->users()->attach($assistantUser->id, ['role' => 'admin']);
+            $accountantCompany->users()->attach($assistantUser->id, ['role' => CompanyRole::Admin->value]);
 
             $pmeTeammate = User::query()->create([
                 'first_name' => 'Awa',
@@ -80,7 +81,7 @@ class DemoAccountsSeeder extends Seeder
                 'phone_verified_at' => now(),
             ]);
 
-            $pmeCompany->users()->attach($pmeTeammate->id, ['role' => 'member']);
+            $pmeCompany->users()->attach($pmeTeammate->id, ['role' => CompanyRole::Member->value]);
 
             $secondSmeCompany = Company::query()->create([
                 'name' => 'Sow BTP SARL',
@@ -101,7 +102,7 @@ class DemoAccountsSeeder extends Seeder
                 'phone_verified_at' => now(),
             ]);
 
-            $secondSmeCompany->users()->attach($secondSmeOwner->id, ['role' => 'owner']);
+            $secondSmeCompany->users()->attach($secondSmeOwner->id, ['role' => CompanyRole::Owner->value]);
 
             Subscription::query()->create([
                 'company_id' => $pmeCompany->id,

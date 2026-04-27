@@ -2,14 +2,14 @@
 
 namespace App\Models\Shared;
 
+use App\Models\Auth\Company;
+use App\Traits\Shared\HasUlid;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Auth\Company;
-use App\Traits\Shared\HasUlid;
 
 class User extends Authenticatable
 {
@@ -24,6 +24,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'phone_verified_at' => 'datetime',
+        'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
         'password' => 'hashed',
     ];

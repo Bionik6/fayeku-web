@@ -1,12 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AccountantActivationController;
 use App\Http\Controllers\Auth\CompanySetupController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'guest'])->group(function () {
     Route::get('/register', [RegisterController::class, 'show'])->name('auth.register');
@@ -17,6 +18,11 @@ Route::middleware(['web', 'guest'])->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetOtp'])->name('auth.forgot-password.submit');
     Route::get('/reset-password', [PasswordResetController::class, 'showResetForm'])->name('auth.reset-password');
     Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('auth.reset-password.submit');
+
+    Route::get('/accountant/activation/{token}', [AccountantActivationController::class, 'show'])
+        ->name('accountant.activation');
+    Route::post('/accountant/activation/{token}', [AccountantActivationController::class, 'process'])
+        ->name('accountant.activation.process');
 });
 
 Route::middleware(['web', 'auth'])->group(function () {

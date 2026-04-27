@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Auth\CompanyRole;
 use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
@@ -72,8 +73,8 @@ class DashboardDemoSeeder extends Seeder
             'rccm' => 'SN-DKR-2024-B-12345',
         ]);
 
-        $firm->users()->attach($owner->id, ['role' => 'owner']);
-        $firm->users()->attach($collaborator->id, ['role' => 'admin']);
+        $firm->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
+        $firm->users()->attach($collaborator->id, ['role' => CompanyRole::Admin->value]);
 
         return $firm;
     }
@@ -185,7 +186,7 @@ class DashboardDemoSeeder extends Seeder
             'phone' => $phone,
         ]);
 
-        $sme->users()->attach($owner->id, ['role' => 'owner']);
+        $sme->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
 
         Subscription::create([
             'company_id' => $sme->id,

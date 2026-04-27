@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Compta\LeadSource;
 use App\Http\Requests\StoreAccountantJoinRequest;
+use App\Mail\Compta\AccountantLeadReceivedMail;
+use App\Mail\Compta\NewAccountantLeadAlertMail;
+use App\Models\Compta\AccountantLead;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
 
 class MarketingPageController extends Controller
 {
@@ -42,7 +47,16 @@ class MarketingPageController extends Controller
 
     public function accountantsJoinStore(StoreAccountantJoinRequest $request): RedirectResponse
     {
-        // TODO: store lead or send notification email
+        // Le FormRequest normalise déjà phone (indicatif + chiffres) et email
+        // (lowercase) avant validation, on peut persister tel quel.
+        $lead = AccountantLead::create($request->validated() + ['source' => LeadSource::Organic]);
+
+        foreach (config('fayeku.admin_emails', []) as $adminEmail) {
+            Mail::to($adminEmail)->send(new NewAccountantLeadAlertMail($lead));
+        }
+
+        Mail::to($lead->email)->send(new AccountantLeadReceivedMail($lead));
+
         return redirect()->route('marketing.accountants.join')
             ->with('success', 'Votre demande a bien été reçue. Un conseiller Fayeku vous contactera sous 24h pour valider votre accès Compta.');
     }

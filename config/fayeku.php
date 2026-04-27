@@ -1,6 +1,15 @@
 <?php
 
 return [
+    /*
+     * Liste d'emails autorisés à recevoir les alertes "nouveau lead cabinet".
+     * Format env: FAYEKU_ADMIN_EMAILS=alice@fayeku.sn,bob@fayeku.sn
+     */
+    'admin_emails' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('FAYEKU_ADMIN_EMAILS', ''))
+    ))),
+
     'otp_expiry_minutes' => (int) env('OTP_EXPIRY_MINUTES', 10),
     'otp_max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 3),
     'otp_bypass_code' => env('OTP_BYPASS_CODE'),

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Auth\CompanyRole;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\QuoteStatus;
 use App\Enums\PME\ReminderChannel;
@@ -74,8 +75,8 @@ class ShowcasePmeSeeder extends Seeder
             'sector' => 'Services numériques',
         ]);
 
-        $this->company->users()->attach($owner->id, ['role' => 'owner']);
-        $this->company->users()->attach($collaborator->id, ['role' => 'member']);
+        $this->company->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
+        $this->company->users()->attach($collaborator->id, ['role' => CompanyRole::Member->value]);
 
         Subscription::query()->create([
             'company_id' => $this->company->id,

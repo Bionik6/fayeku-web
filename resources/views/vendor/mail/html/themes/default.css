@@ -1,0 +1,358 @@
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #f6fbf8;
+    color: #1d5d5d;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.5;
+    text-align: start;
+}
+
+a {
+    color: #024d4d;
+}
+
+a img {
+    border: none;
+}
+
+/* Typography */
+
+h1 {
+    color: #024d4d;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-top: 0;
+    text-align: start;
+}
+
+h2 {
+    color: #024d4d;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: start;
+}
+
+h3 {
+    color: #024d4d;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: left;
+}
+
+p {
+    color: #1d5d5d;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-top: 0;
+    text-align: left;
+}
+
+p.sub {
+    font-size: 12px;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Layout */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #f6fbf8;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header */
+
+.header {
+    padding: 28px 0 12px;
+    text-align: center;
+}
+
+.header a {
+    color: #024d4d;
+    font-size: 19px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.header-brand {
+    color: #024d4d;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-top: 8px;
+}
+
+/* Logo */
+
+.logo {
+    border-radius: 16px;
+    display: block;
+    height: 64px;
+    margin: 4px auto 0;
+    max-height: 64px;
+    width: 64px;
+}
+
+/* Body */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #f6fbf8;
+    border-bottom: 1px solid #f6fbf8;
+    border-top: 1px solid #f6fbf8;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    background-color: #ffffff;
+    border: 1px solid rgba(2, 77, 77, 0.08);
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(2, 77, 77, 0.08);
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+}
+
+.inner-body a {
+    color: #024d4d;
+    word-break: break-all;
+}
+
+/* Subcopy */
+
+.subcopy {
+    border-top: 1px solid rgba(2, 77, 77, 0.12);
+    margin-top: 25px;
+    padding-top: 25px;
+}
+
+.subcopy p {
+    color: #4d6f6f;
+    font-size: 14px;
+}
+
+/* Footer */
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 570px;
+}
+
+.footer p {
+    color: #6b8a8a;
+    font-size: 12px;
+    text-align: center;
+}
+
+.footer a {
+    color: #024d4d;
+    text-decoration: underline;
+}
+
+.footer-brand {
+    color: #024d4d;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin: 0 0 6px;
+    text-transform: uppercase;
+}
+
+.footer-meta {
+    color: #6b8a8a;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+/* Tables */
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 30px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 1px solid rgba(2, 77, 77, 0.12);
+    color: #024d4d;
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.table td {
+    color: #1d5d5d;
+    font-size: 15px;
+    line-height: 18px;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 32px;
+}
+
+/* Buttons */
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 32px auto;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    float: unset;
+}
+
+/*
+ * Boutons préfixés par `a.` pour atteindre une spécificité (0,1,1) égale à
+ * `.inner-body a` (qui pose la couleur des liens du corps du mail). Sans ce
+ * préfixe, la règle des liens prend le dessus et le texte du bouton devient
+ * vert foncé sur fond vert foncé — illisible.
+ */
+a.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 12px;
+    color: #ffffff;
+    display: inline-block;
+    font-weight: 600;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+a.button-blue,
+a.button-primary {
+    background-color: #024d4d;
+    border-bottom: 10px solid #024d4d;
+    border-left: 22px solid #024d4d;
+    border-right: 22px solid #024d4d;
+    border-top: 10px solid #024d4d;
+    color: #ffffff;
+}
+
+a.button-green,
+a.button-success {
+    background-color: #10b75c;
+    border-bottom: 10px solid #10b75c;
+    border-left: 22px solid #10b75c;
+    border-right: 22px solid #10b75c;
+    border-top: 10px solid #10b75c;
+    color: #ffffff;
+}
+
+a.button-red,
+a.button-error {
+    background-color: #dc2626;
+    border-bottom: 10px solid #dc2626;
+    border-left: 22px solid #dc2626;
+    border-right: 22px solid #dc2626;
+    border-top: 10px solid #dc2626;
+    color: #ffffff;
+}
+
+/* Panels */
+
+.panel {
+    border-left: #10b75c solid 4px;
+    margin: 21px 0;
+}
+
+.panel-content {
+    background-color: #ecf8f1;
+    color: #1d5d5d;
+    padding: 16px;
+}
+
+.panel-content p {
+    color: #1d5d5d;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Code blocks (inline + fenced) */
+
+code {
+    background-color: #f1f7f4;
+    border-radius: 4px;
+    color: #024d4d;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 13px;
+    padding: 2px 6px;
+}
+
+pre code {
+    background-color: #f1f7f4;
+    color: #024d4d;
+    display: block;
+    line-height: 1.5;
+    padding: 12px 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Utilities */
+
+.break-all {
+    word-break: break-all;
+}

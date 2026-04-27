@@ -28,7 +28,9 @@
       "Bash(php -l /Volumes/Data/Business/Fayeku/Developments/fayeku-web/resources/views/pages/pme/clients/⚡index.blade.php)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000)",
       "Bash(vendor/bin/pint app/Console/Commands/TestResendMailCommand.php --format agent)",
-      "WebFetch(domain:www.pennylane.com)"
+      "WebFetch(domain:www.pennylane.com)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,
