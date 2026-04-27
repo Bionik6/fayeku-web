@@ -1,9 +1,11 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
 @import '../../vendor/livewire/flux/dist/flux.css';
 @import 'flatpickr/dist/flatpickr.min.css' layer(base);
 @import 'intl-tel-input/build/css/intlTelInput.css' layer(base);
 
 @source '../views';
+@source '../js';
+@source '../../app';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
