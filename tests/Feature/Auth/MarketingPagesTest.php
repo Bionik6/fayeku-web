@@ -20,12 +20,18 @@ test('marketing pages can be rendered', function (string $uri, string $text) {
 })->with('marketing pages');
 
 test('login and register pages reuse the Fayeku branding', function () {
-    $this->get(route('login'))
+    // /login is a 302 to /sme/login (no chooser page anymore).
+    $this->get('/sme/login')
         ->assertOk()
         ->assertSee('Fayeku')
         ->assertSee('Espace securise');
 
-    $this->get(route('auth.register'))
+    $this->get('/accountant/login')
+        ->assertOk()
+        ->assertSee('Fayeku')
+        ->assertSee('Espace securise');
+
+    $this->get(route('sme.auth.register'))
         ->assertOk()
         ->assertSee('Fayeku')
         ->assertSee('Espace securise');

@@ -77,7 +77,7 @@
           </p>
           <p class="mt-1 text-sm text-teal-700">
             {{ __('Vous êtes une PME ?') }}
-            <a href="{{ route('auth.register') }}" class="font-medium underline">
+            <a href="{{ route('sme.auth.register') }}" class="font-medium underline">
               {{ __('Inscrivez-vous ici →') }}
             </a>
           </p>

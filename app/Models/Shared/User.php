@@ -3,6 +3,7 @@
 namespace App\Models\Shared;
 
 use App\Models\Auth\Company;
+use App\Notifications\AccountantPasswordResetNotification;
 use App\Traits\Shared\HasUlid;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -85,5 +86,17 @@ class User extends Authenticatable
         }
 
         return $this->companyCache[$type];
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $expiresInMinutes = (int) config('auth.passwords.users.expire', 60);
+
+        $resetUrl = route('accountant.auth.reset-password', [
+            'token' => $token,
+            'email' => $this->email,
+        ]);
+
+        $this->notify(new AccountantPasswordResetNotification($resetUrl, $expiresInMinutes));
     }
 }

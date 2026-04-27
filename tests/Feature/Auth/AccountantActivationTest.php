@@ -82,7 +82,7 @@ test('auth-button definition keeps cursor-pointer', function () {
 
 test('GET with invalid token redirects to login with friendly flash', function () {
     test()->get(route('accountant.activation', 'totally-bogus-token'))
-        ->assertRedirect(route('login'))
+        ->assertRedirect(route('accountant.auth.login'))
         ->assertSessionHas('status', fn ($msg) => str_contains($msg, "n'est plus valide"));
 });
 
@@ -91,7 +91,7 @@ test('GET with expired token redirects to login with friendly flash', function (
     $lead->forceFill(['activation_token_expires_at' => now()->subMinute()])->save();
 
     test()->get(route('accountant.activation', $token))
-        ->assertRedirect(route('login'))
+        ->assertRedirect(route('accountant.auth.login'))
         ->assertSessionHas('status', fn ($msg) => str_contains($msg, "n'est plus valide"));
 });
 
@@ -111,7 +111,7 @@ test('GET with already-used token redirects to login (no hard 404 for the cabine
 
     // Maintenant déconnecté, on revisite l'URL avec le même token (déjà utilisé).
     test()->get(route('accountant.activation', $token))
-        ->assertRedirect(route('login'))
+        ->assertRedirect(route('accountant.auth.login'))
         ->assertSessionHas('status', fn ($msg) => str_contains($msg, "n'est plus valide"));
 });
 
@@ -175,6 +175,6 @@ test('POSTing again with a used token redirects to login (no second activation)'
         'password_confirmation' => 'AnotherP@ss123!',
         'cgu_accepted' => '1',
     ])
-        ->assertRedirect(route('login'))
+        ->assertRedirect(route('accountant.auth.login'))
         ->assertSessionHas('status', fn ($msg) => str_contains($msg, "n'est plus valide"));
 });

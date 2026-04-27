@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Shared\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,11 +19,21 @@ class LogoutController extends Controller
             return response()->json(['message' => 'Déconnexion réussie.']);
         }
 
+        /** @var User|null $user */
+        $user = Auth::guard('web')->user();
+        $profileType = $user?->profile_type;
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home');
+        $redirectRoute = match ($profileType) {
+            'accountant_firm' => 'accountant.auth.login',
+            'sme' => 'sme.auth.login',
+            default => 'home',
+        };
+
+        return redirect()->route($redirectRoute);
     }
 }

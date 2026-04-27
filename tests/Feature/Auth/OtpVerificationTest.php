@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -10,12 +10,12 @@ test('otp page can be rendered for authenticated user', function () {
 
     $this->actingAs($user)
         ->withSession(['otp_phone' => $user->phone])
-        ->get(route('auth.otp'))
+        ->get(route('sme.auth.otp'))
         ->assertOk();
 });
 
 test('otp page redirects to login if no phone in session', function () {
-    $this->get(route('auth.otp'))
+    $this->get(route('sme.auth.otp'))
         ->assertRedirect(route('login'));
 });
 
@@ -25,7 +25,7 @@ test('valid otp code verifies phone and redirects sme to pme dashboard', functio
 
     $response = $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '123456']);
+        ->post(route('sme.auth.otp.verify'), ['code' => '123456']);
 
     $response->assertRedirect(route('pme.dashboard'));
     expect($user->fresh()->phone_verified_at)->not->toBeNull();
@@ -37,7 +37,7 @@ test('valid otp code verifies phone and redirects accountant to compta dashboard
 
     $response = $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '123456']);
+        ->post(route('sme.auth.otp.verify'), ['code' => '123456']);
 
     $response->assertRedirect(route('dashboard'));
     expect($user->fresh()->phone_verified_at)->not->toBeNull();
@@ -49,7 +49,7 @@ test('invalid otp code is rejected', function () {
 
     $response = $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '999999']);
+        ->post(route('sme.auth.otp.verify'), ['code' => '999999']);
 
     $response->assertSessionHasErrors('code');
 });
@@ -60,7 +60,7 @@ test('expired otp code is rejected', function () {
 
     $response = $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '123456']);
+        ->post(route('sme.auth.otp.verify'), ['code' => '123456']);
 
     $response->assertSessionHasErrors('code');
 });
@@ -70,7 +70,7 @@ test('otp resend works', function () {
 
     $response = $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.resend'));
+        ->post(route('sme.auth.otp.resend'));
 
     $response->assertSessionHas('status');
     $this->assertDatabaseHas('otp_codes', ['phone' => '+221771234567']);

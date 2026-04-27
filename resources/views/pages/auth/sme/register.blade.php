@@ -46,7 +46,7 @@
                 :description="__('Complétez votre inscription pour rejoindre Fayeku.')"
             />
         @else
-            <x-auth-header :title="__('Créer un compte')" :description="__('Remplissez les informations ci-dessous pour créer votre compte')" />
+            <x-auth-header :title="__('Créer un compte PME')" :description="__('Remplissez les informations ci-dessous pour créer votre compte')" />
 
             <div class="rounded-xl border border-teal-200 bg-teal-50 p-4">
                 <p class="text-sm font-semibold text-teal-800">
@@ -63,10 +63,9 @@
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('auth.register.submit') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('sme.auth.register.submit') }}" class="flex flex-col gap-5">
             @csrf
 
-            <input type="hidden" name="profile_type" value="sme" />
             @if (isset($invitation) && $invitation)
                 <input type="hidden" name="invitation_token" value="{{ $invitation->token }}" />
             @endif
@@ -149,7 +148,7 @@
 
         <p class="text-center text-sm leading-6 text-slate-600">
             <span>{{ __('Vous avez déjà un compte ?') }}</span>
-            <a href="{{ route('login') }}" wire:navigate class="auth-link">{{ __('Se connecter') }}</a>
+            <a href="{{ route('sme.auth.login') }}" wire:navigate class="auth-link">{{ __('Se connecter') }}</a>
         </p>
     </div>
 </x-layouts::auth>

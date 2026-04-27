@@ -15,7 +15,7 @@ class EnsurePhoneVerified
                 return response()->json(['message' => 'Phone not verified.'], 403);
             }
 
-            return redirect()->route('auth.otp');
+            return redirect()->route('sme.auth.otp');
         }
 
         return $next($request);

@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Auth\Company;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -50,7 +50,7 @@ test('unverified phone cannot access company setup page', function () {
 
     $this->actingAs($user)
         ->get(route('auth.company-setup'))
-        ->assertRedirect(route('auth.otp'));
+        ->assertRedirect(route('sme.auth.otp'));
 });
 
 test('sme can complete company setup', function () {
@@ -121,7 +121,7 @@ test('otp verification redirects sme without company setup to company setup page
 
     $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '123456'])
+        ->post(route('sme.auth.otp.verify'), ['code' => '123456'])
         ->assertRedirect(route('auth.company-setup'));
 });
 
@@ -133,6 +133,6 @@ test('otp verification redirects sme with completed setup to pme dashboard', fun
 
     $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '123456'])
+        ->post(route('sme.auth.otp.verify'), ['code' => '123456'])
         ->assertRedirect(route('pme.dashboard'));
 });

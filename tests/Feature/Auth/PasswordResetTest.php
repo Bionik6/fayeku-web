@@ -1,47 +1,47 @@
 <?php
 
+use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Models\Shared\User;
 
 uses(RefreshDatabase::class);
 
-test('forgot password page can be rendered', function () {
-    $this->get(route('auth.forgot-password'))
+test('sme forgot password page can be rendered', function () {
+    $this->get(route('sme.auth.forgot-password'))
         ->assertOk();
 });
 
-test('user can request password reset otp', function () {
+test('sme user can request password reset otp', function () {
     User::factory()->create(['phone' => '+221771234567']);
 
-    $response = $this->post(route('auth.forgot-password.submit'), [
+    $response = $this->post(route('sme.auth.forgot-password.submit'), [
         'phone' => '771234567',
         'country_code' => 'SN',
     ]);
 
-    $response->assertRedirect(route('auth.reset-password'));
+    $response->assertRedirect(route('sme.auth.reset-password'));
     $this->assertDatabaseHas('otp_codes', [
         'phone' => '+221771234567',
         'purpose' => 'password_reset',
     ]);
 });
 
-test('reset password page can be rendered with session', function () {
+test('sme reset password page can be rendered with session', function () {
     $response = $this->withSession(['reset_phone' => '+221771234567'])
-        ->get(route('auth.reset-password'));
+        ->get(route('sme.auth.reset-password'));
 
     $response->assertOk();
 });
 
-test('reset password page redirects without session', function () {
-    $this->get(route('auth.reset-password'))
-        ->assertRedirect(route('auth.forgot-password'));
+test('sme reset password page redirects without session', function () {
+    $this->get(route('sme.auth.reset-password'))
+        ->assertRedirect(route('sme.auth.forgot-password'));
 });
 
-test('user can reset password with valid otp', function () {
-    $user = User::factory()->create(['phone' => '+221771234567']);
+test('sme user can reset password with valid otp', function () {
+    $user = User::factory()->create(['phone' => '+221771234567', 'profile_type' => 'sme']);
 
     DB::table('otp_codes')->insert([
         'id' => (string) Str::ulid(),
@@ -55,22 +55,22 @@ test('user can reset password with valid otp', function () {
     ]);
 
     $response = $this->withSession(['reset_phone' => '+221771234567'])
-        ->post(route('auth.reset-password.submit'), [
+        ->post(route('sme.auth.reset-password.submit'), [
             'code' => '123456',
             'password' => 'NewP@ssword123!',
             'password_confirmation' => 'NewP@ssword123!',
         ]);
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('pme.dashboard'));
     $this->assertAuthenticated();
     expect(Hash::check('NewP@ssword123!', $user->fresh()->password))->toBeTrue();
 });
 
-test('password reset fails with invalid otp', function () {
+test('sme password reset fails with invalid otp', function () {
     User::factory()->create(['phone' => '+221771234567']);
 
     $response = $this->withSession(['reset_phone' => '+221771234567'])
-        ->post(route('auth.reset-password.submit'), [
+        ->post(route('sme.auth.reset-password.submit'), [
             'code' => '999999',
             'password' => 'NewP@ssword123!',
             'password_confirmation' => 'NewP@ssword123!',
@@ -80,7 +80,7 @@ test('password reset fails with invalid otp', function () {
 });
 
 test('api password reset returns json', function () {
-    $user = User::factory()->create(['phone' => '+221771234567']);
+    User::factory()->create(['phone' => '+221771234567']);
 
     DB::table('otp_codes')->insert([
         'id' => (string) Str::ulid(),

@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Sme;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\Sme\RegisterRequest;
+use App\Models\Auth\Company;
+use App\Models\Compta\PartnerInvitation;
+use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use App\Http\Requests\Auth\RegisterRequest;
-use App\Models\Auth\Company;
-use App\Services\Auth\AuthService;
-use App\Models\Compta\PartnerInvitation;
 
 class RegisterController extends Controller
 {
@@ -21,7 +21,6 @@ class RegisterController extends Controller
         $joiningFirm = null;
         $inviteePhone = null;
 
-        // Old flow: specific invitation token via ?join= or session
         $token = $request->query('join') ?? session('invitation_token');
 
         if ($token) {
@@ -35,14 +34,13 @@ class RegisterController extends Controller
             }
         }
 
-        // New flow: firm-level join code stored in session by JoinController
         if (! $invitation && session('joining_firm_code')) {
             $joiningFirm = Company::where('invite_code', session('joining_firm_code'))
                 ->where('type', 'accountant_firm')
                 ->first();
         }
 
-        return view('pages.auth.register', [
+        return view('pages.auth.sme.register', [
             'invitation' => $invitation,
             'joiningFirm' => $joiningFirm,
             'inviteePhone' => $inviteePhone,
@@ -54,7 +52,6 @@ class RegisterController extends Controller
         $invitation = null;
         $invitingFirm = null;
 
-        // Old flow: specific invitation token submitted in form
         $token = $request->validated('invitation_token');
 
         if ($token) {
@@ -64,14 +61,12 @@ class RegisterController extends Controller
                 ->first();
         }
 
-        // New flow: firm-level join via session
         if (! $invitation && session('joining_firm_code')) {
             $firm = Company::where('invite_code', session('joining_firm_code'))
                 ->where('type', 'accountant_firm')
                 ->first();
 
             if ($firm) {
-                // Try to match a pending invitation for this phone + firm
                 $normalizedPhone = AuthService::normalizePhone(
                     $request->input('phone'),
                     $request->input('country_code')
@@ -83,7 +78,6 @@ class RegisterController extends Controller
                     ->where('status', 'pending')
                     ->first();
 
-                // If no specific invitation, still link to the firm
                 if (! $invitation) {
                     $invitingFirm = $firm;
                 }
@@ -114,6 +108,6 @@ class RegisterController extends Controller
 
         session()->forget('joining_firm_code');
 
-        return redirect()->route('auth.otp');
+        return redirect()->route('sme.auth.otp');
     }
 }

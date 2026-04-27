@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Compta;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use App\Models\Auth\Company;
+use Illuminate\Http\RedirectResponse;
 
 class JoinController extends Controller
 {
@@ -22,6 +22,6 @@ class JoinController extends Controller
 
         session(['joining_firm_code' => $firm->invite_code]);
 
-        return redirect()->route('auth.register');
+        return redirect()->route('sme.auth.register');
     }
 }

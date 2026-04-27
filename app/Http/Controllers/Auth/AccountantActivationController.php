@@ -19,7 +19,7 @@ class AccountantActivationController extends Controller
      * utilisé (token invalidé), a expiré, ou ne correspond à rien. UX commune
      * pour ces 3 cas — pas de 404 brutal, on guide vers la connexion.
      */
-    private const INVALID_LINK_FLASH = "Ce lien d'activation n'est plus valide. Si votre compte est déjà activé, connectez-vous avec votre numéro de téléphone.";
+    private const INVALID_LINK_FLASH = "Ce lien d'activation n'est plus valide. Si votre compte est déjà activé, connectez-vous avec votre adresse email.";
 
     public function show(string $token): View|RedirectResponse
     {
@@ -84,6 +84,6 @@ class AccountantActivationController extends Controller
 
     private function redirectToLoginWithExpiredFlash(): RedirectResponse
     {
-        return redirect()->route('login')->with('status', self::INVALID_LINK_FLASH);
+        return redirect()->route('accountant.auth.login')->with('status', self::INVALID_LINK_FLASH);
     }
 }

@@ -18,7 +18,7 @@
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('auth.otp.verify') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('sme.auth.otp.verify') }}" class="flex flex-col gap-5">
             @csrf
 
             <label class="auth-label">
@@ -65,7 +65,7 @@
                 {{ __('Code valable encore') }} <span class="font-semibold text-ink" x-text="formatted">{{ sprintf('%d:%02d', intdiv($initialSecondsLeft, 60), $initialSecondsLeft % 60) }}</span>
             </p>
 
-            <form method="POST" action="{{ route('auth.otp.resend') }}" x-show="secondsLeft <= 0" @if ($initialSecondsLeft > 0) style="display: none" @endif>
+            <form method="POST" action="{{ route('sme.auth.otp.resend') }}" x-show="secondsLeft <= 0" @if ($initialSecondsLeft > 0) style="display: none" @endif>
                 @csrf
                 <button type="submit" class="text-sm auth-link">{{ __('Renvoyer le code') }}</button>
             </form>

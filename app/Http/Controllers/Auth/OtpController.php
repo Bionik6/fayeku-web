@@ -18,10 +18,10 @@ class OtpController extends Controller
         $phone = session('otp_phone') ?? auth()->user()?->phone;
 
         if (! $phone) {
-            return redirect()->route('login');
+            return redirect()->route('sme.auth.login');
         }
 
-        return view('pages.auth.verify-otp', [
+        return view('pages.auth.sme.verify-otp', [
             'maskedPhone' => $this->maskPhone($phone),
             'otpExpiresAt' => $this->latestOtpExpiresAt($phone),
         ]);
@@ -36,7 +36,7 @@ class OtpController extends Controller
                 return response()->json(['message' => 'Session expirée.'], 422);
             }
 
-            return redirect()->route('login');
+            return redirect()->route('sme.auth.login');
         }
 
         if (! $otpService->verify($phone, $request->input('code'))) {
@@ -96,7 +96,7 @@ class OtpController extends Controller
                 return response()->json(['message' => 'Session expirée.'], 422);
             }
 
-            return redirect()->route('login');
+            return redirect()->route('sme.auth.login');
         }
 
         if (! $otpService->canResend($phone)) {

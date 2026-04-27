@@ -7,7 +7,7 @@
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('auth.reset-password.submit') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('sme.auth.reset-password.submit') }}" class="flex flex-col gap-5">
             @csrf
 
             <label class="auth-label">
@@ -58,7 +58,7 @@
         </form>
 
         <p class="text-center text-sm leading-6 text-slate-600">
-            <a href="{{ route('login') }}" wire:navigate class="auth-link">{{ __('Retour à la connexion') }}</a>
+            <a href="{{ route('sme.auth.login') }}" wire:navigate class="auth-link">{{ __('Retour à la connexion') }}</a>
         </p>
     </div>
 </x-layouts::auth>

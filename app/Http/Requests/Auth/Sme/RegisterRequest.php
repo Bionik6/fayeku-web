@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Http\Requests\Auth\Sme;
 
+use App\Models\Compta\PartnerInvitation;
+use App\Models\Shared\User;
+use App\Services\Auth\AuthService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
-use App\Services\Auth\AuthService;
-use App\Models\Compta\PartnerInvitation;
-use App\Models\Shared\User;
 
 class RegisterRequest extends FormRequest
 {
@@ -26,7 +26,6 @@ class RegisterRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-            'profile_type' => ['required', 'string', Rule::in(['sme', 'accountant_firm'])],
             'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
             'invitation_token' => ['nullable', 'string', 'max:100'],
         ];
@@ -43,8 +42,6 @@ class RegisterRequest extends FormRequest
             'phone.required' => 'Le numéro de téléphone est obligatoire.',
             'password.required' => 'Le mot de passe est obligatoire.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
-            'profile_type.required' => 'Le type de profil est obligatoire.',
-            'profile_type.in' => 'Le type de profil sélectionné est invalide.',
             'country_code.required' => 'Le pays est obligatoire.',
             'country_code.in' => 'Le pays sélectionné est invalide.',
         ];
@@ -78,5 +75,23 @@ class RegisterRequest extends FormRequest
                 }
             }
         });
+    }
+
+    /**
+     * SME registration always sets profile_type to 'sme'.
+     *
+     * @param  array<string>|string|null  $key
+     * @return mixed
+     */
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated();
+        $data['profile_type'] = 'sme';
+
+        if ($key === null) {
+            return $data;
+        }
+
+        return data_get($data, $key, $default);
     }
 }

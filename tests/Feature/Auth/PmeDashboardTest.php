@@ -124,7 +124,7 @@ test('sme user is redirected to pme dashboard after otp verification', function 
 
     $this->actingAs($user)
         ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('auth.otp.verify'), ['code' => '654321'])
+        ->post(route('sme.auth.otp.verify'), ['code' => '654321'])
         ->assertRedirect(route('pme.dashboard'));
 });
 

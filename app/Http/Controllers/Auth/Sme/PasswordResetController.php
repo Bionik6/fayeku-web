@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Sme;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\Sme\ForgotPasswordRequest;
+use App\Http\Requests\Auth\Sme\ResetPasswordRequest;
+use App\Models\Shared\User;
+use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use App\Http\Requests\Auth\ForgotPasswordRequest;
-use App\Http\Requests\Auth\ResetPasswordRequest;
-use App\Services\Auth\AuthService;
-use App\Models\Shared\User;
 
 class PasswordResetController extends Controller
 {
     public function showForgotForm(): View
     {
-        return view('pages.auth.forgot-password');
+        return view('pages.auth.sme.forgot-password');
     }
 
     public function sendResetOtp(ForgotPasswordRequest $request, AuthService $authService): JsonResponse|RedirectResponse
@@ -39,17 +39,17 @@ class PasswordResetController extends Controller
             'reset_country_code' => $request->input('country_code'),
         ]);
 
-        return redirect()->route('auth.reset-password')
+        return redirect()->route('sme.auth.reset-password')
             ->with('status', 'Si ce numéro est enregistré, un code vous a été envoyé.');
     }
 
     public function showResetForm(): View|RedirectResponse
     {
         if (! session('reset_phone')) {
-            return redirect()->route('auth.forgot-password');
+            return redirect()->route('sme.auth.forgot-password');
         }
 
-        return view('pages.auth.reset-password');
+        return view('pages.auth.sme.reset-password');
     }
 
     public function reset(ResetPasswordRequest $request, AuthService $authService): JsonResponse|RedirectResponse
@@ -61,7 +61,7 @@ class PasswordResetController extends Controller
                 return response()->json(['message' => 'Session expirée.'], 422);
             }
 
-            return redirect()->route('auth.forgot-password');
+            return redirect()->route('sme.auth.forgot-password');
         }
 
         if (! $authService->resetPassword($phone, $request->input('code'), $request->input('password'))) {
@@ -74,7 +74,9 @@ class PasswordResetController extends Controller
 
         session()->forget(['reset_phone', 'reset_country_code']);
 
-        $user = User::where('phone', $phone)->first();
+        $user = User::where('phone', $phone)
+            ->where('profile_type', 'sme')
+            ->first();
 
         if ($user) {
             Auth::login($user);
@@ -87,6 +89,6 @@ class PasswordResetController extends Controller
             ]);
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->route('pme.dashboard');
     }
 }

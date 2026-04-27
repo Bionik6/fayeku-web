@@ -1,28 +1,28 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth\Accountant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\Accountant\LoginRequest;
+use App\Models\Shared\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Services\Auth\AuthService;
-use App\Models\Shared\User;
-use App\Services\Shared\OtpService;
 
 class LoginController extends Controller
 {
     public function show(): View
     {
-        return view('pages.auth.login');
+        return view('pages.auth.accountant.login');
     }
 
-    public function store(LoginRequest $request, OtpService $otpService): JsonResponse|RedirectResponse
+    public function store(LoginRequest $request): JsonResponse|RedirectResponse
     {
-        $throttleKey = $request->input('phone').'|'.$request->ip();
+        $email = Str::lower($request->input('email'));
+        $throttleKey = $email.'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
@@ -33,15 +33,16 @@ class LoginController extends Controller
                 return response()->json(['message' => $message], 429);
             }
 
-            return back()->withErrors(['phone' => $message])->withInput();
+            return back()->withErrors(['email' => $message])->withInput();
         }
 
-        $normalizedPhone = AuthService::normalizePhone(
-            $request->input('phone'),
-            $request->input('country_code')
-        );
+        $credentials = [
+            'email' => $email,
+            'password' => $request->input('password'),
+            'profile_type' => 'accountant_firm',
+        ];
 
-        if (! Auth::attempt(['phone' => $normalizedPhone, 'password' => $request->input('password')], $request->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($throttleKey, 60);
 
             $message = 'Identifiants incorrects.';
@@ -50,7 +51,7 @@ class LoginController extends Controller
                 return response()->json(['message' => $message], 401);
             }
 
-            return back()->withErrors(['phone' => $message])->withInput();
+            return back()->withErrors(['email' => $message])->withInput();
         }
 
         RateLimiter::clear($throttleKey);
@@ -67,7 +68,7 @@ class LoginController extends Controller
                 return response()->json(['message' => $message], 403);
             }
 
-            return back()->withErrors(['phone' => $message])->withInput();
+            return back()->withErrors(['email' => $message])->withInput();
         }
 
         if ($request->expectsJson()) {
@@ -75,24 +76,11 @@ class LoginController extends Controller
                 'message' => 'Connexion réussie.',
                 'user' => $user,
                 'token' => $user->createToken('auth')->plainTextToken,
-                'phone_verified' => ! is_null($user->phone_verified_at),
             ]);
         }
 
         $request->session()->regenerate();
 
-        if (is_null($user->phone_verified_at)) {
-            $otpService->generate($user->phone);
-            session(['otp_phone' => $user->phone]);
-
-            return redirect()->route('auth.otp');
-        }
-
-        return redirect()->intended($this->dashboardRouteForUser($user));
-    }
-
-    private function dashboardRouteForUser(User $user): string
-    {
-        return $user->profile_type === 'sme' ? route('pme.dashboard') : route('dashboard');
+        return redirect()->intended(route('dashboard'));
     }
 }

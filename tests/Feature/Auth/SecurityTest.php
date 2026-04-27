@@ -1,9 +1,9 @@
 <?php
 
+use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
-use App\Models\Shared\User;
 
 uses(RefreshDatabase::class);
 
@@ -20,7 +20,7 @@ test('unverified users are redirected to otp from the settings page', function (
 
     $this->actingAs($user)
         ->get(route('settings.index'))
-        ->assertRedirect(route('auth.otp'));
+        ->assertRedirect(route('sme.auth.otp'));
 });
 
 test('password can be updated', function () {

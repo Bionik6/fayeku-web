@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\OtpController;
-use App\Http\Controllers\Auth\PasswordResetController;
-use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\Sme\LoginController;
+use App\Http\Controllers\Auth\Sme\PasswordResetController;
+use App\Http\Controllers\Auth\Sme\RegisterController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('api/auth')->group(function () {
     Route::post('/register', [RegisterController::class, 'store'])->name('api.auth.register');

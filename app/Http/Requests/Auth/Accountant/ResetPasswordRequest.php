@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Http\Requests\Auth\Accountant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
@@ -18,7 +18,8 @@ class ResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'size:6'],
+            'token' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', Password::defaults(), 'confirmed'],
         ];
     }
@@ -29,8 +30,9 @@ class ResetPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'code.required' => 'Le code de vérification est obligatoire.',
-            'code.size' => 'Le code doit contenir 6 chiffres.',
+            'token.required' => 'Le jeton est manquant.',
+            'email.required' => "L'adresse email est obligatoire.",
+            'email.email' => "L'adresse email n'est pas valide.",
             'password.required' => 'Le mot de passe est obligatoire.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ];
