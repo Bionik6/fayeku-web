@@ -37,7 +37,7 @@ class SharedServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(SmsProviderInterface::class, function ($app) {
+        $this->app->singleton(SmsProviderInterface::class, function ($app) {
             $clientId = config('services.orange_sms.client_id');
             $clientSecret = config('services.orange_sms.client_secret');
             $senderAddress = config('services.orange_sms.sender_address');

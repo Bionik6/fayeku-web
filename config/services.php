@@ -70,7 +70,7 @@ return [
         'client_id' => env('ORANGE_SMS_CLIENT_ID'),
         'client_secret' => env('ORANGE_SMS_CLIENT_SECRET'),
         'sender_address' => env('ORANGE_SMS_SENDER_ADDRESS'),
-        'sender_name' => env('ORANGE_SMS_SENDER_NAME', 'Fayeku'),
+        'sender_name' => env('ORANGE_SMS_SENDER_NAME'),
     ],
 
 ];

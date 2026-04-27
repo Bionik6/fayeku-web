@@ -12,12 +12,17 @@ class OrangeSmsProvider implements SmsProviderInterface
 {
     private const TOKEN_CACHE_KEY = 'orange_sms.access_token';
 
+    /**
+     * @var array{ok: bool, status: int|null, resourceURL: string|null, body: string|null}|null
+     */
+    private ?array $lastResult = null;
+
     public function __construct(
         private readonly string $baseUrl,
         private readonly string $clientId,
         private readonly string $clientSecret,
         private readonly string $senderAddress,
-        private readonly string $senderName,
+        private readonly ?string $senderName,
         private readonly CacheRepository $cache,
     ) {}
 
@@ -26,6 +31,8 @@ class OrangeSmsProvider implements SmsProviderInterface
         $token = $this->accessToken();
 
         if ($token === null) {
+            $this->lastResult = ['ok' => false, 'status' => null, 'resourceURL' => null, 'body' => 'token fetch failed (voir log)'];
+
             return false;
         }
 
@@ -37,28 +44,51 @@ class OrangeSmsProvider implements SmsProviderInterface
             rawurlencode($sender),
         );
 
+        $outbound = [
+            'address' => $recipient,
+            'senderAddress' => $sender,
+            'outboundSMSTextMessage' => [
+                'message' => $message,
+            ],
+        ];
+
+        if ($this->senderName !== null && trim($this->senderName) !== '') {
+            $outbound['senderName'] = $this->senderName;
+        }
+
         try {
-            Http::withToken($token)
+            $response = Http::withToken($token)
                 ->acceptJson()
                 ->asJson()
                 ->timeout(15)
-                ->post($endpoint, [
-                    'outboundSMSMessageRequest' => [
-                        'address' => $recipient,
-                        'senderAddress' => $sender,
-                        'senderName' => $this->senderName,
-                        'outboundSMSTextMessage' => [
-                            'message' => $message,
-                        ],
-                    ],
-                ])
+                ->post($endpoint, ['outboundSMSMessageRequest' => $outbound])
                 ->throw();
+
+            $this->lastResult = [
+                'ok' => true,
+                'status' => $response->status(),
+                'resourceURL' => $response->json('outboundSMSMessageRequest.resourceURL'),
+                'body' => $response->body(),
+            ];
+
+            Log::debug('Orange SMS send accepted', [
+                'to' => $phone,
+                'status' => $response->status(),
+                'resourceURL' => $this->lastResult['resourceURL'],
+            ]);
 
             return true;
         } catch (RequestException $e) {
             if ($e->response?->status() === 401) {
                 $this->cache->forget(self::TOKEN_CACHE_KEY);
             }
+
+            $this->lastResult = [
+                'ok' => false,
+                'status' => $e->response?->status(),
+                'resourceURL' => null,
+                'body' => $e->response?->body(),
+            ];
 
             Log::error('Orange SMS send failed', [
                 'to' => $phone,
@@ -68,6 +98,17 @@ class OrangeSmsProvider implements SmsProviderInterface
 
             return false;
         }
+    }
+
+    /**
+     * Détails de la dernière tentative d'envoi (status HTTP, resourceURL Orange, corps brut).
+     * Utile pour les commandes de diagnostic. `null` si aucun envoi n'a encore eu lieu.
+     *
+     * @return array{ok: bool, status: int|null, resourceURL: string|null, body: string|null}|null
+     */
+    public function lastResult(): ?array
+    {
+        return $this->lastResult;
     }
 
     private function accessToken(): ?string

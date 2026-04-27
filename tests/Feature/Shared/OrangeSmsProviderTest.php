@@ -5,14 +5,14 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
-function makeOrangeProvider(): OrangeSmsProvider
+function makeOrangeProvider(?string $senderName = 'Fayeku'): OrangeSmsProvider
 {
     return new OrangeSmsProvider(
         baseUrl: 'https://api.orange.com',
         clientId: 'client-id',
         clientSecret: 'client-secret',
         senderAddress: 'tel:+221770000000',
-        senderName: 'Fayeku',
+        senderName: $senderName,
         cache: Cache::store('array'),
     );
 }
@@ -71,6 +71,44 @@ test('send reutilise le token en cache entre deux appels', function () {
     });
 
     expect($tokenCalls)->toBe(1);
+});
+
+test('senderName est omis du payload quand non configure', function () {
+    Http::fake([
+        'api.orange.com/oauth/v3/token' => Http::response(['access_token' => 'abc123', 'expires_in' => 3600], 200),
+        'api.orange.com/smsmessaging/*' => Http::response([], 201),
+    ]);
+
+    $ok = makeOrangeProvider(senderName: null)->send('+221771112233', 'Hello');
+
+    expect($ok)->toBeTrue();
+
+    Http::assertSent(function (Request $request) {
+        if (! str_contains($request->url(), '/smsmessaging/')) {
+            return true;
+        }
+
+        $body = $request->data();
+
+        return ! array_key_exists('senderName', $body['outboundSMSMessageRequest']);
+    });
+});
+
+test('senderName est aussi omis quand la config est une chaine vide', function () {
+    Http::fake([
+        'api.orange.com/oauth/v3/token' => Http::response(['access_token' => 'abc123', 'expires_in' => 3600], 200),
+        'api.orange.com/smsmessaging/*' => Http::response([], 201),
+    ]);
+
+    makeOrangeProvider(senderName: '   ')->send('+221771112233', 'Hello');
+
+    Http::assertSent(function (Request $request) {
+        if (! str_contains($request->url(), '/smsmessaging/')) {
+            return true;
+        }
+
+        return ! array_key_exists('senderName', $request->data()['outboundSMSMessageRequest']);
+    });
 });
 
 test('send renvoie false et invalide le cache du token sur un 401', function () {
