@@ -17,6 +17,7 @@ return new class extends Migration
 
         Schema::create('invoices', function (Blueprint $table) {
             $table->string('id')->primary();
+            $table->string('public_code', 8)->unique();
             $table->string('company_id');
             $table->string('client_id')->nullable();
             $table->string('quote_id')->nullable();

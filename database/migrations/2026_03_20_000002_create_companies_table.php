@@ -17,6 +17,8 @@ return new class extends Migration
             $table->char('country_code', 3);
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
+            $table->string('sender_name')->nullable();
+            $table->string('sender_role')->nullable();
             $table->string('address')->nullable();
             $table->string('city')->nullable();
             $table->string('ninea')->nullable();

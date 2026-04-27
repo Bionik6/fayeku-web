@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('quotes', function (Blueprint $table) {
             $table->string('id')->primary();
+            $table->string('public_code', 8)->unique();
             $table->string('company_id');
             $table->string('client_id')->nullable();
             $table->string('reference')->nullable();
