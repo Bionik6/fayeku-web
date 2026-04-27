@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Crée les 5 comptes nommés et les 3 sociétés autour desquels gravite la
- * démo (cabinet Ndiaye + 2 PME). Tout le monde se connecte avec « password ».
+ * Crée les 9 comptes nommés (2 hommes + 1 femme par entité) et les 3 sociétés
+ * autour desquels gravite la démo (cabinet Ndiaye + 2 PME). Tout le monde se
+ * connecte avec « password ».
  *
  * Les comptables se connectent par email (/accountant/login), les PME par
  * téléphone (/sme/login). Les colonnes `phone_verified_at` et
@@ -26,9 +27,9 @@ class DemoAccountsSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function (): void {
-            [$cabinet, $aminata] = $this->createCabinetNdiaye();
-            [$diopServices, $moussa] = $this->createDiopServices();
-            [$sowBtp, $ibrahima] = $this->createSowBtp();
+            [$cabinet] = $this->createCabinetNdiaye();
+            [$diopServices] = $this->createDiopServices();
+            [$sowBtp] = $this->createSowBtp();
 
             $this->linkCabinetToSme($cabinet, $diopServices, monthsAgo: 5);
             $this->linkCabinetToSme($cabinet, $sowBtp, monthsAgo: 2);
@@ -36,12 +37,7 @@ class DemoAccountsSeeder extends Seeder
             // Plans payants pour les deux PME (utiles pour les tests
             // commission/abonnement).
             $this->subscribe($diopServices, plan: 'essentiel', amount: 20_000, invitedByFirmId: $cabinet->id);
-            $this->subscribe($sowBtp, plan: 'basique', amount: 10_000, invitedByFirmId: $cabinet->id);
-
-            // Marqueurs explicites (silence le linter — les variables sont
-            // récupérées pour la lisibilité et serviront aux seeders suivants
-            // via DB lookups par phone/email).
-            unset($aminata, $moussa, $ibrahima);
+            $this->subscribe($sowBtp, plan: 'essentiel', amount: 20_000, invitedByFirmId: $cabinet->id);
         });
     }
 
@@ -51,18 +47,26 @@ class DemoAccountsSeeder extends Seeder
     private function createCabinetNdiaye(): array
     {
         $owner = $this->createUser([
-            'first_name' => 'Aminata',
+            'first_name' => 'Ousmane',
             'last_name' => 'Ndiaye',
             'phone' => '+221774457632',
-            'email' => 'aminata@cabinet-ndiaye.test',
+            'email' => 'ousmane@cabinet-ndiaye.test',
             'profile_type' => 'accountant_firm',
         ]);
 
-        $admin = $this->createUser([
-            'first_name' => 'Fatou',
+        $adminMan = $this->createUser([
+            'first_name' => 'Mamadou',
             'last_name' => 'Sarr',
             'phone' => '+221774457634',
-            'email' => 'fatou@cabinet-ndiaye.test',
+            'email' => 'mamadou@cabinet-ndiaye.test',
+            'profile_type' => 'accountant_firm',
+        ]);
+
+        $adminWoman = $this->createUser([
+            'first_name' => 'Aminata',
+            'last_name' => 'Ndiaye',
+            'phone' => '+221774457640',
+            'email' => 'aminata@cabinet-ndiaye.test',
             'profile_type' => 'accountant_firm',
         ]);
 
@@ -81,7 +85,8 @@ class DemoAccountsSeeder extends Seeder
         ]);
 
         $cabinet->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
-        $cabinet->users()->attach($admin->id, ['role' => CompanyRole::Admin->value]);
+        $cabinet->users()->attach($adminMan->id, ['role' => CompanyRole::Admin->value]);
+        $cabinet->users()->attach($adminWoman->id, ['role' => CompanyRole::Admin->value]);
 
         return [$cabinet, $owner];
     }
@@ -96,6 +101,14 @@ class DemoAccountsSeeder extends Seeder
             'last_name' => 'Diop',
             'phone' => '+221774457633',
             'email' => 'moussa@diop-services.test',
+            'profile_type' => 'sme',
+        ]);
+
+        $admin = $this->createUser([
+            'first_name' => 'Cheikh',
+            'last_name' => 'Diop',
+            'phone' => '+221774457637',
+            'email' => 'cheikh@diop-services.test',
             'profile_type' => 'sme',
         ]);
 
@@ -123,6 +136,7 @@ class DemoAccountsSeeder extends Seeder
         ]);
 
         $company->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
+        $company->users()->attach($admin->id, ['role' => CompanyRole::Admin->value]);
         $company->users()->attach($member->id, ['role' => CompanyRole::Member->value]);
 
         return [$company, $owner];
@@ -141,10 +155,26 @@ class DemoAccountsSeeder extends Seeder
             'profile_type' => 'sme',
         ]);
 
+        $admin = $this->createUser([
+            'first_name' => 'Modou',
+            'last_name' => 'Fall',
+            'phone' => '+221774457638',
+            'email' => 'modou@sow-btp.test',
+            'profile_type' => 'sme',
+        ]);
+
+        $member = $this->createUser([
+            'first_name' => 'Khady',
+            'last_name' => 'Diallo',
+            'phone' => '+221774457639',
+            'email' => 'khady@sow-btp.test',
+            'profile_type' => 'sme',
+        ]);
+
         $company = Company::create([
             'name' => 'Sow BTP SARL',
             'type' => 'sme',
-            'plan' => 'basique',
+            'plan' => 'essentiel',
             'country_code' => 'SN',
             'phone' => '+221338219902',
             'email' => 'contact@sow-btp.test',
@@ -157,6 +187,8 @@ class DemoAccountsSeeder extends Seeder
         ]);
 
         $company->users()->attach($owner->id, ['role' => CompanyRole::Owner->value]);
+        $company->users()->attach($admin->id, ['role' => CompanyRole::Admin->value]);
+        $company->users()->attach($member->id, ['role' => CompanyRole::Member->value]);
 
         return [$company, $owner];
     }

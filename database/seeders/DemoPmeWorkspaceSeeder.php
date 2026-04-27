@@ -16,18 +16,18 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Étoffe l'espace de travail de Diop Services SARL (la PME nominale créée
- * par DemoAccountsSeeder) avec :
- * - 12 clients récurrents (Sonatel, Orange, CBAO, etc.)
- * - 5 mois d'historique de factures payées (Déc 2025 → Mars 2026)
- * - 4 factures en retard (1 critique J+65, 1 critique J+61, 1 J+35, 1 partiellement payée)
- * - Relances email/WhatsApp/SMS associées
- * - 10 factures en cours d'encaissement (Avril → Juin)
- * - 2 brouillons
- * - 7 devis (acceptés, envoyés, refusé, expiré)
+ * Étoffe les deux PME nominales créées par DemoAccountsSeeder avec des
+ * espaces de travail riches et exploitables :
  *
- * Le workspace simule une PME mature pour valider tous les écrans PME
- * (dashboard, factures, devis, relances, trésorerie).
+ * - Diop Services SARL (services numériques) — 12 clients (Orange, CBAO,
+ *   SENELEC…), 5 mois d'historique, 4 retards (dont 2 critiques), 10 émises
+ *   en attente, 2 brouillons, 7 devis variés.
+ * - Sow BTP SARL (BTP / promotion immobilière) — 8 clients (promoteurs,
+ *   syndics, collectivités), 4 mois d'historique, 3 retards (dont 1
+ *   critique J+72), 4 émises, 1 brouillon, 4 devis.
+ *
+ * Permet de valider tous les écrans PME (dashboard, factures, devis,
+ * relances, trésorerie) sur deux profils sectoriels distincts.
  */
 class DemoPmeWorkspaceSeeder extends Seeder
 {
@@ -36,17 +36,34 @@ class DemoPmeWorkspaceSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function (): void {
-            $this->company = Company::query()
-                ->where('type', 'sme')
-                ->where('name', 'Diop Services SARL')
-                ->firstOrFail();
-
-            $this->seedInvoices();
-            $this->seedQuotes();
+            $this->seedDiopServicesWorkspace();
+            $this->seedSowBtpWorkspace();
         });
     }
 
-    private function seedInvoices(): void
+    private function seedDiopServicesWorkspace(): void
+    {
+        $this->company = Company::query()
+            ->where('type', 'sme')
+            ->where('name', 'Diop Services SARL')
+            ->firstOrFail();
+
+        $this->seedDiopInvoices();
+        $this->seedDiopQuotes();
+    }
+
+    private function seedSowBtpWorkspace(): void
+    {
+        $this->company = Company::query()
+            ->where('type', 'sme')
+            ->where('name', 'Sow BTP SARL')
+            ->firstOrFail();
+
+        $this->seedSowBtpInvoices();
+        $this->seedSowBtpQuotes();
+    }
+
+    private function seedDiopInvoices(): void
     {
         // ── Clients ────────────────────────────────────────────────────────
         $orange = $this->client('Orange Sénégal SA', '+221338600001', 'dsi@orange.sn', '21 Rue Léopold Sédar Senghor, Plateau', 'SN2024ORA0001');
@@ -422,7 +439,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         );
     }
 
-    private function seedQuotes(): void
+    private function seedDiopQuotes(): void
     {
         $orange = Client::where('company_id', $this->company->id)->where('name', 'Orange Sénégal SA')->first();
         $lafarge = Client::where('company_id', $this->company->id)->where('name', 'LafargeHolcim Sénégal')->first();
@@ -492,6 +509,307 @@ class DemoPmeWorkspaceSeeder extends Seeder
             lines: [
                 ['Plateforme HSE (Hygiène, Sécurité, Environnement)', 1, 1_700_000],
                 ['Application mobile terrain inspecteurs', 1, 400_000],
+            ]
+        );
+    }
+
+    private function seedSowBtpInvoices(): void
+    {
+        // ── Clients BTP / promotion immobilière ────────────────────────────
+        $socofim = $this->client('SOCOFIM SA — Promotion Immobilière', '+221338700001', 'projets@socofim.sn', '12 Avenue Cheikh Anta Diop, Fann', 'SN2024SOC0001');
+        $almadiesPlaza = $this->client('SCI Almadies Plaza', '+221338700002', 'syndic@almadiesplaza.sn', 'Route des Almadies, Lot 47, Dakar', 'SN2024ALM0002');
+        $mairieDiamniadio = $this->client('Mairie de Diamniadio', '+221338700003', 'urbanisme@diamniadio.sn', 'Préfecture de Rufisque, Diamniadio', 'SN2024MAD0003');
+        $terrouBi = $this->client('Hôtel Terrou-Bi', '+221338700004', 'travaux@terroubi.sn', 'Boulevard du Sud, Corniche Ouest', 'SN2024TBI0004');
+        $senico = $this->client('SENICO Construction', '+221338700005', 'achats@senico.sn', 'Zone Industrielle Sébikhotane, Rufisque', 'SN2024SCO0005');
+        $setuna = $this->client('SETUNA SA — Travaux Publics', '+221338700006', 'compta@setuna.sn', 'Km 5,5 Route de Rufisque, Hann', 'SN2024STU0006');
+        $ucad = $this->client('Université Cheikh Anta Diop', '+221338700007', 'patrimoine@ucad.edu.sn', 'Avenue Cheikh Anta Diop, Fann', 'SN2024UCA0007');
+        $poleDiamniadio = $this->client('Pôle Urbain de Diamniadio', '+221338700008', 'travaux@pud-diamniadio.sn', 'DGPU, Cité Diamniadio', 'SN2024PUD0008');
+
+        // ── Janvier 2026 — 4 factures payées ──────────────────────────────
+        $this->invoice($socofim, 'FYK-FAC-SB0101', InvoiceStatus::Paid, 8_500_000,
+            issuedAt: '2026-01-08', dueAt: '2026-02-07', paidAt: '2026-02-02',
+            lines: [
+                ['Fondations spéciales — Résidence Les Jardins de Yoff (Tranche 1)', 1, 6_500_000],
+                ['Études géotechniques et plan d\'exécution', 1, 1_400_000],
+                ['Coordination SPS chantier (Janv. 2026)', 1, 600_000],
+            ]
+        );
+
+        $this->invoice($almadiesPlaza, 'FYK-FAC-SB0102', InvoiceStatus::Paid, 1_800_000,
+            issuedAt: '2026-01-12', dueAt: '2026-02-11', paidAt: '2026-02-10',
+            lines: [
+                ['Réfection étanchéité toiture-terrasse — Bâtiments A et B', 1, 1_500_000],
+                ['Reprise garde-corps acier inox — 12 balcons', 12, 25_000],
+            ]
+        );
+
+        $this->invoice($terrouBi, 'FYK-FAC-SB0103', InvoiceStatus::Paid, 3_200_000,
+            issuedAt: '2026-01-18', dueAt: '2026-02-17', paidAt: '2026-02-15',
+            lines: [
+                ['Rénovation suites VIP (4 unités) — second œuvre complet', 4, 700_000],
+                ['Plomberie sanitaire haut de gamme (Hansgrohe)', 4, 100_000],
+            ]
+        );
+
+        $this->invoice($senico, 'FYK-FAC-SB0104', InvoiceStatus::Paid, 950_000,
+            issuedAt: '2026-01-25', dueAt: '2026-02-24', paidAt: '2026-02-19',
+            lines: [
+                ['Sous-traitance maçonnerie — Chantier Cité Keur Gorgui (Janv.)', 1, 750_000],
+                ['Location grue à tour — 5 jours', 5, 40_000],
+            ]
+        );
+
+        // ── Février 2026 — 4 factures payées ──────────────────────────────
+        $this->invoice($mairieDiamniadio, 'FYK-FAC-SB0201', InvoiceStatus::Paid, 4_200_000,
+            issuedAt: '2026-02-03', dueAt: '2026-03-05', paidAt: '2026-03-08',
+            lines: [
+                ['Voirie et assainissement — Quartier Cité Mbaye (Phase 1)', 1, 3_400_000],
+                ['Bordures, caniveaux et regards préfabriqués', 1, 800_000],
+            ]
+        );
+
+        $this->invoice($ucad, 'FYK-FAC-SB0202', InvoiceStatus::Paid, 5_800_000,
+            issuedAt: '2026-02-08', dueAt: '2026-03-10', paidAt: '2026-03-04',
+            lines: [
+                ['Extension Faculté des Sciences — gros œuvre R+2 (lot 1/3)', 1, 4_800_000],
+                ['Charpente métallique préau d\'accueil (240 m²)', 240, 4_166],
+            ]
+        );
+
+        $this->invoice($poleDiamniadio, 'FYK-FAC-SB0203', InvoiceStatus::Paid, 6_400_000,
+            issuedAt: '2026-02-14', dueAt: '2026-03-16', paidAt: '2026-03-15',
+            lines: [
+                ['Aménagement parc urbain Diamniadio — terrassement et plantations', 1, 4_800_000],
+                ['Mobilier urbain (40 bancs, 20 lampadaires solaires)', 1, 1_600_000],
+            ]
+        );
+
+        $this->invoice($setuna, 'FYK-FAC-SB0204', InvoiceStatus::Paid, 1_350_000,
+            issuedAt: '2026-02-22', dueAt: '2026-03-24', paidAt: '2026-03-12',
+            lines: [
+                ['Sous-traitance VRD — Chantier autoroute AIBD-Mbour (lot Sénégal)', 1, 1_200_000],
+                ['Location matériel TP (compacteur, niveleuse)', 5, 30_000],
+            ]
+        );
+
+        // ── Mars 2026 — 5 factures payées ─────────────────────────────────
+        $this->invoice($socofim, 'FYK-FAC-SB0301', InvoiceStatus::Paid, 9_200_000,
+            issuedAt: '2026-03-02', dueAt: '2026-04-01', paidAt: '2026-03-25',
+            lines: [
+                ['Gros œuvre R+5 — Résidence Les Jardins de Yoff (Tranche 2)', 1, 7_500_000],
+                ['Élévation et planchers béton armé (1 200 m²)', 1_200, 1_416],
+            ]
+        );
+
+        $this->invoice($almadiesPlaza, 'FYK-FAC-SB0302', InvoiceStatus::Paid, 780_000,
+            issuedAt: '2026-03-06', dueAt: '2026-04-05', paidAt: '2026-04-02',
+            lines: [
+                ['Maintenance ascenseurs (2 batteries) — Q1 2026', 1, 480_000],
+                ['Remplacement éclairage parties communes en LED', 1, 300_000],
+            ]
+        );
+
+        $this->invoice($terrouBi, 'FYK-FAC-SB0303', InvoiceStatus::Paid, 2_100_000,
+            issuedAt: '2026-03-10', dueAt: '2026-04-09', paidAt: '2026-04-04',
+            lines: [
+                ['Création SPA et hammam — second œuvre + équipements', 1, 1_700_000],
+                ['Carrelage grès cérame haut de gamme (180 m²)', 180, 2_222],
+            ]
+        );
+
+        $this->invoice($mairieDiamniadio, 'FYK-FAC-SB0304', InvoiceStatus::Paid, 3_500_000,
+            issuedAt: '2026-03-15', dueAt: '2026-04-14', paidAt: '2026-04-08',
+            lines: [
+                ['Construction salle polyvalente municipale (lot 1 — gros œuvre)', 1, 2_900_000],
+                ['Étude technique, BET structure et fluides', 1, 600_000],
+            ]
+        );
+
+        $this->invoice($senico, 'FYK-FAC-SB0305', InvoiceStatus::Paid, 1_400_000,
+            issuedAt: '2026-03-22', dueAt: '2026-04-21', paidAt: '2026-04-12',
+            lines: [
+                ['Sous-traitance second œuvre — Cité Keur Gorgui (Mars)', 1, 1_100_000],
+                ['Reprise enduits et peinture extérieure (Bâtiment C)', 1, 300_000],
+            ]
+        );
+
+        // ── Avril 2026 — 3 factures payées ────────────────────────────────
+        $this->invoice($poleDiamniadio, 'FYK-FAC-SB0401', InvoiceStatus::Paid, 4_800_000,
+            issuedAt: '2026-04-02', dueAt: '2026-05-02', paidAt: '2026-04-22',
+            lines: [
+                ['Réseau d\'éclairage public — Avenue centrale Diamniadio (1,8 km)', 1, 4_000_000],
+                ['Coffrets de commande et raccordement SENELEC', 1, 800_000],
+            ]
+        );
+
+        $this->invoice($setuna, 'FYK-FAC-SB0402', InvoiceStatus::Paid, 1_800_000,
+            issuedAt: '2026-04-05', dueAt: '2026-05-05', paidAt: '2026-04-18',
+            lines: [
+                ['Sous-traitance terrassement — chantier Pôle Diamniadio Phase 4', 1, 1_500_000],
+                ['Mise à disposition équipe pose de bordures (10 jours)', 10, 30_000],
+            ]
+        );
+
+        $this->invoice($ucad, 'FYK-FAC-SB0403', InvoiceStatus::Paid, 2_650_000,
+            issuedAt: '2026-04-08', dueAt: '2026-05-08', paidAt: '2026-04-20',
+            lines: [
+                ['Réhabilitation amphi 1000 — climatisation et acoustique', 1, 2_100_000],
+                ['Sièges et estrade conférencier', 1, 550_000],
+            ]
+        );
+
+        // ── Factures impayées ──────────────────────────────────────────────
+
+        // Critique J+72 — Hôtel Terrou-Bi (gros chantier, paiement bloqué)
+        $facTerrouBi = $this->invoice($terrouBi, 'FYK-FAC-SB0501', InvoiceStatus::Overdue, 4_500_000,
+            issuedAt: '2026-01-20', dueAt: '2026-02-15', paidAt: null,
+            lines: [
+                ['Création piscine extérieure et plage immergée — gros œuvre', 1, 3_600_000],
+                ['Étanchéité et carrelage piscine (90 m²)', 90, 10_000],
+            ]
+        );
+        Reminder::create([
+            'invoice_id' => $facTerrouBi->id,
+            'channel' => ReminderChannel::Email,
+            'mode' => 'auto',
+            'sent_at' => now()->subDays(50),
+            'message_body' => 'Rappel : la facture FYK-FAC-SB0501 d\'un montant de 5 310 000 F CFA est échue depuis 20 jours. Merci de procéder au règlement.',
+            'recipient_email' => 'travaux@terroubi.sn',
+        ]);
+        Reminder::create([
+            'invoice_id' => $facTerrouBi->id,
+            'channel' => ReminderChannel::WhatsApp,
+            'mode' => 'auto',
+            'sent_at' => now()->subDays(30),
+            'message_body' => 'Bonjour, votre facture FYK-FAC-SB0501 de 5 310 000 F CFA reste impayée depuis 40 jours.',
+            'recipient_phone' => '+221338700004',
+        ]);
+        Reminder::create([
+            'invoice_id' => $facTerrouBi->id,
+            'channel' => ReminderChannel::Email,
+            'mode' => 'manual',
+            'sent_at' => now()->subDays(15),
+            'message_body' => 'Mise en demeure amiable : facture FYK-FAC-SB0501 impayée depuis 55 jours, merci de prendre contact rapidement.',
+            'recipient_email' => 'travaux@terroubi.sn',
+        ]);
+
+        // J+38 — Université Cheikh Anta Diop (paiement administratif lent)
+        $facUcad = $this->invoice($ucad, 'FYK-FAC-SB0502', InvoiceStatus::Overdue, 2_200_000,
+            issuedAt: '2026-02-25', dueAt: '2026-03-20', paidAt: null,
+            lines: [
+                ['Étanchéité toiture amphi Khaly Amar — 320 m²', 320, 6_250],
+                ['Mise aux normes parafoudre bâtiment principal', 1, 200_000],
+            ]
+        );
+        Reminder::create([
+            'invoice_id' => $facUcad->id,
+            'channel' => ReminderChannel::Email,
+            'mode' => 'auto',
+            'sent_at' => now()->subDays(20),
+            'message_body' => 'Rappel : la facture FYK-FAC-SB0502 de 2 596 000 F CFA est échue depuis 18 jours.',
+            'recipient_email' => 'patrimoine@ucad.edu.sn',
+        ]);
+
+        // J+22 — Mairie Diamniadio (premier rappel uniquement)
+        $facMairie = $this->invoice($mairieDiamniadio, 'FYK-FAC-SB0503', InvoiceStatus::Overdue, 1_650_000,
+            issuedAt: '2026-03-15', dueAt: '2026-04-04', paidAt: null,
+            lines: [
+                ['Aménagement parking Mairie — 40 places + signalétique', 1, 1_350_000],
+                ['Bornes anti-stationnement et marquage horizontal', 1, 300_000],
+            ]
+        );
+        Reminder::create([
+            'invoice_id' => $facMairie->id,
+            'channel' => ReminderChannel::Email,
+            'mode' => 'auto',
+            'sent_at' => now()->subDays(7),
+            'message_body' => 'Rappel : la facture FYK-FAC-SB0503 de 1 947 000 F CFA est échue depuis 14 jours.',
+            'recipient_email' => 'urbanisme@diamniadio.sn',
+        ]);
+
+        // ── Avril 2026 — 4 factures émises (à encaisser) ──────────────────
+        $this->invoice($socofim, 'FYK-FAC-SB0601', InvoiceStatus::Sent, 7_800_000,
+            issuedAt: '2026-04-08', dueAt: '2026-05-08', paidAt: null,
+            lines: [
+                ['Gros œuvre R+5 — Résidence Les Jardins de Yoff (Tranche 3)', 1, 6_400_000],
+                ['Cloisons et pré-cadres menuiseries (520 m²)', 520, 2_692],
+            ]
+        );
+
+        $this->invoice($almadiesPlaza, 'FYK-FAC-SB0602', InvoiceStatus::Sent, 1_200_000,
+            issuedAt: '2026-04-12', dueAt: '2026-05-12', paidAt: null,
+            lines: [
+                ['Réfection façade entrée principale — ravalement', 1, 950_000],
+                ['Mise en peinture portail et garde-corps acier', 1, 250_000],
+            ]
+        );
+
+        $this->invoice($poleDiamniadio, 'FYK-FAC-SB0603', InvoiceStatus::Sent, 5_400_000,
+            issuedAt: '2026-04-15', dueAt: '2026-05-15', paidAt: null,
+            lines: [
+                ['Réseau eaux pluviales — Avenue centrale Diamniadio', 1, 4_500_000],
+                ['Bassins de rétention et exutoires (4 unités)', 4, 225_000],
+            ]
+        );
+
+        $this->invoice($senico, 'FYK-FAC-SB0604', InvoiceStatus::Sent, 1_650_000,
+            issuedAt: '2026-04-18', dueAt: '2026-05-18', paidAt: null,
+            lines: [
+                ['Sous-traitance maçonnerie — Cité Keur Gorgui (Avril)', 1, 1_300_000],
+                ['Reprise enduits façade Bâtiment D', 1, 350_000],
+            ]
+        );
+
+        // ── 1 facture en brouillon ────────────────────────────────────────
+        $this->invoice($mairieDiamniadio, 'FYK-FAC-SB0701', InvoiceStatus::Draft, 6_800_000,
+            issuedAt: now()->toDateString(), dueAt: now()->addDays(30)->toDateString(), paidAt: null,
+            lines: [
+                ['Construction salle polyvalente municipale (lot 2 — second œuvre)', 1, 5_400_000],
+                ['Lot menuiseries extérieures alu (12 ouvertures)', 12, 116_666],
+            ]
+        );
+    }
+
+    private function seedSowBtpQuotes(): void
+    {
+        $socofim = Client::where('company_id', $this->company->id)->where('name', 'SOCOFIM SA — Promotion Immobilière')->first();
+        $terrouBi = Client::where('company_id', $this->company->id)->where('name', 'Hôtel Terrou-Bi')->first();
+        $poleDiamniadio = Client::where('company_id', $this->company->id)->where('name', 'Pôle Urbain de Diamniadio')->first();
+        $ucad = Client::where('company_id', $this->company->id)->where('name', 'Université Cheikh Anta Diop')->first();
+
+        $this->quote($socofim, 'FYK-DEV-SB0101', QuoteStatus::Accepted, 12_500_000,
+            issuedAt: now()->subDays(20)->toDateString(),
+            validUntil: now()->subDays(20)->addDays(30)->toDateString(),
+            lines: [
+                ['Résidence Les Jardins de Yoff — Tranche 4 (R+5, 24 logements)', 1, 10_500_000],
+                ['Maîtrise d\'œuvre d\'exécution et coordination SPS', 1, 2_000_000],
+            ]
+        );
+
+        $this->quote($poleDiamniadio, 'FYK-DEV-SB0102', QuoteStatus::Sent, 9_200_000,
+            issuedAt: now()->subDays(8)->toDateString(),
+            validUntil: now()->subDays(8)->addDays(30)->toDateString(),
+            lines: [
+                ['Construction école primaire publique — gros œuvre R+1 (lot 1/2)', 1, 7_800_000],
+                ['Études APS / APD et pièces écrites marché', 1, 1_400_000],
+            ]
+        );
+
+        $this->quote($ucad, 'FYK-DEV-SB0103', QuoteStatus::Sent, 4_300_000,
+            issuedAt: now()->subDays(5)->toDateString(),
+            validUntil: now()->subDays(5)->addDays(30)->toDateString(),
+            lines: [
+                ['Réhabilitation pavillon C — second œuvre complet (réfectoire 320 m²)', 1, 3_500_000],
+                ['Mise aux normes électriques et SSI', 1, 800_000],
+            ]
+        );
+
+        $this->quote($terrouBi, 'FYK-DEV-SB0104', QuoteStatus::Declined, 6_700_000,
+            issuedAt: now()->subDays(28)->toDateString(),
+            validUntil: now()->subDays(28)->addDays(30)->toDateString(),
+            lines: [
+                ['Création espace conférence 200 places — second œuvre + acoustique', 1, 5_400_000],
+                ['Aménagement scénique (régie son + éclairage)', 1, 1_300_000],
             ]
         );
     }
