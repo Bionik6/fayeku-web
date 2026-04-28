@@ -1,6 +1,5 @@
 <?php
 
-use App\Interfaces\Shared\WhatsAppProviderInterface;
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
@@ -22,6 +21,7 @@ function createInvitation(array $overrides = []): array
 
     $invitation = PartnerInvitation::create(array_merge([
         'accountant_firm_id' => $firm->id,
+        'created_by_user_id' => $user->id,
         'token' => 'test-landing-token',
         'invitee_company_name' => 'PME Invitée SARL',
         'invitee_name' => 'Moussa Diallo',
@@ -325,16 +325,22 @@ test('inscription via /join/{code} sans invitation existante lie quand même au 
     expect($accountantCompany->accountant_firm_id)->toBe($firm->id);
 });
 
-test('le message WhatsApp utilise /join/{invite_code}', function () {
+test('le message WhatsApp composé utilise /join/{invite_code}', function () {
     ['firm' => $firm, 'invitation' => $invitation] = createInvitation();
 
-    $mock = Mockery::mock(WhatsAppProviderInterface::class);
-    $mock->shouldReceive('send')
-        ->once()
-        ->withArgs(fn (string $phone, string $msg) => str_contains($msg, '/join/'.$firm->invite_code))
-        ->andReturn(true);
-    app()->instance(WhatsAppProviderInterface::class, $mock);
+    $message = app(InvitationService::class)->composeWhatsAppMessage($invitation);
 
-    app(InvitationService::class)
-        ->sendInvitationMessage($invitation);
+    expect($message)->toContain('/join/'.$firm->invite_code);
+});
+
+test('buildWhatsAppLink contient le numéro et le lien encodé', function () {
+    ['firm' => $firm, 'invitation' => $invitation] = createInvitation([
+        'invitee_phone' => '+221770000099',
+    ]);
+
+    $link = app(InvitationService::class)->buildWhatsAppLink($invitation);
+
+    expect($link)
+        ->toStartWith('https://wa.me/221770000099?text=')
+        ->toContain(rawurlencode('/join/'.$firm->invite_code));
 });

@@ -366,6 +366,8 @@ class DemoComptablePortfolioSeeder extends Seeder
      */
     private function createInvitations(Company $cabinet, array $smes): void
     {
+        $cabinetUserId = $cabinet->users()->orderBy('users.created_at')->first()?->id;
+
         $recentAccepted = [
             ['Dakar Telecom SA', 'Aliou Camara', '+221771900101', 'dakar_telecom', 'essentiel', 8],
             ['BioMed West Africa', 'Ndèye Fatou Diop', '+221771900102', 'biomed_west', 'essentiel', 12],
@@ -382,6 +384,7 @@ class DemoComptablePortfolioSeeder extends Seeder
 
             PartnerInvitation::create([
                 'accountant_firm_id' => $cabinet->id,
+                'created_by_user_id' => $cabinetUserId,
                 'token' => Str::random(32),
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
@@ -415,6 +418,7 @@ class DemoComptablePortfolioSeeder extends Seeder
 
             PartnerInvitation::create([
                 'accountant_firm_id' => $cabinet->id,
+                'created_by_user_id' => $cabinetUserId,
                 'token' => Str::random(32),
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
@@ -442,6 +446,7 @@ class DemoComptablePortfolioSeeder extends Seeder
         foreach ($notOpened as [$company, $contact, $phone, $daysAgo, $plan]) {
             PartnerInvitation::create([
                 'accountant_firm_id' => $cabinet->id,
+                'created_by_user_id' => $cabinetUserId,
                 'token' => Str::random(32),
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
@@ -467,6 +472,7 @@ class DemoComptablePortfolioSeeder extends Seeder
         foreach ($opened as [$company, $contact, $phone, $daysAgo, $reminderDays, $plan]) {
             PartnerInvitation::create([
                 'accountant_firm_id' => $cabinet->id,
+                'created_by_user_id' => $cabinetUserId,
                 'token' => Str::random(32),
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
@@ -491,6 +497,7 @@ class DemoComptablePortfolioSeeder extends Seeder
         foreach ($registering as [$company, $contact, $phone, $daysAgo, $channel]) {
             PartnerInvitation::create([
                 'accountant_firm_id' => $cabinet->id,
+                'created_by_user_id' => $cabinetUserId,
                 'token' => Str::random(32),
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
@@ -516,6 +523,7 @@ class DemoComptablePortfolioSeeder extends Seeder
         foreach ($expired as [$company, $contact, $phone, $daysAgo]) {
             PartnerInvitation::create([
                 'accountant_firm_id' => $cabinet->id,
+                'created_by_user_id' => $cabinetUserId,
                 'token' => Str::random(32),
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,

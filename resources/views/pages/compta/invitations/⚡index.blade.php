@@ -168,51 +168,15 @@ new #[Title('Invitations')] class extends Component
         unset($this->invitations, $this->totalSent, $this->pendingCount);
     }
 
-    public function remindInvitation(string $id): void
+    #[Computed]
+    public function partnerShareMessage(): string
     {
-        $invitation = PartnerInvitation::query()
-            ->where('accountant_firm_id', $this->firm?->id)
-            ->findOrFail($id);
-
-        $invitation->update([
-            'reminder_count' => $invitation->reminder_count + 1,
-            'last_reminder_at' => now(),
-        ]);
-
-        $sent = app(InvitationService::class)->sendReminderMessage($invitation);
-
-        unset($this->invitations);
-
-        if ($sent) {
-            $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
-        } else {
-            $this->dispatch('toast', type: 'warning', title: __("Relance enregistrée mais l'envoi WhatsApp a échoué."));
+        if (! $this->firm) {
+            return '';
         }
-    }
 
-    public function resendInvitation(string $id): void
-    {
-        $invitation = PartnerInvitation::query()
-            ->where('accountant_firm_id', $this->firm?->id)
-            ->findOrFail($id);
-
-        $invitation->update([
-            'status' => 'pending',
-            'expires_at' => now()->addDays(30),
-            'link_opened_at' => null,
-            'reminder_count' => 0,
-            'last_reminder_at' => null,
-        ]);
-
-        $sent = app(InvitationService::class)->sendResendMessage($invitation);
-
-        unset($this->invitations, $this->pendingCount);
-
-        if ($sent) {
-            $this->dispatch('toast', type: 'success', title: __('Invitation renvoyée avec succès.'));
-        } else {
-            $this->dispatch('toast', type: 'warning', title: __("Invitation réinitialisée mais l'envoi WhatsApp a échoué."));
-        }
+        return app(InvitationService::class)
+            ->composePartnerShareMessage($this->firm, auth()->user());
     }
 
     public function setFilter(string $filter): void
@@ -391,8 +355,10 @@ new #[Title('Invitations')] class extends Component
 
             {{-- Carte 2 : Copier le lien --}}
             @php
-                $partnerLink = $firm?->invite_code ? route('join.landing', ['code' => $firm->invite_code]) : '';
-                $whatsappText = urlencode('Rejoignez Fayeku et simplifiez votre facturation ! ' . $partnerLink);
+                $partnerMessage = $this->partnerShareMessage;
+                $partnerWhatsAppUrl = $firm?->invite_code && $partnerMessage
+                    ? 'https://wa.me/?text='.rawurlencode($partnerMessage)
+                    : '';
             @endphp
             <div class="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <div class="flex size-10 items-center justify-center rounded-xl bg-slate-100">
@@ -403,16 +369,16 @@ new #[Title('Invitations')] class extends Component
                 <div class="mt-4 flex items-center gap-2">
                     <button
                         type="button"
-                        x-data="{ link: '{{ $partnerLink }}' }"
-                        x-on:click="navigator.clipboard.writeText(link).then(() => $dispatch('toast', { type: 'success', title: 'Lien copié dans le presse-papiers !' }))"
+                        x-data="{ message: @js($partnerMessage) }"
+                        x-on:click="navigator.clipboard.writeText(message).then(() => $dispatch('toast', { type: 'success', title: 'Message copié dans le presse-papiers !' }))"
                         class="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-100"
                     >
                         <flux:icon name="clipboard" class="size-4" />
                         {{ __('Copier') }}
                     </button>
-                    @if ($partnerLink)
+                    @if ($partnerWhatsAppUrl)
                         <a
-                            href="https://wa.me/?text={{ $whatsappText }}"
+                            href="{{ $partnerWhatsAppUrl }}"
                             target="_blank"
                             rel="noopener"
                             class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700 shadow-sm transition hover:bg-green-100"
@@ -557,7 +523,17 @@ new #[Title('Invitations')] class extends Component
                                 <td class="px-6 py-3.5">
                                     <div class="text-sm text-ink">{{ $invitation->invitee_name ?? '—' }}</div>
                                     @if ($invitation->invitee_phone)
-                                        <div class="text-sm text-slate-500">{{ format_phone($invitation->invitee_phone) }}</div>
+                                        <div class="flex items-center gap-1 text-sm text-slate-500">
+                                            @if ($invitation->channel === 'email')
+                                                <flux:icon name="envelope" class="size-3.5 text-slate-400" />
+                                            @else
+                                                <flux:icon name="chat-bubble-left-right" class="size-3.5 text-emerald-500" />
+                                            @endif
+                                            {{ format_phone($invitation->invitee_phone) }}
+                                        </div>
+                                    @endif
+                                    @if ($invitation->invitee_email)
+                                        <div class="truncate text-xs text-slate-400">{{ $invitation->invitee_email }}</div>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-3.5 text-slate-600">
@@ -594,7 +570,7 @@ new #[Title('Invitations')] class extends Component
                                     @if ($displayStatus === 'sent')
                                         <button
                                             type="button"
-                                            wire:click.stop="remindInvitation('{{ $invitation->id }}')"
+                                            wire:click.stop="$dispatch('open-invite-pme-followup', { id: '{{ $invitation->id }}', context: 'reminder' })"
                                             class="{{ $btnBase }} border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
                                         >
                                             {{ __('Relancer') }}
@@ -602,7 +578,7 @@ new #[Title('Invitations')] class extends Component
                                     @elseif ($displayStatus === 'expired')
                                         <button
                                             type="button"
-                                            wire:click.stop="resendInvitation('{{ $invitation->id }}')"
+                                            wire:click.stop="$dispatch('open-invite-pme-followup', { id: '{{ $invitation->id }}', context: 'resend' })"
                                             class="{{ $btnBase }} border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                                         >
                                             {{ __('Renvoyer') }}

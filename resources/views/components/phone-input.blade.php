@@ -13,6 +13,7 @@
     'inputClass' => '',
     'containerClass' => 'flex items-stretch rounded-2xl border border-slate-300 bg-white transition has-[:focus]:border-primary has-[:focus]:ring-2 has-[:focus]:ring-primary/15',
     'textSize' => 'text-base',
+    'paddingClass' => 'px-4 py-3',
     'placeholderClass' => 'placeholder:text-slate-400',
     'readonly' => false,
     'showLabel' => true,
@@ -117,7 +118,7 @@
             <div class="{{ $containerClass }}">
                 @if ($isSingleCountry)
                     {{-- Single country: static label --}}
-                    <div class="flex items-center rounded-l-2xl px-4 py-3 {{ $textSize }} font-medium text-slate-500">
+                    <div class="flex items-center rounded-l-2xl {{ $paddingClass }} {{ $textSize }} font-medium text-slate-500">
                         <span x-text="selected?.label ?? @js($selectedCountryData['label'])"></span>
                     </div>
                     <input type="hidden" name="{{ $countryName }}" :value="country" />
@@ -127,7 +128,7 @@
                         <button
                             type="button"
                             @click="open = !open"
-                            class="flex h-full items-center gap-1.5 rounded-l-2xl px-4 py-3 {{ $textSize }} font-medium text-ink hover:bg-slate-50 focus:outline-none"
+                            class="flex h-full items-center gap-1.5 rounded-l-2xl {{ $paddingClass }} {{ $textSize }} font-medium text-ink hover:bg-slate-50 focus:outline-none"
                             :aria-expanded="open"
                         >
                             <span x-text="selected?.label ?? '---'"></span>
@@ -213,7 +214,7 @@
                     @if ($autofocus) autofocus @endif
                     autocomplete="{{ $autocomplete }}"
                     @input="onPhoneInput"
-                    class="block min-w-0 grow rounded-r-2xl border-0 bg-transparent px-4 py-3 {{ $textSize }} text-ink {{ $placeholderClass }} outline-none focus:ring-0 {{ $inputClass }}"
+                    class="block min-w-0 grow rounded-r-2xl border-0 bg-transparent {{ $paddingClass }} {{ $textSize }} text-ink {{ $placeholderClass }} outline-none focus:ring-0 {{ $inputClass }}"
                 />
             </div>
         </div>
