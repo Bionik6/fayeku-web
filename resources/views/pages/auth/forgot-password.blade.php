@@ -2,7 +2,7 @@
     <div class="flex flex-col gap-6" x-data="{ profile: @js(old('profile', 'sme')) }">
         <x-auth-header
             :title="__('Mot de passe oublié')"
-            :description="__('Choisissez votre profil pour recevoir un code (PME) ou un lien (Cabinet) de réinitialisation.')"
+            :description="__('Sélectionnez votre profil. Nous vous enverrons les instructions pour réinitialiser votre mot de passe.')"
         />
 
         <x-auth-session-status :status="session('status')" />

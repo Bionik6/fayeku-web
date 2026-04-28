@@ -9,19 +9,19 @@
     $options = [
         'sme' => [
             'icon' => 'building-storefront',
-            'title' => __('Espace PME'),
-            'description' => __('Pour une PME qui se connecte ou récupère son compte.'),
+            'title' => __('Entreprise'),
+            'description' => __('Je facture mes clients et suis ma trésorerie.'),
         ],
         'accountant' => [
             'icon' => 'briefcase',
-            'title' => __('Cabinet Comptable'),
-            'description' => __('Pour un comptable qui gère son cabinet.'),
+            'title' => __('Cabinet'),
+            'description' => __('Je gère mes clients PME et leurs déclarations.'),
         ],
     ];
 @endphp
 
 <fieldset>
-    <legend class="text-sm font-semibold text-ink">{{ __('Vous êtes') }}</legend>
+    <legend class="text-sm font-semibold text-ink">{{ __('Quel est votre profil ?') }}</legend>
     <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
         @foreach ($options as $key => $option)
             <label
@@ -42,7 +42,7 @@
                     />
                     <div>
                         <span class="block text-sm font-semibold text-ink">{{ $option['title'] }}</span>
-                        <span class="mt-0.5 block text-xs leading-snug text-slate-500">{{ $option['description'] }}</span>
+                        <span class="mt-0.5 block text-[16px] leading-snug text-slate-500">{{ $option['description'] }}</span>
                     </div>
                 </div>
                 <flux:icon

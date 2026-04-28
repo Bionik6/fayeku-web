@@ -16,8 +16,10 @@ test('the named login route resolves to /login', function () {
 test('GET /login renders the unified login page with both profile cards', function () {
     $this->get(route('login'))
         ->assertOk()
-        ->assertSee('Espace PME')
-        ->assertSee('Cabinet Comptable');
+        ->assertSee('Entreprise')
+        ->assertSee('Cabinet')
+        ->assertSee('Je facture mes clients')
+        ->assertSee('Je gère mes clients PME');
 });
 
 test('GET /login does not mark the phone field with a static HTML required attribute (would block accountant submit)', function () {
