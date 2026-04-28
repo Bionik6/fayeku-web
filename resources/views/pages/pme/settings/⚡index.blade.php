@@ -253,11 +253,19 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
             'deletePassword.current_password' => __('Le mot de passe est incorrect.'),
         ]);
 
+        /** @var \App\Models\Shared\User|null $user */
         $user = Auth::user();
+        $smeCompany = $user?->smeCompany();
 
         $logout();
 
-        $user?->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $smeCompany) {
+            // Drop the SME company first so the FK cascade cleans up partner_invitations,
+            // commissions, accountant_companies, subscriptions and the cabinet's
+            // dashboards stop showing this PME.
+            $smeCompany?->delete();
+            $user?->delete();
+        });
 
         $this->redirect('/', navigate: true);
     }

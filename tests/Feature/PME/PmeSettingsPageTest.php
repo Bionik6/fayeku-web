@@ -1,7 +1,10 @@
 <?php
 
+use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
+use App\Models\Compta\Commission;
+use App\Models\Compta\PartnerInvitation;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -456,6 +459,59 @@ it('rejects delete without password', function () {
         ->set('deletePassword', '')
         ->call('deleteUser')
         ->assertHasErrors(['deletePassword']);
+});
+
+it('deletes the SME company along with the user (cabinet dashboards stay clean)', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+
+    // The cabinet has a referral linkage, an invitation row and a commission tied
+    // to this PME — all of these MUST disappear when the PME closes their account.
+    $firm = Company::factory()->accountantFirm()->create();
+    AccountantCompany::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $company->id,
+        'started_at' => now()->subMonth(),
+    ]);
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'cleanup-token',
+        'invitee_phone' => $user->phone,
+        'invitee_name' => 'Owner',
+        'invitee_company_name' => 'Entreprise Test',
+        'recommended_plan' => 'essentiel',
+        'channel' => 'link',
+        'status' => 'accepted',
+        'sme_company_id' => $company->id,
+        'expires_at' => now()->addDays(30),
+    ]);
+    $commission = Commission::create([
+        'accountant_firm_id' => $firm->id,
+        'sme_company_id' => $company->id,
+        'amount' => 3_000,
+        'period_month' => now()->startOfMonth(),
+        'status' => 'pending',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'danger')
+        ->set('showDeleteAccountModal', true)
+        ->set('deletePassword', 'password')
+        ->call('deleteUser')
+        ->assertRedirect('/');
+
+    // User AND SME company are both gone.
+    expect(User::find($user->id))->toBeNull();
+    expect(Company::find($company->id))->toBeNull();
+
+    // FK cascades drop everything tied to the SME, so the cabinet's invitations
+    // and commissions dashboards no longer surface the deleted PME.
+    expect(AccountantCompany::where('sme_company_id', $company->id)->exists())->toBeFalse();
+    expect(PartnerInvitation::find($invitation->id))->toBeNull();
+    expect(Commission::find($commission->id))->toBeNull();
+
+    // The cabinet itself is untouched.
+    expect(Company::find($firm->id))->not->toBeNull();
 });
 
 // ─── Signature des relances ──────────────────────────────────────────────
