@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Auth\Company;
+use App\Models\Compta\PartnerInvitation;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -28,6 +29,31 @@ test('company setup page renders for sme with incomplete setup', function () {
     $this->actingAs($user)
         ->get(route('auth.company-setup'))
         ->assertOk();
+});
+
+test('company setup page does NOT pre-populate the name field when no session hint is set', function () {
+    ['user' => $user, 'company' => $company] = createUnsetupSme();
+
+    // Even though the temp Company.name is "Amadou Diallo" (= user's full name set
+    // by AuthService::register as a placeholder), the form must NOT pre-fill it.
+    $content = $this->actingAs($user)
+        ->get(route('auth.company-setup'))
+        ->assertOk()
+        ->assertDontSee('value="'.$company->name.'"', false)
+        ->getContent();
+
+    // The company_name input renders with empty value="".
+    expect($content)->toMatch('/<input[^>]*name="company_name"[^>]*value=""/s');
+});
+
+test('company setup page pre-populates the name from invitee_company_name session (cabinet-typed invitations)', function () {
+    ['user' => $user] = createUnsetupSme();
+
+    $this->actingAs($user)
+        ->withSession(['invitee_company_name' => 'Transport Ngor SARL'])
+        ->get(route('auth.company-setup'))
+        ->assertOk()
+        ->assertSee('value="Transport Ngor SARL"', false);
 });
 
 test('company setup redirects to dashboard if already complete', function () {
@@ -78,6 +104,63 @@ test('company setup fails without required fields', function () {
     $this->actingAs($user)
         ->post(route('auth.company-setup.submit'), [])
         ->assertSessionHasErrors(['company_name', 'sector']);
+});
+
+test('completing company setup backfills the related PartnerInvitation with the chosen company name', function () {
+    ['user' => $user, 'company' => $company] = createUnsetupSme();
+
+    // Synthetic referral invitation: invitee_company_name is null (no leak of the
+    // user's full name) until setup completes.
+    $firm = Company::factory()->accountantFirm()->create();
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'sync-test-token',
+        'invitee_company_name' => null,
+        'invitee_name' => 'Amadou Diallo',
+        'invitee_phone' => $user->phone,
+        'recommended_plan' => 'essentiel',
+        'channel' => 'link',
+        'status' => 'registering',
+        'sme_company_id' => $company->id,
+        'expires_at' => now()->addDays(30),
+        'link_opened_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('auth.company-setup.submit'), [
+            'company_name' => 'Diallo Bâtiment SARL',
+            'sector' => 'BTP',
+        ])->assertRedirect(route('pme.dashboard'));
+
+    expect($invitation->fresh()->invitee_company_name)->toBe('Diallo Bâtiment SARL');
+});
+
+test('completing company setup does NOT overwrite an already-set invitee_company_name on the invitation', function () {
+    ['user' => $user, 'company' => $company] = createUnsetupSme();
+
+    // Cabinet-typed invitation already carries a meaningful company name.
+    $firm = Company::factory()->accountantFirm()->create();
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'preset-token',
+        'invitee_company_name' => 'Transport Ngor SARL',
+        'invitee_name' => 'Amadou Diallo',
+        'invitee_phone' => $user->phone,
+        'recommended_plan' => 'essentiel',
+        'channel' => 'whatsapp',
+        'status' => 'registering',
+        'sme_company_id' => $company->id,
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('auth.company-setup.submit'), [
+            'company_name' => 'Different SARL',
+            'sector' => 'BTP',
+        ])->assertRedirect(route('pme.dashboard'));
+
+    // Cabinet's reference name is preserved; only null entries get backfilled.
+    expect($invitation->fresh()->invitee_company_name)->toBe('Transport Ngor SARL');
 });
 
 test('company setup succeeds without optional ninea and rccm', function () {

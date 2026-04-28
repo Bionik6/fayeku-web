@@ -167,13 +167,37 @@ test('POST /register via /join/{code} crée une PartnerInvitation synthétique v
     expect($invitation->channel)->toBe('link');
     expect($invitation->invitee_phone)->toBe('+221770000123');
     expect($invitation->invitee_name)->toBe('Aïssatou Diop');
-    expect($invitation->invitee_company_name)->toBe('Aïssatou Diop');
-    expect($invitation->recommended_plan)->toBe('basique');
+    // invitee_company_name stays null until the SME completes /company-setup —
+    // we don't want to leak the temp Company.name (= user's full name) into the
+    // cabinet's dashboard, nor pre-populate the company-setup form.
+    expect($invitation->invitee_company_name)->toBeNull();
+    // Referrals always land on Essentiel (the plan promised in marketing messages)
+    expect($invitation->recommended_plan)->toBe('essentiel');
     expect($invitation->link_opened_at)->not->toBeNull();
     expect($invitation->sme_company_id)->not->toBeNull();
 });
 
-test('POST /register via /join/{code} crée une Commission pour le cabinet (basique = 1 500)', function () {
+test('POST /register via /join/{code} positionne la SME sur le plan Essentiel par défaut', function () {
+    $firm = Company::factory()->accountantFirm()->create();
+
+    $this->withSession(['joining_firm_code' => $firm->invite_code])
+        ->post(route('register.submit'), [
+            'first_name' => 'Aïssatou',
+            'last_name' => 'Diop',
+            'phone' => '770000123',
+            'country_code' => 'SN',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+    $smeCompany = Company::where('type', 'sme')->where('name', 'Aïssatou Diop')->first();
+    expect($smeCompany->plan)->toBe('essentiel');
+
+    $subscription = Subscription::where('company_id', $smeCompany->id)->first();
+    expect($subscription->plan_slug)->toBe('essentiel');
+});
+
+test('POST /register via /join/{code} crée une Commission pour le cabinet (essentiel = 3 000)', function () {
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
@@ -192,8 +216,8 @@ test('POST /register via /join/{code} crée une Commission pour le cabinet (basi
         ->first();
 
     expect($commission)->not->toBeNull();
-    expect($commission->amount)->toBe(CommissionService::calculate(10_000));
-    expect($commission->amount)->toBe(1_500);
+    expect($commission->amount)->toBe(CommissionService::calculate(20_000));
+    expect($commission->amount)->toBe(3_000);
     expect($commission->status)->toBe('pending');
     expect($commission->period_month?->format('Y-m'))->toBe(now()->format('Y-m'));
     expect($commission->subscription_id)->not->toBeNull();
@@ -282,7 +306,7 @@ test('OTP verify après inscription via /join/{code} flippe la PartnerInvitation
     expect($invitation->accepted_at)->not->toBeNull();
 });
 
-test('POST /sme/register sans invitation tombe sur le plan basique par défaut', function () {
+test('POST /sme/register via referral link bascule la SME sur Essentiel (plan promis dans le pitch)', function () {
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
@@ -298,7 +322,7 @@ test('POST /sme/register sans invitation tombe sur le plan basique par défaut',
 
     $smeCompany = Company::where('type', 'sme')->where('name', 'Pape Ndiaye')->first();
     $subscription = Subscription::where('company_id', $smeCompany->id)->first();
-    expect($subscription->plan_slug)->toBe('basique');
+    expect($subscription->plan_slug)->toBe('essentiel');
 });
 
 test('POST /sme/register vide joining_firm_code de la session après inscription', function () {

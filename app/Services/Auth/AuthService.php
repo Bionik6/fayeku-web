@@ -82,7 +82,10 @@ class AuthService
 
             // The linking firm is either from a specific invitation or a firm-level join
             $firm = $invitation?->accountantFirm ?? $invitingFirm;
-            $planSlug = $invitation?->recommended_plan ?? 'basique';
+            // Referred SMEs (any cabinet entry point) land on Essentiel — that's the
+            // plan promised in every referral message ("2 mois offerts sur Essentiel").
+            // Only standalone signups (no firm context) stay on Basique.
+            $planSlug = $invitation?->recommended_plan ?? ($firm ? 'essentiel' : 'basique');
             $type = $data['profile_type'] === 'sme' ? 'sme' : 'accountant_firm';
 
             $company = Company::create([
@@ -123,10 +126,14 @@ class AuthService
                 // Referral-link signup (no pre-invitation): synthesize one so the
                 // cabinet still sees this PME in its invitations dashboard, and so
                 // the OTP step can flip it to 'accepted' through the normal flow.
+                // invitee_company_name stays null until the SME completes
+                // company-setup — we don't know it at register time and we don't
+                // want to leak the temp Company.name (= user's full name) into the
+                // session, which would pre-populate the company-setup form.
                 $invitation = PartnerInvitation::create([
                     'accountant_firm_id' => $firm->id,
                     'token' => Str::random(32),
-                    'invitee_company_name' => $company->name,
+                    'invitee_company_name' => null,
                     'invitee_name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
                     'invitee_phone' => $phone,
                     'recommended_plan' => $planSlug,

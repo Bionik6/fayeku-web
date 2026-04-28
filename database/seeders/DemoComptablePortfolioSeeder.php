@@ -259,31 +259,6 @@ class DemoComptablePortfolioSeeder extends Seeder
             $smes['sow_btp'] = $sowBtp;
         }
 
-        $essentielKeys = [
-            'transatlantique', 'groupe_batisseur', 'senechimie', 'transport_ngor', 'ndioum_agro',
-            'dakar_telecom', 'biomed_west', 'sene_batiment', 'oryx_energy', 'afridata_consulting',
-            'sunu_digital', 'mbour_hotels', 'thies_constructions', 'almadies_immo', 'sicap_media',
-            'plateau_finance', 'digital_creation',
-        ];
-
-        $basiqueKeys = [
-            'coury_textile', 'sahel_commerce', 'sebikhotane', 'keur_massar',
-            'louga_services', 'grand_yoff_auto', 'ziguinchor_peche', 'tambacounda_mining',
-        ];
-
-        // Diop & Sow s'ajoutent selon leurs propres plans (essentiel et basique).
-        $essentielKeys[] = 'diop_services';
-        $basiqueKeys[] = 'sow_btp';
-
-        $amounts = [];
-
-        foreach ($essentielKeys as $key) {
-            $amounts[$key] = CommissionService::calculate(20_000);
-        }
-        foreach ($basiqueKeys as $key) {
-            $amounts[$key] = CommissionService::calculate(10_000);
-        }
-
         // 14 clients dont la commission du mois courant est déjà versée.
         $paidThisMonth = [
             'dakar_telecom', 'biomed_west', 'sene_batiment', 'oryx_energy',
@@ -292,16 +267,16 @@ class DemoComptablePortfolioSeeder extends Seeder
             'sebikhotane', 'keur_massar', 'louga_services',
         ];
 
-        foreach ($amounts as $key => $amount) {
-            if (! isset($smes[$key])) {
-                continue;
-            }
-
+        // Le montant de la commission est dérivé du plan réel de chaque SME
+        // (single source of truth : Company.plan) — évite que la liste seedée
+        // se désynchronise des prix appliqués aux abonnements.
+        foreach ($smes as $key => $sme) {
+            $amount = CommissionService::calculate(CommissionService::planMonthlyPrice($sme->plan ?? 'basique'));
             $isPaidThisMonth = in_array($key, $paidThisMonth, strict: true);
 
             Commission::create([
                 'accountant_firm_id' => $cabinet->id,
-                'sme_company_id' => $smes[$key]->id,
+                'sme_company_id' => $sme->id,
                 'amount' => $amount,
                 'period_month' => now()->startOfMonth(),
                 'status' => $isPaidThisMonth ? 'paid' : 'pending',
@@ -312,7 +287,7 @@ class DemoComptablePortfolioSeeder extends Seeder
             foreach (range(1, 5) as $monthsAgo) {
                 Commission::create([
                     'accountant_firm_id' => $cabinet->id,
-                    'sme_company_id' => $smes[$key]->id,
+                    'sme_company_id' => $sme->id,
                     'amount' => $amount,
                     'period_month' => now()->subMonthsNoOverflow($monthsAgo)->startOfMonth(),
                     'status' => 'paid',
