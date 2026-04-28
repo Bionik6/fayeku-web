@@ -6,11 +6,14 @@ use App\Enums\Auth\CompanyRole;
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
+use App\Models\Compta\Commission;
 use App\Models\Compta\PartnerInvitation;
 use App\Models\Shared\User;
+use App\Services\Compta\CommissionService;
 use App\Services\Shared\OtpService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthService
 {
@@ -63,9 +66,9 @@ class AuthService
         ];
     }
 
-    public function register(array $data, ?PartnerInvitation $invitation = null, ?Company $invitingFirm = null): User
+    public function register(array $data, ?PartnerInvitation &$invitation = null, ?Company $invitingFirm = null): User
     {
-        return DB::transaction(function () use ($data, $invitation, $invitingFirm) {
+        return DB::transaction(function () use ($data, &$invitation, $invitingFirm) {
             $phone = self::normalizePhone($data['phone'], $data['country_code']);
 
             $user = User::create([
@@ -91,7 +94,7 @@ class AuthService
 
             $company->users()->attach($user->id, ['role' => CompanyRole::Owner->value]);
 
-            Subscription::create([
+            $subscription = Subscription::create([
                 'company_id' => $company->id,
                 'plan_slug' => $planSlug,
                 'price_paid' => 0,
@@ -116,6 +119,41 @@ class AuthService
                     'status' => 'registering',
                     'sme_company_id' => $company->id,
                 ]);
+            } elseif ($firm) {
+                // Referral-link signup (no pre-invitation): synthesize one so the
+                // cabinet still sees this PME in its invitations dashboard, and so
+                // the OTP step can flip it to 'accepted' through the normal flow.
+                $invitation = PartnerInvitation::create([
+                    'accountant_firm_id' => $firm->id,
+                    'token' => Str::random(32),
+                    'invitee_company_name' => $company->name,
+                    'invitee_name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
+                    'invitee_phone' => $phone,
+                    'recommended_plan' => $planSlug,
+                    'channel' => 'link',
+                    'status' => 'registering',
+                    'sme_company_id' => $company->id,
+                    'expires_at' => now()->addDays(30),
+                    'link_opened_at' => now(),
+                ]);
+            }
+
+            // Credit the cabinet with a commission for the current month so the
+            // PME shows up in /compta/commissions immediately. Idempotent via
+            // firstOrCreate (won't duplicate if the seeder already inserted one).
+            if ($firm) {
+                Commission::firstOrCreate(
+                    [
+                        'accountant_firm_id' => $firm->id,
+                        'sme_company_id' => $company->id,
+                        'period_month' => now()->startOfMonth(),
+                    ],
+                    [
+                        'subscription_id' => $subscription->id,
+                        'amount' => CommissionService::calculate(CommissionService::planMonthlyPrice($planSlug)),
+                        'status' => 'pending',
+                    ]
+                );
             }
 
             $this->otpService->generate($phone);

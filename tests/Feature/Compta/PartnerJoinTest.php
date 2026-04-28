@@ -3,8 +3,10 @@
 use App\Models\Auth\AccountantCompany;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
+use App\Models\Compta\Commission;
 use App\Models\Compta\PartnerInvitation;
 use App\Models\Shared\User;
+use App\Services\Compta\CommissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -143,6 +145,141 @@ test('POST /sme/register crée le user, la company SME, la subscription et la li
     expect($subscription)->not->toBeNull();
     expect($subscription->invited_by_firm_id)->toBe($firm->id);
     expect($subscription->status)->toBe('trial');
+});
+
+test('POST /register via /join/{code} crée une PartnerInvitation synthétique visible côté cabinet', function () {
+    $firm = Company::factory()->accountantFirm()->create();
+
+    $this->withSession(['joining_firm_code' => $firm->invite_code])
+        ->post(route('register.submit'), [
+            'first_name' => 'Aïssatou',
+            'last_name' => 'Diop',
+            'phone' => '770000123',
+            'country_code' => 'SN',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])
+        ->assertRedirect(route('sme.auth.otp'));
+
+    $invitation = PartnerInvitation::where('accountant_firm_id', $firm->id)->first();
+    expect($invitation)->not->toBeNull();
+    expect($invitation->status)->toBe('registering');
+    expect($invitation->channel)->toBe('link');
+    expect($invitation->invitee_phone)->toBe('+221770000123');
+    expect($invitation->invitee_name)->toBe('Aïssatou Diop');
+    expect($invitation->invitee_company_name)->toBe('Aïssatou Diop');
+    expect($invitation->recommended_plan)->toBe('basique');
+    expect($invitation->link_opened_at)->not->toBeNull();
+    expect($invitation->sme_company_id)->not->toBeNull();
+});
+
+test('POST /register via /join/{code} crée une Commission pour le cabinet (basique = 1 500)', function () {
+    $firm = Company::factory()->accountantFirm()->create();
+
+    $this->withSession(['joining_firm_code' => $firm->invite_code])
+        ->post(route('register.submit'), [
+            'first_name' => 'Aïssatou',
+            'last_name' => 'Diop',
+            'phone' => '770000123',
+            'country_code' => 'SN',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+    $smeCompany = Company::where('type', 'sme')->where('name', 'Aïssatou Diop')->first();
+    $commission = Commission::where('accountant_firm_id', $firm->id)
+        ->where('sme_company_id', $smeCompany->id)
+        ->first();
+
+    expect($commission)->not->toBeNull();
+    expect($commission->amount)->toBe(CommissionService::calculate(10_000));
+    expect($commission->amount)->toBe(1_500);
+    expect($commission->status)->toBe('pending');
+    expect($commission->period_month?->format('Y-m'))->toBe(now()->format('Y-m'));
+    expect($commission->subscription_id)->not->toBeNull();
+});
+
+test('POST /register avec une PartnerInvitation existante (essentiel) crée la commission au tarif essentiel (3 000)', function () {
+    $firm = Company::factory()->accountantFirm()->create();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'preexisting-token',
+        'invitee_phone' => '+221770000789',
+        'invitee_name' => 'Khady',
+        'invitee_company_name' => 'Khady SARL',
+        'recommended_plan' => 'essentiel',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+        'expires_at' => now()->addDays(20),
+    ]);
+
+    $this->post(route('register.submit'), [
+        'first_name' => 'Khady',
+        'last_name' => 'Mbaye',
+        'phone' => '770000789',
+        'country_code' => 'SN',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'invitation_token' => $invitation->token,
+    ]);
+
+    // The pre-existing invitation is reused (no duplicate created)
+    expect(PartnerInvitation::where('accountant_firm_id', $firm->id)->count())->toBe(1);
+
+    // Commission is created at the essentiel rate (15% of 20 000 = 3 000)
+    $smeCompany = Company::where('type', 'sme')->where('name', 'Khady Mbaye')->first();
+    $commission = Commission::where('accountant_firm_id', $firm->id)
+        ->where('sme_company_id', $smeCompany->id)
+        ->first();
+
+    expect($commission)->not->toBeNull();
+    expect($commission->amount)->toBe(3_000);
+    expect($commission->status)->toBe('pending');
+});
+
+test('POST /register sans cabinet ne crée ni PartnerInvitation ni Commission', function () {
+    $this->post(route('register.submit'), [
+        'first_name' => 'Solo',
+        'last_name' => 'Faye',
+        'phone' => '770000111',
+        'country_code' => 'SN',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertRedirect(route('sme.auth.otp'));
+
+    expect(PartnerInvitation::count())->toBe(0);
+    expect(Commission::count())->toBe(0);
+});
+
+test('OTP verify après inscription via /join/{code} flippe la PartnerInvitation à accepted', function () {
+    $firm = Company::factory()->accountantFirm()->create();
+
+    // Step 1: register via referral link
+    $this->withSession(['joining_firm_code' => $firm->invite_code])
+        ->post(route('register.submit'), [
+            'first_name' => 'Aïssatou',
+            'last_name' => 'Diop',
+            'phone' => '770000123',
+            'country_code' => 'SN',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])
+        ->assertRedirect(route('sme.auth.otp'));
+
+    $invitation = PartnerInvitation::where('accountant_firm_id', $firm->id)->first();
+    expect($invitation->status)->toBe('registering');
+
+    // Step 2: simulate OTP verification (use the auto-generated OTP code)
+    DB::table('otp_codes')
+        ->where('phone', '+221770000123')
+        ->update(['code' => hash('sha256', '123456')]);
+
+    $this->post(route('sme.auth.otp.verify'), ['code' => '123456']);
+
+    $invitation->refresh();
+    expect($invitation->status)->toBe('accepted');
+    expect($invitation->accepted_at)->not->toBeNull();
 });
 
 test('POST /sme/register sans invitation tombe sur le plan basique par défaut', function () {
