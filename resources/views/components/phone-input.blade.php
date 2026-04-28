@@ -8,6 +8,7 @@
     'countryModel' => null,
     'phoneModel' => null,
     'required' => false,
+    'requiredWhen' => null,
     'autocomplete' => 'tel',
     'autofocus' => false,
     'inputClass' => '',
@@ -88,7 +89,7 @@
 <div {{ $attributes->class(['space-y-1']) }} data-phone-field>
     @if ($showLabel)
         <span class="mb-1.5 block text-sm font-medium text-slate-700">
-            {{ $label }}@if ($required)<span class="text-ink"> *</span>@endif
+            {{ $label }}@if ($required || $requiredWhen)<span class="text-ink"> *</span>@endif
         </span>
     @endif
 
@@ -210,7 +211,7 @@
                     :value="phone"
                     :placeholder="placeholder"
                     @if (filled($phoneModel)) wire:model="{{ $phoneModel }}" @endif
-                    @if ($required) required @endif
+                    @if ($requiredWhen) x-bind:required="{{ $requiredWhen }}" @elseif ($required) required @endif
                     @if ($autofocus) autofocus @endif
                     autocomplete="{{ $autocomplete }}"
                     @input="onPhoneInput"

@@ -59,7 +59,7 @@
         </form>
 
         <p class="text-center text-sm leading-6 text-slate-600">
-            <a href="{{ route('accountant.auth.login') }}" wire:navigate class="auth-link">{{ __('Retour à la connexion') }}</a>
+            <a href="{{ route('login') }}" wire:navigate class="auth-link">{{ __('Retour à la connexion') }}</a>
         </p>
     </div>
 </x-layouts::auth>

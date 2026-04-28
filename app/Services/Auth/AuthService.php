@@ -126,7 +126,9 @@ class AuthService
 
     public function requestPasswordReset(string $phone): void
     {
-        $user = User::where('phone', $phone)->first();
+        $user = User::where('phone', $phone)
+            ->where('profile_type', 'sme')
+            ->first();
 
         if (! $user) {
             return;
@@ -141,7 +143,9 @@ class AuthService
             return false;
         }
 
-        $user = User::where('phone', $phone)->first();
+        $user = User::where('phone', $phone)
+            ->where('profile_type', 'sme')
+            ->first();
 
         if (! $user) {
             return false;

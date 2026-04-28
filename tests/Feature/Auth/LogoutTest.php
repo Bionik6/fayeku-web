@@ -5,23 +5,23 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('authenticated sme can logout and lands on sme login', function () {
+test('authenticated sme can logout and lands on the unified login', function () {
     $user = User::factory()->create(['profile_type' => 'sme']);
 
     $response = $this->actingAs($user)
         ->post(route('auth.logout'));
 
-    $response->assertRedirect(route('sme.auth.login'));
+    $response->assertRedirect(route('login'));
     $this->assertGuest();
 });
 
-test('authenticated accountant can logout and lands on accountant login', function () {
+test('authenticated accountant can logout and lands on the unified login', function () {
     $user = User::factory()->accountantFirm()->create();
 
     $response = $this->actingAs($user)
         ->post(route('auth.logout'));
 
-    $response->assertRedirect(route('accountant.auth.login'));
+    $response->assertRedirect(route('login'));
     $this->assertGuest();
 });
 

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth\Accountant;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\Accountant\ForgotPasswordRequest;
 use App\Http\Requests\Auth\Accountant\ResetPasswordRequest;
 use App\Models\Shared\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -17,26 +16,6 @@ use Illuminate\View\View;
 
 class PasswordResetController extends Controller
 {
-    public function showForgotForm(): View
-    {
-        return view('pages.auth.accountant.forgot-password');
-    }
-
-    public function sendResetLink(ForgotPasswordRequest $request): RedirectResponse
-    {
-        $email = Str::lower($request->input('email'));
-
-        Password::broker()->sendResetLink([
-            'email' => $email,
-            'profile_type' => 'accountant_firm',
-        ]);
-
-        return back()->with(
-            'status',
-            'Si cette adresse est associée à un compte, un lien de réinitialisation vous a été envoyé.'
-        );
-    }
-
     public function showResetForm(string $token, Request $request): View
     {
         return view('pages.auth.accountant.reset-password', [
@@ -84,7 +63,7 @@ class PasswordResetController extends Controller
             return redirect()->intended(route('dashboard'));
         }
 
-        return redirect()->route('accountant.auth.login')
+        return redirect()->route('login')
             ->with('status', 'Mot de passe réinitialisé. Connectez-vous.');
     }
 }

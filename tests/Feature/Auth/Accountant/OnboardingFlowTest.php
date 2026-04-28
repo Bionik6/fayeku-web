@@ -62,22 +62,24 @@ test('full accountant onboarding: lead → activation → dashboard → logout �
     // --- 3. Dashboard accessible ---
     $this->actingAs($user)->get('/compta/dashboard')->assertOk();
 
-    // --- 4. Logout → redirige vers /accountant/login ---
-    $this->post(route('auth.logout'))->assertRedirect(route('accountant.auth.login'));
+    // --- 4. Logout → redirige vers /login (unifié) ---
+    $this->post(route('auth.logout'))->assertRedirect(route('login'));
     $this->assertGuest();
 
-    // --- 5. Connexion avec email + password ---
-    $this->post(route('accountant.auth.login.submit'), [
+    // --- 5. Connexion avec email + password (profile=accountant) ---
+    $this->post(route('login'), [
+        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
         'password' => 'Init@P4ssw0rd!',
     ])->assertRedirect(route('dashboard'));
     $this->assertAuthenticatedAs($user);
 
-    // --- 6. Logout, puis demande de reset par email ---
+    // --- 6. Logout, puis demande de reset par email (profile=accountant) ---
     $this->post(route('auth.logout'));
 
     Notification::fake();
-    $this->post(route('accountant.auth.forgot-password.submit'), [
+    $this->post(route('password.email'), [
+        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
     ])->assertRedirect();
 
@@ -112,14 +114,16 @@ test('full accountant onboarding: lead → activation → dashboard → logout �
 
     // --- 8. Old password no longer works ---
     $this->post(route('auth.logout'));
-    $this->post(route('accountant.auth.login.submit'), [
+    $this->post(route('login'), [
+        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
         'password' => 'Init@P4ssw0rd!',
     ])->assertSessionHasErrors('email');
     $this->assertGuest();
 
     // --- 9. New password works ---
-    $this->post(route('accountant.auth.login.submit'), [
+    $this->post(route('login'), [
+        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
         'password' => 'NewSecure@P4ssw0rd!',
     ])->assertRedirect(route('dashboard'));
@@ -165,16 +169,18 @@ test('accountant activation flow rejects accountant from logging in via sme port
 
     $this->post(route('auth.logout'));
 
-    // Tentative de login via le portail PME avec le téléphone du cabinet → refusé.
-    $this->post(route('sme.auth.login.submit'), [
+    // Tentative de login avec le profil PME et le téléphone du cabinet → refusé.
+    $this->post(route('login'), [
+        'profile' => 'sme',
         'phone' => '770000077',
         'password' => 'Init@P4ssw0rd!',
         'country_code' => 'SN',
     ])->assertSessionHasErrors('phone');
     $this->assertGuest();
 
-    // Login via le portail comptable → OK.
-    $this->post(route('accountant.auth.login.submit'), [
+    // Login avec le profil Cabinet → OK.
+    $this->post(route('login'), [
+        'profile' => 'accountant',
         'email' => 'awa@sow.sn',
         'password' => 'Init@P4ssw0rd!',
     ])->assertRedirect(route('dashboard'));

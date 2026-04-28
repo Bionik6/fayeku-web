@@ -84,6 +84,6 @@ class AccountantActivationController extends Controller
 
     private function redirectToLoginWithExpiredFlash(): RedirectResponse
     {
-        return redirect()->route('accountant.auth.login')->with('status', self::INVALID_LINK_FLASH);
+        return redirect()->route('login')->with('status', self::INVALID_LINK_FLASH);
     }
 }

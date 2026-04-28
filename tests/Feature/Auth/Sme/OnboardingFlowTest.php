@@ -55,12 +55,13 @@ test('full sme onboarding: register, otp, company-setup, dashboard, logout, rese
     // --- 5. Dashboard accessible ---
     $this->get('/pme/dashboard')->assertOk();
 
-    // --- 6. Logout : redirige vers /sme/login ---
-    $this->post(route('auth.logout'))->assertRedirect(route('sme.auth.login'));
+    // --- 6. Logout : redirige vers /login (unifié) ---
+    $this->post(route('auth.logout'))->assertRedirect(route('login'));
     $this->assertGuest();
 
-    // --- 7. Forgot password ---
-    $this->post(route('sme.auth.forgot-password.submit'), [
+    // --- 7. Forgot password (profile=sme) ---
+    $this->post(route('password.email'), [
+        'profile' => 'sme',
         'phone' => '770000099',
         'country_code' => 'SN',
     ])->assertRedirect(route('sme.auth.reset-password'));
@@ -91,10 +92,11 @@ test('full sme onboarding: register, otp, company-setup, dashboard, logout, rese
     $this->assertAuthenticated();
     expect(Hash::check('NewP@ssword456!', $user->fresh()->password))->toBeTrue();
 
-    // --- 9. Re-logout, re-login with new password ---
+    // --- 9. Re-logout, re-login with new password (profile=sme) ---
     $this->post(route('auth.logout'));
 
-    $this->post(route('sme.auth.login.submit'), [
+    $this->post(route('login'), [
+        'profile' => 'sme',
         'phone' => '770000099',
         'password' => 'NewP@ssword456!',
         'country_code' => 'SN',
@@ -105,7 +107,8 @@ test('full sme onboarding: register, otp, company-setup, dashboard, logout, rese
     // --- 10. Old password no longer works ---
     $this->post(route('auth.logout'));
 
-    $this->post(route('sme.auth.login.submit'), [
+    $this->post(route('login'), [
+        'profile' => 'sme',
         'phone' => '770000099',
         'password' => 'P@ssword123!',
         'country_code' => 'SN',

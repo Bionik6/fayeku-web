@@ -148,7 +148,7 @@
 
         <p class="text-center text-sm leading-6 text-slate-600">
             <span>{{ __('Vous avez déjà un compte ?') }}</span>
-            <a href="{{ route('sme.auth.login') }}" wire:navigate class="auth-link">{{ __('Se connecter') }}</a>
+            <a href="{{ route('login') }}" wire:navigate class="auth-link">{{ __('Se connecter') }}</a>
         </p>
     </div>
 </x-layouts::auth>

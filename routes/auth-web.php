@@ -1,35 +1,36 @@
 <?php
 
-use App\Http\Controllers\Auth\Accountant\LoginController as AccountantLoginController;
 use App\Http\Controllers\Auth\Accountant\PasswordResetController as AccountantPasswordResetController;
 use App\Http\Controllers\Auth\AccountantActivationController;
 use App\Http\Controllers\Auth\CompanySetupController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\OtpController;
-use App\Http\Controllers\Auth\Sme\LoginController as SmeLoginController;
 use App\Http\Controllers\Auth\Sme\PasswordResetController as SmePasswordResetController;
 use App\Http\Controllers\Auth\Sme\RegisterController as SmeRegisterController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'guest'])->group(function () {
-    // Portail PME (téléphone + OTP)
+    // Connexion unifiée (toggle PME / Cabinet)
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->name('login.submit');
+
+    // Mot de passe oublié unifié (toggle PME / Cabinet)
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
+
+    // Suite du reset PME (OTP) — pas de toggle, le profil est figé après l'envoi du code
     Route::prefix('sme')->name('sme.auth.')->group(function () {
-        Route::get('/login', [SmeLoginController::class, 'show'])->name('login');
-        Route::post('/login', [SmeLoginController::class, 'store'])->name('login.submit');
         Route::get('/register', [SmeRegisterController::class, 'show'])->name('register');
         Route::post('/register', [SmeRegisterController::class, 'store'])->name('register.submit');
-        Route::get('/forgot-password', [SmePasswordResetController::class, 'showForgotForm'])->name('forgot-password');
-        Route::post('/forgot-password', [SmePasswordResetController::class, 'sendResetOtp'])->name('forgot-password.submit');
         Route::get('/reset-password', [SmePasswordResetController::class, 'showResetForm'])->name('reset-password');
         Route::post('/reset-password', [SmePasswordResetController::class, 'reset'])->name('reset-password.submit');
     });
 
-    // Portail Expert-Comptable (email + lien)
+    // Suite du reset Cabinet (lien e-mail) — `accountant.auth.reset-password` reste
+    // référencé par User::sendPasswordResetNotification, ne pas renommer.
     Route::prefix('accountant')->name('accountant.auth.')->group(function () {
-        Route::get('/login', [AccountantLoginController::class, 'show'])->name('login');
-        Route::post('/login', [AccountantLoginController::class, 'store'])->name('login.submit');
-        Route::get('/forgot-password', [AccountantPasswordResetController::class, 'showForgotForm'])->name('forgot-password');
-        Route::post('/forgot-password', [AccountantPasswordResetController::class, 'sendResetLink'])->name('forgot-password.submit');
         Route::get('/reset-password/{token}', [AccountantPasswordResetController::class, 'showResetForm'])->name('reset-password');
         Route::post('/reset-password', [AccountantPasswordResetController::class, 'reset'])->name('reset-password.submit');
     });
@@ -39,18 +40,6 @@ Route::middleware(['web', 'guest'])->group(function () {
         ->name('accountant.activation');
     Route::post('/accountant/activation/{token}', [AccountantActivationController::class, 'process'])
         ->name('accountant.activation.process');
-
-});
-
-// /login conserve le nom de route `login` requis par Laravel (auth middleware
-// y redirige les guests). Toujours un redirect 302 vers le portail PME — par
-// défaut, le visiteur sans profil tombe sur l'espace PME.
-Route::middleware('web')->group(function () {
-    Route::redirect('/login', '/sme/login')->name('login');
-    Route::redirect('/register', '/sme/register');
-    Route::redirect('/forgot-password', '/sme/forgot-password');
-    Route::redirect('/reset-password', '/sme/reset-password');
-    Route::redirect('/otp', '/sme/otp');
 });
 
 Route::middleware(['web', 'auth'])->group(function () {
