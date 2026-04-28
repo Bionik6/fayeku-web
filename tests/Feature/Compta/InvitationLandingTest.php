@@ -40,7 +40,7 @@ function createInvitation(array $overrides = []): array
 test('le formulaire d\'inscription est pré-rempli avec les données d\'invitation', function () {
     ['invitation' => $invitation] = createInvitation();
 
-    $this->get(route('sme.auth.register', ['join' => $invitation->token]))
+    $this->get(route('register', ['join' => $invitation->token]))
         ->assertOk()
         ->assertSee('Cabinet Test')
         ->assertSee('PME Invitée SARL')
@@ -52,7 +52,7 @@ test('le formulaire pré-remplit le numéro de téléphone', function () {
     ['invitation' => $invitation] = createInvitation(['invitee_phone' => '+221770000099']);
 
     // The phone component formats 770000099 (SN) as "77 000 00 99"
-    $this->get(route('sme.auth.register', ['join' => $invitation->token]))
+    $this->get(route('register', ['join' => $invitation->token]))
         ->assertOk()
         ->assertSee('77 000 00 99');
 });
@@ -60,7 +60,7 @@ test('le formulaire pré-remplit le numéro de téléphone', function () {
 test('le formulaire masque le sélecteur de profil quand invitation présente', function () {
     ['invitation' => $invitation] = createInvitation();
 
-    $response = $this->get(route('sme.auth.register', ['join' => $invitation->token]));
+    $response = $this->get(route('register', ['join' => $invitation->token]));
 
     $response->assertOk();
     $response->assertDontSee('Cabinet d\'expertise comptable');
@@ -71,7 +71,7 @@ test('le formulaire masque le sélecteur de profil quand invitation présente', 
 test('inscription via invitation crée la subscription avec le plan recommandé et invited_by_firm_id', function () {
     ['firm' => $firm, 'invitation' => $invitation] = createInvitation();
 
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
         'phone' => '770000099',
@@ -92,7 +92,7 @@ test('inscription via invitation crée la subscription avec le plan recommandé 
 test('inscription via invitation crée la relation AccountantCompany', function () {
     ['firm' => $firm, 'invitation' => $invitation] = createInvitation();
 
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
         'phone' => '770000099',
@@ -113,7 +113,7 @@ test('inscription via invitation crée la relation AccountantCompany', function 
 test('inscription via invitation met le statut à registering', function () {
     ['invitation' => $invitation] = createInvitation();
 
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
         'phone' => '770000099',
@@ -133,7 +133,7 @@ test('inscription via invitation met le statut à registering', function () {
 test('inscription via invitation définit le plan de la company', function () {
     ['invitation' => $invitation] = createInvitation();
 
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
         'phone' => '770000099',
@@ -150,7 +150,7 @@ test('inscription via invitation définit le plan de la company', function () {
 });
 
 test('inscription sans invitation reste sur le plan basique', function () {
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Amadou',
         'last_name' => 'Ba',
         'phone' => '770000011',
@@ -167,7 +167,7 @@ test('inscription sans invitation reste sur le plan basique', function () {
 });
 
 test('inscription avec token invalide échoue', function () {
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Test',
         'last_name' => 'User',
         'phone' => '770000022',
@@ -186,7 +186,7 @@ test('vérification OTP finalise le statut de l\'invitation à accepted', functi
     ['invitation' => $invitation] = createInvitation();
 
     // Register via invitation
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
         'phone' => '770000099',
@@ -240,7 +240,7 @@ test('/join/{code} redirige vers register et stocke le code en session', functio
     $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'ABC123']);
 
     $this->get(route('join.landing', 'ABC123'))
-        ->assertRedirect(route('sme.auth.register'))
+        ->assertRedirect(route('register'))
         ->assertSessionHas('joining_firm_code', 'ABC123');
 });
 
@@ -248,7 +248,7 @@ test('/join/{code} est insensible à la casse', function () {
     $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'ABC123']);
 
     $this->get(route('join.landing', 'abc123'))
-        ->assertRedirect(route('sme.auth.register'));
+        ->assertRedirect(route('register'));
 });
 
 test('/join/{code} invalide retourne 404', function () {
@@ -272,7 +272,7 @@ test('le formulaire affiche la bannière du cabinet via joining_firm_code', func
     ]);
 
     $this->withSession(['joining_firm_code' => 'TST001'])
-        ->get(route('sme.auth.register'))
+        ->get(route('register'))
         ->assertOk()
         ->assertSee('Cabinet Test Join');
 });
@@ -284,7 +284,7 @@ test('inscription via /join/{code} avec invitation existante crée la relation',
     ]);
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Ibrahima',
             'last_name' => 'Ciss',
             'phone' => '770000099',
@@ -307,7 +307,7 @@ test('inscription via /join/{code} sans invitation existante lie quand même au 
     $firm = Company::factory()->accountantFirm()->create(['invite_code' => 'NOINV1']);
 
     $this->withSession(['joining_firm_code' => 'NOINV1'])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Omar',
             'last_name' => 'Sy',
             'phone' => '770000077',

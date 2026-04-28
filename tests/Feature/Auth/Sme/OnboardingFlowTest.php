@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
  */
 test('full sme onboarding: register, otp, company-setup, dashboard, logout, reset password, login again', function () {
     // --- 1. Inscription ---
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Awa',
         'last_name' => 'Ndiaye',
         'phone' => '770000099',

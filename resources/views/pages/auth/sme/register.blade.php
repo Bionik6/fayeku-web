@@ -63,7 +63,7 @@
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('sme.auth.register.submit') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('register.submit') }}" class="flex flex-col gap-5">
             @csrf
 
             @if (isset($invitation) && $invitation)

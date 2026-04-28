@@ -22,6 +22,6 @@ class JoinController extends Controller
 
         session(['joining_firm_code' => $firm->invite_code]);
 
-        return redirect()->route('sme.auth.register');
+        return redirect()->route('register');
     }
 }

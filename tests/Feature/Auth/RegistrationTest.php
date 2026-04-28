@@ -8,12 +8,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 test('sme registration page can be rendered', function () {
-    $this->get(route('sme.auth.register'))
+    $this->get(route('register'))
         ->assertOk();
 });
 
 test('user can register as sme', function () {
-    $response = $this->post(route('sme.auth.register.submit'), [
+    $response = $this->post(route('register.submit'), [
         'first_name' => 'Amadou',
         'last_name' => 'Diallo',
         'phone' => '771234567',
@@ -35,7 +35,7 @@ test('user can register as sme', function () {
 });
 
 test('sme registration ignores attempt to set accountant_firm profile type', function () {
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Fatou',
         'last_name' => 'Sow',
         'phone' => '781234567',
@@ -55,7 +55,7 @@ test('sme registration ignores attempt to set accountant_firm profile type', fun
 });
 
 test('registration fails with missing fields', function () {
-    $response = $this->post(route('sme.auth.register.submit'), []);
+    $response = $this->post(route('register.submit'), []);
 
     $response->assertSessionHasErrors([
         'first_name', 'last_name', 'phone', 'password', 'country_code',
@@ -65,7 +65,7 @@ test('registration fails with missing fields', function () {
 test('registration fails with duplicate phone', function () {
     User::factory()->create(['phone' => '+221771234567']);
 
-    $response = $this->post(route('sme.auth.register.submit'), [
+    $response = $this->post(route('register.submit'), [
         'first_name' => 'Amadou',
         'last_name' => 'Diallo',
         'phone' => '771234567',

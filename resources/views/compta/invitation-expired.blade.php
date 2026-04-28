@@ -16,7 +16,7 @@
         </div>
 
         <div class="flex flex-col gap-3 w-full">
-            <a href="{{ route('sme.auth.register') }}" class="auth-button inline-block text-center">
+            <a href="{{ route('register') }}" class="auth-button inline-block text-center">
                 {{ __('Créer un compte Fayeku') }}
             </a>
             <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-slate-900 transition">

@@ -30,7 +30,7 @@ test('login and register pages reuse the Fayeku branding', function () {
         ->assertSee('Fayeku')
         ->assertSee('Espace sécurisé');
 
-    $this->get(route('sme.auth.register'))
+    $this->get(route('register'))
         ->assertOk()
         ->assertSee('Fayeku')
         ->assertSee('Espace sécurisé');

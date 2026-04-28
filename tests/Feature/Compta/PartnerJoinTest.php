@@ -16,7 +16,7 @@ test('GET /join/{code} stocke le code en session et redirige vers le formulaire 
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->get(route('join.landing', ['code' => $firm->invite_code]))
-        ->assertRedirect(route('sme.auth.register'))
+        ->assertRedirect(route('register'))
         ->assertSessionHas('joining_firm_code', $firm->invite_code);
 });
 
@@ -24,7 +24,7 @@ test('GET /join/{code} accepte le code en minuscules (lookup insensible à la ca
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->get(route('join.landing', ['code' => strtolower($firm->invite_code)]))
-        ->assertRedirect(route('sme.auth.register'))
+        ->assertRedirect(route('register'))
         ->assertSessionHas('joining_firm_code', $firm->invite_code);
 });
 
@@ -65,21 +65,49 @@ test('GET /join/{code} redirige un comptable déjà connecté vers son tableau d
 
 // ─── GET /sme/register avec joining_firm_code en session ──────────────────────
 
-test('GET /sme/register expose le cabinet quand joining_firm_code est en session', function () {
+test('GET /register expose le cabinet quand joining_firm_code est en session', function () {
     $firm = Company::factory()->accountantFirm()->create(['name' => 'Cabinet Ndiaye Conseil']);
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->get(route('sme.auth.register'))
+        ->get(route('register'))
         ->assertOk()
         ->assertViewHas('joiningFirm', fn ($f) => $f?->id === $firm->id)
-        ->assertViewHas('invitation', null);
+        ->assertViewHas('invitation', null)
+        ->assertSee('Cabinet Ndiaye Conseil')
+        ->assertSee('vous recommande Fayeku')
+        ->assertDontSee('Cette page est réservée aux PME');
 });
 
-test('GET /sme/register sans session ni token n\'expose pas de cabinet', function () {
-    $this->get(route('sme.auth.register'))
+test('GET /register sans session ni token n\'expose pas de cabinet et montre la disclaimer PME', function () {
+    $this->get(route('register'))
         ->assertOk()
         ->assertViewHas('joiningFirm', null)
-        ->assertViewHas('invitation', null);
+        ->assertViewHas('invitation', null)
+        ->assertSee('Cette page est réservée aux PME');
+});
+
+test('le middleware web est appliqué sur /join/{code} (sinon la session ne persiste pas)', function () {
+    $route = collect(app('router')->getRoutes()->getRoutesByName())
+        ->get('join.landing');
+
+    expect($route)->not->toBeNull();
+    expect($route->gatherMiddleware())->toContain('web');
+});
+
+test('flow réel : /join/{code} -> /register affiche le banner du cabinet (session persiste via web middleware)', function () {
+    $firm = Company::factory()->accountantFirm()->create(['name' => 'Cabinet Ndiaye Conseil']);
+
+    // Étape 1 : visite du lien d'invitation
+    $this->get(route('join.landing', ['code' => $firm->invite_code]))
+        ->assertRedirect(route('register'))
+        ->assertSessionHas('joining_firm_code', $firm->invite_code);
+
+    // Étape 2 : la session continue sur la page d'inscription
+    $this->get(route('register'))
+        ->assertOk()
+        ->assertSee('Cabinet Ndiaye Conseil')
+        ->assertSee('vous recommande Fayeku')
+        ->assertDontSee('Cette page est réservée aux PME');
 });
 
 // ─── POST /sme/register : flow complet de création ────────────────────────────
@@ -88,7 +116,7 @@ test('POST /sme/register crée le user, la company SME, la subscription et la li
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Aïssatou',
             'last_name' => 'Diop',
             'phone' => '770000123',
@@ -121,7 +149,7 @@ test('POST /sme/register sans invitation tombe sur le plan basique par défaut',
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Pape',
             'last_name' => 'Ndiaye',
             'phone' => '770000999',
@@ -140,7 +168,7 @@ test('POST /sme/register vide joining_firm_code de la session après inscription
     $firm = Company::factory()->accountantFirm()->create();
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Moussa',
             'last_name' => 'Sarr',
             'phone' => '770000456',
@@ -153,7 +181,7 @@ test('POST /sme/register vide joining_firm_code de la session après inscription
 });
 
 test('POST /sme/register sans joining_firm_code ni token ne crée pas de liaison cabinet', function () {
-    $this->post(route('sme.auth.register.submit'), [
+    $this->post(route('register.submit'), [
         'first_name' => 'Solo',
         'last_name' => 'Faye',
         'phone' => '770000111',
@@ -188,7 +216,7 @@ test('POST /sme/register associe automatiquement une PartnerInvitation existante
     ]);
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Khady',
             'last_name' => 'Mbaye',
             'phone' => '770000789',
@@ -221,7 +249,7 @@ test('POST /sme/register lie le cabinet sans toucher à une PartnerInvitation d\
     ]);
 
     $this->withSession(['joining_firm_code' => $firm->invite_code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Direct',
             'last_name' => 'Jonction',
             'phone' => '770000333',
@@ -248,18 +276,18 @@ test('flow complet : GET /join/{code} → POST /sme/register lie le SME au cabin
     $firm = Company::factory()->accountantFirm()->create();
 
     $session = $this->get(route('join.landing', ['code' => $firm->invite_code]))
-        ->assertRedirect(route('sme.auth.register'));
+        ->assertRedirect(route('register'));
 
     $code = $session->getSession()->get('joining_firm_code');
     expect($code)->toBe($firm->invite_code);
 
     $this->withSession(['joining_firm_code' => $code])
-        ->get(route('sme.auth.register'))
+        ->get(route('register'))
         ->assertOk()
         ->assertViewHas('joiningFirm', fn ($f) => $f?->id === $firm->id);
 
     $this->withSession(['joining_firm_code' => $code])
-        ->post(route('sme.auth.register.submit'), [
+        ->post(route('register.submit'), [
             'first_name' => 'Bineta',
             'last_name' => 'Lo',
             'phone' => '770000555',

@@ -20,10 +20,12 @@ Route::middleware(['web', 'guest'])->group(function () {
     Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
 
+    // Inscription PME (la seule inscription self-serve — les cabinets sont activés via /accountant/join)
+    Route::get('/register', [SmeRegisterController::class, 'show'])->name('register');
+    Route::post('/register', [SmeRegisterController::class, 'store'])->name('register.submit');
+
     // Suite du reset PME (OTP) — pas de toggle, le profil est figé après l'envoi du code
     Route::prefix('sme')->name('sme.auth.')->group(function () {
-        Route::get('/register', [SmeRegisterController::class, 'show'])->name('register');
-        Route::post('/register', [SmeRegisterController::class, 'store'])->name('register.submit');
         Route::get('/reset-password', [SmePasswordResetController::class, 'showResetForm'])->name('reset-password');
         Route::post('/reset-password', [SmePasswordResetController::class, 'reset'])->name('reset-password.submit');
     });

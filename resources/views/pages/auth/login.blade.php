@@ -83,7 +83,7 @@
             <template x-if="profile === 'sme'">
                 <span>
                     {{ __('Pas encore de compte ?') }}
-                    <a href="{{ route('sme.auth.register') }}" wire:navigate class="auth-link">{{ __('Créer un compte') }}</a>
+                    <a href="{{ route('register') }}" wire:navigate class="auth-link">{{ __('Créer un compte') }}</a>
                 </span>
             </template>
             <template x-if="profile === 'accountant'">

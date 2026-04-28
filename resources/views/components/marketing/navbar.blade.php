@@ -32,7 +32,7 @@
 
         <div class="hidden items-center gap-4 lg:flex">
             <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 transition hover:text-primary">Se connecter</a>
-            <a href="{{ route('sme.auth.register') }}" class="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-accent">Essayer 2 mois</a>
+            <a href="{{ route('register') }}" class="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-accent">Essayer 2 mois</a>
         </div>
 
         <button
@@ -69,7 +69,7 @@
 
             <div class="mt-2 grid gap-2">
                 <a href="{{ route('login') }}" class="rounded-full border border-primary/20 px-4 py-3 text-center text-sm font-medium text-primary">Se connecter</a>
-                <a href="{{ route('sme.auth.register') }}" class="rounded-full bg-primary px-4 py-3 text-center text-sm font-semibold text-accent">Essayer 2 mois</a>
+                <a href="{{ route('register') }}" class="rounded-full bg-primary px-4 py-3 text-center text-sm font-semibold text-accent">Essayer 2 mois</a>
             </div>
         </nav>
     </div>
