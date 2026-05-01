@@ -25,6 +25,9 @@ new class extends Component {
 
     public string $clientAddress = '';
 
+    /** Sentinel non-null lorsque la popup "client sans contact" est ouverte. */
+    public ?string $confirmNoContactId = null;
+
     public function mount(?Company $company = null): void
     {
         $this->company = $company;
@@ -38,7 +41,7 @@ new class extends Component {
     public function openModal(): void
     {
         $this->resetValidation();
-        $this->reset(['clientName', 'clientPhone', 'clientEmail', 'clientTaxId', 'clientAddress']);
+        $this->reset(['clientName', 'clientPhone', 'clientEmail', 'clientTaxId', 'clientAddress', 'confirmNoContactId']);
         $this->clientPhoneCountry = $this->company?->country_code ?? 'SN';
         $this->showModal = true;
     }
@@ -47,25 +50,61 @@ new class extends Component {
     {
         abort_unless($this->company && auth()->user()->can('create', Client::class), 403);
 
-        $validated = $this->validate([
+        $this->validateForm();
+
+        // Si ni téléphone ni email → ouvrir la confirmation pour avertir que les
+        // relances seront désactivées.
+        if (! $this->hasContactInfo()) {
+            $this->confirmNoContactId = 'pending';
+
+            return;
+        }
+
+        $this->createClient();
+    }
+
+    public function confirmCreateWithoutContact(?string $id = null): void
+    {
+        abort_unless($this->company && auth()->user()->can('create', Client::class), 403);
+
+        $this->confirmNoContactId = null;
+        $this->validateForm();
+        $this->createClient();
+    }
+
+    public function cancelNoContact(): void
+    {
+        $this->confirmNoContactId = null;
+    }
+
+    private function validateForm(): void
+    {
+        $this->validate([
             'clientName'    => ['required', 'string', 'max:255'],
-            'clientPhone'   => ['required', 'string', 'max:30'],
+            'clientPhone'   => ['nullable', 'string', 'max:30'],
             'clientEmail'   => ['nullable', 'email', 'max:255'],
             'clientTaxId'   => ['nullable', 'string', 'max:100'],
             'clientAddress' => ['nullable', 'string', 'max:500'],
         ], [
-            'clientName.required'  => __('Le nom du client est requis.'),
-            'clientPhone.required' => __('Le numéro de téléphone est requis.'),
-            'clientEmail.email'    => __("L'adresse email doit être valide."),
+            'clientName.required' => __('Le nom du client est requis.'),
+            'clientEmail.email'   => __("L'adresse email doit être valide."),
         ]);
+    }
 
+    private function hasContactInfo(): bool
+    {
+        return filled($this->clientPhone) || filled($this->clientEmail);
+    }
+
+    private function createClient(): void
+    {
         $client = Client::query()->create([
             'company_id' => $this->company->id,
-            'name'       => trim($validated['clientName']),
-            'phone'      => $this->normalizePhone($validated['clientPhone']),
-            'email'      => $this->emptyToNull($validated['clientEmail'] ?? ''),
-            'tax_id'     => $this->emptyToNull($validated['clientTaxId'] ?? ''),
-            'address'    => $this->emptyToNull($validated['clientAddress'] ?? ''),
+            'name'       => trim($this->clientName),
+            'phone'      => filled($this->clientPhone) ? $this->normalizePhone($this->clientPhone) : null,
+            'email'      => $this->emptyToNull($this->clientEmail),
+            'tax_id'     => $this->emptyToNull($this->clientTaxId),
+            'address'    => $this->emptyToNull($this->clientAddress),
         ]);
 
         $this->showModal = false;
@@ -152,7 +191,7 @@ new class extends Component {
                             @error('clientName') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- Téléphone --}}
+                        {{-- Téléphone (optionnel) --}}
                         <x-phone-input
                             :label="__('Téléphone / WhatsApp')"
                             country-name="clientPhoneCountry"
@@ -165,7 +204,6 @@ new class extends Component {
                             container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
                             text-size="text-sm"
                             placeholder-class="placeholder:text-slate-500"
-                            required
                         />
                         @error('clientPhone') <p class="-mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
 
@@ -205,7 +243,7 @@ new class extends Component {
                     </div>
 
                     <div class="mt-5 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                        {{ __('Les coordonnées client serviront aussi aux relances WhatsApp, SMS et email selon le canal choisi.') }}
+                        {{ __('Renseignez au moins un téléphone ou un email pour activer les relances WhatsApp, SMS ou email.') }}
                     </div>
                 </div>
 
@@ -228,5 +266,16 @@ new class extends Component {
             </form>
         </div>
     </div>
+
+    {{-- Confirmation : créer un client sans téléphone ni email --}}
+    <x-ui.confirm-modal
+        :confirm-id="$confirmNoContactId"
+        :title="__('Créer ce client sans contact ?')"
+        :description="__('Sans téléphone ni email, ce client ne pourra recevoir aucune relance (WhatsApp, SMS ou email). Vous pourrez compléter ses informations plus tard.')"
+        confirm-action="confirmCreateWithoutContact"
+        cancel-action="cancelNoContact"
+        :confirm-label="__('Créer quand même')"
+        variant="primary"
+    />
 @endif
 </div>

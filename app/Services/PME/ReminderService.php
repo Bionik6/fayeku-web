@@ -30,6 +30,17 @@ class ReminderService
         ?int $dayOffset = null,
         ?string $templateKey = null,
     ): Reminder {
+        $invoice->loadMissing('client');
+
+        // Garde-fou : un client sans le contact requis pour le canal ne peut pas
+        // recevoir de relance. Cette défense couvre tous les chemins (manuel,
+        // automatique, file d'attente, démo).
+        if (! $invoice->client?->canReceiveReminderOn($channel)) {
+            throw new \RuntimeException(
+                "Le client n'a pas le contact requis pour le canal {$channel->value}."
+            );
+        }
+
         if (config('fayeku.demo')) {
             return $this->simulateReminder($invoice, $channel, $messageBody, $mode, $dayOffset);
         }

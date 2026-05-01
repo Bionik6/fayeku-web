@@ -80,7 +80,7 @@ test('sendInvoiceCreated bascule sur email quand le client a uniquement un email
     expect($queued)->not->toBeNull()
         ->and($queued->subjectLine)->toContain('FAC-EMAIL-01')
         ->and($queued->body)->toContain('Dakar Pharma')
-        ->and($queued->ctaUrl)->toContain('/invoices/')
+        ->and($queued->ctaUrl)->toContain('/f/')
         ->and($queued->ctaLabel)->toBe('Voir la facture');
 });
 
@@ -115,7 +115,7 @@ test('sendQuoteSent bascule sur email avec CTA vers le PDF devis', function () {
     Mail::assertQueued(NotificationMail::class);
 
     $queued = Mail::queued(NotificationMail::class)->first();
-    expect($queued->ctaUrl)->toContain('/quotes/')
+    expect($queued->ctaUrl)->toContain('/d/')
         ->and($queued->ctaLabel)->toBe('Voir le devis');
 });
 

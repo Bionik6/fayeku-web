@@ -87,15 +87,20 @@ class Invoice extends Model
     }
 
     /**
-     * A reminder (manual or automatic) can only be sent for unpaid, active invoices.
+     * A reminder (manual or automatic) can only be sent for unpaid, active
+     * invoices whose client has at least one contact channel filled in.
      */
     public function canReceiveReminder(): bool
     {
-        return ! in_array($this->status, [
+        if (in_array($this->status, [
             InvoiceStatus::Paid,
             InvoiceStatus::Cancelled,
             InvoiceStatus::Draft,
-        ], true);
+        ], true)) {
+            return false;
+        }
+
+        return (bool) $this->client?->hasContact();
     }
 
     /**
