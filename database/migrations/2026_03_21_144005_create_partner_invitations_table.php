@@ -18,8 +18,10 @@ return new class extends Migration
         Schema::create('partner_invitations', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('accountant_firm_id');
+            $table->string('created_by_user_id')->nullable();
             $table->string('token')->unique();
             $table->string('invitee_phone')->nullable();
+            $table->string('invitee_email')->nullable();
             $table->string('invitee_name')->nullable();
             $table->string('invitee_company_name')->nullable();
             $table->string('recommended_plan')->nullable();
@@ -33,7 +35,13 @@ return new class extends Migration
             $table->string('sme_company_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('accountant_firm_id')->references('id')->on('companies');
+            // Cascade : la suppression d'un cabinet ou d'une PME nettoie ses invitations.
+            $table->foreign('accountant_firm_id')
+                ->references('id')->on('companies')
+                ->cascadeOnDelete();
+            $table->foreign('sme_company_id')
+                ->references('id')->on('companies')
+                ->cascadeOnDelete();
         });
     }
 

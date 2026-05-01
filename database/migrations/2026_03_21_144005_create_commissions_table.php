@@ -26,8 +26,13 @@ return new class extends Migration
             $table->datetime('paid_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('accountant_firm_id')->references('id')->on('companies');
-            $table->foreign('sme_company_id')->references('id')->on('companies');
+            // Cascade : la suppression d'un cabinet ou d'une PME nettoie ses commissions.
+            $table->foreign('accountant_firm_id')
+                ->references('id')->on('companies')
+                ->cascadeOnDelete();
+            $table->foreign('sme_company_id')
+                ->references('id')->on('companies')
+                ->cascadeOnDelete();
         });
     }
 
