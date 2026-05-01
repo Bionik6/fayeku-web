@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Compta\ExportDownloadController;
 use App\Http\Controllers\MarketingPageController;
+use App\Http\Controllers\PME\CompanyLogoController;
 use App\Http\Controllers\PME\InvoicePdfController;
 use App\Http\Controllers\PME\ProformaPdfController;
 use App\Http\Controllers\PME\QuotePdfController;
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('collections', 'pages::pme.collection.index')->name('pme.collection.index');
     Route::livewire('treasury', 'pages::pme.treasury.index')->name('pme.treasury.index');
     Route::get('treasury/export', TreasuryExportController::class)->name('pme.treasury.export');
+    Route::get('company/logo', CompanyLogoController::class)->name('pme.company.logo');
     Route::livewire('support', 'pages::pme.support.index')->name('pme.support.index');
 });
 

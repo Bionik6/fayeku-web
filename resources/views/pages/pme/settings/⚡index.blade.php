@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
@@ -8,12 +9,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use App\Livewire\Actions\Logout;
 use App\Models\Auth\Company;
 use App\Models\Auth\Subscription;
 use App\Services\Auth\AuthService;
 
 new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
+    use WithFileUploads;
     #[Url(as: 'section')]
     public string $activeSection = 'company';
 
@@ -23,9 +26,15 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
     public string $firmPhone = '';
     public string $firmAddress = '';
     public string $firmCity = '';
-    public string $firmCountry = 'SN';
     public string $firmNinea = '';
     public string $firmRccm = '';
+
+    // Pays verrouillé sur le Sénégal pour le moment (cf. page de connexion).
+    // L'ouverture multi-pays viendra avec NCC/RCCM ivoiriens et la TOB.
+    public string $firmCountry = 'SN';
+
+    // ─── Logo de l'entreprise ───────────────────────────────────────────
+    public $logoUpload = null;
 
     // ─── Compte utilisateur ─────────────────────────────────────────────
     public string $firstName = '';
@@ -61,14 +70,12 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
         if ($company) {
             $this->firmName = $company->name ?? '';
             $this->firmEmail = $company->email ?? '';
-            $country = $company->country_code ?? 'SN';
             $this->firmPhone = $this->formatLocalPhone(
-                $this->extractLocalPhone($company->phone ?? '', $country),
-                $country,
+                $this->extractLocalPhone($company->phone ?? '', 'SN'),
+                'SN',
             );
             $this->firmAddress = $company->address ?? '';
             $this->firmCity = $company->city ?? '';
-            $this->firmCountry = $country;
             $this->firmNinea = $company->ninea ?? '';
             $this->firmRccm = $company->rccm ?? '';
             $this->senderName = $company->sender_name ?? '';
@@ -144,13 +151,15 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function saveCompanyProfile(): void
     {
+        // Pays verrouillé sur SN — pas exposé dans l'UI ni validé côté serveur.
+        $this->firmCountry = 'SN';
+
         $validated = $this->validate([
             'firmName' => ['required', 'string', 'max:255'],
             'firmEmail' => ['nullable', 'email', 'max:255'],
             'firmPhone' => ['nullable', 'string', 'max:30'],
             'firmAddress' => ['nullable', 'string', 'max:255'],
             'firmCity' => ['nullable', 'string', 'max:100'],
-            'firmCountry' => ['required', 'string', 'size:2'],
             'firmNinea' => ['nullable', 'string', 'max:50'],
             'firmRccm' => ['nullable', 'string', 'max:50'],
         ]);
@@ -160,10 +169,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
             $company->update([
                 'name' => $validated['firmName'],
                 'email' => $validated['firmEmail'],
-                'phone' => filled($validated['firmPhone']) ? AuthService::normalizePhone($validated['firmPhone'], $validated['firmCountry']) : null,
+                'phone' => filled($validated['firmPhone']) ? AuthService::normalizePhone($validated['firmPhone'], 'SN') : null,
                 'address' => $validated['firmAddress'],
                 'city' => $validated['firmCity'],
-                'country_code' => $validated['firmCountry'],
+                'country_code' => 'SN',
                 'ninea' => $validated['firmNinea'],
                 'rccm' => $validated['firmRccm'],
             ]);
@@ -171,6 +180,82 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
         }
 
         session()->flash('firm-saved', true);
+    }
+
+    public function updatedLogoUpload(): void
+    {
+        try {
+            $this->validate([
+                'logoUpload' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:1024'],
+            ], [
+                'logoUpload.image' => __('Le fichier doit être une image.'),
+                'logoUpload.mimes' => __('Formats acceptés : PNG, JPG, WebP.'),
+                'logoUpload.max' => __('Le logo ne doit pas dépasser 1 Mo.'),
+            ]);
+        } catch (ValidationException $e) {
+            $this->logoUpload = null;
+
+            throw $e;
+        }
+
+        $this->saveLogo();
+    }
+
+    public function saveLogo(): void
+    {
+        $company = $this->company;
+
+        if (! $company || ! $this->logoUpload) {
+            return;
+        }
+
+        $extension = strtolower($this->logoUpload->getClientOriginalExtension() ?: 'png');
+        $path = "company-logos/{$company->id}.{$extension}";
+
+        if ($company->logo_path && $company->logo_path !== $path && Storage::exists($company->logo_path)) {
+            Storage::delete($company->logo_path);
+        }
+
+        Storage::put($path, file_get_contents($this->logoUpload->getRealPath()));
+
+        $company->update(['logo_path' => $path]);
+        $this->logoUpload = null;
+        unset($this->company);
+
+        $this->dispatch('toast', type: 'success', title: __('Logo mis à jour.'));
+    }
+
+    public function removeLogo(): void
+    {
+        $company = $this->company;
+
+        if (! $company || ! $company->logo_path) {
+            return;
+        }
+
+        if (Storage::exists($company->logo_path)) {
+            Storage::delete($company->logo_path);
+        }
+
+        $company->update(['logo_path' => null]);
+        $this->logoUpload = null;
+        unset($this->company);
+
+        $this->dispatch('toast', type: 'success', title: __('Logo supprimé.'));
+    }
+
+    #[Computed]
+    public function logoPreviewUrl(): ?string
+    {
+        if ($this->logoUpload) {
+            return $this->logoUpload->temporaryUrl();
+        }
+
+        if ($this->company?->logo_path) {
+            return route('pme.company.logo').'?v='.($this->company->updated_at?->timestamp ?? 0);
+        }
+
+        return null;
     }
 
     public function saveSignature(): void
@@ -301,14 +386,6 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
     }
 }; ?>
 
-@php
-    $settingsPhoneCountries = collect(config('fayeku.countries'))
-        ->only(['SN', 'CI'])
-        ->map(fn ($c) => $c['label'])
-        ->all();
-
-@endphp
-
 <div class="settings-page">
     {{-- ─── Header ──────────────────────────────────────────────────────── --}}
     <section class="app-shell-panel px-8 py-7">
@@ -422,6 +499,43 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                         @endif
 
+                        {{-- Logo de l'entreprise --}}
+                        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+                            <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
+                                <div class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                    @if ($this->logoPreviewUrl)
+                                        <img src="{{ $this->logoPreviewUrl }}" alt="{{ __('Logo') }}" class="max-h-full max-w-full object-contain" />
+                                    @else
+                                        <svg class="size-9 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                    @endif
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-semibold text-ink">{{ __('Logo de l\'entreprise') }}</h3>
+                                    <p class="mt-1 text-sm text-slate-500">{{ __('Affiché en haut à droite de vos devis, proformas et factures. PNG, JPG ou WebP, jusqu\'à 1 Mo.') }}</p>
+                                    <div class="mt-3 flex flex-wrap items-center gap-3">
+                                        <label class="inline-flex cursor-pointer items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
+                                            <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 7.5m0 0L7.5 12M12 7.5v9" />
+                                            </svg>
+                                            <span>{{ $this->company?->logo_path ? __('Remplacer') : __('Téléverser un logo') }}</span>
+                                            <input type="file" wire:model="logoUpload" accept="image/png,image/jpeg,image/webp" class="hidden" />
+                                        </label>
+                                        @if ($this->company?->logo_path)
+                                            <button type="button" wire:click="removeLogo" class="inline-flex items-center rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
+                                                {{ __('Supprimer') }}
+                                            </button>
+                                        @endif
+                                        <span wire:loading wire:target="logoUpload" class="text-sm text-slate-500">
+                                            {{ __('Téléversement…') }}
+                                        </span>
+                                    </div>
+                                    @error('logoUpload') <p class="auth-error mt-2">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+
                         <form wire:submit="saveCompanyProfile" class="mt-6 space-y-8">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <label class="auth-label sm:col-span-2">
@@ -432,9 +546,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                 <x-phone-input
                                     :label="__('Téléphone de l\'entreprise')"
                                     country-name="firmCountry"
-                                    :country-value="$firmCountry"
-                                    :countries="$settingsPhoneCountries"
-                                    country-model="firmCountry"
+                                    country-value="SN"
+                                    :countries="['SN' => config('fayeku.countries.SN.label', 'SEN (+221)')]"
                                     phone-name="firmPhone"
                                     :phone-value="$firmPhone"
                                     phone-model="firmPhone"
@@ -451,20 +564,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                     <input wire:model="firmAddress" type="text" class="auth-input" />
                                     @error('firmAddress') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
-                                <label class="auth-label">
+                                <label class="auth-label sm:col-span-2">
                                     <span>{{ __('Ville') }}</span>
                                     <input wire:model="firmCity" type="text" class="auth-input" />
                                     @error('firmCity') <p class="auth-error">{{ $message }}</p> @enderror
-                                </label>
-                                <label class="auth-label">
-                                    <span>{{ __('Pays') }}</span>
-                                    <x-select-native>
-                                        <select wire:model.live="firmCountry" class="auth-select col-start-1 row-start-1 appearance-none">
-                                            <option value="SN">{{ __('Sénégal') }}</option>
-                                            <option value="CI">{{ __('Côte d\'Ivoire') }}</option>
-                                        </select>
-                                    </x-select-native>
-                                    @error('firmCountry') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                             </div>
 
@@ -526,8 +629,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                 <x-phone-input
                                     :label="__('Téléphone')"
                                     country-name="userCountryDisplay"
-                                    :country-value="Auth::user()->country_code ?? 'SN'"
-                                    :countries="$settingsPhoneCountries"
+                                    country-value="SN"
+                                    :countries="['SN' => config('fayeku.countries.SN.label', 'SEN (+221)')]"
                                     phone-name="userPhoneDisplay"
                                     :phone-value="Auth::user()->phone"
                                     :readonly="true"

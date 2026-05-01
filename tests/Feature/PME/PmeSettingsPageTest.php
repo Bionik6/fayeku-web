@@ -160,6 +160,63 @@ it('validates company email format', function () {
         ->assertHasErrors(['firmEmail']);
 });
 
+// ─── Country verrouillé sur le Sénégal ────────────────────────────────────
+
+it('initialise toujours firmCountry à SN au mount', function () {
+    ['user' => $user] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->assertSet('firmCountry', 'SN');
+});
+
+it('initialise firmCountry à SN même si la company avait un autre pays en DB', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['country_code' => 'CI']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->assertSet('firmCountry', 'SN');
+});
+
+it('saveCompanyProfile ne valide plus firmCountry et persiste toujours SN', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('firmName', 'Diop Services SARL')
+        ->set('firmCountry', '') // tentative de corruption
+        ->call('saveCompanyProfile')
+        ->assertHasNoErrors();
+
+    expect($company->fresh()->country_code)->toBe('SN');
+});
+
+it('saveCompanyProfile écrase toute valeur firmCountry non-SN à SN', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('firmName', 'Diop Services SARL')
+        ->set('firmCountry', 'CI') // valeur étrangère
+        ->call('saveCompanyProfile')
+        ->assertHasNoErrors();
+
+    expect($company->fresh()->country_code)->toBe('SN');
+});
+
+it('normalise le téléphone avec le préfixe sénégalais +221', function () {
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('firmPhone', '77 243 22 31')
+        ->call('saveCompanyProfile')
+        ->assertHasNoErrors();
+
+    expect($company->fresh()->phone)->toStartWith('+221');
+});
+
 // ─── User profile (Mon Profil) ───────────────────────────────────────────
 
 it('loads user data on mount', function () {
