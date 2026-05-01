@@ -2,17 +2,17 @@
 
 namespace App\Events\PME;
 
+use App\Models\PME\Invoice;
+use App\Models\PME\ProposalDocument;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\PME\Invoice;
-use App\Models\PME\Quote;
 
-class QuoteAccepted
+class ProposalDocumentConverted
 {
     use Dispatchable, SerializesModels;
 
     public function __construct(
-        public Quote $quote,
+        public ProposalDocument $document,
         public Invoice $invoice,
     ) {}
 }

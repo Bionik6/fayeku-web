@@ -9,16 +9,17 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\ProformaStatus;
-use App\Models\PME\Proforma;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
+use App\Models\PME\ProposalDocument;
 use App\Services\PME\CurrencyService;
-use App\Services\PME\ProformaService;
+use App\Services\PME\ProposalDocumentService;
 
 new #[Title('Proforma')]
 #[Layout('layouts::pme')]
 class extends Component {
 
-    public ?Proforma $proforma = null;
+    public ?ProposalDocument $proforma = null;
 
     public bool $isEditing = false;
 
@@ -81,18 +82,19 @@ class extends Component {
         $this->currencyJs = CurrencyService::jsConfig($this->currency);
     }
 
-    public function mount(?Proforma $proforma = null): void
+    public function mount(?ProposalDocument $proforma = null): void
     {
         $this->company = auth()->user()->smeCompany();
 
         abort_unless($this->company, 403);
 
         if ($proforma && $proforma->exists) {
+            abort_unless($proforma->isProforma(), 404);
             abort_unless($proforma->company_id === $this->company->id, 403);
 
-            $service = app(ProformaService::class);
+            $service = app(ProposalDocumentService::class);
 
-            if (!$service->canEdit($proforma)) {
+            if (! $service->canEdit($proforma)) {
                 $this->dispatch('toast', type: 'error', title: __('Cette proforma ne peut plus être modifiée.'));
                 $this->redirect(route('pme.proformas.index'), navigate: true);
 
@@ -136,7 +138,8 @@ class extends Component {
             ])->toArray();
         }
         else {
-            $this->reference = app(ProformaService::class)->generateReference($this->company);
+            $this->reference = app(ProposalDocumentService::class)
+                ->generateReference($this->company, ProposalDocumentType::Proforma);
             $this->issuedAt = now()->format('Y-m-d');
             $this->validUntil = now()->addDays(30)->format('Y-m-d');
             $this->lines = [$this->emptyLine()];
@@ -199,7 +202,7 @@ class extends Component {
     #[Computed]
     public function computedTotals(): array
     {
-        return app(ProformaService::class)->calculateProformaTotals($this->lines, $this->taxRate, $this->discount ?? 0, $this->discountType);
+        return app(ProposalDocumentService::class)->calculateTotals($this->lines, $this->taxRate, $this->discount ?? 0, $this->discountType);
     }
 
     #[Computed]
@@ -385,7 +388,7 @@ class extends Component {
             throw $e;
         }
 
-        $service = app(ProformaService::class);
+        $service = app(ProposalDocumentService::class);
 
         $data = $this->buildData();
         $lines = $this->buildLines();
@@ -395,7 +398,7 @@ class extends Component {
             $this->proforma->refresh();
         }
         else {
-            $this->proforma = $service->create($this->company, $data, $lines);
+            $this->proforma = $service->create($this->company, ProposalDocumentType::Proforma, $data, $lines);
             $this->isEditing = true;
         }
 
@@ -452,8 +455,14 @@ class extends Component {
             return;
         }
 
-        $service = app(ProformaService::class);
+        $service = app(ProposalDocumentService::class);
         $service->markAsSent($this->proforma);
+
+        if ($this->sendChannel === 'whatsapp' && $this->proforma->company) {
+            $this->proforma->loadMissing(['client', 'company']);
+            app(\App\Services\PME\WhatsAppNotificationService::class)
+                ->sendProposalSent($this->proforma, $this->proforma->company);
+        }
 
         session()->flash('success', __('Proforma envoyée avec succès.'));
         $this->redirect(route('pme.proformas.index'), navigate: true);
@@ -571,7 +580,7 @@ class extends Component {
                     @endif
                 </div>
                 <div class="mt-1 flex items-center gap-3 text-sm text-slate-700">
-                    @if ($isEditing && $proforma?->status === ProformaStatus::Sent)
+                    @if ($isEditing && $proforma?->status === ProposalDocumentStatus::Sent)
                         <span class="inline-flex items-center gap-1.5"><span
                                     class="size-2 rounded-full bg-blue-400"></span>{{ __('Envoyée') }}</span>
                     @else
@@ -588,7 +597,7 @@ class extends Component {
                         class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
             </div>
         </div>
-        @if ($isEditing && $proforma?->status === ProformaStatus::Sent)
+        @if ($isEditing && $proforma?->status === ProposalDocumentStatus::Sent)
             <div class="border-t border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-800">
                 <svg class="mr-1.5 inline size-4" fill="none" stroke="currentColor"
                      stroke-width="1.5" viewBox="0 0 24 24">

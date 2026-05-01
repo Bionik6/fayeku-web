@@ -6,13 +6,11 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\Auth\Company;
-use App\Enums\PME\ProformaStatus;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Models\PME\Invoice;
-use App\Models\PME\Proforma;
-use App\Models\PME\Quote;
-use App\Services\PME\ProformaService;
-use App\Services\PME\QuoteService;
+use App\Models\PME\ProposalDocument;
+use App\Services\PME\ProposalDocumentService;
 
 new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Component {
     #[Url(as: 'statut')]
@@ -44,11 +42,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
 
     public ?string $confirmConvertId = null;
 
-    public ?string $confirmConvertProformaId = null;
-
     public ?string $confirmDeleteId = null;
-
-    public ?string $confirmDeleteProformaId = null;
 
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
@@ -68,15 +62,14 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
         $this->refreshKpis();
     }
 
-    public function viewQuote(string $quoteId): void
+    public function viewDocument(string $documentId): void
     {
         abort_unless($this->company, 403);
 
-        Quote::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($quoteId);
+        $document = $this->findDocumentOrFail($documentId);
+        $route = $document->isProforma() ? 'pme.proformas.show' : 'pme.quotes.show';
 
-        $this->redirect(route('pme.quotes.show', $quoteId), navigate: true);
+        $this->redirect(route($route, $documentId), navigate: true);
     }
 
     #[Computed]
@@ -119,33 +112,31 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
         $this->confirmDeleteId = null;
     }
 
-    public function deleteQuote(string $quoteId): void
+    public function deleteDocument(string $documentId): void
     {
         $this->confirmDeleteId = null;
         abort_unless($this->company, 403);
 
-        $quote = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($quoteId);
+        $document = $this->findDocumentOrFail($documentId);
+        $message = $document->isProforma()
+            ? __('La proforma a été supprimée.')
+            : __('Le devis a été supprimé.');
 
-        $quote->delete();
+        $document->delete();
 
         $this->flushCaches();
         $this->refreshKpis();
         unset($this->rows, $this->statusCounts);
 
-        $this->dispatch('toast', type: 'success', title: __('Le devis a été supprimé.'));
+        $this->dispatch('toast', type: 'success', title: $message);
     }
 
-    public function markAsAccepted(string $quoteId): void
+    public function markAsAccepted(string $documentId): void
     {
         abort_unless($this->company, 403);
 
-        $quote = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($quoteId);
-
-        app(QuoteService::class)->markAsAccepted($quote);
+        $document = $this->findDocumentOrFail($documentId);
+        app(ProposalDocumentService::class)->markAsAccepted($document);
 
         $this->flushCaches();
         $this->refreshKpis();
@@ -154,34 +145,46 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme accepté.'));
     }
 
-    public function markAsDeclined(string $quoteId): void
+    public function markAsDeclined(string $documentId): void
     {
         abort_unless($this->company, 403);
 
-        $quote = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($quoteId);
-
-        app(QuoteService::class)->markAsDeclined($quote);
+        $document = $this->findDocumentOrFail($documentId);
+        app(ProposalDocumentService::class)->markAsDeclined($document);
 
         $this->flushCaches();
         $this->refreshKpis();
         unset($this->rows, $this->statusCounts);
 
-        $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme refusé.'));
+        $message = $document->isProforma()
+            ? __('La proforma a été marquée comme refusée.')
+            : __('Le devis a été marqué comme refusé.');
+        $this->dispatch('toast', type: 'success', title: $message);
     }
 
-    public function convertToInvoice(string $quoteId): void
+    public function markAsPoReceived(string $documentId): void
     {
         abort_unless($this->company, 403);
 
-        $quote = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->with('lines')
-            ->findOrFail($quoteId);
+        $document = $this->findDocumentOrFail($documentId);
+        app(ProposalDocumentService::class)->markAsPoReceived($document);
+
+        $this->flushCaches();
+        $this->refreshKpis();
+        unset($this->rows, $this->statusCounts);
+
+        $this->dispatch('toast', type: 'success', title: __('Bon de commande reçu : la proforma peut être convertie en facture.'));
+    }
+
+    public function convertToInvoice(string $documentId): void
+    {
+        abort_unless($this->company, 403);
+
+        $document = $this->findDocumentOrFail($documentId);
+        $document->load('lines');
 
         try {
-            $invoice = app(QuoteService::class)->convertToInvoice($quote, $this->company);
+            $invoice = app(ProposalDocumentService::class)->convertToInvoice($document, $this->company);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
             $this->dispatch('toast', type: 'error', title: $e->getMessage());
 
@@ -201,109 +204,13 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
         $this->confirmConvertId = null;
     }
 
-    // ─── Proforma actions ────────────────────────────────────────────────────
-
-    public function viewProforma(string $proformaId): void
+    private function findDocumentOrFail(string $id): ProposalDocument
     {
         abort_unless($this->company, 403);
 
-        Proforma::query()
+        return ProposalDocument::query()
             ->where('company_id', $this->company->id)
-            ->findOrFail($proformaId);
-
-        $this->redirect(route('pme.proformas.show', $proformaId), navigate: true);
-    }
-
-    public function deleteProforma(string $proformaId): void
-    {
-        $this->confirmDeleteProformaId = null;
-        abort_unless($this->company, 403);
-
-        $proforma = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($proformaId);
-
-        $proforma->delete();
-
-        $this->flushCaches();
-        $this->refreshKpis();
-        unset($this->rows, $this->statusCounts);
-
-        $this->dispatch('toast', type: 'success', title: __('La proforma a été supprimée.'));
-    }
-
-    public function confirmDeleteProforma(string $id): void
-    {
-        $this->confirmDeleteProformaId = $id;
-    }
-
-    public function cancelDeleteProforma(): void
-    {
-        $this->confirmDeleteProformaId = null;
-    }
-
-    public function markAsPoReceived(string $proformaId): void
-    {
-        abort_unless($this->company, 403);
-
-        $proforma = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($proformaId);
-
-        app(ProformaService::class)->markAsPoReceived($proforma);
-
-        $this->flushCaches();
-        $this->refreshKpis();
-        unset($this->rows, $this->statusCounts);
-
-        $this->dispatch('toast', type: 'success', title: __('Bon de commande reçu : la proforma peut être convertie en facture.'));
-    }
-
-    public function markProformaAsDeclined(string $proformaId): void
-    {
-        abort_unless($this->company, 403);
-
-        $proforma = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->findOrFail($proformaId);
-
-        app(ProformaService::class)->markAsDeclined($proforma);
-
-        $this->flushCaches();
-        $this->refreshKpis();
-        unset($this->rows, $this->statusCounts);
-
-        $this->dispatch('toast', type: 'success', title: __('La proforma a été marquée comme refusée.'));
-    }
-
-    public function convertProformaToInvoice(string $proformaId): void
-    {
-        abort_unless($this->company, 403);
-
-        $proforma = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->with('lines')
-            ->findOrFail($proformaId);
-
-        try {
-            $invoice = app(ProformaService::class)->convertToInvoice($proforma, $this->company);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
-            $this->dispatch('toast', type: 'error', title: $e->getMessage());
-
-            return;
-        }
-
-        $this->redirect(route('pme.invoices.edit', $invoice), navigate: true);
-    }
-
-    public function confirmConvertProforma(string $id): void
-    {
-        $this->confirmConvertProformaId = $id;
-    }
-
-    public function cancelConvertProforma(): void
-    {
-        $this->confirmConvertProformaId = null;
+            ->findOrFail($id);
     }
 
     private function refreshKpis(): void
@@ -319,63 +226,29 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
             return;
         }
 
-        $this->totalQuotes = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->count();
+        $base = ProposalDocument::query()->where('company_id', $this->company->id);
 
-        $this->totalProformas = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->count();
-
+        $this->totalQuotes = (clone $base)->ofType(ProposalDocumentType::Quote)->count();
+        $this->totalProformas = (clone $base)->ofType(ProposalDocumentType::Proforma)->count();
         $this->totalDocuments = $this->totalQuotes + $this->totalProformas;
 
-        $pendingQuotes = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->where('status', QuoteStatus::Sent)
+        $this->pendingDocuments = (clone $base)
+            ->where('status', ProposalDocumentStatus::Sent)
             ->count();
 
-        $pendingProformas = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->where('status', ProformaStatus::Sent)
+        $this->validatedDocuments = (clone $base)
+            ->whereIn('status', [ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived])
             ->count();
 
-        $this->pendingDocuments = $pendingQuotes + $pendingProformas;
-
-        $acceptedQuotes = Quote::query()
-            ->where('company_id', $this->company->id)
-            ->where('status', QuoteStatus::Accepted)
-            ->count();
-
-        $poReceivedProformas = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->where('status', ProformaStatus::PoReceived)
-            ->count();
-
-        $this->validatedDocuments = $acceptedQuotes + $poReceivedProformas;
-
-        $expiredQuotes = Quote::query()
-            ->where('company_id', $this->company->id)
+        $this->expiredDocuments = (clone $base)
             ->where(function ($q) {
-                $q->where('status', QuoteStatus::Expired)
+                $q->where('status', ProposalDocumentStatus::Expired)
                     ->orWhere(function ($q2) {
-                        $q2->where('status', QuoteStatus::Sent)
+                        $q2->where('status', ProposalDocumentStatus::Sent)
                             ->where('valid_until', '<', now());
                     });
             })
             ->count();
-
-        $expiredProformas = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->where(function ($q) {
-                $q->where('status', ProformaStatus::Expired)
-                    ->orWhere(function ($q2) {
-                        $q2->where('status', ProformaStatus::Sent)
-                            ->where('valid_until', '<', now());
-                    });
-            })
-            ->count();
-
-        $this->expiredDocuments = $expiredQuotes + $expiredProformas;
     }
 
     #[Computed]
@@ -441,67 +314,35 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
             return $this->allRowsCache = [];
         }
 
-        $quoteRows = Quote::query()
+        return $this->allRowsCache = ProposalDocument::query()
             ->where('company_id', $this->company->id)
             ->with(['client', 'invoice'])
+            ->orderByDesc('issued_at')
             ->get()
-            ->map(function ($q) {
-                $isExpired = $q->status === QuoteStatus::Expired ||
-                    ($q->valid_until && $q->valid_until->isPast() && $q->status === QuoteStatus::Sent);
+            ->map(function (ProposalDocument $d) {
+                $isExpired = $d->status === ProposalDocumentStatus::Expired
+                    || ($d->valid_until && $d->valid_until->isPast() && $d->status === ProposalDocumentStatus::Sent);
 
                 return [
-                    'id'           => $q->id,
-                    'type'         => 'quote',
-                    'reference'    => $q->reference ?? '—',
-                    'client_id'    => $q->client_id,
-                    'client_name'  => $q->client?->name ?? '—',
-                    'subtotal'     => $q->subtotal,
-                    'tax_amount'   => $q->tax_amount,
-                    'total'        => $q->total,
-                    'currency'     => $q->currency,
-                    'issued_at'    => $q->issued_at,
-                    'valid_until'  => $q->valid_until,
-                    'status_value' => $isExpired ? 'expired' : $q->status->value,
-                    'has_invoice'  => $q->invoice !== null,
-                    'invoice_id'   => $q->invoice?->id,
-                    'invoice_public_code' => $q->invoice?->public_code,
-                    'public_code'  => $q->public_code,
-                    'dossier_reference' => null,
+                    'id'           => $d->id,
+                    'type'         => $d->type->value,
+                    'reference'    => $d->reference ?? '—',
+                    'client_id'    => $d->client_id,
+                    'client_name'  => $d->client?->name ?? '—',
+                    'subtotal'     => $d->subtotal,
+                    'tax_amount'   => $d->tax_amount,
+                    'total'        => $d->total,
+                    'currency'     => $d->currency,
+                    'issued_at'    => $d->issued_at,
+                    'valid_until'  => $d->valid_until,
+                    'status_value' => $isExpired ? 'expired' : $d->status->value,
+                    'has_invoice'  => $d->invoice !== null,
+                    'invoice_id'   => $d->invoice?->id,
+                    'invoice_public_code' => $d->invoice?->public_code,
+                    'public_code'  => $d->public_code,
+                    'dossier_reference' => $d->dossier_reference,
                 ];
-            });
-
-        $proformaRows = Proforma::query()
-            ->where('company_id', $this->company->id)
-            ->with(['client', 'invoice'])
-            ->get()
-            ->map(function ($p) {
-                $isExpired = $p->status === ProformaStatus::Expired ||
-                    ($p->valid_until && $p->valid_until->isPast() && $p->status === ProformaStatus::Sent);
-
-                return [
-                    'id'           => $p->id,
-                    'type'         => 'proforma',
-                    'reference'    => $p->reference ?? '—',
-                    'client_id'    => $p->client_id,
-                    'client_name'  => $p->client?->name ?? '—',
-                    'subtotal'     => $p->subtotal,
-                    'tax_amount'   => $p->tax_amount,
-                    'total'        => $p->total,
-                    'currency'     => $p->currency,
-                    'issued_at'    => $p->issued_at,
-                    'valid_until'  => $p->valid_until,
-                    'status_value' => $isExpired ? 'expired' : $p->status->value,
-                    'has_invoice'  => $p->invoice !== null,
-                    'invoice_id'   => $p->invoice?->id,
-                    'invoice_public_code' => $p->invoice?->public_code,
-                    'public_code'  => $p->public_code,
-                    'dossier_reference' => $p->dossier_reference,
-                ];
-            });
-
-        return $this->allRowsCache = $quoteRows
-            ->concat($proformaRows)
-            ->sortByDesc(fn ($row) => $row['issued_at']?->timestamp ?? 0)
+            })
             ->values()
             ->toArray();
     }
@@ -957,7 +798,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
 
                                         @if ($isProforma && $row['status_value'] === 'po_received' && ! $row['has_invoice'])
                                             <x-ui.dropdown-separator />
-                                            <x-ui.dropdown-item wire:click="confirmConvertProforma('{{ $row['id'] }}')">
+                                            <x-ui.dropdown-item wire:click="confirmConvert('{{ $row['id'] }}')">
                                                 <x-slot:icon>{!! $iconConvert !!}</x-slot:icon>
                                                 {{ __('Convertir en facture') }}
                                             </x-ui.dropdown-item>
@@ -971,27 +812,23 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
                                                     <x-slot:icon>{!! $iconCheck !!}</x-slot:icon>
                                                     {{ __('Marquer BC reçu') }}
                                                 </x-ui.dropdown-item>
-                                                <x-ui.dropdown-item wire:click="markProformaAsDeclined('{{ $row['id'] }}')">
-                                                    <x-slot:icon>{!! $iconX !!}</x-slot:icon>
-                                                    {{ __('Marquer comme refusée') }}
-                                                </x-ui.dropdown-item>
                                             @else
                                                 <x-ui.dropdown-item wire:click="markAsAccepted('{{ $row['id'] }}')">
                                                     <x-slot:icon>{!! $iconCheck !!}</x-slot:icon>
                                                     {{ __('Marquer comme accepté') }}
                                                 </x-ui.dropdown-item>
-                                                <x-ui.dropdown-item wire:click="markAsDeclined('{{ $row['id'] }}')">
-                                                    <x-slot:icon>{!! $iconX !!}</x-slot:icon>
-                                                    {{ __('Marquer comme refusé') }}
-                                                </x-ui.dropdown-item>
                                             @endif
+                                            <x-ui.dropdown-item wire:click="markAsDeclined('{{ $row['id'] }}')">
+                                                <x-slot:icon>{!! $iconX !!}</x-slot:icon>
+                                                {{ $isProforma ? __('Marquer comme refusée') : __('Marquer comme refusé') }}
+                                            </x-ui.dropdown-item>
                                         @endif
 
                                         {{-- Suppression brouillon --}}
                                         @if ($row['status_value'] === 'draft')
                                             <x-ui.dropdown-separator />
                                             <x-ui.dropdown-item
-                                                wire:click="{{ $isProforma ? 'confirmDeleteProforma' : 'confirmDelete' }}('{{ $row['id'] }}')"
+                                                wire:click="confirmDelete('{{ $row['id'] }}')"
                                                 :destructive="true"
                                             >
                                                 <x-slot:icon>{!! $iconTrash !!}</x-slot:icon>
@@ -1052,9 +889,9 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
 
     <x-ui.confirm-modal
         :confirm-id="$confirmDeleteId"
-        :title="__('Supprimer le devis')"
-        :description="__('Cette action est irréversible. Le devis sera définitivement supprimé.')"
-        confirm-action="deleteQuote"
+        :title="__('Supprimer le document')"
+        :description="__('Cette action est irréversible. Le document sera définitivement supprimé.')"
+        confirm-action="deleteDocument"
         cancel-action="cancelDelete"
         :confirm-label="__('Supprimer')"
     />
@@ -1062,28 +899,9 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
     <x-ui.confirm-modal
         :confirm-id="$confirmConvertId"
         :title="__('Convertir en facture')"
-        :description="__('Ce devis sera converti en facture brouillon. Vous pourrez la modifier avant de l\'envoyer.')"
+        :description="__('Ce document sera converti en facture brouillon. Vous pourrez la modifier avant de l\'envoyer.')"
         confirm-action="convertToInvoice"
         cancel-action="cancelConvert"
-        :confirm-label="__('Convertir')"
-        variant="primary"
-    />
-
-    <x-ui.confirm-modal
-        :confirm-id="$confirmDeleteProformaId"
-        :title="__('Supprimer la proforma')"
-        :description="__('Cette action est irréversible. La proforma sera définitivement supprimée.')"
-        confirm-action="deleteProforma"
-        cancel-action="cancelDeleteProforma"
-        :confirm-label="__('Supprimer')"
-    />
-
-    <x-ui.confirm-modal
-        :confirm-id="$confirmConvertProformaId"
-        :title="__('Convertir en facture')"
-        :description="__('Cette proforma sera convertie en facture brouillon. Vous pourrez la modifier avant de l\'envoyer.')"
-        confirm-action="convertProformaToInvoice"
-        cancel-action="cancelConvertProforma"
         :confirm-label="__('Convertir')"
         variant="primary"
     />

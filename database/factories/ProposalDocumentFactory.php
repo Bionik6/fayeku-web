@@ -2,19 +2,20 @@
 
 namespace Database\Factories;
 
-use App\Enums\PME\ProformaStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Models\PME\Proforma;
-use App\Models\PME\ProformaLine;
+use App\Models\PME\ProposalDocument;
+use App\Models\PME\ProposalDocumentLine;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Proforma>
+ * @extends Factory<ProposalDocument>
  */
-class ProformaFactory extends Factory
+class ProposalDocumentFactory extends Factory
 {
-    protected $model = Proforma::class;
+    protected $model = ProposalDocument::class;
 
     /**
      * @return array<string, mixed>
@@ -27,9 +28,10 @@ class ProformaFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'client_id' => null,
-            'reference' => 'FYK-PRO-'.strtoupper(fake()->unique()->bothify('??????')),
+            'type' => ProposalDocumentType::Quote,
+            'reference' => 'FYK-DEV-'.strtoupper(fake()->unique()->bothify('??????')),
             'currency' => 'XOF',
-            'status' => ProformaStatus::Draft,
+            'status' => ProposalDocumentStatus::Draft,
             'issued_at' => now(),
             'valid_until' => now()->addDays(30),
             'subtotal' => $subtotal,
@@ -38,6 +40,22 @@ class ProformaFactory extends Factory
             'discount' => 0,
             'discount_type' => 'percent',
         ];
+    }
+
+    public function quote(): static
+    {
+        return $this->state(fn () => [
+            'type' => ProposalDocumentType::Quote,
+            'reference' => 'FYK-DEV-'.strtoupper(fake()->unique()->bothify('??????')),
+        ]);
+    }
+
+    public function proforma(): static
+    {
+        return $this->state(fn () => [
+            'type' => ProposalDocumentType::Proforma,
+            'reference' => 'FYK-PRO-'.strtoupper(fake()->unique()->bothify('??????')),
+        ]);
     }
 
     public function forCompany(Company|array $company): static
@@ -56,27 +74,37 @@ class ProformaFactory extends Factory
 
     public function sent(): static
     {
-        return $this->state(['status' => ProformaStatus::Sent]);
+        return $this->state(['status' => ProposalDocumentStatus::Sent]);
+    }
+
+    public function accepted(): static
+    {
+        return $this->quote()->state(['status' => ProposalDocumentStatus::Accepted]);
     }
 
     public function poReceived(): static
     {
-        return $this->state(['status' => ProformaStatus::PoReceived]);
+        return $this->proforma()->state(['status' => ProposalDocumentStatus::PoReceived]);
     }
 
     public function converted(): static
     {
-        return $this->state(['status' => ProformaStatus::Converted]);
+        return $this->proforma()->state(['status' => ProposalDocumentStatus::Converted]);
     }
 
     public function declined(): static
     {
-        return $this->state(['status' => ProformaStatus::Declined]);
+        return $this->state(['status' => ProposalDocumentStatus::Declined]);
+    }
+
+    public function expired(): static
+    {
+        return $this->state(['status' => ProposalDocumentStatus::Expired]);
     }
 
     public function withLines(int $count = 2): static
     {
-        return $this->afterCreating(function (Proforma $proforma) use ($count) {
+        return $this->afterCreating(function (ProposalDocument $document) use ($count) {
             $subtotal = 0;
             $taxAmount = 0;
 
@@ -87,8 +115,8 @@ class ProformaFactory extends Factory
                 $lineTotal = $quantity * $unitPrice;
                 $lineTax = (int) round($lineTotal * $taxRate / 100);
 
-                ProformaLine::query()->create([
-                    'proforma_id' => $proforma->id,
+                ProposalDocumentLine::query()->create([
+                    'proposal_document_id' => $document->id,
                     'description' => fake()->sentence(3),
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
@@ -100,7 +128,7 @@ class ProformaFactory extends Factory
                 $taxAmount += $lineTax;
             }
 
-            $proforma->update([
+            $document->update([
                 'subtotal' => $subtotal,
                 'tax_amount' => $taxAmount,
                 'total' => $subtotal + $taxAmount,

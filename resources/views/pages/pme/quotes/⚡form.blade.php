@@ -9,16 +9,17 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\QuoteStatus;
-use App\Models\PME\Quote;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
+use App\Models\PME\ProposalDocument;
 use App\Services\PME\CurrencyService;
-use App\Services\PME\QuoteService;
+use App\Services\PME\ProposalDocumentService;
 
 new #[Title('Devis')]
 #[Layout('layouts::pme')]
 class extends Component {
 
-    public ?Quote $quote = null;
+    public ?ProposalDocument $quote = null;
 
     public bool $isEditing = false;
 
@@ -75,19 +76,20 @@ class extends Component {
         $this->currencyJs = CurrencyService::jsConfig($this->currency);
     }
 
-    public function mount(?Quote $quote = null): void
+    public function mount(?ProposalDocument $quote = null): void
     {
         $this->company = auth()->user()->smeCompany();
 
         abort_unless($this->company, 403);
 
         if ($quote && $quote->exists) {
+            abort_unless($quote->isQuote(), 404);
             abort_unless(auth()->user()->can('update', $quote), 403);
             abort_unless($quote->company_id === $this->company->id, 403);
 
-            $service = app(QuoteService::class);
+            $service = app(ProposalDocumentService::class);
 
-            if (!$service->canEdit($quote)) {
+            if (! $service->canEdit($quote)) {
                 $this->dispatch('toast', type: 'error', title: __('Ce devis ne peut plus être modifié.'));
                 $this->redirect(route('pme.quotes.index'), navigate: true);
 
@@ -128,9 +130,10 @@ class extends Component {
             ])->toArray();
         }
         else {
-            abort_unless(auth()->user()->can('create', Quote::class), 403);
+            abort_unless(auth()->user()->can('create', ProposalDocument::class), 403);
 
-            $this->reference = app(QuoteService::class)->generateReference($this->company);
+            $this->reference = app(ProposalDocumentService::class)
+                ->generateReference($this->company, ProposalDocumentType::Quote);
             $this->issuedAt = now()->format('Y-m-d');
             $this->validUntil = now()->addDays(30)->format('Y-m-d');
             $this->lines = [$this->emptyLine()];
@@ -193,7 +196,7 @@ class extends Component {
     #[Computed]
     public function computedTotals(): array
     {
-        return app(QuoteService::class)->calculateQuoteTotals($this->lines, $this->taxRate, $this->discount ?? 0, $this->discountType);
+        return app(ProposalDocumentService::class)->calculateTotals($this->lines, $this->taxRate, $this->discount ?? 0, $this->discountType);
     }
 
     #[Computed]
@@ -379,7 +382,7 @@ class extends Component {
             throw $e;
         }
 
-        $service = app(QuoteService::class);
+        $service = app(ProposalDocumentService::class);
 
         $data = $this->buildData();
         $lines = $this->buildLines();
@@ -389,7 +392,7 @@ class extends Component {
             $this->quote->refresh();
         }
         else {
-            $this->quote = $service->create($this->company, $data, $lines);
+            $this->quote = $service->create($this->company, ProposalDocumentType::Quote, $data, $lines);
             $this->isEditing = true;
         }
 
@@ -446,13 +449,13 @@ class extends Component {
             return;
         }
 
-        $service = app(QuoteService::class);
+        $service = app(ProposalDocumentService::class);
         $service->markAsSent($this->quote);
 
         if ($this->sendChannel === 'whatsapp' && $this->quote->company) {
             $this->quote->loadMissing(['client', 'company']);
             app(\App\Services\PME\WhatsAppNotificationService::class)
-                ->sendQuoteSent($this->quote, $this->quote->company);
+                ->sendProposalSent($this->quote, $this->quote->company);
         }
 
         session()->flash('success', __('Devis envoyé avec succès.'));
@@ -565,7 +568,7 @@ class extends Component {
                     @endif
                 </div>
                 <div class="mt-1 flex items-center gap-3 text-sm text-slate-700">
-                    @if ($isEditing && $quote?->status === QuoteStatus::Sent)
+                    @if ($isEditing && $quote?->status === ProposalDocumentStatus::Sent)
                         <span class="inline-flex items-center gap-1.5"><span
                                     class="size-2 rounded-full bg-blue-400"></span>{{ __('Envoyé') }}</span>
                     @else
@@ -582,7 +585,7 @@ class extends Component {
                         class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">{{ __('Annuler') }}</button>
             </div>
         </div>
-        @if ($isEditing && $quote?->status === QuoteStatus::Sent)
+        @if ($isEditing && $quote?->status === ProposalDocumentStatus::Sent)
             <div class="border-t border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-800">
                 <svg class="mr-1.5 inline size-4" fill="none" stroke="currentColor"
                      stroke-width="1.5" viewBox="0 0 24 24">

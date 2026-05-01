@@ -3,6 +3,7 @@
 namespace App\Models\PME;
 
 use App\Enums\PME\DunningStrategy;
+use App\Enums\PME\ProposalDocumentType;
 use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Traits\Shared\HasUlid;
@@ -40,14 +41,19 @@ class Client extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function proposalDocuments(): HasMany
+    {
+        return $this->hasMany(ProposalDocument::class);
+    }
+
     public function quotes(): HasMany
     {
-        return $this->hasMany(Quote::class);
+        return $this->proposalDocuments()->where('type', ProposalDocumentType::Quote);
     }
 
     public function proformas(): HasMany
     {
-        return $this->hasMany(Proforma::class);
+        return $this->proposalDocuments()->where('type', ProposalDocumentType::Proforma);
     }
 
     /**

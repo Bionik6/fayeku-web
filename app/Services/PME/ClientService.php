@@ -3,7 +3,8 @@
 namespace App\Services\PME;
 
 use App\Enums\PME\InvoiceStatus;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
@@ -210,7 +211,7 @@ class ClientService
         $client->loadMissing([
             'company',
             'invoices.reminders',
-            'quotes',
+            'proposalDocuments',
         ]);
 
         $row = collect($this->portfolioRows($client->company, 'all'))
@@ -220,7 +221,8 @@ class ClientService
             ->sortByDesc('issued_at')
             ->values();
 
-        $quotes = $client->quotes
+        $quotes = $client->proposalDocuments
+            ->where('type', ProposalDocumentType::Quote)
             ->sortByDesc('issued_at')
             ->values();
 
@@ -340,7 +342,7 @@ class ClientService
             ->where('company_id', $company->id)
             ->with([
                 'invoices.reminders',
-                'quotes',
+                'proposalDocuments',
             ])
             ->orderBy('name')
             ->get();
@@ -353,7 +355,9 @@ class ClientService
             ->filter(fn (Invoice $invoice) => ! in_array($invoice->status, [InvoiceStatus::Draft, InvoiceStatus::Cancelled], true))
             ->values();
 
-        $quotes = $client->quotes->values();
+        $quotes = $client->proposalDocuments
+            ->where('type', ProposalDocumentType::Quote)
+            ->values();
 
         $periodInvoices = $periodStart
             ? $invoices->filter(fn (Invoice $invoice) => $invoice->issued_at && $invoice->issued_at->greaterThanOrEqualTo($periodStart))
@@ -634,24 +638,25 @@ class ClientService
         };
     }
 
-    private function quoteStatusLabel(QuoteStatus $status): string
+    private function quoteStatusLabel(ProposalDocumentStatus $status): string
     {
         return match ($status) {
-            QuoteStatus::Draft => 'Brouillon',
-            QuoteStatus::Sent => 'Envoyé',
-            QuoteStatus::Accepted => 'Accepté',
-            QuoteStatus::Declined => 'Refusé',
-            QuoteStatus::Expired => 'Expiré',
+            ProposalDocumentStatus::Draft => 'Brouillon',
+            ProposalDocumentStatus::Sent => 'Envoyé',
+            ProposalDocumentStatus::Accepted => 'Accepté',
+            ProposalDocumentStatus::Declined => 'Refusé',
+            ProposalDocumentStatus::Expired => 'Expiré',
+            default => ucfirst($status->value),
         };
     }
 
-    private function quoteStatusTone(QuoteStatus $status): string
+    private function quoteStatusTone(ProposalDocumentStatus $status): string
     {
         return match ($status) {
-            QuoteStatus::Accepted => 'green',
-            QuoteStatus::Sent => 'blue',
-            QuoteStatus::Declined => 'red',
-            QuoteStatus::Draft, QuoteStatus::Expired => 'gray',
+            ProposalDocumentStatus::Accepted => 'green',
+            ProposalDocumentStatus::Sent => 'blue',
+            ProposalDocumentStatus::Declined => 'red',
+            default => 'gray',
         };
     }
 }

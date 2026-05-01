@@ -2,14 +2,15 @@
 
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\PaymentMethod;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Interfaces\Shared\WhatsAppProviderInterface;
 use App\Mail\Shared\NotificationMail;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use App\Models\Shared\Notification;
 use App\Services\PME\EmailReminderService;
 use App\Services\PME\WhatsAppNotificationService;
@@ -84,30 +85,31 @@ test('sendInvoiceCreated bascule sur email quand le client a uniquement un email
         ->and($queued->ctaLabel)->toBe('Voir la facture');
 });
 
-test('sendQuoteSent bascule sur email avec CTA vers le PDF devis', function () {
+test('sendProposalSent bascule sur email avec CTA vers le PDF devis', function () {
     Mail::fake();
 
     $company = bootstrapEmailFallbackCompany();
     $client = createEmailOnlyClient($company);
 
-    $quote = Quote::unguarded(fn () => Quote::create([
+    $quote = ProposalDocument::create([
         'company_id' => $company->id,
         'client_id' => $client->id,
+        'type' => ProposalDocumentType::Quote,
         'reference' => 'DEV-EMAIL-01',
-        'status' => QuoteStatus::Sent->value,
+        'status' => ProposalDocumentStatus::Sent,
         'issued_at' => now(),
         'valid_until' => now()->addDays(30),
         'subtotal' => 500_000,
         'tax_amount' => 0,
         'total' => 500_000,
         'currency' => 'XOF',
-    ]));
+    ]);
 
     $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) {
         $m->shouldNotReceive('sendTemplate');
     });
 
-    $notif = app(WhatsAppNotificationService::class)->sendQuoteSent($quote, $company);
+    $notif = app(WhatsAppNotificationService::class)->sendProposalSent($quote, $company);
 
     expect($notif->channel)->toBe('email')
         ->and($notif->template_key)->toBe('notification_quote_sent');

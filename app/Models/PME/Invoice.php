@@ -28,7 +28,8 @@ class Invoice extends Model
     }
 
     protected $fillable = [
-        'company_id', 'client_id', 'quote_id', 'proforma_id', 'reference', 'currency', 'status',
+        'company_id', 'client_id', 'proposal_document_id',
+        'reference', 'currency', 'status',
         'issued_at', 'due_at', 'paid_at',
         'subtotal', 'tax_amount', 'total', 'discount', 'discount_type', 'amount_paid',
         'notes', 'payment_terms', 'payment_instructions',
@@ -66,14 +67,9 @@ class Invoice extends Model
         return $this->hasMany(InvoiceLine::class);
     }
 
-    public function quote(): BelongsTo
+    public function source(): BelongsTo
     {
-        return $this->belongsTo(Quote::class);
-    }
-
-    public function proforma(): BelongsTo
-    {
-        return $this->belongsTo(Proforma::class);
+        return $this->belongsTo(ProposalDocument::class, 'proposal_document_id');
     }
 
     public function reminders(): HasMany

@@ -2,16 +2,16 @@
 
 namespace App\Models\PME;
 
+use App\Traits\Shared\HasUlid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Traits\Shared\HasUlid;
 
-class QuoteLine extends Model
+class ProposalDocumentLine extends Model
 {
     use HasUlid;
 
     protected $fillable = [
-        'quote_id', 'description', 'quantity',
+        'proposal_document_id', 'description', 'quantity',
         'unit_price', 'tax_rate', 'discount', 'total',
     ];
 
@@ -23,8 +23,8 @@ class QuoteLine extends Model
         'total' => 'integer',
     ];
 
-    public function quote(): BelongsTo
+    public function document(): BelongsTo
     {
-        return $this->belongsTo(Quote::class);
+        return $this->belongsTo(ProposalDocument::class, 'proposal_document_id');
     }
 }

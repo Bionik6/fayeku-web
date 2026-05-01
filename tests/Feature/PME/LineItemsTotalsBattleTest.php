@@ -1,12 +1,12 @@
 <?php
 
+use App\Enums\PME\ProposalDocumentType;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Models\PME\Proforma;
+use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use App\Services\PME\InvoiceService;
-use App\Services\PME\ProformaService;
-use App\Services\PME\QuoteService;
+use App\Services\PME\ProposalDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -37,12 +37,6 @@ function reportedScreenshotLines(): array
     ];
 }
 
-function expectedScreenshotSubtotal(): int
-{
-    return 235_000 + 95_000 + 175_000 + 10_000 + (5 * 195_000) + (3 * 245_000) + 60_000;
-    // = 2 285 000 FCFA
-}
-
 function createSmeForBattle(): array
 {
     $user = User::factory()->create(['profile_type' => 'sme']);
@@ -58,7 +52,7 @@ function createSmeForBattle(): array
 // ════════════════════════════════════════════════════════════════════════════
 
 test('REGRESSION SCREENSHOT — proforma 7 lignes Astech sans TVA = 2 285 000 FCFA', function () {
-    $totals = (new ProformaService)->calculateProformaTotals(reportedScreenshotLines(), taxRate: 0);
+    $totals = (new ProposalDocumentService)->calculateTotals(reportedScreenshotLines(), taxRate: 0);
 
     expect($totals['subtotal'])->toBe(2_285_000)
         ->and($totals['total'])->toBe(2_285_000)
@@ -66,7 +60,7 @@ test('REGRESSION SCREENSHOT — proforma 7 lignes Astech sans TVA = 2 285 000 FC
 });
 
 test('REGRESSION SCREENSHOT — devis 7 lignes Astech sans TVA = 2 285 000 FCFA', function () {
-    $totals = (new QuoteService)->calculateQuoteTotals(reportedScreenshotLines(), taxRate: 0);
+    $totals = (new ProposalDocumentService)->calculateTotals(reportedScreenshotLines(), taxRate: 0);
 
     expect($totals['subtotal'])->toBe(2_285_000)
         ->and($totals['total'])->toBe(2_285_000);
@@ -82,7 +76,7 @@ test('REGRESSION SCREENSHOT — facture 7 lignes Astech sans TVA = 2 285 000 FCF
 test('REGRESSION SCREENSHOT — proforma persiste 2 285 000 et le rechargement DB donne pareil', function () {
     ['company' => $company, 'client' => $client] = createSmeForBattle();
 
-    $proforma = (new ProformaService)->create($company, [
+    $proforma = (new ProposalDocumentService)->create($company, ProposalDocumentType::Proforma, [
         'client_id' => $client->id,
         'reference' => 'FYK-PRO-COGBEW',
         'currency' => 'XOF',
@@ -96,8 +90,7 @@ test('REGRESSION SCREENSHOT — proforma persiste 2 285 000 et le rechargement D
     expect($proforma->subtotal)->toBe(2_285_000)
         ->and($proforma->total)->toBe(2_285_000);
 
-    // Rechargement complet depuis la DB : invariant tenu
-    $reloaded = Proforma::query()->with('lines')->find($proforma->id);
+    $reloaded = ProposalDocument::query()->with('lines')->find($proforma->id);
     $sumOfLines = $reloaded->lines->sum(fn ($l) => $l->quantity * $l->unit_price);
 
     expect($reloaded->subtotal)->toBe($sumOfLines)
@@ -108,8 +101,8 @@ test('REGRESSION SCREENSHOT — proforma persiste 2 285 000 et le rechargement D
 //  ZONE 2 — Property-based : 200 jeux aléatoires, l'invariant doit tenir
 // ════════════════════════════════════════════════════════════════════════════
 
-test('PROPERTY — calculateProformaTotals respecte sum(qty × price) sur 200 jeux aléatoires', function () {
-    $service = new ProformaService;
+test('PROPERTY — calculateTotals respecte sum(qty × price) sur 200 jeux aléatoires', function () {
+    $service = new ProposalDocumentService;
 
     for ($run = 0; $run < 200; $run++) {
         $lineCount = random_int(1, 12);
@@ -123,15 +116,15 @@ test('PROPERTY — calculateProformaTotals respecte sum(qty × price) sur 200 je
             $expected += $qty * $price;
         }
 
-        $totals = $service->calculateProformaTotals($lines, taxRate: 0);
+        $totals = $service->calculateTotals($lines, taxRate: 0);
 
         expect($totals['subtotal'])->toBe($expected, "Subtotal incorrect pour le run $run");
         expect($totals['total'])->toBe($expected, "Total (sans TVA ni remise) incorrect pour le run $run");
     }
 });
 
-test('PROPERTY — calculateProformaTotals avec TVA 18% : tax = round(subtotal * 0.18)', function () {
-    $service = new ProformaService;
+test('PROPERTY — calculateTotals avec TVA 18% : tax = round(subtotal * 0.18)', function () {
+    $service = new ProposalDocumentService;
 
     for ($run = 0; $run < 100; $run++) {
         $lineCount = random_int(1, 8);
@@ -146,7 +139,7 @@ test('PROPERTY — calculateProformaTotals avec TVA 18% : tax = round(subtotal *
         }
 
         $expectedTax = (int) round($subtotal * 0.18);
-        $totals = $service->calculateProformaTotals($lines, taxRate: 18);
+        $totals = $service->calculateTotals($lines, taxRate: 18);
 
         expect($totals['subtotal'])->toBe($subtotal);
         expect($totals['tax_amount'])->toBe($expectedTax);
@@ -155,7 +148,7 @@ test('PROPERTY — calculateProformaTotals avec TVA 18% : tax = round(subtotal *
 });
 
 test('PROPERTY — remise % : discounted_subtotal = subtotal - round(subtotal × discount/100)', function () {
-    $service = new ProformaService;
+    $service = new ProposalDocumentService;
 
     foreach ([5, 10, 25, 50, 100] as $discount) {
         for ($run = 0; $run < 20; $run++) {
@@ -165,7 +158,7 @@ test('PROPERTY — remise % : discounted_subtotal = subtotal - round(subtotal ×
             $expectedDiscount = (int) round($subtotal * $discount / 100);
             $expectedDiscounted = $subtotal - $expectedDiscount;
 
-            $totals = $service->calculateProformaTotals(
+            $totals = $service->calculateTotals(
                 [['quantity' => $qty, 'unit_price' => $price]],
                 taxRate: 0,
                 discount: $discount,
@@ -181,7 +174,7 @@ test('PROPERTY — remise % : discounted_subtotal = subtotal - round(subtotal ×
 });
 
 test('PROPERTY — remise fixe ne peut pas dépasser le subtotal', function () {
-    $service = new ProformaService;
+    $service = new ProposalDocumentService;
 
     for ($run = 0; $run < 50; $run++) {
         $qty = random_int(1, 10);
@@ -189,7 +182,7 @@ test('PROPERTY — remise fixe ne peut pas dépasser le subtotal', function () {
         $subtotal = $qty * $price;
         $oversizedDiscount = $subtotal + random_int(1_000, 1_000_000);
 
-        $totals = $service->calculateProformaTotals(
+        $totals = $service->calculateTotals(
             [['quantity' => $qty, 'unit_price' => $price]],
             taxRate: 0,
             discount: $oversizedDiscount,
@@ -215,14 +208,14 @@ dataset('impure_lines', [
     'price max int courant (9 999 999)' => [['quantity' => 1, 'unit_price' => 9_999_999], 9_999_999],
 ]);
 
-test('calculateProformaTotals normalise les types impurs', function (array $line, int $expected) {
-    $totals = (new ProformaService)->calculateProformaTotals([$line], taxRate: 0);
+test('calculateTotals normalise les types impurs', function (array $line, int $expected) {
+    $totals = (new ProposalDocumentService)->calculateTotals([$line], taxRate: 0);
 
     expect($totals['subtotal'])->toBe($expected);
 })->with('impure_lines');
 
-test('calculateProformaTotals sur tableau vide retourne tout à zéro', function () {
-    $totals = (new ProformaService)->calculateProformaTotals([], taxRate: 18, discount: 10, discountType: 'percent');
+test('calculateTotals sur tableau vide retourne tout à zéro', function () {
+    $totals = (new ProposalDocumentService)->calculateTotals([], taxRate: 18, discount: 10, discountType: 'percent');
 
     expect($totals['subtotal'])->toBe(0)
         ->and($totals['discount_amount'])->toBe(0)
@@ -304,7 +297,7 @@ test('LIVE FORM — proforma : saveDraft persiste un total cohérent avec les li
         ])->all())
         ->call('saveDraft');
 
-    $proforma = Proforma::query()->where('company_id', $company->id)->with('lines')->first();
+    $proforma = ProposalDocument::query()->where('company_id', $company->id)->proformas()->with('lines')->first();
     $sum = $proforma->lines->sum(fn ($l) => $l->quantity * $l->unit_price);
 
     expect($proforma->subtotal)->toBe(2_285_000)
@@ -316,7 +309,6 @@ test('LIVE FORM — proforma : saveDraft persiste un total cohérent avec les li
 test('LIVE FORM — proforma : rouvrir en édition après save donne les mêmes totaux', function () {
     ['user' => $user, 'company' => $company, 'client' => $client] = createSmeForBattle();
 
-    // 1. Sauvegarde initiale
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.form')
         ->set('clientId', $client->id)
@@ -328,9 +320,8 @@ test('LIVE FORM — proforma : rouvrir en édition après save donne les mêmes 
         ])->all())
         ->call('saveDraft');
 
-    $proforma = Proforma::query()->where('company_id', $company->id)->first();
+    $proforma = ProposalDocument::query()->where('company_id', $company->id)->proformas()->first();
 
-    // 2. Rouverture
     $reedit = Livewire::actingAs($user)
         ->test('pages::pme.proformas.form', ['proforma' => $proforma]);
 
@@ -405,9 +396,9 @@ test('LIVE FORM — devis et facture : screenshot scenario donne 2 285 000', fun
 
 test('CONVERSION — proforma → facture : invoice.total == proforma.total == sum(lignes)', function () {
     ['company' => $company, 'client' => $client] = createSmeForBattle();
-    $service = new ProformaService;
+    $service = new ProposalDocumentService;
 
-    $proforma = $service->create($company, [
+    $proforma = $service->create($company, ProposalDocumentType::Proforma, [
         'client_id' => $client->id,
         'reference' => 'FYK-PRO-CONV01',
         'currency' => 'XOF',
@@ -433,15 +424,13 @@ test('CONVERSION — proforma → facture : invoice.total == proforma.total == s
 //  ZONE 7 — Symétrie inter-services : même input → même output
 // ════════════════════════════════════════════════════════════════════════════
 
-test('SYMÉTRIE — Quote, Proforma et Invoice services produisent le même résultat sur le screenshot', function () {
+test('SYMÉTRIE — ProposalDocument et Invoice services produisent le même résultat sur le screenshot', function () {
     $lines = reportedScreenshotLines();
 
-    $proforma = (new ProformaService)->calculateProformaTotals($lines, taxRate: 18, discount: 5, discountType: 'percent');
-    $quote = (new QuoteService)->calculateQuoteTotals($lines, taxRate: 18, discount: 5, discountType: 'percent');
+    $proposal = (new ProposalDocumentService)->calculateTotals($lines, taxRate: 18, discount: 5, discountType: 'percent');
     $invoice = (new InvoiceService)->calculateInvoiceTotals($lines, taxRate: 18, discount: 5, discountType: 'percent');
 
     foreach (['subtotal', 'discount_amount', 'discounted_subtotal', 'tax_amount', 'total'] as $key) {
-        expect($proforma[$key])->toBe($quote[$key], "Quote vs Proforma diffèrent sur $key")
-            ->and($proforma[$key])->toBe($invoice[$key], "Invoice vs Proforma diffèrent sur $key");
+        expect($proposal[$key])->toBe($invoice[$key], "ProposalDocument vs Invoice diffèrent sur $key");
     }
 });

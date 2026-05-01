@@ -2,13 +2,14 @@
 
 namespace App\Services\PME;
 
+use App\Enums\PME\ProposalDocumentType;
 use App\Exceptions\Shared\QuotaExceededException;
 use App\Interfaces\Shared\WhatsAppProviderInterface;
 use App\Mail\Shared\NotificationMail;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use App\Models\Shared\Notification;
 use App\Services\Shared\QuotaService;
 use App\Services\Shared\WhatsAppTemplateCatalog;
@@ -97,30 +98,34 @@ class WhatsAppNotificationService
         );
     }
 
-    public function sendQuoteSent(Quote $quote, Company $company): ?Notification
+    /**
+     * Notification d'envoi d'un devis ou d'une proforma. Le template diffère
+     * selon le type ; les variables et le routage WhatsApp/email sont identiques.
+     */
+    public function sendProposalSent(ProposalDocument $document, Company $company): ?Notification
     {
-        $quote->loadMissing(['client', 'company']);
-        $currency = $quote->currency ?? 'XOF';
+        $document->loadMissing(['client', 'company']);
+        $currency = $document->currency ?? 'XOF';
 
         $variables = [
-            'client_name' => $quote->client?->name ?? 'Cher client',
+            'client_name' => $document->client?->name ?? 'Cher client',
             'company_name' => $company->name ?? '',
-            'quote_number' => $quote->reference ?? '',
-            'quote_amount' => CurrencyService::format((int) $quote->total, $currency, withLabel: true),
-            'expiry_date' => $quote->valid_until instanceof CarbonInterface
-                ? $quote->valid_until->locale('fr')->translatedFormat('d F Y')
+            'quote_number' => $document->reference ?? '',
+            'quote_amount' => CurrencyService::format((int) $document->total, $currency, withLabel: true),
+            'expiry_date' => $document->valid_until instanceof CarbonInterface
+                ? $document->valid_until->locale('fr')->translatedFormat('d F Y')
                 : '',
             'sender_signature' => $company->composeSenderSignature(),
         ];
 
         return $this->dispatch(
-            notifiable: $quote,
+            notifiable: $document,
             company: $company,
             templateKey: 'notification_quote_sent',
             variables: $variables,
-            urlButtonParameter: $quote->public_code ? $quote->public_code.'/pdf' : null,
-            recipientPhone: $quote->client?->phone,
-            recipientEmail: $quote->client?->email,
+            urlButtonParameter: $document->public_code ? $document->public_code.'/pdf' : null,
+            recipientPhone: $document->client?->phone,
+            recipientEmail: $document->client?->email,
         );
     }
 
@@ -310,10 +315,14 @@ class WhatsAppNotificationService
             ];
         }
 
-        if ($notifiable instanceof Quote && $notifiable->public_code) {
+        if ($notifiable instanceof ProposalDocument && $notifiable->public_code) {
+            $isProforma = $notifiable->type === ProposalDocumentType::Proforma;
+
             return [
-                'url' => route('pme.quotes.pdf', ['quote' => $notifiable->public_code]),
-                'label' => 'Voir le devis',
+                'url' => $isProforma
+                    ? route('pme.proformas.pdf', ['proformaPublic' => $notifiable->public_code])
+                    : route('pme.quotes.pdf', ['quotePublic' => $notifiable->public_code]),
+                'label' => $isProforma ? 'Voir la proforma' : 'Voir le devis',
             ];
         }
 

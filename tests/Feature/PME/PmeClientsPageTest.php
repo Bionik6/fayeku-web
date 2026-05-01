@@ -1,12 +1,13 @@
 <?php
 
 use App\Enums\PME\InvoiceStatus;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use App\Models\PME\Reminder;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,19 +56,20 @@ function makePortfolioInvoice(Client $client, array $overrides = []): Invoice
     ], $overrides)));
 }
 
-function makePortfolioQuote(Client $client, array $overrides = []): Quote
+function makePortfolioQuote(Client $client, array $overrides = []): ProposalDocument
 {
-    return Quote::unguarded(fn () => Quote::create(array_merge([
+    return ProposalDocument::create(array_merge([
         'company_id' => $client->company_id,
         'client_id' => $client->id,
+        'type' => ProposalDocumentType::Quote,
         'reference' => 'DEV-'.fake()->unique()->numerify('###'),
-        'status' => QuoteStatus::Sent->value,
+        'status' => ProposalDocumentStatus::Sent,
         'issued_at' => now()->subDays(8),
         'valid_until' => now()->addDays(15),
         'subtotal' => 90_000,
         'tax_amount' => 0,
         'total' => 90_000,
-    ], $overrides)));
+    ], $overrides));
 }
 
 function makePortfolioReminder(Invoice $invoice, array $overrides = []): Reminder

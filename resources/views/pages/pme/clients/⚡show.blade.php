@@ -12,8 +12,8 @@ use App\Services\PME\ClientService;
 use App\Enums\PME\ReminderChannel;
 use App\Services\PME\ReminderService;
 use App\Models\PME\Invoice;
-use App\Models\PME\Quote;
-use App\Services\PME\QuoteService;
+use App\Models\PME\ProposalDocument;
+use App\Services\PME\ProposalDocumentService;
 
 new #[Title('Client')] #[Layout('layouts::pme')] class extends Component {
     public Client $client;
@@ -182,13 +182,14 @@ public function viewInvoice(string $id): void
 
     public function convertToInvoice(string $quoteId): void
     {
-        $quote = Quote::query()
+        $quote = ProposalDocument::query()
             ->where('company_id', $this->client->company_id)
+            ->quotes()
             ->with('lines')
             ->findOrFail($quoteId);
 
         try {
-            $invoice = app(QuoteService::class)->convertToInvoice($quote, $this->company);
+            $invoice = app(ProposalDocumentService::class)->convertToInvoice($quote, $this->company);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
             $this->dispatch('toast', type: 'error', title: $e->getMessage());
 
@@ -361,14 +362,15 @@ public function viewInvoice(string $id): void
     }
 
     #[Computed]
-    public function selectedQuote(): ?Quote
+    public function selectedQuote(): ?ProposalDocument
     {
         if (! $this->selectedQuoteId) {
             return null;
         }
 
-        return Quote::query()
+        return ProposalDocument::query()
             ->with(['client', 'lines', 'invoice'])
+            ->quotes()
             ->where('company_id', $this->client->company_id)
             ->where('client_id', $this->client->id)
             ->whereKey($this->selectedQuoteId)
@@ -1035,11 +1037,11 @@ public function viewInvoice(string $id): void
             $q = $this->selectedQuote;
             $client = $q->client;
             $statusConfig = match ($q->status) {
-                \App\Enums\PME\QuoteStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
-                \App\Enums\PME\QuoteStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
-                \App\Enums\PME\QuoteStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
-                \App\Enums\PME\QuoteStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700'],
-                \App\Enums\PME\QuoteStatus::Expired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500'],
+                \App\Enums\PME\ProposalDocumentStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+                \App\Enums\PME\ProposalDocumentStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
+                \App\Enums\PME\ProposalDocumentStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
+                \App\Enums\PME\ProposalDocumentStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700'],
+                \App\Enums\PME\ProposalDocumentStatus::Expired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500'],
                 default => ['label' => ucfirst($q->status->value), 'class' => 'bg-slate-100 text-slate-600'],
             };
         @endphp
@@ -1193,7 +1195,7 @@ public function viewInvoice(string $id): void
                                 </div>
                             </dl>
 
-                            @if (in_array($q->status, [\App\Enums\PME\QuoteStatus::Sent, \App\Enums\PME\QuoteStatus::Accepted]) && ! $q->invoice)
+                            @if (in_array($q->status, [\App\Enums\PME\ProposalDocumentStatus::Sent, \App\Enums\PME\ProposalDocumentStatus::Accepted]) && ! $q->invoice)
                                 <div class="mt-6">
                                     <button
                                         wire:click="confirmConvert('{{ $q->id }}')"

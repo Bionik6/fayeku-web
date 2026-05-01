@@ -1,13 +1,25 @@
 <?php
 
+use App\Enums\PME\ProposalDocumentType;
 use App\Http\Controllers\Compta\ExportDownloadController;
 use App\Http\Controllers\MarketingPageController;
 use App\Http\Controllers\PME\CompanyLogoController;
 use App\Http\Controllers\PME\InvoicePdfController;
-use App\Http\Controllers\PME\ProformaPdfController;
-use App\Http\Controllers\PME\QuotePdfController;
+use App\Http\Controllers\PME\ProposalDocumentPdfController;
 use App\Http\Controllers\PME\TreasuryExportController;
+use App\Models\PME\ProposalDocument;
 use Illuminate\Support\Facades\Route;
+
+// Bindings vers la table unifiée `proposal_documents`, scopée par type.
+// Empêche un id/public_code de devis d'être servi via une URL proforma (et vice-versa).
+Route::bind('quote', fn ($value) => ProposalDocument::query()
+    ->where('id', $value)->ofType(ProposalDocumentType::Quote)->firstOrFail());
+Route::bind('proforma', fn ($value) => ProposalDocument::query()
+    ->where('id', $value)->ofType(ProposalDocumentType::Proforma)->firstOrFail());
+Route::bind('quotePublic', fn ($value) => ProposalDocument::query()
+    ->where('public_code', $value)->ofType(ProposalDocumentType::Quote)->firstOrFail());
+Route::bind('proformaPublic', fn ($value) => ProposalDocument::query()
+    ->where('public_code', $value)->ofType(ProposalDocumentType::Proforma)->firstOrFail());
 
 Route::get('/', [MarketingPageController::class, 'home'])->name('home');
 Route::get('/pricing', [MarketingPageController::class, 'pricing'])->name('marketing.pricing');
@@ -33,11 +45,13 @@ Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix
     Route::livewire('support', 'pages::compta.support.index')->name('support.index');
 });
 
-// PDF publics — pas d'auth, résolus via le public_code (8 caractères).
-// URLs courtes pour tenir dans un SMS/WhatsApp et rester lisibles dans les emails.
+// PDF publics — pas d'auth, URLs courtes pour SMS/WhatsApp.
+// La syntaxe `{param:public_code}` indique à Laravel d'utiliser `public_code`
+// comme clé de route (binding + génération d'URL). Notre `Route::bind()`
+// au-dessus prend le relais sur la résolution pour ajouter le scope par type.
 Route::get('f/{invoice:public_code}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
-Route::get('d/{quote:public_code}/pdf', QuotePdfController::class)->name('pme.quotes.pdf');
-Route::get('p/{proforma:public_code}/pdf', ProformaPdfController::class)->name('pme.proformas.pdf');
+Route::get('d/{quotePublic:public_code}/pdf', ProposalDocumentPdfController::class)->name('pme.quotes.pdf');
+Route::get('p/{proformaPublic:public_code}/pdf', ProposalDocumentPdfController::class)->name('pme.proformas.pdf');
 
 Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
     Route::redirect('/', '/pme/dashboard');

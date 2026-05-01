@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('public_code', 8)->unique();
             $table->string('company_id');
             $table->string('client_id')->nullable();
-            $table->string('quote_id')->nullable();
+            $table->string('proposal_document_id')->nullable();
             $table->string('reference')->nullable();
             $table->string('status')->default('draft');
             $table->string('currency', 3)->default('XOF');

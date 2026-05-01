@@ -1,11 +1,10 @@
 <?php
 
-use App\Enums\PME\ProformaStatus;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Models\PME\Proforma;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -26,31 +25,45 @@ function bootstrapUnifiedFilterScenario(): array
     $client = Client::factory()->create(['company_id' => $company->id]);
 
     // 5 devis : 2 draft, 2 sent, 1 accepted
-    foreach ([['DEV-D1', QuoteStatus::Draft], ['DEV-D2', QuoteStatus::Draft], ['DEV-S1', QuoteStatus::Sent], ['DEV-S2', QuoteStatus::Sent], ['DEV-A1', QuoteStatus::Accepted]] as [$ref, $status]) {
-        Quote::unguarded(fn () => Quote::create([
+    $quotes = [
+        ['DEV-D1', ProposalDocumentStatus::Draft],
+        ['DEV-D2', ProposalDocumentStatus::Draft],
+        ['DEV-S1', ProposalDocumentStatus::Sent],
+        ['DEV-S2', ProposalDocumentStatus::Sent],
+        ['DEV-A1', ProposalDocumentStatus::Accepted],
+    ];
+    foreach ($quotes as [$ref, $status]) {
+        ProposalDocument::create([
             'company_id' => $company->id,
             'client_id' => $client->id,
+            'type' => ProposalDocumentType::Quote,
             'reference' => $ref,
             'currency' => 'XOF',
-            'status' => $status->value,
+            'status' => $status,
             'issued_at' => now(),
             'valid_until' => now()->addDays(30),
             'subtotal' => 100_000, 'tax_amount' => 0, 'total' => 100_000,
-        ]));
+        ]);
     }
 
     // 3 proformas : 1 draft, 1 sent, 1 po_received
-    foreach ([['PRO-D1', ProformaStatus::Draft], ['PRO-S1', ProformaStatus::Sent], ['PRO-P1', ProformaStatus::PoReceived]] as [$ref, $status]) {
-        Proforma::unguarded(fn () => Proforma::create([
+    $proformas = [
+        ['PRO-D1', ProposalDocumentStatus::Draft],
+        ['PRO-S1', ProposalDocumentStatus::Sent],
+        ['PRO-P1', ProposalDocumentStatus::PoReceived],
+    ];
+    foreach ($proformas as [$ref, $status]) {
+        ProposalDocument::create([
             'company_id' => $company->id,
             'client_id' => $client->id,
+            'type' => ProposalDocumentType::Proforma,
             'reference' => $ref,
             'currency' => 'XOF',
-            'status' => $status->value,
+            'status' => $status,
             'issued_at' => now(),
             'valid_until' => now()->addDays(30),
             'subtotal' => 50_000, 'tax_amount' => 0, 'total' => 50_000,
-        ]));
+        ]);
     }
 
     return compact('user', 'company', 'client');
@@ -75,7 +88,7 @@ test('Aucune méthode setTypeFilter ne doit exister sur le composant', function 
     Livewire::actingAs($user)
         ->test('pages::pme.quotes.index')
         ->call('setTypeFilter', 'quote')
-        ->assertStatus(500); // méthode publique introuvable → erreur
+        ->assertStatus(500);
 })->throws(Exception::class);
 
 // ─── Aller-retour Statut ─────────────────────────────────────────────────────
@@ -86,7 +99,6 @@ test('REGRESSION : cliquer Envoyé puis Tous (statut) restaure les 8 documents',
     $component = Livewire::actingAs($user)->test('pages::pme.quotes.index');
 
     $component->call('setStatusFilter', 'sent');
-    // 2 devis sent + 1 proforma sent = 3
     expect(count($component->get('rows')))->toBe(3);
 
     $component->call('setStatusFilter', 'all');
@@ -98,17 +110,14 @@ test('REGRESSION : statuts spécifiques (po_received, accepted) restent disponib
 
     $component = Livewire::actingAs($user)->test('pages::pme.quotes.index');
 
-    // Filtre sur po_received → uniquement la proforma PRO-P1
     $component->call('setStatusFilter', 'po_received');
     expect(count($component->get('rows')))->toBe(1)
         ->and(collect($component->get('rows'))->first()['reference'])->toBe('PRO-P1');
 
-    // Filtre sur accepted → uniquement le devis DEV-A1
     $component->call('setStatusFilter', 'accepted');
     expect(count($component->get('rows')))->toBe(1)
         ->and(collect($component->get('rows'))->first()['reference'])->toBe('DEV-A1');
 
-    // Retour à Tous
     $component->call('setStatusFilter', 'all');
     expect(count($component->get('rows')))->toBe(8);
 });

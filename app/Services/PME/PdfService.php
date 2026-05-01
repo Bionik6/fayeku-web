@@ -2,9 +2,9 @@
 
 namespace App\Services\PME;
 
+use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
-use App\Models\PME\Proforma;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPDF;
 use Illuminate\Http\Response;
@@ -12,143 +12,72 @@ use Illuminate\Support\Facades\Storage;
 
 class PdfService
 {
-    /**
-     * Generate a PDF object for the given invoice.
-     */
     public function generate(Invoice $invoice): DomPDF
     {
         $invoice->loadMissing(['company', 'client', 'lines']);
 
-        $logoBase64 = null;
-
-        if ($invoice->company->logo_path && Storage::exists($invoice->company->logo_path)) {
-            $logoContent = Storage::get($invoice->company->logo_path);
-
-            if ($logoContent) {
-                $mime = Storage::mimeType($invoice->company->logo_path) ?: 'image/png';
-                $logoBase64 = 'data:'.$mime.';base64,'.base64_encode($logoContent);
-            }
-        }
-
         return Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
-            'logoBase64' => $logoBase64,
+            'logoBase64' => $this->logoBase64($invoice->company),
         ])->setPaper('a4');
     }
 
-    /**
-     * Stream the PDF inline in the browser (for preview).
-     */
     public function stream(Invoice $invoice): Response
     {
-        $filename = "facture-{$invoice->reference}.pdf";
-
-        return $this->generate($invoice)->stream($filename);
+        return $this->generate($invoice)->stream("facture-{$invoice->reference}.pdf");
     }
 
-    /**
-     * Force-download the PDF.
-     */
     public function download(Invoice $invoice): Response
     {
-        $filename = "facture-{$invoice->reference}.pdf";
-
-        return $this->generate($invoice)->download($filename);
+        return $this->generate($invoice)->download("facture-{$invoice->reference}.pdf");
     }
 
-    /**
-     * Return the raw PDF binary for attachments.
-     */
     public function rawContent(Invoice $invoice): string
     {
         return $this->generate($invoice)->output();
     }
 
-    /**
-     * Generate a PDF object for the given quote.
-     */
-    public function generateQuote(Quote $quote): DomPDF
+    public function generateDocument(ProposalDocument $document): DomPDF
     {
-        $quote->loadMissing(['company', 'client', 'lines']);
+        $document->loadMissing(['company', 'client', 'lines']);
 
-        $logoBase64 = null;
-
-        if ($quote->company->logo_path && Storage::exists($quote->company->logo_path)) {
-            $logoContent = Storage::get($quote->company->logo_path);
-
-            if ($logoContent) {
-                $mime = Storage::mimeType($quote->company->logo_path) ?: 'image/png';
-                $logoBase64 = 'data:'.$mime.';base64,'.base64_encode($logoContent);
-            }
-        }
-
-        return Pdf::loadView('pdf.quote', [
-            'quote' => $quote,
-            'logoBase64' => $logoBase64,
+        return Pdf::loadView('pdf.proposal-document', [
+            'document' => $document,
+            'logoBase64' => $this->logoBase64($document->company),
         ])->setPaper('a4');
     }
 
-    /**
-     * Stream the quote PDF inline in the browser.
-     */
-    public function streamQuote(Quote $quote): Response
+    public function streamDocument(ProposalDocument $document): Response
     {
-        $filename = "devis-{$quote->reference}.pdf";
-
-        return $this->generateQuote($quote)->stream($filename);
+        return $this->generateDocument($document)->stream($this->documentFilename($document));
     }
 
-    /**
-     * Force-download the quote PDF.
-     */
-    public function downloadQuote(Quote $quote): Response
+    public function downloadDocument(ProposalDocument $document): Response
     {
-        $filename = "devis-{$quote->reference}.pdf";
-
-        return $this->generateQuote($quote)->download($filename);
+        return $this->generateDocument($document)->download($this->documentFilename($document));
     }
 
-    /**
-     * Generate a PDF object for the given proforma.
-     */
-    public function generateProforma(Proforma $proforma): DomPDF
+    private function documentFilename(ProposalDocument $document): string
     {
-        $proforma->loadMissing(['company', 'client', 'lines']);
+        $prefix = $document->isProforma() ? 'proforma' : 'devis';
 
-        $logoBase64 = null;
+        return "{$prefix}-{$document->reference}.pdf";
+    }
 
-        if ($proforma->company->logo_path && Storage::exists($proforma->company->logo_path)) {
-            $logoContent = Storage::get($proforma->company->logo_path);
-
-            if ($logoContent) {
-                $mime = Storage::mimeType($proforma->company->logo_path) ?: 'image/png';
-                $logoBase64 = 'data:'.$mime.';base64,'.base64_encode($logoContent);
-            }
+    private function logoBase64(?Company $company): ?string
+    {
+        if (! $company || ! $company->logo_path || ! Storage::exists($company->logo_path)) {
+            return null;
         }
 
-        return Pdf::loadView('pdf.proforma', [
-            'proforma' => $proforma,
-            'logoBase64' => $logoBase64,
-        ])->setPaper('a4');
-    }
+        $content = Storage::get($company->logo_path);
 
-    /**
-     * Stream the proforma PDF inline in the browser.
-     */
-    public function streamProforma(Proforma $proforma): Response
-    {
-        $filename = "proforma-{$proforma->reference}.pdf";
+        if (! $content) {
+            return null;
+        }
 
-        return $this->generateProforma($proforma)->stream($filename);
-    }
+        $mime = Storage::mimeType($company->logo_path) ?: 'image/png';
 
-    /**
-     * Force-download the proforma PDF.
-     */
-    public function downloadProforma(Proforma $proforma): Response
-    {
-        $filename = "proforma-{$proforma->reference}.pdf";
-
-        return $this->generateProforma($proforma)->download($filename);
+        return 'data:'.$mime.';base64,'.base64_encode($content);
     }
 }

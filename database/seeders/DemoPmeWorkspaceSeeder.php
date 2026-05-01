@@ -3,14 +3,15 @@
 namespace Database\Seeders;
 
 use App\Enums\PME\InvoiceStatus;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Enums\PME\ReminderChannel;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\InvoiceLine;
-use App\Models\PME\Quote;
-use App\Models\PME\QuoteLine;
+use App\Models\PME\ProposalDocument;
+use App\Models\PME\ProposalDocumentLine;
 use App\Models\PME\Reminder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -449,7 +450,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         $auchan = Client::where('company_id', $this->company->id)->where('name', 'AUCHAN Sénégal')->first();
         $totalEnergies = Client::where('company_id', $this->company->id)->where('name', 'TotalEnergies Marketing SN')->first();
 
-        $this->quote($orange, 'FYK-DEV-DS0101', QuoteStatus::Accepted, 2_400_000,
+        $this->quote($orange, 'FYK-DEV-DS0101', ProposalDocumentStatus::Accepted, 2_400_000,
             issuedAt: now()->subDays(18)->toDateString(),
             validUntil: now()->subDays(18)->addDays(30)->toDateString(),
             lines: [
@@ -458,7 +459,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($lafarge, 'FYK-DEV-DS0102', QuoteStatus::Accepted, 1_950_000,
+        $this->quote($lafarge, 'FYK-DEV-DS0102', ProposalDocumentStatus::Accepted, 1_950_000,
             issuedAt: now()->subDays(25)->toDateString(),
             validUntil: now()->subDays(25)->addDays(30)->toDateString(),
             lines: [
@@ -467,7 +468,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($cbao, 'FYK-DEV-DS0201', QuoteStatus::Sent, 3_200_000,
+        $this->quote($cbao, 'FYK-DEV-DS0201', ProposalDocumentStatus::Sent, 3_200_000,
             issuedAt: now()->subDays(6)->toDateString(),
             validUntil: now()->subDays(6)->addDays(30)->toDateString(),
             lines: [
@@ -476,7 +477,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($senelec, 'FYK-DEV-DS0202', QuoteStatus::Sent, 1_750_000,
+        $this->quote($senelec, 'FYK-DEV-DS0202', ProposalDocumentStatus::Sent, 1_750_000,
             issuedAt: now()->subDays(9)->toDateString(),
             validUntil: now()->subDays(9)->addDays(30)->toDateString(),
             lines: [
@@ -485,7 +486,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($airSenegal, 'FYK-DEV-DS0203', QuoteStatus::Sent, 2_800_000,
+        $this->quote($airSenegal, 'FYK-DEV-DS0203', ProposalDocumentStatus::Sent, 2_800_000,
             issuedAt: now()->subDays(4)->toDateString(),
             validUntil: now()->subDays(4)->addDays(30)->toDateString(),
             lines: [
@@ -494,7 +495,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($auchan, 'FYK-DEV-DS0301', QuoteStatus::Declined, 4_500_000,
+        $this->quote($auchan, 'FYK-DEV-DS0301', ProposalDocumentStatus::Declined, 4_500_000,
             issuedAt: now()->subDays(14)->toDateString(),
             validUntil: now()->subDays(14)->addDays(30)->toDateString(),
             lines: [
@@ -503,7 +504,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($totalEnergies, 'FYK-DEV-DS0302', QuoteStatus::Expired, 2_100_000,
+        $this->quote($totalEnergies, 'FYK-DEV-DS0302', ProposalDocumentStatus::Expired, 2_100_000,
             issuedAt: now()->subDays(45)->toDateString(),
             validUntil: now()->subDays(45)->addDays(30)->toDateString(),
             lines: [
@@ -777,7 +778,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         $poleDiamniadio = Client::where('company_id', $this->company->id)->where('name', 'Pôle Urbain de Diamniadio')->first();
         $ucad = Client::where('company_id', $this->company->id)->where('name', 'Université Cheikh Anta Diop')->first();
 
-        $this->quote($socofim, 'FYK-DEV-SB0101', QuoteStatus::Accepted, 12_500_000,
+        $this->quote($socofim, 'FYK-DEV-SB0101', ProposalDocumentStatus::Accepted, 12_500_000,
             issuedAt: now()->subDays(20)->toDateString(),
             validUntil: now()->subDays(20)->addDays(30)->toDateString(),
             lines: [
@@ -786,7 +787,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($poleDiamniadio, 'FYK-DEV-SB0102', QuoteStatus::Sent, 9_200_000,
+        $this->quote($poleDiamniadio, 'FYK-DEV-SB0102', ProposalDocumentStatus::Sent, 9_200_000,
             issuedAt: now()->subDays(8)->toDateString(),
             validUntil: now()->subDays(8)->addDays(30)->toDateString(),
             lines: [
@@ -795,7 +796,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($ucad, 'FYK-DEV-SB0103', QuoteStatus::Sent, 4_300_000,
+        $this->quote($ucad, 'FYK-DEV-SB0103', ProposalDocumentStatus::Sent, 4_300_000,
             issuedAt: now()->subDays(5)->toDateString(),
             validUntil: now()->subDays(5)->addDays(30)->toDateString(),
             lines: [
@@ -804,7 +805,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             ]
         );
 
-        $this->quote($terrouBi, 'FYK-DEV-SB0104', QuoteStatus::Declined, 6_700_000,
+        $this->quote($terrouBi, 'FYK-DEV-SB0104', ProposalDocumentStatus::Declined, 6_700_000,
             issuedAt: now()->subDays(28)->toDateString(),
             validUntil: now()->subDays(28)->addDays(30)->toDateString(),
             lines: [
@@ -881,18 +882,19 @@ class DemoPmeWorkspaceSeeder extends Seeder
     private function quote(
         Client $client,
         string $reference,
-        QuoteStatus $status,
+        ProposalDocumentStatus $status,
         int $subtotal,
         string $issuedAt,
         string $validUntil,
         array $lines = [],
-    ): Quote {
+    ): ProposalDocument {
         $taxAmount = (int) round($subtotal * 0.18);
         $total = $subtotal + $taxAmount;
 
-        $quote = Quote::create([
+        $quote = ProposalDocument::create([
             'company_id' => $this->company->id,
             'client_id' => $client->id,
+            'type' => ProposalDocumentType::Quote,
             'reference' => $reference,
             'status' => $status,
             'issued_at' => $issuedAt,
@@ -903,8 +905,8 @@ class DemoPmeWorkspaceSeeder extends Seeder
         ]);
 
         foreach ($lines as [$description, $quantity, $unitPrice]) {
-            QuoteLine::create([
-                'quote_id' => $quote->id,
+            ProposalDocumentLine::create([
+                'proposal_document_id' => $quote->id,
                 'description' => $description,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,

@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\PME\ProformaStatus;
+use App\Enums\PME\ProposalDocumentStatus;
 use App\Models\Auth\Company;
-use App\Models\PME\Proforma;
-use App\Services\PME\ProformaService;
+use App\Models\PME\ProposalDocument;
+use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
-    public Proforma $proforma;
+    public ProposalDocument $proforma;
 
     public ?Company $company = null;
 
@@ -44,12 +44,12 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     /** @var array<string, string> Liste des pays disponibles pour le composant phone-input. */
     public array $sendPhoneCountries = [];
 
-    public function mount(Proforma $proforma): void
+    public function mount(ProposalDocument $proforma): void
     {
         $this->company = auth()->user()->smeCompany();
 
         abort_unless(
-            $this->company && $proforma->company_id === $this->company->id,
+            $this->company && $proforma->company_id === $this->company->id && $proforma->isProforma(),
             404
         );
 
@@ -66,16 +66,16 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function statusDisplay(): array
     {
-        $isExpired = $this->proforma->status === ProformaStatus::Expired
-            || ($this->proforma->valid_until && $this->proforma->valid_until->isPast() && $this->proforma->status === ProformaStatus::Sent);
+        $isExpired = $this->proforma->status === ProposalDocumentStatus::Expired
+            || ($this->proforma->valid_until && $this->proforma->valid_until->isPast() && $this->proforma->status === ProposalDocumentStatus::Sent);
 
         return match (true) {
             $isExpired => ['label' => 'Expirée', 'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-500/20'],
-            $this->proforma->status === ProformaStatus::PoReceived => ['label' => 'BC reçu', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
-            $this->proforma->status === ProformaStatus::Converted => ['label' => 'Facturée', 'class' => 'bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-600/20'],
-            $this->proforma->status === ProformaStatus::Sent => ['label' => 'Envoyée', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
-            $this->proforma->status === ProformaStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
-            $this->proforma->status === ProformaStatus::Declined => ['label' => 'Refusée', 'class' => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::PoReceived => ['label' => 'BC reçu', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::Converted => ['label' => 'Facturée', 'class' => 'bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::Sent => ['label' => 'Envoyée', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::Declined => ['label' => 'Refusée', 'class' => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20'],
             default => ['label' => ucfirst($this->proforma->status->value), 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
         };
     }
@@ -87,7 +87,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             return null;
         }
 
-        if (in_array($this->proforma->status, [ProformaStatus::Converted, ProformaStatus::PoReceived], true) || $this->proforma->invoice) {
+        if (in_array($this->proforma->status, [ProposalDocumentStatus::Converted, ProposalDocumentStatus::PoReceived], true) || $this->proforma->invoice) {
             return null;
         }
 
@@ -107,14 +107,14 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function isEditable(): bool
     {
-        return in_array($this->proforma->status, [ProformaStatus::Draft, ProformaStatus::Sent], true);
+        return in_array($this->proforma->status, [ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent], true);
     }
 
     // ─── Bon de commande ─────────────────────────────────────────────────────
 
     public function openPoModal(): void
     {
-        if ($this->proforma->status !== ProformaStatus::Sent) {
+        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
             return;
         }
         $this->resetErrorBag();
@@ -141,13 +141,13 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             'poReceivedAt.required' => __('La date du bon de commande est requise.'),
         ]);
 
-        if ($this->proforma->status !== ProformaStatus::Sent) {
+        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
             $this->showPoModal = false;
 
             return;
         }
 
-        app(ProformaService::class)->markAsPoReceived($this->proforma, [
+        app(ProposalDocumentService::class)->markAsPoReceived($this->proforma, [
             'reference' => trim($this->poReference),
             'received_at' => $this->poReceivedAt,
             'notes' => trim($this->poNotes),
@@ -163,10 +163,10 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
      */
     public function markAsPoReceived(): void
     {
-        if ($this->proforma->status !== ProformaStatus::Sent) {
+        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
             return;
         }
-        app(ProformaService::class)->markAsPoReceived($this->proforma);
+        app(ProposalDocumentService::class)->markAsPoReceived($this->proforma);
         $this->proforma->refresh();
         $this->dispatch('toast', type: 'success', title: __('Bon de commande reçu : la proforma peut être convertie en facture.'));
     }
@@ -175,7 +175,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
 
     public function openSendModal(): void
     {
-        if ($this->proforma->status === ProformaStatus::Converted) {
+        if ($this->proforma->status === ProposalDocumentStatus::Converted) {
             return;
         }
 
@@ -291,8 +291,8 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         // Le clic sur "Envoyer depuis WhatsApp/messagerie" déclenche la transition
         // Draft → Sent : l'utilisateur a validé l'envoi, on bascule la fiche.
         $statusChanged = false;
-        if ($this->proforma->status === ProformaStatus::Draft) {
-            app(ProformaService::class)->markAsSent($this->proforma);
+        if ($this->proforma->status === ProposalDocumentStatus::Draft) {
+            app(ProposalDocumentService::class)->markAsSent($this->proforma);
             $this->proforma->refresh();
             $statusChanged = true;
         }
@@ -308,10 +308,10 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
 
     public function markAsDeclined(): void
     {
-        if ($this->proforma->status !== ProformaStatus::Sent) {
+        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
             return;
         }
-        app(ProformaService::class)->markAsDeclined($this->proforma);
+        app(ProposalDocumentService::class)->markAsDeclined($this->proforma);
         $this->proforma->refresh();
         $this->dispatch('toast', type: 'success', title: __('La proforma a été marquée comme refusée.'));
     }
@@ -332,7 +332,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         $this->confirmConvert = null;
 
         try {
-            $invoice = app(ProformaService::class)->convertToInvoice($this->proforma, $this->company);
+            $invoice = app(ProposalDocumentService::class)->convertToInvoice($this->proforma, $this->company);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
             $this->dispatch('toast', type: 'error', title: $e->getMessage());
 
@@ -355,7 +355,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     public function deleteProforma(?string $id = null): void
     {
         $this->confirmDelete = null;
-        if ($this->proforma->status !== ProformaStatus::Draft) {
+        if ($this->proforma->status !== ProposalDocumentStatus::Draft) {
             return;
         }
         $this->proforma->delete();
@@ -429,7 +429,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                 <a href="{{ route('pme.invoices.show', $p->invoice) }}" wire:navigate class="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-strong">
                     {{ $p->invoice->reference }} <flux:icon name="arrow-right" class="size-3.5" />
                 </a>
-            @elseif ($p->status === ProformaStatus::PoReceived)
+            @elseif ($p->status === ProposalDocumentStatus::PoReceived)
                 @if ($p->po_reference)
                     <p class="mt-2 truncate text-2xl font-semibold tracking-tight text-emerald-600">{{ $p->po_reference }}</p>
                     <p class="mt-1 text-sm text-slate-500">
@@ -439,7 +439,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                     <p class="mt-2 text-2xl font-semibold tracking-tight text-emerald-600">{{ __('BC reçu') }}</p>
                     <p class="mt-1 text-sm text-slate-500">{{ __('Prête à convertir en facture') }}</p>
                 @endif
-            @elseif ($p->status === ProformaStatus::Sent)
+            @elseif ($p->status === ProposalDocumentStatus::Sent)
                 <p class="mt-2 text-2xl font-semibold tracking-tight text-amber-500">{{ __('En attente') }}</p>
                 <p class="mt-1 text-sm text-slate-500">{{ __('Pas encore de bon de commande') }}</p>
             @else
@@ -569,7 +569,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                         </li>
                     @endif
-                    @if ($p->status === ProformaStatus::PoReceived)
+                    @if ($p->status === ProposalDocumentStatus::PoReceived)
                         <li class="flex items-start gap-3">
                             <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                                 <flux:icon name="check-circle" class="size-4" />
@@ -580,7 +580,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                         </li>
                     @endif
-                    @if ($p->status === ProformaStatus::Declined)
+                    @if ($p->status === ProposalDocumentStatus::Declined)
                         <li class="flex items-start gap-3">
                             <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
                                 <flux:icon name="x-circle" class="size-4" />
@@ -650,13 +650,13 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                 <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
 
                 <div class="mt-4 space-y-2">
-                    @if ($p->status === ProformaStatus::PoReceived && ! $p->invoice)
+                    @if ($p->status === ProposalDocumentStatus::PoReceived && ! $p->invoice)
                         <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
                             <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
                         </button>
                     @endif
 
-                    @if ($p->status === ProformaStatus::Sent)
+                    @if ($p->status === ProposalDocumentStatus::Sent)
                         <button type="button" wire:click="openPoModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
                             <flux:icon name="document-check" class="size-4" /> {{ __('Enregistrer un bon de commande') }}
                         </button>
@@ -665,7 +665,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                         </button>
                     @endif
 
-                    @if ($p->status !== ProformaStatus::Converted)
+                    @if ($p->status !== ProposalDocumentStatus::Converted)
                         <button type="button" wire:click="openSendModal" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
                             <flux:icon name="paper-airplane" class="size-4" /> {{ __('Envoyer la proforma') }}
                         </button>
@@ -689,7 +689,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                         </a>
                     @endif
 
-                    @if ($p->status === ProformaStatus::Draft)
+                    @if ($p->status === ProposalDocumentStatus::Draft)
                         <button type="button" wire:click="requestDelete" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50">
                             <flux:icon name="trash" class="size-4" /> {{ __('Supprimer la proforma') }}
                         </button>

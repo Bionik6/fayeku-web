@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
 use App\Models\Auth\Company;
-use App\Models\PME\Quote;
-use App\Services\PME\QuoteService;
+use App\Models\PME\ProposalDocument;
+use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
-    public Quote $quote;
+    public ProposalDocument $quote;
 
     public ?Company $company = null;
 
@@ -35,12 +35,12 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     /** @var array<string, string> Liste des pays disponibles pour le composant phone-input. */
     public array $sendPhoneCountries = [];
 
-    public function mount(Quote $quote): void
+    public function mount(ProposalDocument $quote): void
     {
         $this->company = auth()->user()->smeCompany();
 
         abort_unless(
-            $this->company && $quote->company_id === $this->company->id,
+            $this->company && $quote->company_id === $this->company->id && $quote->isQuote(),
             404
         );
 
@@ -57,15 +57,15 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function statusDisplay(): array
     {
-        $isExpired = $this->quote->status === QuoteStatus::Expired
-            || ($this->quote->valid_until && $this->quote->valid_until->isPast() && $this->quote->status === QuoteStatus::Sent);
+        $isExpired = $this->quote->status === ProposalDocumentStatus::Expired
+            || ($this->quote->valid_until && $this->quote->valid_until->isPast() && $this->quote->status === ProposalDocumentStatus::Sent);
 
         return match (true) {
             $isExpired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-500/20'],
-            $this->quote->status === QuoteStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
-            $this->quote->status === QuoteStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
-            $this->quote->status === QuoteStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
-            $this->quote->status === QuoteStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20'],
+            $this->quote->status === ProposalDocumentStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+            $this->quote->status === ProposalDocumentStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
+            $this->quote->status === ProposalDocumentStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
+            $this->quote->status === ProposalDocumentStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20'],
             default => ['label' => ucfirst($this->quote->status->value), 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
         };
     }
@@ -77,7 +77,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             return null;
         }
 
-        if ($this->quote->status === QuoteStatus::Accepted || $this->quote->invoice) {
+        if ($this->quote->status === ProposalDocumentStatus::Accepted || $this->quote->invoice) {
             return null;
         }
 
@@ -97,25 +97,25 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     #[Computed]
     public function isEditable(): bool
     {
-        return in_array($this->quote->status, [QuoteStatus::Draft, QuoteStatus::Sent], true);
+        return in_array($this->quote->status, ProposalDocumentStatus::editable(), true);
     }
 
     public function markAsAccepted(): void
     {
-        if ($this->quote->status !== QuoteStatus::Sent) {
+        if ($this->quote->status !== ProposalDocumentStatus::Sent) {
             return;
         }
-        app(QuoteService::class)->markAsAccepted($this->quote);
+        app(ProposalDocumentService::class)->markAsAccepted($this->quote);
         $this->quote->refresh();
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme accepté.'));
     }
 
     public function markAsDeclined(): void
     {
-        if ($this->quote->status !== QuoteStatus::Sent) {
+        if ($this->quote->status !== ProposalDocumentStatus::Sent) {
             return;
         }
-        app(QuoteService::class)->markAsDeclined($this->quote);
+        app(ProposalDocumentService::class)->markAsDeclined($this->quote);
         $this->quote->refresh();
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme refusé.'));
     }
@@ -136,7 +136,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $this->confirmConvert = null;
 
         try {
-            $invoice = app(QuoteService::class)->convertToInvoice($this->quote, $this->company);
+            $invoice = app(ProposalDocumentService::class)->convertToInvoice($this->quote, $this->company);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
             $this->dispatch('toast', type: 'error', title: $e->getMessage());
 
@@ -159,7 +159,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     public function deleteQuote(?string $id = null): void
     {
         $this->confirmDelete = null;
-        if ($this->quote->status !== QuoteStatus::Draft) {
+        if ($this->quote->status !== ProposalDocumentStatus::Draft) {
             return;
         }
         $this->quote->delete();
@@ -281,8 +281,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         // de statut Draft → Sent. C'est l'intention claire de l'utilisateur :
         // il a validé que le message part, on bascule la fiche en conséquence.
         $statusChanged = false;
-        if ($this->quote->status === QuoteStatus::Draft) {
-            app(QuoteService::class)->markAsSent($this->quote);
+        if ($this->quote->status === ProposalDocumentStatus::Draft) {
+            app(ProposalDocumentService::class)->markAsSent($this->quote);
             $this->quote->refresh();
             unset($this->statusDisplay);
             $statusChanged = true;
@@ -363,7 +363,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <a href="{{ route('pme.invoices.show', $q->invoice) }}" wire:navigate class="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-strong">
                     {{ $q->invoice->reference }} <flux:icon name="arrow-right" class="size-3.5" />
                 </a>
-            @elseif (in_array($q->status, [QuoteStatus::Sent, QuoteStatus::Accepted], true))
+            @elseif (in_array($q->status, [ProposalDocumentStatus::Sent, ProposalDocumentStatus::Accepted], true))
                 <p class="mt-2 text-2xl font-semibold tracking-tight text-amber-500">{{ __('À facturer') }}</p>
                 <p class="mt-1 text-sm text-slate-500">{{ __('Pas encore convertie en facture') }}</p>
             @else
@@ -466,7 +466,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                         </li>
                     @endif
-                    @if ($q->status === QuoteStatus::Accepted)
+                    @if ($q->status === ProposalDocumentStatus::Accepted)
                         <li class="flex items-start gap-3">
                             <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                                 <flux:icon name="check-circle" class="size-4" />
@@ -477,7 +477,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                             </div>
                         </li>
                     @endif
-                    @if ($q->status === QuoteStatus::Declined)
+                    @if ($q->status === ProposalDocumentStatus::Declined)
                         <li class="flex items-start gap-3">
                             <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
                                 <flux:icon name="x-circle" class="size-4" />
@@ -547,13 +547,13 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
 
                 <div class="mt-4 space-y-2">
-                    @if ($q->status === QuoteStatus::Sent && ! $q->invoice)
+                    @if ($q->status === ProposalDocumentStatus::Sent && ! $q->invoice)
                         <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
                             <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
                         </button>
                     @endif
 
-                    @if ($q->status === QuoteStatus::Accepted && ! $q->invoice)
+                    @if ($q->status === ProposalDocumentStatus::Accepted && ! $q->invoice)
                         <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
                             <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
                         </button>
@@ -565,7 +565,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                         </a>
                     @endif
 
-                    @if ($q->status === QuoteStatus::Sent)
+                    @if ($q->status === ProposalDocumentStatus::Sent)
                         <button type="button" wire:click="markAsAccepted" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
                             <flux:icon name="check-circle" class="size-4" /> {{ __('Marquer comme accepté') }}
                         </button>
@@ -590,7 +590,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                         </a>
                     @endif
 
-                    @if ($q->status === QuoteStatus::Draft)
+                    @if ($q->status === ProposalDocumentStatus::Draft)
                         <button type="button" wire:click="requestDelete" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50">
                             <flux:icon name="trash" class="size-4" /> {{ __('Supprimer le devis') }}
                         </button>

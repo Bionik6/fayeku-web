@@ -2,13 +2,14 @@
 
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\PaymentMethod;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Interfaces\Shared\WhatsAppProviderInterface;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use App\Models\Shared\Notification;
 use App\Services\PME\WhatsAppNotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -175,21 +176,22 @@ test('sendInvoicePartiallyPaid envoie partially_paid avec amount_remaining', fun
     app(WhatsAppNotificationService::class)->sendInvoicePartiallyPaid($invoice, $payment, $company);
 });
 
-test('sendQuoteSent envoie notification_quote_sent avec expiry_date', function () {
+test('sendProposalSent envoie notification_quote_sent avec expiry_date', function () {
     ['company' => $company, 'client' => $client] = bootstrapNotifContext();
 
-    $quote = Quote::unguarded(fn () => Quote::create([
+    $quote = ProposalDocument::create([
         'company_id' => $company->id,
         'client_id' => $client->id,
+        'type' => ProposalDocumentType::Quote,
         'reference' => 'DEV-001',
-        'status' => QuoteStatus::Sent->value,
+        'status' => ProposalDocumentStatus::Sent,
         'issued_at' => now(),
         'valid_until' => now()->addDays(30),
         'subtotal' => 500_000,
         'tax_amount' => 0,
         'total' => 500_000,
         'currency' => 'XOF',
-    ]));
+    ]);
 
     $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) {
         $m->shouldReceive('sendTemplate')
@@ -201,9 +203,9 @@ test('sendQuoteSent envoie notification_quote_sent avec expiry_date', function (
             ->andReturnTrue();
     });
 
-    $notif = app(WhatsAppNotificationService::class)->sendQuoteSent($quote, $company);
+    $notif = app(WhatsAppNotificationService::class)->sendProposalSent($quote, $company);
 
-    expect($notif->notifiable_type)->toBe(Quote::class)
+    expect($notif->notifiable_type)->toBe(ProposalDocument::class)
         ->and($notif->notifiable_id)->toBe($quote->id);
 });
 

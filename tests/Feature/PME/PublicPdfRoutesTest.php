@@ -1,13 +1,12 @@
 <?php
 
 use App\Enums\PME\InvoiceStatus;
-use App\Enums\PME\ProformaStatus;
-use App\Enums\PME\QuoteStatus;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
-use App\Models\PME\Proforma;
-use App\Models\PME\Quote;
+use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -33,27 +32,29 @@ function bootstrapPublicPdfDocs(): array
     $company->users()->attach($user->id, ['role' => 'owner']);
     $client = Client::factory()->create(['company_id' => $company->id]);
 
-    $quote = Quote::unguarded(fn () => Quote::create([
+    $quote = ProposalDocument::create([
         'company_id' => $company->id,
         'client_id' => $client->id,
+        'type' => ProposalDocumentType::Quote,
         'reference' => 'FYK-DEV-PUB01',
         'currency' => 'XOF',
-        'status' => QuoteStatus::Sent->value,
+        'status' => ProposalDocumentStatus::Sent,
         'issued_at' => now(),
         'valid_until' => now()->addDays(30),
         'subtotal' => 100_000, 'tax_amount' => 0, 'total' => 100_000,
-    ]));
+    ]);
 
-    $proforma = Proforma::unguarded(fn () => Proforma::create([
+    $proforma = ProposalDocument::create([
         'company_id' => $company->id,
         'client_id' => $client->id,
+        'type' => ProposalDocumentType::Proforma,
         'reference' => 'FYK-PRO-PUB01',
         'currency' => 'XOF',
-        'status' => ProformaStatus::Sent->value,
+        'status' => ProposalDocumentStatus::Sent,
         'issued_at' => now(),
         'valid_until' => now()->addDays(30),
         'subtotal' => 100_000, 'tax_amount' => 0, 'total' => 100_000,
-    ]));
+    ]);
 
     $invoice = Invoice::unguarded(fn () => Invoice::create([
         'company_id' => $company->id,

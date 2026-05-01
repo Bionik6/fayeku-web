@@ -3,27 +3,29 @@
 namespace App\Services\PME;
 
 use App\Enums\PME\InvoiceStatus;
-use App\Enums\PME\ProformaStatus;
-use App\Events\PME\ProformaConverted;
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
+use App\Events\PME\ProposalDocumentConverted;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
-use App\Models\PME\Proforma;
+use App\Models\PME\ProposalDocument;
 use Carbon\Carbon;
+use DomainException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class ProformaService
+class ProposalDocumentService
 {
     /**
-     * Generate a unique reference in the format FYK-PRO-XXXXXX.
+     * Generate a unique reference (FYK-DEV-XXXXXX or FYK-PRO-XXXXXX) scoped to the company.
      */
-    public function generateReference(Company $company): string
+    public function generateReference(Company $company, ProposalDocumentType $type): string
     {
         do {
             $code = Str::upper(Str::random(6));
-            $reference = "FYK-PRO-{$code}";
+            $reference = $type->referencePrefix().$code;
         } while (
-            Proforma::query()
+            ProposalDocument::query()
                 ->where('company_id', $company->id)
                 ->where('reference', $reference)
                 ->exists()
@@ -43,17 +45,14 @@ class ProformaService
     }
 
     /**
-     * Calculate proforma-level totals from lines + global discount + global tax rate.
+     * Calculate document-level totals from lines + global discount + global tax rate.
      *
      * Order: subtotal → discount → discountedSubtotal → TVA → total
      *
      * @param  array<int, array{quantity: int, unit_price: int}>  $lines
-     * @param  int  $taxRate  Global tax rate percentage (e.g. 18)
-     * @param  int  $discount  Discount value — percentage (e.g. 10) or fixed amount in smallest unit
-     * @param  string  $discountType  'percent' or 'fixed'
      * @return array{subtotal: int, discount_amount: int, discounted_subtotal: int, tax_amount: int, total: int}
      */
-    public function calculateProformaTotals(array $lines, int $taxRate = 0, int $discount = 0, string $discountType = 'percent'): array
+    public function calculateTotals(array $lines, int $taxRate = 0, int $discount = 0, string $discountType = 'percent'): array
     {
         $subtotal = 0;
 
@@ -82,26 +81,27 @@ class ProformaService
     }
 
     /**
-     * Create a proforma with its lines inside a transaction.
+     * Create a proposal document with its lines inside a transaction.
      *
      * @param  array<string, mixed>  $data
      * @param  array<int, array<string, mixed>>  $lines
      */
-    public function create(Company $company, array $data, array $lines): Proforma
+    public function create(Company $company, ProposalDocumentType $type, array $data, array $lines): ProposalDocument
     {
         $taxRate = (int) ($data['tax_rate'] ?? 0);
         $discount = (int) ($data['discount'] ?? 0);
         $discountType = $data['discount_type'] ?? 'percent';
 
-        return DB::transaction(function () use ($company, $data, $lines, $taxRate, $discount, $discountType) {
-            $totals = $this->calculateProformaTotals($lines, $taxRate, $discount, $discountType);
+        return DB::transaction(function () use ($company, $type, $data, $lines, $taxRate, $discount, $discountType) {
+            $totals = $this->calculateTotals($lines, $taxRate, $discount, $discountType);
 
-            $proforma = Proforma::query()->create([
+            $payload = [
                 'company_id' => $company->id,
                 'client_id' => $data['client_id'],
+                'type' => $type,
                 'reference' => $data['reference'],
                 'currency' => $data['currency'] ?? 'XOF',
-                'status' => ProformaStatus::Draft,
+                'status' => ProposalDocumentStatus::Draft,
                 'issued_at' => $data['issued_at'],
                 'valid_until' => $data['valid_until'],
                 'subtotal' => $totals['subtotal'],
@@ -109,34 +109,39 @@ class ProformaService
                 'total' => $totals['total'],
                 'discount' => $discount,
                 'discount_type' => $discountType,
-                'dossier_reference' => $data['dossier_reference'] ?? null,
-                'payment_terms' => $data['payment_terms'] ?? null,
-                'delivery_terms' => $data['delivery_terms'] ?? null,
                 'notes' => $data['notes'] ?? null,
-            ]);
+            ];
 
-            $this->createLines($proforma, $lines, $taxRate);
+            if ($type === ProposalDocumentType::Proforma) {
+                $payload['dossier_reference'] = $data['dossier_reference'] ?? null;
+                $payload['payment_terms'] = $data['payment_terms'] ?? null;
+                $payload['delivery_terms'] = $data['delivery_terms'] ?? null;
+            }
 
-            return $proforma;
+            $document = ProposalDocument::query()->create($payload);
+
+            $this->createLines($document, $lines, $taxRate);
+
+            return $document;
         });
     }
 
     /**
-     * Update an existing proforma and replace its lines.
+     * Update an existing document and replace its lines.
      *
      * @param  array<string, mixed>  $data
      * @param  array<int, array<string, mixed>>  $lines
      */
-    public function update(Proforma $proforma, array $data, array $lines): Proforma
+    public function update(ProposalDocument $document, array $data, array $lines): ProposalDocument
     {
         $taxRate = (int) ($data['tax_rate'] ?? 0);
         $discount = (int) ($data['discount'] ?? 0);
         $discountType = $data['discount_type'] ?? 'percent';
 
-        return DB::transaction(function () use ($proforma, $data, $lines, $taxRate, $discount, $discountType) {
-            $totals = $this->calculateProformaTotals($lines, $taxRate, $discount, $discountType);
+        return DB::transaction(function () use ($document, $data, $lines, $taxRate, $discount, $discountType) {
+            $totals = $this->calculateTotals($lines, $taxRate, $discount, $discountType);
 
-            $proforma->update([
+            $payload = [
                 'client_id' => $data['client_id'],
                 'currency' => $data['currency'] ?? 'XOF',
                 'issued_at' => $data['issued_at'],
@@ -146,27 +151,36 @@ class ProformaService
                 'total' => $totals['total'],
                 'discount' => $discount,
                 'discount_type' => $discountType,
-                'dossier_reference' => $data['dossier_reference'] ?? null,
-                'payment_terms' => $data['payment_terms'] ?? null,
-                'delivery_terms' => $data['delivery_terms'] ?? null,
                 'notes' => $data['notes'] ?? null,
-            ]);
+            ];
 
-            $proforma->lines()->delete();
-            $this->createLines($proforma, $lines, $taxRate);
+            if ($document->isProforma()) {
+                $payload['dossier_reference'] = $data['dossier_reference'] ?? null;
+                $payload['payment_terms'] = $data['payment_terms'] ?? null;
+                $payload['delivery_terms'] = $data['delivery_terms'] ?? null;
+            }
 
-            return $proforma->refresh();
+            $document->update($payload);
+            $document->lines()->delete();
+            $this->createLines($document, $lines, $taxRate);
+
+            return $document->refresh();
         });
     }
 
-    /**
-     * Mark a proforma as sent.
-     */
-    public function markAsSent(Proforma $proforma): Proforma
+    public function markAsSent(ProposalDocument $document): ProposalDocument
     {
-        $proforma->update(['status' => ProformaStatus::Sent]);
+        $document->update(['status' => ProposalDocumentStatus::Sent]);
 
-        return $proforma;
+        return $document;
+    }
+
+    public function markAsAccepted(ProposalDocument $document): ProposalDocument
+    {
+        $this->assertTypeAllows($document, ProposalDocumentStatus::Accepted);
+        $document->update(['status' => ProposalDocumentStatus::Accepted]);
+
+        return $document;
     }
 
     /**
@@ -174,9 +188,11 @@ class ProformaService
      *
      * @param  array{reference?: string|null, received_at?: string|Carbon|null, notes?: string|null}  $purchaseOrderData
      */
-    public function markAsPoReceived(Proforma $proforma, array $purchaseOrderData = []): Proforma
+    public function markAsPoReceived(ProposalDocument $document, array $purchaseOrderData = []): ProposalDocument
     {
-        $update = ['status' => ProformaStatus::PoReceived];
+        $this->assertTypeAllows($document, ProposalDocumentStatus::PoReceived);
+
+        $update = ['status' => ProposalDocumentStatus::PoReceived];
 
         if (array_key_exists('reference', $purchaseOrderData)) {
             $update['po_reference'] = $purchaseOrderData['reference'] !== ''
@@ -194,68 +210,61 @@ class ProformaService
                 : null;
         }
 
-        $proforma->update($update);
+        $document->update($update);
 
-        return $proforma;
+        return $document;
     }
 
-    /**
-     * Mark a proforma as declined.
-     */
-    public function markAsDeclined(Proforma $proforma): Proforma
+    public function markAsDeclined(ProposalDocument $document): ProposalDocument
     {
-        $proforma->update(['status' => ProformaStatus::Declined]);
+        $document->update(['status' => ProposalDocumentStatus::Declined]);
 
-        return $proforma;
+        return $document;
     }
 
-    /**
-     * Determine if a proforma can be edited.
-     */
-    public function canEdit(Proforma $proforma): bool
+    public function canEdit(ProposalDocument $document): bool
     {
-        return in_array($proforma->status, [
-            ProformaStatus::Draft,
-            ProformaStatus::Sent,
-        ]);
+        return in_array($document->status, ProposalDocumentStatus::editable(), true);
     }
 
     /**
-     * Convert a proforma into a new draft invoice.
+     * Convert a proposal document into a new draft invoice.
      */
-    public function convertToInvoice(Proforma $proforma, Company $company): Invoice
+    public function convertToInvoice(ProposalDocument $document, Company $company): Invoice
     {
         abort_if(
-            Invoice::query()->where('proforma_id', $proforma->id)->exists(),
+            Invoice::query()->where('proposal_document_id', $document->id)->exists(),
             409,
-            'Cette proforma a déjà été convertie en facture.'
+            $document->isProforma()
+                ? 'Cette proforma a déjà été convertie en facture.'
+                : 'Ce devis a déjà été converti en facture.'
         );
 
         $invoiceService = app(InvoiceService::class);
 
-        return DB::transaction(function () use ($proforma, $company, $invoiceService) {
+        return DB::transaction(function () use ($document, $company, $invoiceService) {
             $reference = $invoiceService->generateReference($company);
 
             $invoice = Invoice::query()->create([
                 'company_id' => $company->id,
-                'client_id' => $proforma->client_id,
-                'proforma_id' => $proforma->id,
+                'client_id' => $document->client_id,
+                'proposal_document_id' => $document->id,
                 'reference' => $reference,
-                'currency' => $proforma->currency ?? 'XOF',
+                'currency' => $document->currency ?? 'XOF',
                 'status' => InvoiceStatus::Draft,
                 'issued_at' => now()->toDateString(),
                 'due_at' => now()->addDays(30)->toDateString(),
-                'subtotal' => $proforma->subtotal,
-                'tax_amount' => $proforma->tax_amount,
-                'total' => $proforma->total,
-                'discount' => $proforma->discount ?? 0,
-                'discount_type' => $proforma->discount_type ?? 'percent',
+                'subtotal' => $document->subtotal,
+                'tax_amount' => $document->tax_amount,
+                'total' => $document->total,
+                'discount' => $document->discount ?? 0,
+                'discount_type' => $document->discount_type ?? 'percent',
                 'amount_paid' => 0,
-                'notes' => $proforma->notes,
-                'payment_terms' => $proforma->payment_terms,
+                'notes' => $document->notes,
+                'payment_terms' => $document->isProforma() ? $document->payment_terms : null,
             ]);
 
-            foreach ($proforma->lines as $line) {
+            foreach ($document->lines as $line) {
                 $invoice->lines()->create([
                     'description' => $line->description,
                     'quantity' => $line->quantity,
@@ -265,23 +274,36 @@ class ProformaService
                 ]);
             }
 
-            $proforma->update(['status' => ProformaStatus::Converted]);
+            if ($document->isQuote() && $document->status === ProposalDocumentStatus::Sent) {
+                $document->update(['status' => ProposalDocumentStatus::Accepted]);
+            } elseif ($document->isProforma()) {
+                $document->update(['status' => ProposalDocumentStatus::Converted]);
+            }
 
-            ProformaConverted::dispatch($proforma, $invoice);
+            ProposalDocumentConverted::dispatch($document->refresh(), $invoice);
 
             return $invoice;
         });
     }
 
+    private function assertTypeAllows(ProposalDocument $document, ProposalDocumentStatus $target): void
+    {
+        if (! $target->isAllowedFor($document->type)) {
+            throw new DomainException(
+                "Le statut {$target->value} n'est pas autorisé pour un document de type {$document->type->value}."
+            );
+        }
+    }
+
     /**
-     * Create proforma lines from an array.
+     * Create document lines from an array.
      *
      * @param  array<int, array<string, mixed>>  $lines
      */
-    private function createLines(Proforma $proforma, array $lines, int $taxRate = 0): void
+    private function createLines(ProposalDocument $document, array $lines, int $taxRate = 0): void
     {
         foreach ($lines as $line) {
-            $proforma->lines()->create([
+            $document->lines()->create([
                 'description' => $line['description'],
                 'quantity' => (int) $line['quantity'],
                 'unit_price' => (int) $line['unit_price'],
