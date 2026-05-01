@@ -5,7 +5,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>{{ __('Facture') }} {{ $invoice->reference }}</title>
+    <title>{{ __('Facture Proforma') }} {{ $proforma->reference }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -46,7 +46,7 @@
             max-width: 150px;
         }
 
-        /* ── Info block (dates + parties) ── */
+        /* ── Info block ── */
         .info-block-wrapper {
             background-color: #f0faf6;
             border-radius: 8px;
@@ -87,10 +87,6 @@
             color: #475569;
             line-height: 1.7;
             margin-top: 2px;
-        }
-        .info-detail strong {
-            color: #1e293b;
-            font-size: 9pt;
         }
 
         /* ── Items table ── */
@@ -184,8 +180,32 @@
             color: #475569;
             line-height: 1.6;
         }
-        .payment-section {
-            margin-top: 12px;
+        .terms-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .terms-grid td {
+            vertical-align: top;
+            padding: 8px 10px 8px 0;
+            font-size: 9pt;
+            color: #475569;
+            width: 33%;
+        }
+        .terms-grid .terms-label {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #024D4D;
+            margin-bottom: 2px;
+        }
+        .non-binding {
+            margin-top: 14px;
+            background-color: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 8.5pt;
+            color: #9a3412;
         }
 
         /* ── Footer ── */
@@ -222,50 +242,50 @@
     <table class="header">
         <tr>
             <td>
-                <div class="invoice-title">{{ __('Facture') }}</div>
-                <div class="invoice-ref">#{{ $invoice->reference }}</div>
+                <div class="invoice-title">{{ __('Facture Proforma') }}</div>
+                <div class="invoice-ref">#{{ $proforma->reference }}</div>
             </td>
             <td class="header-logo">
                 @if ($logoBase64)
-                    <img src="{{ $logoBase64 }}" alt="{{ $invoice->company->name }}">
+                    <img src="{{ $logoBase64 }}" alt="{{ $proforma->company->name }}">
                 @endif
             </td>
         </tr>
     </table>
 
-    {{-- Info block: dates + parties --}}
+    {{-- Info block --}}
     <div class="info-block-wrapper">
     <table class="info-block">
         <tr>
             <td class="info-dates">
                 <div class="info-label">{{ __('Date d\'émission') }}</div>
-                <div class="info-value">{{ $invoice->issued_at->locale('fr_FR')->translatedFormat('d') }} {{ ucfirst($invoice->issued_at->locale('fr_FR')->translatedFormat('F')) }} {{ $invoice->issued_at->translatedFormat('Y') }}</div>
+                <div class="info-value">{{ $proforma->issued_at->locale('fr_FR')->translatedFormat('d') }} {{ ucfirst($proforma->issued_at->locale('fr_FR')->translatedFormat('F')) }} {{ $proforma->issued_at->translatedFormat('Y') }}</div>
                 <div style="height: 10px;"></div>
-                <div class="info-label">{{ __('Échéance') }}</div>
-                <div class="info-value">{{ $invoice->due_at->locale('fr_FR')->translatedFormat('d') }} {{ ucfirst($invoice->due_at->locale('fr_FR')->translatedFormat('F')) }} {{ $invoice->due_at->translatedFormat('Y') }}</div>
+                <div class="info-label">{{ __('Valide jusqu\'au') }}</div>
+                <div class="info-value">{{ $proforma->valid_until->locale('fr_FR')->translatedFormat('d') }} {{ ucfirst($proforma->valid_until->locale('fr_FR')->translatedFormat('F')) }} {{ $proforma->valid_until->translatedFormat('Y') }}</div>
             </td>
             <td class="info-party party-from">
                 <div class="info-label">{{ __('Émetteur') }}</div>
-                <div class="info-value">{{ $invoice->company->name }}</div>
+                <div class="info-value">{{ $proforma->company->name }}</div>
                 <div class="info-detail">
-                    @if ($invoice->company->address)
-                        {{ $invoice->company->address }}
-                        @if ($invoice->company->city), {{ $invoice->company->city }} @endif
+                    @if ($proforma->company->address)
+                        {{ $proforma->company->address }}
+                        @if ($proforma->company->city), {{ $proforma->company->city }} @endif
                         <br>
                     @endif
-                    @if ($invoice->company->phone) {{ format_phone($invoice->company->phone) }}<br> @endif
-                    @if ($invoice->company->email) {{ $invoice->company->email }}<br> @endif
-                    @if ($invoice->company->ninea) {{ __('NINEA') }} : {{ $invoice->company->ninea }}<br> @endif
-                    @if ($invoice->company->rccm) {{ __('RCCM') }} : {{ $invoice->company->rccm }} @endif
+                    @if ($proforma->company->phone) {{ format_phone($proforma->company->phone) }}<br> @endif
+                    @if ($proforma->company->email) {{ $proforma->company->email }}<br> @endif
+                    @if ($proforma->company->ninea) {{ __('NINEA') }} : {{ $proforma->company->ninea }}<br> @endif
+                    @if ($proforma->company->rccm) {{ __('RCCM') }} : {{ $proforma->company->rccm }} @endif
                 </div>
             </td>
             <td class="info-party">
                 <div class="info-label">{{ __('Destinataire') }}</div>
-                <div class="info-value">{{ $invoice->client->name }}</div>
+                <div class="info-value">{{ $proforma->client->name }}</div>
                 <div class="info-detail">
-                    @if ($invoice->client->address) {{ $invoice->client->address }}<br> @endif
-                    @if ($invoice->client->phone) {{ format_phone($invoice->client->phone) }}<br> @endif
-                    @if ($invoice->client->email) {{ $invoice->client->email }} @endif
+                    @if ($proforma->client->address) {{ $proforma->client->address }}<br> @endif
+                    @if ($proforma->client->phone) {{ format_phone($proforma->client->phone) }}<br> @endif
+                    @if ($proforma->client->email) {{ $proforma->client->email }} @endif
                 </div>
             </td>
         </tr>
@@ -284,13 +304,13 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($invoice->lines as $line)
+            @foreach ($proforma->lines as $line)
                 <tr>
                     <td>{{ $line->description }}</td>
                     <td class="center">{{ $line->quantity }}</td>
-                    <td class="right">{{ CurrencyService::format($line->unit_price, $invoice->currency) }}</td>
+                    <td class="right">{{ CurrencyService::format($line->unit_price, $proforma->currency ?? 'XOF') }}</td>
                     <td class="center">{{ $line->tax_rate > 0 ? $line->tax_rate . '%' : '-' }}</td>
-                    <td class="right">{{ CurrencyService::format($line->total, $invoice->currency) }}</td>
+                    <td class="right">{{ CurrencyService::format($line->total, $proforma->currency ?? 'XOF') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -301,67 +321,83 @@
         <table class="totals-table">
             <tr>
                 <td class="label">{{ __('Sous-total HT') }}</td>
-                <td class="value">{{ CurrencyService::format($invoice->subtotal, $invoice->currency) }}</td>
+                <td class="value">{{ CurrencyService::format($proforma->subtotal, $proforma->currency ?? 'XOF') }}</td>
             </tr>
-            @if ($invoice->discount > 0)
+            @if ($proforma->discount > 0)
                 @php
-                    $discountAmount = ($invoice->discount_type ?? 'percent') === 'fixed'
-                        ? $invoice->discount
-                        : (int) round($invoice->subtotal * $invoice->discount / 100);
-                    $discountLabel = ($invoice->discount_type ?? 'percent') === 'fixed'
+                    $discountAmount = ($proforma->discount_type ?? 'percent') === 'fixed'
+                        ? $proforma->discount
+                        : (int) round($proforma->subtotal * $proforma->discount / 100);
+                    $discountLabel = ($proforma->discount_type ?? 'percent') === 'fixed'
                         ? __('Remise (montant fixe)')
-                        : __('Remise (:rate%)', ['rate' => $invoice->discount]);
+                        : __('Remise (:rate%)', ['rate' => $proforma->discount]);
                 @endphp
                 <tr class="discount">
                     <td class="label">{{ $discountLabel }}</td>
-                    <td class="value">-{{ CurrencyService::format($discountAmount, $invoice->currency) }}</td>
+                    <td class="value">-{{ CurrencyService::format($discountAmount, $proforma->currency ?? 'XOF') }}</td>
                 </tr>
             @endif
-            @if ($invoice->tax_amount > 0)
+            @if ($proforma->tax_amount > 0)
                 <tr>
                     <td class="label">{{ __('TVA') }}</td>
-                    <td class="value">{{ CurrencyService::format($invoice->tax_amount, $invoice->currency) }}</td>
+                    <td class="value">{{ CurrencyService::format($proforma->tax_amount, $proforma->currency ?? 'XOF') }}</td>
                 </tr>
             @endif
             <tr class="total-row">
                 <td class="label">{{ __('Total TTC') }}</td>
-                <td class="value">{{ CurrencyService::format($invoice->total, $invoice->currency) }}</td>
+                <td class="value">{{ CurrencyService::format($proforma->total, $proforma->currency ?? 'XOF') }}</td>
             </tr>
         </table>
     </div>
 
-    {{-- Notes --}}
-    @if ($invoice->notes)
+    {{-- Conditions proforma --}}
+    @if ($proforma->dossier_reference || $proforma->payment_terms || $proforma->delivery_terms)
         <div class="bottom-section">
-            <div class="bottom-title">{{ __('Notes') }}</div>
-            <div class="bottom-content">{!! nl2br(e($invoice->notes)) !!}</div>
+            <div class="bottom-title">{{ __('Conditions') }}</div>
+            <table class="terms-grid">
+                <tr>
+                    @if ($proforma->dossier_reference)
+                        <td>
+                            <div class="terms-label">{{ __('Référence dossier') }}</div>
+                            <div>{{ $proforma->dossier_reference }}</div>
+                        </td>
+                    @endif
+                    @if ($proforma->payment_terms)
+                        <td>
+                            <div class="terms-label">{{ __('Conditions de paiement') }}</div>
+                            <div>{{ $proforma->payment_terms }}</div>
+                        </td>
+                    @endif
+                    @if ($proforma->delivery_terms)
+                        <td>
+                            <div class="terms-label">{{ __('Délai d\'exécution') }}</div>
+                            <div>{{ $proforma->delivery_terms }}</div>
+                        </td>
+                    @endif
+                </tr>
+            </table>
         </div>
     @endif
 
-    {{-- Payment method --}}
-    @if ($invoice->payment_method)
-        <div class="bottom-section payment-section">
-            <div class="bottom-title">{{ __('Moyen de paiement') }}</div>
-            <div class="bottom-content">
-                @php
-                    $paymentLabels = [
-                        'wave' => 'Wave',
-                        'orange_money' => 'Orange Money',
-                        'cash' => __('Espèces'),
-                        'bank_transfer' => __('Virement bancaire'),
-                    ];
-                @endphp
-                {{ $paymentLabels[$invoice->payment_method] ?? $invoice->payment_method }}@if ($invoice->payment_details): {!! nl2br(e($invoice->payment_details)) !!}@endif
-            </div>
+    {{-- Notes --}}
+    @if ($proforma->notes)
+        <div class="bottom-section">
+            <div class="bottom-title">{{ __('Notes') }}</div>
+            <div class="bottom-content">{!! nl2br(e($proforma->notes)) !!}</div>
         </div>
     @endif
+
+    {{-- Mention non-engagement --}}
+    <div class="non-binding">
+        {{ __('Document non comptable, à titre informatif. Valable jusqu\'au :date et soumis à confirmation par bon de commande.', ['date' => $proforma->valid_until->locale('fr_FR')->translatedFormat('d F Y')]) }}
+    </div>
 
     {{-- Footer --}}
     <div class="footer">
         <table class="footer-table">
             <tr>
                 <td>Par <a href="https://fayeku.sn" class="footer-fayeku">Fayeku</a></td>
-                <td class="footer-right">{{ $invoice->company->name }}</td>
+                <td class="footer-right">{{ $proforma->company->name }}</td>
             </tr>
         </table>
     </div>

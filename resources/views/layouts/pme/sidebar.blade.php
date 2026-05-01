@@ -22,10 +22,10 @@
                     'navigate' => true,
                 ],
                 [
-                    'label' => __('Devis'),
+                    'label' => __('Devis & Proformas'),
                     'icon' => 'quote',
                     'href' => route('pme.quotes.index'),
-                    'current' => request()->routeIs('pme.quotes.*'),
+                    'current' => request()->routeIs('pme.quotes.*') || request()->routeIs('pme.proformas.*'),
                     'navigate' => true,
                 ],
                 [
@@ -79,9 +79,16 @@
                 request()->routeIs('pme.quotes.*') => [
                     'segments' => [
                         __('Tableau de bord'),
-                        __('Devis'),
+                        __('Devis & Proformas'),
                     ],
-                    'title' => __('Devis'),
+                    'title' => __('Devis & Proformas'),
+                ],
+                request()->routeIs('pme.proformas.*') => [
+                    'segments' => [
+                        __('Tableau de bord'),
+                        __('Devis & Proformas'),
+                    ],
+                    'title' => __('Devis & Proformas'),
                 ],
                 request()->routeIs('pme.invoices.*') => [
                     'segments' => [

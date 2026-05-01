@@ -60,8 +60,9 @@ test('la route PDF devis utilise le public_code (8 caracteres alphanumeriques)',
 
     expect($quote->public_code)
         ->toMatch('/^[A-Za-z0-9]{8}$/')
-        ->and($url)->toContain('/quotes/'.$quote->public_code.'/pdf')
+        ->and($url)->toContain('/d/'.$quote->public_code.'/pdf')
         ->and($url)->not->toContain('/pme/')
+        ->and($url)->not->toContain('/quotes/')
         ->and($url)->not->toContain($quote->id);
 });
 
@@ -105,4 +106,32 @@ test('le PDF devis n\'affiche pas de ligne remise quand elle est nulle', functio
     $html = view('pdf.quote', ['quote' => $quote->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
 
     expect($html)->not->toContain('Remise');
+});
+
+// ─── Mentions légales (NINEA / RCCM) ─────────────────────────────────────────
+
+test('le PDF devis affiche NINEA et RCCM quand renseignés', function () {
+    ['company' => $company] = createSmeUserForQuotePdf();
+    $company->update(['ninea' => 'SN20240001', 'rccm' => 'SN-DKR-2024-B-00001']);
+    $quote = createQuoteForPdf($company);
+
+    $html = view('pdf.quote', ['quote' => $quote->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('NINEA')
+        ->toContain('SN20240001')
+        ->toContain('RCCM')
+        ->toContain('SN-DKR-2024-B-00001');
+});
+
+test('le PDF devis masque NINEA et RCCM quand non renseignés', function () {
+    ['company' => $company] = createSmeUserForQuotePdf();
+    $company->update(['ninea' => null, 'rccm' => null]);
+    $quote = createQuoteForPdf($company);
+
+    $html = view('pdf.quote', ['quote' => $quote->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->not->toContain('NINEA')
+        ->not->toContain('RCCM');
 });

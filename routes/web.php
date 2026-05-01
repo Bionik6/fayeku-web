@@ -3,6 +3,7 @@
 use App\Http\Controllers\Compta\ExportDownloadController;
 use App\Http\Controllers\MarketingPageController;
 use App\Http\Controllers\PME\InvoicePdfController;
+use App\Http\Controllers\PME\ProformaPdfController;
 use App\Http\Controllers\PME\QuotePdfController;
 use App\Http\Controllers\PME\TreasuryExportController;
 use Illuminate\Support\Facades\Route;
@@ -31,9 +32,11 @@ Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix
     Route::livewire('support', 'pages::compta.support.index')->name('support.index');
 });
 
-// PDF publics — pas d'auth, résolus via le public_code (8 caractères)
-Route::get('invoices/{invoice:public_code}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
-Route::get('quotes/{quote:public_code}/pdf', QuotePdfController::class)->name('pme.quotes.pdf');
+// PDF publics — pas d'auth, résolus via le public_code (8 caractères).
+// URLs courtes pour tenir dans un SMS/WhatsApp et rester lisibles dans les emails.
+Route::get('f/{invoice:public_code}/pdf', InvoicePdfController::class)->name('pme.invoices.pdf');
+Route::get('d/{quote:public_code}/pdf', QuotePdfController::class)->name('pme.quotes.pdf');
+Route::get('p/{proforma:public_code}/pdf', ProformaPdfController::class)->name('pme.proformas.pdf');
 
 Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
     Route::redirect('/', '/pme/dashboard');
@@ -45,6 +48,11 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('quotes/create', 'pages::pme.quotes.form')->name('pme.quotes.create');
     Route::livewire('quotes/{quote}/edit', 'pages::pme.quotes.form')->name('pme.quotes.edit');
     Route::livewire('quotes', 'pages::pme.quotes.index')->name('pme.quotes.index');
+    Route::livewire('proformas/create', 'pages::pme.proformas.form')->name('pme.proformas.create');
+    Route::livewire('proformas/{proforma}/edit', 'pages::pme.proformas.form')->name('pme.proformas.edit');
+    Route::livewire('proformas/{proforma}', 'pages::pme.proformas.show')->name('pme.proformas.show');
+    // Liste unifiée : /pme/proformas redirige vers la page Devis & Proformas
+    Route::redirect('proformas', '/pme/quotes')->name('pme.proformas.index');
     Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');
     Route::livewire('clients/{client}', 'pages::pme.clients.show')->name('pme.clients.show');
     Route::livewire('collections', 'pages::pme.collection.index')->name('pme.collection.index');

@@ -23,7 +23,7 @@
             margin-bottom: 30px;
         }
         .header td {
-            vertical-align: top;
+            vertical-align: middle;
             padding: 0;
         }
         .invoice-title {
@@ -247,7 +247,9 @@
                         <br>
                     @endif
                     @if ($quote->company->phone) {{ format_phone($quote->company->phone) }}<br> @endif
-                    @if ($quote->company->email) {{ $quote->company->email }} @endif
+                    @if ($quote->company->email) {{ $quote->company->email }}<br> @endif
+                    @if ($quote->company->ninea) {{ __('NINEA') }} : {{ $quote->company->ninea }}<br> @endif
+                    @if ($quote->company->rccm) {{ __('RCCM') }} : {{ $quote->company->rccm }} @endif
                 </div>
             </td>
             <td class="info-party">

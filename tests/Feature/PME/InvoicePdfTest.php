@@ -64,8 +64,9 @@ test('la route PDF utilise le public_code (8 caracteres alphanumeriques)', funct
 
     expect($invoice->public_code)
         ->toMatch('/^[A-Za-z0-9]{8}$/')
-        ->and($url)->toContain('/invoices/'.$invoice->public_code.'/pdf')
+        ->and($url)->toContain('/f/'.$invoice->public_code.'/pdf')
         ->and($url)->not->toContain('/pme/')
+        ->and($url)->not->toContain('/invoices/')
         ->and($url)->not->toContain($invoice->id);
 });
 
@@ -161,4 +162,32 @@ test('le PDF facture n\'affiche pas de ligne remise quand elle est nulle', funct
     $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
 
     expect($html)->not->toContain('Remise');
+});
+
+// ─── Mentions légales (NINEA / RCCM) ─────────────────────────────────────────
+
+test('le PDF facture affiche NINEA et RCCM quand renseignés', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $company->update(['ninea' => 'SN20240001', 'rccm' => 'SN-DKR-2024-B-00001']);
+    $invoice = createInvoiceForPdf($company);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('NINEA')
+        ->toContain('SN20240001')
+        ->toContain('RCCM')
+        ->toContain('SN-DKR-2024-B-00001');
+});
+
+test('le PDF facture masque NINEA et RCCM quand non renseignés', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $company->update(['ninea' => null, 'rccm' => null]);
+    $invoice = createInvoiceForPdf($company);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->not->toContain('NINEA')
+        ->not->toContain('RCCM');
 });

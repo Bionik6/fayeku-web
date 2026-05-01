@@ -33,7 +33,7 @@
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }}
                             <span class="text-rose-500">*</span></label>
-                        <input wire:model.blur="lines.{{ $index }}.description"
+                        <input wire:model.live.debounce.300ms="lines.{{ $index }}.description"
                                type="text"
                                placeholder="{{ __('Ex : Ciment, prestation…') }}"
                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
@@ -47,7 +47,7 @@
                         {{-- Quantité --}}
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Quantité') }}</label>
-                            <input wire:model.blur="lines.{{ $index }}.quantity"
+                            <input wire:model.live.debounce.300ms="lines.{{ $index }}.quantity"
                                    type="number" min="1"
                                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
                             @error("lines.{$index}.quantity") <p

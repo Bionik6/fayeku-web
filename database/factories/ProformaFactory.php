@@ -1,0 +1,110 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Enums\PME\ProformaStatus;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Models\PME\Proforma;
+use App\Models\PME\ProformaLine;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Proforma>
+ */
+class ProformaFactory extends Factory
+{
+    protected $model = Proforma::class;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        $subtotal = fake()->numberBetween(50_000, 500_000);
+        $taxAmount = (int) round($subtotal * 0.18);
+
+        return [
+            'company_id' => Company::factory(),
+            'client_id' => null,
+            'reference' => 'FYK-PRO-'.strtoupper(fake()->unique()->bothify('??????')),
+            'currency' => 'XOF',
+            'status' => ProformaStatus::Draft,
+            'issued_at' => now(),
+            'valid_until' => now()->addDays(30),
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'total' => $subtotal + $taxAmount,
+            'discount' => 0,
+            'discount_type' => 'percent',
+        ];
+    }
+
+    public function forCompany(Company|array $company): static
+    {
+        $attributes = $company instanceof Company
+            ? ['company_id' => $company->id]
+            : ['company_id' => Company::factory()->create($company)->id];
+
+        return $this->state($attributes);
+    }
+
+    public function withClient(Client $client): static
+    {
+        return $this->state(['client_id' => $client->id]);
+    }
+
+    public function sent(): static
+    {
+        return $this->state(['status' => ProformaStatus::Sent]);
+    }
+
+    public function poReceived(): static
+    {
+        return $this->state(['status' => ProformaStatus::PoReceived]);
+    }
+
+    public function converted(): static
+    {
+        return $this->state(['status' => ProformaStatus::Converted]);
+    }
+
+    public function declined(): static
+    {
+        return $this->state(['status' => ProformaStatus::Declined]);
+    }
+
+    public function withLines(int $count = 2): static
+    {
+        return $this->afterCreating(function (Proforma $proforma) use ($count) {
+            $subtotal = 0;
+            $taxAmount = 0;
+
+            for ($i = 0; $i < $count; $i++) {
+                $quantity = fake()->numberBetween(1, 10);
+                $unitPrice = fake()->numberBetween(5_000, 100_000);
+                $taxRate = fake()->randomElement([0, 18]);
+                $lineTotal = $quantity * $unitPrice;
+                $lineTax = (int) round($lineTotal * $taxRate / 100);
+
+                ProformaLine::query()->create([
+                    'proforma_id' => $proforma->id,
+                    'description' => fake()->sentence(3),
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'tax_rate' => $taxRate,
+                    'total' => $lineTotal,
+                ]);
+
+                $subtotal += $lineTotal;
+                $taxAmount += $lineTax;
+            }
+
+            $proforma->update([
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
+                'total' => $subtotal + $taxAmount,
+            ]);
+        });
+    }
+}
