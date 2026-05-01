@@ -46,6 +46,22 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public string $previewChannel = 'whatsapp';
 
+    // Modal "Envoyer la facture"
+    public bool $showSendModal = false;
+
+    /** 'whatsapp' | 'email' */
+    public string $sendChannel = 'whatsapp';
+
+    public string $sendRecipient = '';
+
+    public string $sendMessage = '';
+
+    /** Code pays ISO-2 pour le composant phone-input (WhatsApp). */
+    public string $sendCountry = 'SN';
+
+    /** @var array<string, string> Liste des pays disponibles pour le composant phone-input. */
+    public array $sendPhoneCountries = [];
+
     public function mount(Invoice $invoice): void
     {
         $this->company = auth()->user()->smeCompany();
@@ -58,6 +74,11 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $invoice->load(['client', 'lines', 'reminders', 'payments']);
 
         $this->invoice = $invoice;
+
+        // Liste des pays pour le sélecteur du composant phone-input.
+        $this->sendPhoneCountries = collect(config('fayeku.phone_countries', []))
+            ->map(fn ($c) => $c['label'])
+            ->all();
     }
 
     #[Computed]
@@ -131,6 +152,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public function sendInvoice(): void
     {
+        // Conservé pour compat — passe rapidement la facture en Sent sans modal.
+        // Le nouveau flow d'envoi est dans openSendModal/confirmSend.
         abort_unless($this->company, 403);
 
         if ($this->invoice->status !== InvoiceStatus::Draft) {
@@ -147,6 +170,140 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         unset($this->statusDisplay);
 
         $this->dispatch('toast', type: 'success', title: __('Facture marquée comme envoyée.'));
+    }
+
+    // ─── Envoi (WhatsApp / Email) ────────────────────────────────────────────
+
+    public function openSendModal(): void
+    {
+        if (in_array($this->invoice->status, [InvoiceStatus::Cancelled, InvoiceStatus::Paid], true)) {
+            return;
+        }
+
+        $this->resetErrorBag();
+        $client = $this->invoice->client;
+
+        // Canal par défaut : WhatsApp si téléphone dispo, sinon email.
+        $this->sendChannel = filled($client?->phone) ? 'whatsapp' : 'email';
+        $this->fillSendDefaults();
+        $this->showSendModal = true;
+    }
+
+    public function closeSendModal(): void
+    {
+        $this->showSendModal = false;
+        $this->resetErrorBag();
+    }
+
+    public function updatedSendChannel(): void
+    {
+        $this->fillSendDefaults();
+    }
+
+    private function fillSendDefaults(): void
+    {
+        $client = $this->invoice->client;
+
+        if ($this->sendChannel === 'email') {
+            $this->sendRecipient = $client?->email ?? '';
+        } else {
+            $clientPhone = $client?->phone ?? '';
+            if (filled($clientPhone)) {
+                $parsed = \App\Support\PhoneNumber::parse($clientPhone);
+                $this->sendCountry = $parsed['country_code'];
+                $this->sendRecipient = $parsed['local_number'];
+            } else {
+                $this->sendCountry = $this->company?->country_code ?? 'SN';
+                $this->sendRecipient = '';
+            }
+        }
+        $this->sendMessage = $this->buildSendMessage();
+    }
+
+    private function buildSendMessage(): string
+    {
+        $link = route('pme.invoices.pdf', $this->invoice->public_code);
+        $total = format_money($this->invoice->total, $this->invoice->currency);
+        $dueAt = $this->invoice->due_at ? format_date($this->invoice->due_at) : '—';
+        $signature = $this->buildSignature();
+
+        return <<<MSG
+            Bonjour,
+
+            Suite à notre prestation, je vous transmets la facture n° {$this->invoice->reference} d'un montant de {$total} TTC, échéance le {$dueAt}.
+
+            Facture à consulter ici :
+            {$link}
+
+            Modalités de paiement acceptées : Wave, Orange Money, virement bancaire.
+
+            Je reste à votre disposition pour toute question.
+
+            {$signature}
+            MSG;
+    }
+
+    private function buildSignature(): string
+    {
+        $sender = trim((string) ($this->company?->sender_name ?? ''));
+        $companyName = trim((string) ($this->company?->name ?? ''));
+
+        $lines = ['Cordialement,'];
+        if ($sender !== '') {
+            $lines[] = $sender;
+        }
+        if ($companyName !== '') {
+            $lines[] = $companyName;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    #[Computed]
+    public function sendOpenUrl(): string
+    {
+        if ($this->sendChannel === 'whatsapp') {
+            $digits = \App\Support\PhoneNumber::digitsForWhatsApp($this->sendRecipient, $this->sendCountry);
+
+            return 'https://wa.me/'.$digits.'?text='.rawurlencode($this->sendMessage);
+        }
+
+        $subject = rawurlencode((string) __('Facture :ref', ['ref' => $this->invoice->reference]));
+
+        return 'mailto:'.$this->sendRecipient.'?subject='.$subject.'&body='.rawurlencode($this->sendMessage);
+    }
+
+    public function confirmSend(): void
+    {
+        $rules = $this->sendChannel === 'email'
+            ? ['sendRecipient' => ['required', 'email']]
+            : ['sendRecipient' => ['required', 'string', 'min:6']];
+
+        $this->validate($rules + [
+            'sendMessage' => ['required', 'string', 'min:5'],
+        ], [
+            'sendRecipient.required' => __('Renseignez un destinataire.'),
+            'sendRecipient.email' => __("L'adresse email n'est pas valide."),
+            'sendMessage.required' => __('Le message ne peut pas être vide.'),
+        ]);
+
+        // Le clic sur "Envoyer depuis WhatsApp/messagerie" déclenche la transition
+        // Draft → Sent : l'utilisateur a validé l'envoi, on bascule la facture.
+        $statusChanged = false;
+        if ($this->invoice->status === InvoiceStatus::Draft) {
+            $this->invoice->update(['status' => InvoiceStatus::Sent]);
+            $this->invoice->refresh();
+            unset($this->statusDisplay);
+            $statusChanged = true;
+        }
+
+        $url = $this->sendOpenUrl;
+        $this->showSendModal = false;
+        $this->dispatch('open-external-url', url: $url);
+
+        if ($statusChanged) {
+            $this->dispatch('toast', type: 'success', title: __('Facture marquée comme envoyée.'));
+        }
     }
 
     public function markAsPaid(?string $invoiceId = null): void
@@ -402,7 +559,9 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     }
 }; ?>
 
-<div class="flex h-full w-full flex-1 flex-col gap-6">
+<div class="flex h-full w-full flex-1 flex-col gap-6"
+     x-data
+     x-on:open-external-url.window="window.open($event.detail.url, '_blank')">
 
     @php
         $inv = $this->invoice;
@@ -513,13 +672,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         </article>
     </section>
 
-    {{-- Corps 2 colonnes --}}
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {{-- Colonne gauche --}}
-        <div class="flex flex-col gap-6 xl:col-span-2">
+    {{-- Corps 2 colonnes : Aperçu en premier (full width sur mobile, 2/3 sur lg+),
+         sidebar Client+Actions à droite (full width sur mobile, 1/3 sur lg+). --}}
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-            {{-- Carte client --}}
-            <x-invoices.client-card :invoice="$inv" />
+        {{-- Colonne gauche : Aperçu / Paiements / Activity --}}
+        <div class="flex flex-col gap-6 lg:col-span-2">
 
             {{-- Aperçu facture --}}
             <article class="app-shell-panel p-6">
@@ -624,66 +782,130 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         </div>
 
-        {{-- Colonne droite (sidebar sticky sur xl, sinon bloc centré sous le contenu) --}}
-        <div class="mx-auto flex w-full max-w-md flex-col gap-6 xl:mx-0 xl:max-w-none">
+        {{-- Colonne droite : client + actions (sticky sur lg). --}}
+        <div class="flex w-full flex-col gap-6">
+
+            {{-- Carte client --}}
+            <x-invoices.client-card :invoice="$inv" />
 
             {{-- Actions rapides --}}
-            <article class="app-shell-panel p-6 xl:sticky xl:top-6">
+            @php
+                $isPayable = in_array($inv->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid], true);
+                $isClosed = in_array($inv->status, [InvoiceStatus::Paid, InvoiceStatus::Cancelled], true);
+                $canEdit = in_array($inv->status, [InvoiceStatus::Draft, InvoiceStatus::Sent], true);
+            @endphp
+            <article class="app-shell-panel p-6 lg:sticky lg:top-6">
                 <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
 
+                {{-- Actions primaires (3 max selon le statut) --}}
                 <div class="mt-4 space-y-2">
-                    @if ($inv->status === InvoiceStatus::Draft)
-                        <a href="{{ route('pme.invoices.edit', $inv) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
-                            <flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier la facture') }}
-                        </a>
-                        <button type="button" wire:click="sendInvoice" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="paper-airplane" class="size-4" /> {{ __('Envoyer au client') }}
+                    {{-- Enregistrer un paiement : uniquement si la facture peut encore recevoir un paiement --}}
+                    @if ($isPayable && $remaining > 0)
+                        <button type="button" wire:click="openPaymentModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
+                            <flux:icon name="banknotes" class="size-4" /> {{ __('Enregistrer un paiement') }}
                         </button>
                     @endif
 
-                    @if (in_array($inv->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid], true))
-                        @if ($remaining > 0)
-                            <button type="button" wire:click="openPaymentModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
-                                <flux:icon name="banknotes" class="size-4" /> {{ __('Enregistrer un paiement') }}
-                            </button>
-                        @endif
-
-                        @if ($inv->status === InvoiceStatus::Sent)
-                            <a href="{{ route('pme.invoices.edit', $inv) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                                <flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier la facture') }}
-                            </a>
-                        @endif
-
+                    {{-- Relancer le client : uniquement quand applicable --}}
+                    @if ($isPayable)
                         <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50">
                             <flux:icon name="bell-alert" class="size-4" /> {{ __('Relancer le client') }}
                         </button>
-
-                        <button type="button" wire:click="requestMarkPaid" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="check-circle" class="size-4" /> {{ __('Marquer comme payée') }}
-                        </button>
                     @endif
 
+                    {{-- Télécharger le PDF : toujours visible --}}
                     <a href="{{ route('pme.invoices.pdf', $inv) }}" target="_blank" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
                         <flux:icon name="arrow-down-tray" class="size-4" /> {{ __('Télécharger le PDF') }}
                     </a>
-                </div>
 
-                <div class="mt-5 space-y-2 border-t border-slate-100 pt-4">
-                    @if ($inv->client_id)
-                        <a href="{{ route('pme.clients.show', $inv->client_id) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="user" class="size-4" /> {{ __('Voir le client') }}
-                        </a>
-                    @endif
-                    <button type="button" wire:click="duplicateInvoice" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                        <flux:icon name="document-duplicate" class="size-4" /> {{ __('Dupliquer') }}
-                    </button>
-                    <button type="button" wire:click="requestDeleteInvoice" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50">
-                        <flux:icon name="trash" class="size-4" /> {{ __('Supprimer la facture') }}
-                    </button>
+                    {{-- Plus d'actions : dropdown teleporté pour échapper au sticky/overflow --}}
+                    <div
+                        x-data="{ open: false, top: 0, right: 0, width: 0 }"
+                        class="relative"
+                        @click.window="open = false"
+                        @keydown.escape.window="open = false"
+                    >
+                        <button
+                            type="button"
+                            x-ref="moreActionsTrigger"
+                            @click.stop="
+                                const wasOpen = open;
+                                if (wasOpen) { open = false; return; }
+                                const rect = $refs.moreActionsTrigger.getBoundingClientRect();
+                                top = rect.bottom + 8;
+                                right = window.innerWidth - rect.right;
+                                width = rect.width;
+                                open = true;
+                            "
+                            class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+                            :aria-expanded="open"
+                        >
+                            <flux:icon name="ellipsis-horizontal" class="size-4" />
+                            {{ __("Plus d'actions") }}
+                            <svg class="size-3.5 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </button>
+
+                        <template x-teleport="body">
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                @click.stop
+                                :style="`position: fixed; z-index: 9999; top: ${top}px; right: ${right}px; min-width: ${width}px`"
+                                class="overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+                                role="menu"
+                            >
+                                @if (! $isClosed)
+                                    <button type="button" @click="open = false" wire:click="openSendModal" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
+                                        <flux:icon name="paper-airplane" class="size-4 text-slate-400" />
+                                        {{ $inv->status === InvoiceStatus::Draft ? __('Envoyer au client') : __('Renvoyer au client') }}
+                                    </button>
+                                @endif
+                                @if ($canEdit)
+                                    <a href="{{ route('pme.invoices.edit', $inv) }}" @click="open = false" wire:navigate class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
+                                        <flux:icon name="pencil-square" class="size-4 text-slate-400" />
+                                        {{ __('Modifier la facture') }}
+                                    </a>
+                                @endif
+                                @if ($isPayable)
+                                    <button type="button" @click="open = false" wire:click="requestMarkPaid" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
+                                        <flux:icon name="check-circle" class="size-4 text-slate-400" />
+                                        {{ __('Marquer comme payée') }}
+                                    </button>
+                                @endif
+                                @if (! $isClosed || $canEdit || $isPayable)
+                                    <div class="my-1 border-t border-slate-100"></div>
+                                @endif
+                                @if ($inv->client_id)
+                                    <a href="{{ route('pme.clients.show', $inv->client_id) }}" @click="open = false" wire:navigate class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
+                                        <flux:icon name="user" class="size-4 text-slate-400" />
+                                        {{ __('Voir le client') }}
+                                    </a>
+                                @endif
+                                <button type="button" @click="open = false" wire:click="duplicateInvoice" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
+                                    <flux:icon name="document-duplicate" class="size-4 text-slate-400" />
+                                    {{ __('Dupliquer') }}
+                                </button>
+                                <div class="my-1 border-t border-slate-100"></div>
+                                <button type="button" @click="open = false" wire:click="requestDeleteInvoice" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 transition hover:bg-rose-50">
+                                    <flux:icon name="trash" class="size-4 text-rose-400" />
+                                    {{ __('Supprimer la facture') }}
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </article>
 
         </div>
+
     </section>
 
     {{-- Modale paiement --}}
@@ -832,5 +1054,112 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         cancel-action="cancelDeleteInvoice"
         :confirm-label="__('Supprimer')"
     />
+
+    {{-- Modal : Envoyer la facture --}}
+    @if ($showSendModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+             wire:click.self="closeSendModal" x-data
+             @keydown.escape.window="$wire.closeSendModal()">
+            <div class="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-start justify-between border-b border-slate-100 px-7 py-5">
+                    <div>
+                        <h2 class="text-lg font-semibold text-ink">{{ __('Envoyer la facture') }}</h2>
+                        <p class="mt-1 text-sm text-slate-500">{{ __('Choisissez le canal. Le lien public du PDF est inclus dans le message — vous l\'envoyez depuis votre propre WhatsApp ou messagerie.') }}</p>
+                    </div>
+                    <button type="button" wire:click="closeSendModal" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="px-7 py-6">
+                    <div class="mb-5 flex gap-2">
+                        <button type="button" wire:click="$set('sendChannel', 'whatsapp')"
+                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'whatsapp' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                            <flux:icon name="chat-bubble-left-right" class="mr-1 inline size-4" /> {{ __('WhatsApp') }}
+                        </button>
+                        <button type="button" wire:click="$set('sendChannel', 'email')"
+                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'email' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                            <flux:icon name="envelope" class="mr-1 inline size-4" /> {{ __('Email') }}
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        @if ($sendChannel === 'whatsapp')
+                            <div wire:key="send-phone-{{ $sendChannel }}">
+                                <x-phone-input
+                                    :label="__('Téléphone du client (WhatsApp)')"
+                                    country-name="sendCountry"
+                                    :country-value="$sendCountry"
+                                    country-model="sendCountry"
+                                    phone-name="sendRecipient"
+                                    :phone-value="$sendRecipient"
+                                    phone-model="sendRecipient"
+                                    :countries="$sendPhoneCountries"
+                                    container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
+                                    text-size="text-sm"
+                                    placeholder-class="placeholder:text-slate-500"
+                                    required
+                                />
+                                @error('sendRecipient') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+                        @else
+                            <div wire:key="send-email-{{ $sendChannel }}">
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">
+                                    {{ __('Adresse email du client') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input wire:model.live.debounce.300ms="sendRecipient" type="email"
+                                       placeholder="contact@client.sn"
+                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                @error('sendRecipient') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
+                        <div>
+                            <div class="mb-1.5 flex items-center justify-between gap-2">
+                                <label class="block text-sm font-medium text-slate-700">{{ __('Message') }}</label>
+                                <button type="button"
+                                        x-data="{ copied: false }"
+                                        x-on:click="navigator.clipboard.writeText($wire.sendMessage).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                                        class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
+                                    <template x-if="!copied">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <flux:icon name="document-duplicate" class="size-3.5" />
+                                            {{ __('Copier le message') }}
+                                        </span>
+                                    </template>
+                                    <template x-if="copied">
+                                        <span class="inline-flex items-center gap-1.5 text-emerald-600">
+                                            <flux:icon name="check" class="size-3.5" />
+                                            {{ __('Copié') }}
+                                        </span>
+                                    </template>
+                                </button>
+                            </div>
+                            <textarea wire:model.live.debounce.300ms="sendMessage" rows="10"
+                                      class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-[15px] leading-relaxed text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
+                            @error('sendMessage') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                            <flux:icon name="information-circle" class="mr-1 inline size-3.5" />
+                            {{ __('Le PDF ne peut pas être joint via WhatsApp Web ou mailto. Le lien public dans le message reste accessible 24/24 — votre client pourra le télécharger en cliquant.') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
+                    <button type="button" wire:click="closeSendModal" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30">{{ __('Annuler') }}</button>
+                    <button type="button" wire:click="confirmSend"
+                            class="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
+                        @if ($sendChannel === 'whatsapp')
+                            {{ __('Envoyer depuis WhatsApp') }}
+                        @else
+                            {{ __('Envoyer depuis ma messagerie') }}
+                        @endif
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

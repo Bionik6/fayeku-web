@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->gro
     Route::livewire('invoices/{invoice}', 'pages::pme.invoices.show')->name('pme.invoices.show');
     Route::livewire('quotes/create', 'pages::pme.quotes.form')->name('pme.quotes.create');
     Route::livewire('quotes/{quote}/edit', 'pages::pme.quotes.form')->name('pme.quotes.edit');
+    Route::livewire('quotes/{quote}', 'pages::pme.quotes.show')->name('pme.quotes.show');
     Route::livewire('quotes', 'pages::pme.quotes.index')->name('pme.quotes.index');
     Route::livewire('proformas/create', 'pages::pme.proformas.form')->name('pme.proformas.create');
     Route::livewire('proformas/{proforma}/edit', 'pages::pme.proformas.form')->name('pme.proformas.edit');

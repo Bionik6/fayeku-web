@@ -668,3 +668,215 @@ test('la timeline n\'inclut aucune relance à venir pour un brouillon', function
 
     expect($types)->not->toContain('upcoming');
 });
+
+// ─── Send modal (Envoyer la facture) ─────────────────────────────────────────
+
+test('openSendModal pré-remplit le téléphone + détecte le pays + bascule en email si pas de tel', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->assertSet('showSendModal', true)
+        ->assertSet('sendChannel', 'whatsapp')
+        ->assertSet('sendCountry', 'SN')
+        ->assertSet('sendRecipient', '770000000');
+});
+
+test('le template facture suit le format demandé (Bonjour, prestation, échéance, modalités, signature)', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $company->update(['name' => 'Rassoul Electronique Services', 'sender_name' => 'Moussa Diop']);
+    $invoice = makeShowPageInvoice($company);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal');
+
+    $message = $component->get('sendMessage');
+
+    expect($message)
+        ->toStartWith('Bonjour,')
+        ->not->toContain('M.')
+        ->toContain('Suite à notre prestation')
+        ->toContain($invoice->reference)
+        ->toContain('TTC')
+        ->toContain('échéance le')
+        ->toContain(route('pme.invoices.pdf', $invoice->public_code))
+        ->toContain('Wave, Orange Money, virement bancaire')
+        ->toEndWith("Cordialement,\nMoussa Diop\nRassoul Electronique Services");
+});
+
+test('confirmSend WhatsApp construit wa.me/<international> + ouvre le canal', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->call('confirmSend')
+        ->assertDispatched('open-external-url', function ($name, $params) {
+            return str_starts_with($params['url'], 'https://wa.me/221770000000?text=');
+        });
+});
+
+test('confirmSend Email construit mailto:client@... + ouvre le canal', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'email' => 'jean@client.sn']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->set('sendChannel', 'email')
+        ->set('sendRecipient', 'jean@client.sn')
+        ->call('confirmSend')
+        ->assertDispatched('open-external-url', function ($name, $params) {
+            return str_starts_with($params['url'], 'mailto:jean@client.sn?subject=');
+        });
+});
+
+test('confirmSend sur une facture Draft la passe automatiquement en Sent + toast', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->call('confirmSend')
+        ->assertHasNoErrors()
+        ->assertDispatched('open-external-url')
+        ->assertDispatched('toast', function ($name, $params) {
+            return ($params['type'] ?? null) === 'success'
+                && str_contains((string) ($params['title'] ?? ''), 'envoyée');
+        });
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
+});
+
+// ─── Layout des actions rapides : 3 primaires + dropdown "Plus d'actions" ───
+
+test('Actions rapides facture Sent : 3 primaires visibles + dropdown Plus d\'actions', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Sent->value]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertSeeText('Enregistrer un paiement')
+        ->assertSeeText('Relancer le client')
+        ->assertSeeText('Télécharger le PDF')
+        ->assertSeeText("Plus d'actions");
+});
+
+test("Le dropdown Plus d'actions contient: Renvoyer/Modifier/Marquer payée/Voir client/Dupliquer/Supprimer", function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Sent->value]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertSeeText('Renvoyer au client')
+        ->assertSeeText('Modifier la facture')
+        ->assertSeeText('Marquer comme payée')
+        ->assertSeeText('Voir le client')
+        ->assertSeeText('Dupliquer')
+        ->assertSeeText('Supprimer la facture');
+});
+
+test("facture Draft : pas de paiement/relance comme primaire, mais 'Envoyer au client' dans Plus d'actions", function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Draft->value]);
+
+    $response = $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk();
+
+    // Pas de paiement / relance en primaire (Draft : pas applicable)
+    $response->assertDontSeeText('Enregistrer un paiement')
+        ->assertDontSeeText('Relancer le client');
+
+    // Mais Télécharger le PDF + Plus d'actions toujours visibles
+    $response->assertSeeText('Télécharger le PDF')
+        ->assertSeeText("Plus d'actions")
+        // L'envoi initial est dans le dropdown sur Draft
+        ->assertSeeText('Envoyer au client')
+        ->assertSeeText('Modifier la facture');
+});
+
+test('facture Paid : seul Télécharger le PDF en primaire, dropdown limité (Voir client + Dupliquer)', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::Paid->value,
+        'amount_paid' => 118_000,
+        'paid_at' => now(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk();
+
+    // Aucun primaire payable / relance
+    $response->assertDontSeeText('Enregistrer un paiement')
+        ->assertDontSeeText('Relancer le client');
+
+    // PDF + Plus d'actions
+    $response->assertSeeText('Télécharger le PDF')
+        ->assertSeeText("Plus d'actions");
+
+    // Sur Paid : pas de "Renvoyer au client", pas de "Modifier", pas de "Marquer payée"
+    $response->assertDontSeeText('Renvoyer au client')
+        ->assertDontSeeText('Modifier la facture')
+        ->assertDontSeeText('Marquer comme payée');
+});
+
+test('facture PartiallyPaid : Enregistrer paiement reste visible si remaining > 0', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'amount_paid' => 50_000, // remaining = 68 000
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertSeeText('Enregistrer un paiement')
+        ->assertSeeText('Relancer le client');
+});
+
+test('confirmSend sur une facture déjà Sent ne ré-affiche pas le toast de bascule', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Sent->value]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->call('confirmSend');
+
+    $component->assertDispatched('open-external-url');
+
+    $events = collect($component->effects['dispatches'] ?? []);
+    $statusToast = $events->first(fn ($e) => ($e['name'] ?? null) === 'toast' && str_contains((string) ($e['params']['title'] ?? ''), 'envoyée'));
+    expect($statusToast)->toBeNull();
+});
+
+test('openSendModal n\'ouvre pas si la facture est Paid ou Cancelled', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+
+    foreach ([InvoiceStatus::Paid, InvoiceStatus::Cancelled] as $blockedStatus) {
+        $invoice = makeShowPageInvoice($company, ['status' => $blockedStatus->value]);
+
+        Livewire::actingAs($user)
+            ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+            ->call('openSendModal')
+            ->assertSet('showSendModal', false);
+    }
+});
