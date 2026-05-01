@@ -6,12 +6,15 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use App\Models\Auth\Company;
+use App\Enums\PME\ProformaStatus;
 use App\Enums\PME\QuoteStatus;
 use App\Models\PME\Invoice;
+use App\Models\PME\Proforma;
 use App\Models\PME\Quote;
+use App\Services\PME\ProformaService;
 use App\Services\PME\QuoteService;
 
-new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
+new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Component {
     #[Url(as: 'statut')]
     public string $statusFilter = 'all';
 
@@ -25,21 +28,27 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
     public string $currentMonth = '';
 
+    public int $totalDocuments = 0;
+
     public int $totalQuotes = 0;
 
-    public int $pendingQuotes = 0;
+    public int $totalProformas = 0;
 
-    public int $acceptedQuotes = 0;
+    public int $pendingDocuments = 0;
 
-    public int $expiredQuotes = 0;
+    public int $validatedDocuments = 0;
 
-    public ?string $selectedQuoteId = null;
+    public int $expiredDocuments = 0;
 
     public ?string $selectedInvoiceId = null;
 
     public ?string $confirmConvertId = null;
 
+    public ?string $confirmConvertProformaId = null;
+
     public ?string $confirmDeleteId = null;
+
+    public ?string $confirmDeleteProformaId = null;
 
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allRowsCache = null;
@@ -59,20 +68,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $this->refreshKpis();
     }
 
-    #[Computed]
-    public function selectedQuote(): ?Quote
-    {
-        if (! $this->selectedQuoteId || ! $this->company) {
-            return null;
-        }
-
-        return Quote::query()
-            ->with(['client', 'lines', 'invoice'])
-            ->where('company_id', $this->company->id)
-            ->whereKey($this->selectedQuoteId)
-            ->first();
-    }
-
     public function viewQuote(string $quoteId): void
     {
         abort_unless($this->company, 403);
@@ -81,12 +76,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             ->where('company_id', $this->company->id)
             ->findOrFail($quoteId);
 
-        $this->selectedQuoteId = $quoteId;
-    }
-
-    public function closeQuote(): void
-    {
-        $this->selectedQuoteId = null;
+        $this->redirect(route('pme.quotes.show', $quoteId), navigate: true);
     }
 
     #[Computed]
@@ -140,13 +130,9 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
         $quote->delete();
 
-        if ($this->selectedQuoteId === $quoteId) {
-            $this->selectedQuoteId = null;
-        }
-
         $this->flushCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedQuote);
+        unset($this->rows, $this->statusCounts);
 
         $this->dispatch('toast', type: 'success', title: __('Le devis a été supprimé.'));
     }
@@ -163,7 +149,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
         $this->flushCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedQuote);
+        unset($this->rows, $this->statusCounts);
 
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme accepté.'));
     }
@@ -180,7 +166,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
         $this->flushCaches();
         $this->refreshKpis();
-        unset($this->rows, $this->statusCounts, $this->selectedQuote);
+        unset($this->rows, $this->statusCounts);
 
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme refusé.'));
     }
@@ -215,13 +201,120 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $this->confirmConvertId = null;
     }
 
+    // ─── Proforma actions ────────────────────────────────────────────────────
+
+    public function viewProforma(string $proformaId): void
+    {
+        abort_unless($this->company, 403);
+
+        Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($proformaId);
+
+        $this->redirect(route('pme.proformas.show', $proformaId), navigate: true);
+    }
+
+    public function deleteProforma(string $proformaId): void
+    {
+        $this->confirmDeleteProformaId = null;
+        abort_unless($this->company, 403);
+
+        $proforma = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($proformaId);
+
+        $proforma->delete();
+
+        $this->flushCaches();
+        $this->refreshKpis();
+        unset($this->rows, $this->statusCounts);
+
+        $this->dispatch('toast', type: 'success', title: __('La proforma a été supprimée.'));
+    }
+
+    public function confirmDeleteProforma(string $id): void
+    {
+        $this->confirmDeleteProformaId = $id;
+    }
+
+    public function cancelDeleteProforma(): void
+    {
+        $this->confirmDeleteProformaId = null;
+    }
+
+    public function markAsPoReceived(string $proformaId): void
+    {
+        abort_unless($this->company, 403);
+
+        $proforma = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($proformaId);
+
+        app(ProformaService::class)->markAsPoReceived($proforma);
+
+        $this->flushCaches();
+        $this->refreshKpis();
+        unset($this->rows, $this->statusCounts);
+
+        $this->dispatch('toast', type: 'success', title: __('Bon de commande reçu : la proforma peut être convertie en facture.'));
+    }
+
+    public function markProformaAsDeclined(string $proformaId): void
+    {
+        abort_unless($this->company, 403);
+
+        $proforma = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->findOrFail($proformaId);
+
+        app(ProformaService::class)->markAsDeclined($proforma);
+
+        $this->flushCaches();
+        $this->refreshKpis();
+        unset($this->rows, $this->statusCounts);
+
+        $this->dispatch('toast', type: 'success', title: __('La proforma a été marquée comme refusée.'));
+    }
+
+    public function convertProformaToInvoice(string $proformaId): void
+    {
+        abort_unless($this->company, 403);
+
+        $proforma = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->with('lines')
+            ->findOrFail($proformaId);
+
+        try {
+            $invoice = app(ProformaService::class)->convertToInvoice($proforma, $this->company);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        $this->redirect(route('pme.invoices.edit', $invoice), navigate: true);
+    }
+
+    public function confirmConvertProforma(string $id): void
+    {
+        $this->confirmConvertProformaId = $id;
+    }
+
+    public function cancelConvertProforma(): void
+    {
+        $this->confirmConvertProformaId = null;
+    }
+
     private function refreshKpis(): void
     {
         if (! $this->company) {
+            $this->totalDocuments = 0;
             $this->totalQuotes = 0;
-            $this->pendingQuotes = 0;
-            $this->acceptedQuotes = 0;
-            $this->expiredQuotes = 0;
+            $this->totalProformas = 0;
+            $this->pendingDocuments = 0;
+            $this->validatedDocuments = 0;
+            $this->expiredDocuments = 0;
 
             return;
         }
@@ -230,17 +323,37 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             ->where('company_id', $this->company->id)
             ->count();
 
-        $this->pendingQuotes = Quote::query()
+        $this->totalProformas = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->count();
+
+        $this->totalDocuments = $this->totalQuotes + $this->totalProformas;
+
+        $pendingQuotes = Quote::query()
             ->where('company_id', $this->company->id)
             ->where('status', QuoteStatus::Sent)
             ->count();
 
-        $this->acceptedQuotes = Quote::query()
+        $pendingProformas = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->where('status', ProformaStatus::Sent)
+            ->count();
+
+        $this->pendingDocuments = $pendingQuotes + $pendingProformas;
+
+        $acceptedQuotes = Quote::query()
             ->where('company_id', $this->company->id)
             ->where('status', QuoteStatus::Accepted)
             ->count();
 
-        $this->expiredQuotes = Quote::query()
+        $poReceivedProformas = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->where('status', ProformaStatus::PoReceived)
+            ->count();
+
+        $this->validatedDocuments = $acceptedQuotes + $poReceivedProformas;
+
+        $expiredQuotes = Quote::query()
             ->where('company_id', $this->company->id)
             ->where(function ($q) {
                 $q->where('status', QuoteStatus::Expired)
@@ -250,6 +363,19 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     });
             })
             ->count();
+
+        $expiredProformas = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->where(function ($q) {
+                $q->where('status', ProformaStatus::Expired)
+                    ->orWhere(function ($q2) {
+                        $q2->where('status', ProformaStatus::Sent)
+                            ->where('valid_until', '<', now());
+                    });
+            })
+            ->count();
+
+        $this->expiredDocuments = $expiredQuotes + $expiredProformas;
     }
 
     #[Computed]
@@ -300,7 +426,9 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             return $this->rowsBeforeAggregateFiltersCache;
         }
 
-        return $this->rowsBeforeAggregateFiltersCache = $this->applySearchFilter($this->applyPeriodFilter($this->allRows()));
+        return $this->rowsBeforeAggregateFiltersCache = $this->applySearchFilter(
+            $this->applyPeriodFilter($this->allRows())
+        );
     }
 
     private function allRows(): array
@@ -313,11 +441,9 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             return $this->allRowsCache = [];
         }
 
-        return $this->allRowsCache = Quote::query()
+        $quoteRows = Quote::query()
             ->where('company_id', $this->company->id)
             ->with(['client', 'invoice'])
-            ->orderByDesc('issued_at')
-            ->orderByDesc('created_at')
             ->get()
             ->map(function ($q) {
                 $isExpired = $q->status === QuoteStatus::Expired ||
@@ -325,6 +451,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
                 return [
                     'id'           => $q->id,
+                    'type'         => 'quote',
                     'reference'    => $q->reference ?? '—',
                     'client_id'    => $q->client_id,
                     'client_name'  => $q->client?->name ?? '—',
@@ -339,9 +466,42 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     'invoice_id'   => $q->invoice?->id,
                     'invoice_public_code' => $q->invoice?->public_code,
                     'public_code'  => $q->public_code,
+                    'dossier_reference' => null,
                 ];
-            })
-            ->sortByDesc('issued_at')
+            });
+
+        $proformaRows = Proforma::query()
+            ->where('company_id', $this->company->id)
+            ->with(['client', 'invoice'])
+            ->get()
+            ->map(function ($p) {
+                $isExpired = $p->status === ProformaStatus::Expired ||
+                    ($p->valid_until && $p->valid_until->isPast() && $p->status === ProformaStatus::Sent);
+
+                return [
+                    'id'           => $p->id,
+                    'type'         => 'proforma',
+                    'reference'    => $p->reference ?? '—',
+                    'client_id'    => $p->client_id,
+                    'client_name'  => $p->client?->name ?? '—',
+                    'subtotal'     => $p->subtotal,
+                    'tax_amount'   => $p->tax_amount,
+                    'total'        => $p->total,
+                    'currency'     => $p->currency,
+                    'issued_at'    => $p->issued_at,
+                    'valid_until'  => $p->valid_until,
+                    'status_value' => $isExpired ? 'expired' : $p->status->value,
+                    'has_invoice'  => $p->invoice !== null,
+                    'invoice_id'   => $p->invoice?->id,
+                    'invoice_public_code' => $p->invoice?->public_code,
+                    'public_code'  => $p->public_code,
+                    'dossier_reference' => $p->dossier_reference,
+                ];
+            });
+
+        return $this->allRowsCache = $quoteRows
+            ->concat($proformaRows)
+            ->sortByDesc(fn ($row) => $row['issued_at']?->timestamp ?? 0)
             ->values()
             ->toArray();
     }
@@ -409,31 +569,87 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         <div class="flex flex-col gap-4 p-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">
-                    {{ __('Devis') }} · {{ $currentMonth }}
+                    {{ __('Documents commerciaux') }} · {{ $currentMonth }}
                     @if (count($this->rows) > 0)
-                        · {{ count($this->rows) }} {{ count($this->rows) > 1 ? __('devis') : __('devis') }}
+                        · {{ count($this->rows) }}
                     @endif
                 </p>
-                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Devis') }}</h2>
+                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ __('Devis & Proformas') }}</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    {{ __('Gérez vos devis clients et convertissez-les en factures.') }}
+                    {{ __('Gérez vos propositions commerciales pré-facturation et convertissez-les en factures.') }}
                 </p>
             </div>
 
             <div class="flex shrink-0 flex-wrap items-center gap-2">
-                <a
-                    href="{{ route('pme.quotes.create') }}"
-                    wire:navigate
-                    class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                {{-- Bouton dropdown : un seul point d'entrée pour la création.
+                     Pattern teleport+fixed pour échapper à l'overflow-hidden de la section parente. --}}
+                <div
+                    x-data="{ open: false, top: 0, right: 0, width: 0 }"
+                    class="inline-block"
+                    @click.window="open = false"
+                    @keydown.escape.window="open = false"
                 >
-                    <flux:icon name="plus" class="size-4" />
-                    {{ __('Nouveau devis') }}
-                </a>
+                    <button
+                        type="button"
+                        x-ref="trigger"
+                        @click.stop="
+                            const wasOpen = open;
+                            if (wasOpen) { open = false; return; }
+                            const rect = $refs.trigger.getBoundingClientRect();
+                            top = rect.bottom + 8;
+                            right = window.innerWidth - rect.right;
+                            width = Math.max(rect.width, 288);
+                            open = true;
+                        "
+                        class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
+                        :aria-expanded="open"
+                    >
+                        <flux:icon name="plus" class="size-4" />
+                        {{ __('Nouveau document') }}
+                        <svg class="size-3.5 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                        </svg>
+                    </button>
+
+                    <template x-teleport="body">
+                        <div
+                            x-show="open"
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            @click.stop
+                            :style="`position: fixed; z-index: 9999; top: ${top}px; right: ${right}px; min-width: ${width}px`"
+                            class="w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg"
+                        >
+                            <a href="{{ route('pme.quotes.create') }}" wire:navigate
+                               class="block border-b border-slate-100 px-5 py-4 transition hover:bg-amber-50/40">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{{ __('Devis') }}</span>
+                                    <span class="text-sm font-semibold text-ink">{{ __('Nouveau devis') }}</span>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">{{ __('Proposition commerciale signable par le client.') }}</p>
+                            </a>
+                            <a href="{{ route('pme.proformas.create') }}" wire:navigate
+                               class="block px-5 py-4 transition hover:bg-blue-50/40">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">{{ __('Proforma') }}</span>
+                                    <span class="text-sm font-semibold text-ink">{{ __('Nouvelle proforma') }}</span>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">{{ __('Document pré-facture pour déclencher un bon de commande.') }}</p>
+                            </a>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
+
     </section>
 
-    {{-- Bloc B -- 4 KPI cards --}}
+    {{-- Bloc B -- 4 KPI cards (combinés Devis + Proformas) --}}
     <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
         <article class="app-shell-stat-card">
@@ -442,8 +658,18 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     <flux:icon name="document-duplicate" class="size-5 text-primary" />
                 </div>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Total devis') }}</p>
-            <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">{{ $totalQuotes }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Total documents') }}</p>
+            <p class="mt-1 text-4xl font-semibold tracking-tight text-ink">{{ $totalDocuments }}</p>
+            <div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 font-semibold text-amber-700">
+                    <span>{{ __('Devis') }}</span>
+                    <span class="text-amber-900">{{ $totalQuotes }}</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 font-semibold text-blue-700">
+                    <span>{{ __('Proforma') }}</span>
+                    <span class="text-blue-900">{{ $totalProformas }}</span>
+                </span>
+            </div>
         </article>
 
         <article class="app-shell-stat-card">
@@ -455,8 +681,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     {{ __('En attente') }}
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Devis en attente') }}</p>
-            <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $pendingQuotes }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Documents envoyés') }}</p>
+            <p class="mt-1 text-4xl font-semibold tracking-tight text-amber-500">{{ $pendingDocuments }}</p>
         </article>
 
         <article class="app-shell-stat-card">
@@ -465,11 +691,11 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     <flux:icon name="check-circle" class="size-5 text-emerald-500" />
                 </div>
                 <span class="inline-flex whitespace-nowrap items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
-                    {{ __('Acceptés') }}
+                    {{ __('Validés') }}
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Devis acceptés') }}</p>
-            <p class="mt-1 text-4xl font-semibold tracking-tight text-emerald-500">{{ $acceptedQuotes }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Acceptés / BC reçus') }}</p>
+            <p class="mt-1 text-4xl font-semibold tracking-tight text-emerald-500">{{ $validatedDocuments }}</p>
         </article>
 
         <article class="app-shell-stat-card">
@@ -481,27 +707,36 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     {{ __('Expirés') }}
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Devis expirés') }}</p>
-            <p class="mt-1 text-4xl font-semibold tracking-tight text-rose-500">{{ $expiredQuotes }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Documents expirés') }}</p>
+            <p class="mt-1 text-4xl font-semibold tracking-tight text-rose-500">{{ $expiredDocuments }}</p>
         </article>
 
     </section>
 
     {{-- Bloc C+D -- Filtres + Table --}}
     <x-ui.table-panel
-        :title="__('Devis')"
-        :description="__('Liste des devis envoyés et en cours.')"
+        :title="__('Devis & Proformas')"
+        :description="__('Liste de vos propositions commerciales pré-facturation.')"
         :filterLabel="__('Filtrer par statut')"
     >
         <x-slot:filters>
-            @foreach ([
-                'all'      => ['label' => 'Tous',      'dot' => null,           'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
-                'draft'    => ['label' => 'Brouillon', 'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
-                'sent'     => ['label' => 'Envoyé',    'dot' => 'bg-blue-500',  'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
-                'accepted' => ['label' => 'Accepté',   'dot' => 'bg-accent',    'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                'declined' => ['label' => 'Refusé',    'dot' => 'bg-rose-500',  'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
-                'expired'  => ['label' => 'Expiré',    'dot' => 'bg-slate-400', 'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
-            ] as $key => $tab)
+            @php
+                // Statuts disponibles : union des statuts devis ET proforma.
+                // Les statuts spécifiques (accepted devis-only, po_received/converted proforma-only)
+                // s'affichent automatiquement seulement s'ils ont au moins une ligne.
+                $statusTabs = [
+                    'all'         => ['label' => 'Tous',      'dot' => null,             'activeClass' => 'bg-primary text-white',     'badgeInactive' => 'bg-slate-100 text-slate-500'],
+                    'draft'       => ['label' => 'Brouillon', 'dot' => 'bg-slate-400',   'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                    'sent'        => ['label' => 'Envoyé',    'dot' => 'bg-blue-500',    'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
+                    'accepted'    => ['label' => 'Accepté',   'dot' => 'bg-accent',      'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                    'po_received' => ['label' => 'BC reçu',   'dot' => 'bg-emerald-500', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                    'converted'   => ['label' => 'Facturée',  'dot' => 'bg-teal-500',    'activeClass' => 'bg-teal-600 text-white',    'badgeInactive' => 'bg-teal-100 text-teal-700'],
+                    'declined'    => ['label' => 'Refusé',    'dot' => 'bg-rose-500',    'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
+                    'expired'     => ['label' => 'Expiré',    'dot' => 'bg-slate-400',   'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
+                ];
+            @endphp
+
+            @foreach ($statusTabs as $key => $tab)
                 @php $count = $this->statusCounts[$key] ?? 0; @endphp
                 @if ($key === 'all' || $count > 0)
                     <x-ui.filter-chip
@@ -554,7 +789,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/80">
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Type') }}</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-500">{{ __('Client') }}</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant HT') }}</th>
                             <th class="px-4 py-3 text-right text-sm font-semibold text-slate-500">{{ __('Montant TTC') }}</th>
@@ -567,26 +803,46 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($rows as $row)
                             @php
+                                $isProforma = $row['type'] === 'proforma';
+                                $typeBadge = $isProforma
+                                    ? ['code' => __('Proforma'), 'class' => 'bg-blue-50 text-blue-700 ring-blue-600/20']
+                                    : ['code' => __('Devis'),    'class' => 'bg-amber-50 text-amber-700 ring-amber-600/20'];
+                                $borderClass = $isProforma ? 'border-l-4 border-blue-400' : 'border-l-4 border-amber-300';
                                 $statusConfig = match ($row['status_value']) {
-                                    'accepted' => ['label' => 'Accepté',   'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
-                                    'sent'     => ['label' => 'Envoyé',    'class' => 'bg-blue-50 text-blue-700 ring-blue-600/20'],
-                                    'draft'    => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
-                                    'declined' => ['label' => 'Refusé',    'class' => 'bg-rose-50 text-rose-700 ring-rose-600/20'],
-                                    'expired'  => ['label' => 'Expiré',    'class' => 'bg-slate-100 text-slate-500 ring-slate-500/20'],
-                                    default    => ['label' => ucfirst($row['status_value']), 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
+                                    'accepted'    => ['label' => 'Accepté',   'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
+                                    'po_received' => ['label' => 'BC reçu',   'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
+                                    'converted'   => ['label' => 'Facturée',  'class' => 'bg-teal-50 text-teal-700 ring-teal-600/20'],
+                                    'sent'        => ['label' => $isProforma ? 'Envoyée' : 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-blue-600/20'],
+                                    'draft'       => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
+                                    'declined'    => ['label' => $isProforma ? 'Refusée' : 'Refusé', 'class' => 'bg-rose-50 text-rose-700 ring-rose-600/20'],
+                                    'expired'     => ['label' => $isProforma ? 'Expirée' : 'Expiré', 'class' => 'bg-slate-100 text-slate-500 ring-slate-500/20'],
+                                    default       => ['label' => ucfirst($row['status_value']), 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
                                 };
+                                $showRoute = $isProforma
+                                    ? route('pme.proformas.show', $row['id'])
+                                    : route('pme.quotes.show', $row['id']);
                             @endphp
                             <tr
-                                wire:key="quote-{{ $row['id'] }}"
-                                class="cursor-pointer transition hover:bg-slate-50/60"
-                                wire:click="viewQuote('{{ $row['id'] }}')"
+                                wire:key="{{ $row['type'] }}-{{ $row['id'] }}"
+                                class="cursor-pointer transition hover:bg-slate-50/60 {{ $borderClass }}"
+                                onclick="if(!event.target.closest('[x-on\\:click\\.stop]')) Livewire.navigate('{{ $showRoute }}')"
                             >
 
+                                {{-- Type pill --}}
+                                <td class="px-4 py-4">
+                                    <span class="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset {{ $typeBadge['class'] }}">
+                                        {{ $typeBadge['code'] }}
+                                    </span>
+                                </td>
+
                                 {{-- Référence --}}
-                                <td class="px-6 py-4 font-semibold text-ink">
+                                <td class="px-4 py-4 font-semibold text-ink">
                                     {{ $row['reference'] }}
                                     @if ($row['has_invoice'])
-                                        <span class="ml-1.5 inline-flex whitespace-nowrap items-center rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">{{ __('Facturé') }}</span>
+                                        <span class="ml-1.5 inline-flex whitespace-nowrap items-center rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">{{ $isProforma ? __('Facturée') : __('Facturé') }}</span>
+                                    @endif
+                                    @if ($isProforma && $row['dossier_reference'])
+                                        <p class="mt-0.5 text-xs font-normal text-slate-500">{{ __('Dossier') }} : {{ $row['dossier_reference'] }}</p>
                                     @endif
                                 </td>
 
@@ -635,98 +891,111 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                                 {{-- Actions --}}
                                 <td class="px-4 py-4" x-on:click.stop>
                                     <x-ui.dropdown>
-                                        <x-ui.dropdown-item wire:click="viewQuote('{{ $row['id'] }}')">
-                                            <x-slot:icon>
-                                                <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                </svg>
-                                            </x-slot:icon>
-                                            {{ __('Voir le devis') }}
+                                        @php
+                                            $iconEye = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
+                                            $iconUser = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>';
+                                            $iconInvoice = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
+                                            $iconPdf = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
+                                            $iconEdit = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>';
+                                            $iconConvert = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
+                                            $iconCheck = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>';
+                                            $iconX = '<svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>';
+                                            $iconTrash = '<svg class="size-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>';
+                                        @endphp
+
+                                        {{-- Voir --}}
+                                        <x-ui.dropdown-item :href="$showRoute" wire:navigate>
+                                            <x-slot:icon>{!! $iconEye !!}</x-slot:icon>
+                                            {{ $isProforma ? __('Voir la proforma') : __('Voir le devis') }}
                                         </x-ui.dropdown-item>
+
+                                        {{-- Voir le client --}}
                                         @if ($row['client_id'])
                                             <x-ui.dropdown-item :href="route('pme.clients.show', $row['client_id'])" wire:navigate>
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                                    </svg>
-                                                </x-slot:icon>
+                                                <x-slot:icon>{!! $iconUser !!}</x-slot:icon>
                                                 {{ __('Voir le client') }}
                                             </x-ui.dropdown-item>
                                         @endif
+
+                                        {{-- Voir la facture liée --}}
                                         @if ($row['has_invoice'])
                                             <x-ui.dropdown-separator />
                                             <x-ui.dropdown-item wire:click="viewInvoice('{{ $row['invoice_id'] }}')">
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                                    </svg>
-                                                </x-slot:icon>
+                                                <x-slot:icon>{!! $iconInvoice !!}</x-slot:icon>
                                                 {{ __('Voir la facture') }}
                                             </x-ui.dropdown-item>
                                             <x-ui.dropdown-item :href="route('pme.invoices.pdf', $row['invoice_public_code'])" target="_blank">
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                                    </svg>
-                                                </x-slot:icon>
+                                                <x-slot:icon>{!! $iconPdf !!}</x-slot:icon>
                                                 {{ __('Afficher en PDF') }}
                                             </x-ui.dropdown-item>
                                         @endif
-                                        @if (in_array($row['status_value'], ['draft', 'sent']))
-                                            <x-ui.dropdown-item :href="route('pme.quotes.edit', $row['id'])" wire:navigate>
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                                    </svg>
-                                                </x-slot:icon>
-                                                {{ __('Modifier le devis') }}
+
+                                        {{-- PDF du document lui-même (toujours dispo pour les proformas) --}}
+                                        @if ($isProforma)
+                                            <x-ui.dropdown-item :href="route('pme.proformas.pdf', $row['public_code'])" target="_blank">
+                                                <x-slot:icon>{!! $iconPdf !!}</x-slot:icon>
+                                                {{ __('Afficher la proforma en PDF') }}
                                             </x-ui.dropdown-item>
                                         @endif
-                                        @if (in_array($row['status_value'], ['sent', 'accepted']) && ! $row['has_invoice'])
+
+                                        {{-- Modifier --}}
+                                        @if (in_array($row['status_value'], ['draft', 'sent']))
+                                            <x-ui.dropdown-item :href="$isProforma ? route('pme.proformas.edit', $row['id']) : route('pme.quotes.edit', $row['id'])" wire:navigate>
+                                                <x-slot:icon>{!! $iconEdit !!}</x-slot:icon>
+                                                {{ $isProforma ? __('Modifier la proforma') : __('Modifier le devis') }}
+                                            </x-ui.dropdown-item>
+                                        @endif
+
+                                        {{-- Convertir en facture (logique différente quote vs proforma) --}}
+                                        @if (! $isProforma && in_array($row['status_value'], ['sent', 'accepted']) && ! $row['has_invoice'])
                                             <x-ui.dropdown-separator />
-                                            <x-ui.dropdown-item
-                                                wire:click="confirmConvert('{{ $row['id'] }}')"
-                                            >
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                                    </svg>
-                                                </x-slot:icon>
+                                            <x-ui.dropdown-item wire:click="confirmConvert('{{ $row['id'] }}')">
+                                                <x-slot:icon>{!! $iconConvert !!}</x-slot:icon>
                                                 {{ __('Convertir en facture') }}
                                             </x-ui.dropdown-item>
                                         @endif
-                                        @if ($row['status_value'] === 'sent')
+
+                                        @if ($isProforma && $row['status_value'] === 'po_received' && ! $row['has_invoice'])
                                             <x-ui.dropdown-separator />
-                                            <x-ui.dropdown-item wire:click="markAsAccepted('{{ $row['id'] }}')">
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                    </svg>
-                                                </x-slot:icon>
-                                                {{ __('Marquer comme accepté') }}
-                                            </x-ui.dropdown-item>
-                                            <x-ui.dropdown-item wire:click="markAsDeclined('{{ $row['id'] }}')">
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                    </svg>
-                                                </x-slot:icon>
-                                                {{ __('Marquer comme refusé') }}
+                                            <x-ui.dropdown-item wire:click="confirmConvertProforma('{{ $row['id'] }}')">
+                                                <x-slot:icon>{!! $iconConvert !!}</x-slot:icon>
+                                                {{ __('Convertir en facture') }}
                                             </x-ui.dropdown-item>
                                         @endif
+
+                                        {{-- Transitions de statut sur Sent --}}
+                                        @if ($row['status_value'] === 'sent')
+                                            <x-ui.dropdown-separator />
+                                            @if ($isProforma)
+                                                <x-ui.dropdown-item wire:click="markAsPoReceived('{{ $row['id'] }}')">
+                                                    <x-slot:icon>{!! $iconCheck !!}</x-slot:icon>
+                                                    {{ __('Marquer BC reçu') }}
+                                                </x-ui.dropdown-item>
+                                                <x-ui.dropdown-item wire:click="markProformaAsDeclined('{{ $row['id'] }}')">
+                                                    <x-slot:icon>{!! $iconX !!}</x-slot:icon>
+                                                    {{ __('Marquer comme refusée') }}
+                                                </x-ui.dropdown-item>
+                                            @else
+                                                <x-ui.dropdown-item wire:click="markAsAccepted('{{ $row['id'] }}')">
+                                                    <x-slot:icon>{!! $iconCheck !!}</x-slot:icon>
+                                                    {{ __('Marquer comme accepté') }}
+                                                </x-ui.dropdown-item>
+                                                <x-ui.dropdown-item wire:click="markAsDeclined('{{ $row['id'] }}')">
+                                                    <x-slot:icon>{!! $iconX !!}</x-slot:icon>
+                                                    {{ __('Marquer comme refusé') }}
+                                                </x-ui.dropdown-item>
+                                            @endif
+                                        @endif
+
+                                        {{-- Suppression brouillon --}}
                                         @if ($row['status_value'] === 'draft')
                                             <x-ui.dropdown-separator />
                                             <x-ui.dropdown-item
-                                                wire:click="confirmDelete('{{ $row['id'] }}')"
+                                                wire:click="{{ $isProforma ? 'confirmDeleteProforma' : 'confirmDelete' }}('{{ $row['id'] }}')"
                                                 :destructive="true"
                                             >
-                                                <x-slot:icon>
-                                                    <svg class="size-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                                    </svg>
-                                                </x-slot:icon>
-                                                {{ __('Supprimer le devis') }}
+                                                <x-slot:icon>{!! $iconTrash !!}</x-slot:icon>
+                                                {{ $isProforma ? __('Supprimer la proforma') : __('Supprimer le devis') }}
                                             </x-ui.dropdown-item>
                                         @endif
                                     </x-ui.dropdown>
@@ -800,191 +1069,24 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         variant="primary"
     />
 
-    {{-- Quote detail modal --}}
-    @if ($this->selectedQuote)
-        @php
-            $q = $this->selectedQuote;
-            $client = $q->client;
-            $statusConfig = match ($q->status) {
-                \App\Enums\PME\QuoteStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
-                \App\Enums\PME\QuoteStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
-                \App\Enums\PME\QuoteStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600'],
-                \App\Enums\PME\QuoteStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700'],
-                \App\Enums\PME\QuoteStatus::Expired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500'],
-                default => ['label' => ucfirst($q->status->value), 'class' => 'bg-slate-100 text-slate-600'],
-            };
-        @endphp
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-            wire:click.self="closeQuote"
-        >
-            <div class="relative w-full max-w-[1200px] overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div class="flex items-start justify-between border-b border-slate-100 px-10 py-7">
-                    <div>
-                        <p class="text-sm font-semibold tracking-[0.24em] text-slate-400">{{ __('Devis') }}</p>
-                        <h2 class="mt-1 text-xl font-bold text-ink">{{ $q->reference }}</h2>
-                        <div class="mt-1 flex items-center gap-3">
-                            <p class="text-sm text-slate-500">
-                                {{ __('Émis le') }} {{ format_date($q->issued_at) }}
-                                @if ($q->valid_until)
-                                    &nbsp;·&nbsp;
-                                    {{ __('Valide jusqu\'au') }} {{ format_date($q->valid_until) }}
-                                @endif
-                            </p>
-                            <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $statusConfig['class'] }}">
-                                {{ $statusConfig['label'] }}
-                            </span>
-                        </div>
-                    </div>
-                    <button
-                        wire:click="closeQuote"
-                        class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                    >
-                        <flux:icon name="x-mark" class="size-5" />
-                    </button>
-                </div>
+    <x-ui.confirm-modal
+        :confirm-id="$confirmDeleteProformaId"
+        :title="__('Supprimer la proforma')"
+        :description="__('Cette action est irréversible. La proforma sera définitivement supprimée.')"
+        confirm-action="deleteProforma"
+        cancel-action="cancelDeleteProforma"
+        :confirm-label="__('Supprimer')"
+    />
 
-                <div class="max-h-[80vh] overflow-y-auto">
-                    <div class="grid grid-cols-1 gap-0 lg:grid-cols-3">
-                        <div class="col-span-2 px-10 py-8">
-                            @if ($client)
-                                <div class="mb-6">
-                                    <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Destinataire') }}</p>
-                                    <div class="rounded-xl border border-slate-100 bg-slate-50/60 px-5 py-4">
-                                        <p class="font-semibold text-ink">{{ $client->name }}</p>
-                                        @if ($client->phone)
-                                            <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-                                                <flux:icon name="phone" class="size-3.5 shrink-0" />
-                                                {{ format_phone($client->phone) }}
-                                            </p>
-                                        @endif
-                                        @if ($client->email)
-                                            <p class="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-                                                <flux:icon name="envelope" class="size-3.5 shrink-0" />
-                                                {{ $client->email }}
-                                            </p>
-                                        @endif
-                                        @if ($client->address)
-                                            <p class="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-                                                <flux:icon name="map-pin" class="size-3.5 shrink-0" />
-                                                {{ $client->address }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endif
-
-                            <div>
-                                <p class="mb-3 text-sm font-semibold text-slate-500">{{ __('Détail des prestations') }}</p>
-                                <table class="w-full text-sm">
-                                    <thead>
-                                        <tr class="border-b border-slate-100 text-left">
-                                            <th class="pb-2 pr-4 text-sm font-semibold text-slate-500">{{ __('Description') }}</th>
-                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Qté') }}</th>
-                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('PU HT') }}</th>
-                                            <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('TVA') }}</th>
-                                            <th class="pb-2 pl-4 text-right text-sm font-semibold text-slate-500 whitespace-nowrap">{{ __('Total HT') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-50">
-                                        @forelse ($q->lines as $line)
-                                            <tr>
-                                                <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
-                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
-                                                <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
-                                                    {{ format_money($line->unit_price, $q->currency) }}
-                                                </td>
-                                                <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
-                                                <td class="py-3 pl-4 text-right tabular-nums font-medium text-ink whitespace-nowrap">
-                                                    {{ format_money($line->total, $q->currency) }}
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="5" class="py-4 text-center text-slate-400">{{ __('Aucune ligne.') }}</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                    <tfoot class="border-t border-slate-200">
-                                        <tr>
-                                            <td colspan="4" class="pt-4 pr-4 text-right text-sm text-slate-500">{{ __('Sous-total HT') }}</td>
-                                            <td class="pt-4 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                                {{ format_money($q->subtotal, $q->currency) }}
-                                            </td>
-                                        </tr>
-                                        @if ($q->discount > 0)
-                                            @php $discountAmount = (int) round($q->subtotal * $q->discount / 100); @endphp
-                                            <tr>
-                                                <td colspan="4" class="pt-1 pr-4 text-right text-sm text-emerald-600">{{ __('Réduction') }} ({{ $q->discount }} %)</td>
-                                                <td class="pt-1 pl-4 text-right tabular-nums text-sm text-emerald-600 whitespace-nowrap">
-                                                    − {{ format_money($discountAmount, $q->currency) }}
-                                                </td>
-                                            </tr>
-                                        @endif
-                                        <tr>
-                                            <td colspan="4" class="pt-1 pr-4 text-right text-sm text-slate-500">{{ __('TVA') }}</td>
-                                            <td class="pt-1 pl-4 text-right tabular-nums text-sm text-ink whitespace-nowrap">
-                                                {{ format_money($q->tax_amount, $q->currency) }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="4" class="pt-2 pr-4 text-right text-base font-semibold text-ink">{{ __('Total TTC') }}</td>
-                                            <td class="pt-2 pl-4 text-right tabular-nums text-base font-bold text-ink whitespace-nowrap">
-                                                {{ format_money($q->total, $q->currency) }}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-slate-100 bg-slate-50/60 px-8 py-8 lg:border-t-0 lg:border-l">
-                            <p class="mb-4 text-sm font-semibold text-slate-500">{{ __('Récapitulatif') }}</p>
-                            <dl class="space-y-3 text-sm">
-                                <div class="flex justify-between">
-                                    <dt class="text-slate-500">{{ __('Montant HT') }}</dt>
-                                    <dd class="tabular-nums font-medium text-ink">{{ format_money($q->subtotal, $q->currency) }}</dd>
-                                </div>
-                                @if ($q->discount > 0)
-                                    @php $discountAmount = (int) round($q->subtotal * $q->discount / 100); @endphp
-                                    <div class="flex justify-between text-emerald-600">
-                                        <dt>{{ __('Réduction') }} ({{ $q->discount }} %)</dt>
-                                        <dd class="tabular-nums font-medium">− {{ format_money($discountAmount, $q->currency) }}</dd>
-                                    </div>
-                                @endif
-                                <div class="flex justify-between">
-                                    <dt class="text-slate-500">{{ __('TVA') }}</dt>
-                                    <dd class="tabular-nums font-medium text-ink">{{ format_money($q->tax_amount, $q->currency) }}</dd>
-                                </div>
-                                <div class="flex justify-between border-t border-slate-200 pt-3">
-                                    <dt class="font-semibold text-ink">{{ __('Total TTC') }}</dt>
-                                    <dd class="tabular-nums text-lg font-bold text-ink">{{ format_money($q->total, $q->currency) }}</dd>
-                                </div>
-                            </dl>
-
-                            @if (in_array($q->status, [\App\Enums\PME\QuoteStatus::Sent, \App\Enums\PME\QuoteStatus::Accepted]) && ! $q->invoice)
-                                <div class="mt-6">
-                                    <button
-                                        wire:click="confirmConvert('{{ $q->id }}')"
-                                        class="flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
-                                    >
-                                        <flux:icon name="document-arrow-up" class="mr-2 size-4" />
-                                        {{ __('Convertir en facture') }}
-                                    </button>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-10 py-5">
-                    <flux:button variant="ghost" wire:click="closeQuote">
-                        {{ __('Fermer') }}
-                    </flux:button>
-                </div>
-            </div>
-        </div>
-    @endif
+    <x-ui.confirm-modal
+        :confirm-id="$confirmConvertProformaId"
+        :title="__('Convertir en facture')"
+        :description="__('Cette proforma sera convertie en facture brouillon. Vous pourrez la modifier avant de l\'envoyer.')"
+        confirm-action="convertProformaToInvoice"
+        cancel-action="cancelConvertProforma"
+        :confirm-label="__('Convertir')"
+        variant="primary"
+    />
 
 
 </div>

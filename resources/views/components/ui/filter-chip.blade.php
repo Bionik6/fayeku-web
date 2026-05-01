@@ -10,7 +10,7 @@
 <button
     {{ $attributes->merge(['type' => 'button']) }}
     @class([
-        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-semibold transition',
+        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-semibold transition focus:outline-none',
         $activeClass => $active,
         'bg-white border border-slate-200 text-slate-600 hover:border-primary/30 hover:text-primary' => ! $active,
     ])

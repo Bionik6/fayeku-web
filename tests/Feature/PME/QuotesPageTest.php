@@ -162,14 +162,14 @@ test('le modal de détail affiche les montants EUR correctement', function () {
         'total' => 814_000,
     ]);
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.quotes.index')
-        ->call('viewQuote', $quote->id)
+    $this->actingAs($user)
+        ->get(route('pme.quotes.show', $quote))
+        ->assertOk()
         ->assertSeeHtml('8 140,00')
         ->assertDontSeeHtml('814 000 FCFA');
 });
 
-test('le modal de détail affiche les montants XOF correctement', function () {
+test('la show page affiche les montants XOF correctement', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
 
     $client = Client::factory()->create(['company_id' => $company->id]);
@@ -187,16 +187,16 @@ test('le modal de détail affiche les montants XOF correctement', function () {
         'discount' => 0,
     ]));
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.quotes.index')
-        ->call('viewQuote', $quote->id)
+    $this->actingAs($user)
+        ->get(route('pme.quotes.show', $quote))
+        ->assertOk()
         ->assertSeeHtml('500 000')
         ->assertSeeHtml('590 000');
 });
 
 // ─── Réduction ────────────────────────────────────────────────────────────────
 
-test('la modale de détail devis affiche la réduction quand elle est présente', function () {
+test('la show page devis affiche la réduction quand elle est présente', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
 
     $client = Client::factory()->create(['company_id' => $company->id]);
@@ -214,23 +214,22 @@ test('la modale de détail devis affiche la réduction quand elle est présente'
         'total' => 106_200,
     ]));
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.quotes.index')
-        ->call('viewQuote', $quote->id)
-        ->assertSeeHtml('Réduction')
-        ->assertSeeHtml('10 %')
+    $this->actingAs($user)
+        ->get(route('pme.quotes.show', $quote))
+        ->assertOk()
+        ->assertSeeHtml('Remise')
         ->assertSeeHtml('10 000');
 });
 
-test('la modale de détail devis n\'affiche pas la réduction quand elle est nulle', function () {
+test('la show page devis n\'affiche pas la réduction quand elle est nulle', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompanyForQuotes();
 
     $quote = makeQuote($company, ['discount' => 0]);
 
-    Livewire::actingAs($user)
-        ->test('pages::pme.quotes.index')
-        ->call('viewQuote', $quote->id)
-        ->assertDontSeeHtml('Réduction');
+    $this->actingAs($user)
+        ->get(route('pme.quotes.show', $quote))
+        ->assertOk()
+        ->assertDontSeeHtml('Remise');
 });
 
 // ─── Devis converti en facture ────────────────────────────────────────────────
