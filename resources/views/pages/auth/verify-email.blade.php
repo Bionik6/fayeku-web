@@ -1,13 +1,12 @@
 @php
-    $otpChannelLabel = config('fayeku.otp_channel') === 'sms' ? 'SMS' : 'WhatsApp';
     $initialSecondsLeft = $otpExpiresAt ? max(0, $otpExpiresAt - time()) : 0;
 @endphp
 
-<x-layouts::auth :title="__('Vérification du téléphone')">
+<x-layouts::auth :title="__('Vérification de l\'email')">
     <div class="flex flex-col gap-6">
         <x-auth-header
-            :title="__('Vérification du téléphone')"
-            :description="__('Entrez le code à 6 chiffres envoyé via :channel au :phone', ['channel' => '<strong class=\'font-semibold text-ink\'>'.e($otpChannelLabel).'</strong>', 'phone' => e($maskedPhone)])"
+            :title="__('Vérification de l\'email')"
+            :description="__('Entrez le code à 6 chiffres envoyé à :email', ['email' => '<strong class=\'font-semibold text-ink\'>'.e($maskedEmail).'</strong>'])"
         />
 
         @if (! app()->environment('production') && config('fayeku.otp_bypass_code'))
@@ -18,7 +17,7 @@
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('sme.auth.otp.verify') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('auth.verify-email.verify') }}" class="flex flex-col gap-5">
             @csrf
 
             <label class="auth-label">
@@ -65,7 +64,7 @@
                 {{ __('Code valable encore') }} <span class="font-semibold text-ink" x-text="formatted">{{ sprintf('%d:%02d', intdiv($initialSecondsLeft, 60), $initialSecondsLeft % 60) }}</span>
             </p>
 
-            <form method="POST" action="{{ route('sme.auth.otp.resend') }}" x-show="secondsLeft <= 0" @if ($initialSecondsLeft > 0) style="display: none" @endif>
+            <form method="POST" action="{{ route('auth.verify-email.resend') }}" x-show="secondsLeft <= 0" @if ($initialSecondsLeft > 0) style="display: none" @endif>
                 @csrf
                 <button type="submit" class="text-sm auth-link">{{ __('Renvoyer le code') }}</button>
             </form>

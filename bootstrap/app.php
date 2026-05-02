@@ -1,6 +1,6 @@
 <?php
 
-use App\Middleware\EnsurePhoneVerified;
+use App\Middleware\EnsureEmailVerified;
 use App\Middleware\EnsureProfileType;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'profile' => EnsureProfileType::class,
-            'verified.phone' => EnsurePhoneVerified::class,
+            'verified.email' => EnsureEmailVerified::class,
         ]);
 
         $middleware->redirectGuestsTo('/login');

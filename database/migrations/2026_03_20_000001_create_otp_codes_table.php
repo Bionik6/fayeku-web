@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('otp_codes', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->string('phone');
+            $table->string('identifier');
             $table->string('code');
             $table->string('purpose')->default('verification');
             $table->timestamp('expires_at');
@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
 
-            $table->index(['phone', 'purpose', 'used_at']);
+            $table->index(['identifier', 'purpose', 'used_at']);
         });
     }
 

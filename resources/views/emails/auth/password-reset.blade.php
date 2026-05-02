@@ -1,7 +1,7 @@
 <x-mail::message>
-# Bonjour {{ $firstName ?: 'Cher partenaire' }},
+# Bonjour {{ $firstName ?: 'cher utilisateur' }},
 
-Nous avons reçu une demande de réinitialisation du mot de passe associé à votre compte Fayeku Compta.
+Nous avons reçu une demande de réinitialisation du mot de passe associé à votre compte Fayeku.
 
 Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe. Le lien est valable **{{ $expiresInMinutes }} minutes**.
 

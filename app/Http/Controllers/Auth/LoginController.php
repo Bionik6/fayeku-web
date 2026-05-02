@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Shared\User;
-use App\Services\Auth\AuthService;
-use App\Services\Shared\OtpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,120 +19,53 @@ class LoginController extends Controller
         return view('pages.auth.login');
     }
 
-    public function store(LoginRequest $request, OtpService $otpService): JsonResponse|RedirectResponse
+    public function store(LoginRequest $request): JsonResponse|RedirectResponse
     {
-        $profile = $request->input('profile');
+        $email = Str::lower(trim((string) $request->input('email')));
+        $throttleKey = 'email:'.$email.'|'.$request->ip();
 
-        if ($profile === 'accountant') {
-            return $this->authenticateAccountant($request);
-        }
-
-        return $this->authenticateSme($request, $otpService);
-    }
-
-    private function authenticateSme(LoginRequest $request, OtpService $otpService): JsonResponse|RedirectResponse
-    {
-        $normalizedPhone = AuthService::normalizePhone(
-            $request->input('phone'),
-            $request->input('country_code')
-        );
-
-        $throttleKey = 'sme:'.$normalizedPhone.'|'.$request->ip();
-
-        if ($response = $this->throttleResponse($request, $throttleKey, 'phone')) {
-            return $response;
-        }
-
-        $credentials = [
-            'phone' => $normalizedPhone,
-            'password' => $request->input('password'),
-            'profile_type' => 'sme',
-        ];
-
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            RateLimiter::hit($throttleKey, 60);
-
-            return $this->failedAttempt($request, 'phone');
-        }
-
-        RateLimiter::clear($throttleKey);
-
-        /** @var User $user */
-        $user = Auth::user();
-
-        if (! $user->is_active) {
-            Auth::logout();
-
-            return $this->disabledAccount($request, 'phone');
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => 'Connexion réussie.',
-                'user' => $user,
-                'token' => $user->createToken('auth')->plainTextToken,
-                'phone_verified' => ! is_null($user->phone_verified_at),
-            ]);
-        }
-
-        $request->session()->regenerate();
-
-        if (is_null($user->phone_verified_at)) {
-            $otpService->generate($user->phone);
-            session(['otp_phone' => $user->phone]);
-
-            return redirect()->route('sme.auth.otp');
-        }
-
-        return redirect()->intended(route('pme.dashboard'));
-    }
-
-    private function authenticateAccountant(LoginRequest $request): JsonResponse|RedirectResponse
-    {
-        $email = Str::lower($request->input('email'));
-        $throttleKey = 'accountant:'.$email.'|'.$request->ip();
-
-        if ($response = $this->throttleResponse($request, $throttleKey, 'email')) {
+        if ($response = $this->throttleResponse($request, $throttleKey)) {
             return $response;
         }
 
         $credentials = [
             'email' => $email,
             'password' => $request->input('password'),
-            'profile_type' => 'accountant_firm',
         ];
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($throttleKey, 60);
 
-            return $this->failedAttempt($request, 'email');
+            return $this->failedAttempt($request);
         }
-
-        RateLimiter::clear($throttleKey);
 
         /** @var User $user */
         $user = Auth::user();
 
         if (! $user->is_active) {
             Auth::logout();
+            RateLimiter::hit($throttleKey, 60);
 
-            return $this->disabledAccount($request, 'email');
+            return $this->disabledAccount($request);
         }
+
+        RateLimiter::clear($throttleKey);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Connexion réussie.',
                 'user' => $user,
                 'token' => $user->createToken('auth')->plainTextToken,
+                'email_verified' => ! is_null($user->email_verified_at),
             ]);
         }
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended($user->dashboardUrl());
     }
 
-    private function throttleResponse(LoginRequest $request, string $throttleKey, string $errorField): JsonResponse|RedirectResponse|null
+    private function throttleResponse(LoginRequest $request, string $throttleKey): JsonResponse|RedirectResponse|null
     {
         if (! RateLimiter::tooManyAttempts($throttleKey, 5)) {
             return null;
@@ -147,10 +78,10 @@ class LoginController extends Controller
             return response()->json(['message' => $message], 429);
         }
 
-        return back()->withErrors([$errorField => $message])->withInput();
+        return back()->withErrors(['email' => $message])->withInput();
     }
 
-    private function failedAttempt(LoginRequest $request, string $errorField): JsonResponse|RedirectResponse
+    private function failedAttempt(LoginRequest $request): JsonResponse|RedirectResponse
     {
         $message = 'Identifiants incorrects.';
 
@@ -158,10 +89,10 @@ class LoginController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        return back()->withErrors([$errorField => $message])->withInput();
+        return back()->withErrors(['email' => $message])->withInput();
     }
 
-    private function disabledAccount(LoginRequest $request, string $errorField): JsonResponse|RedirectResponse
+    private function disabledAccount(LoginRequest $request): JsonResponse|RedirectResponse
     {
         $message = 'Votre compte est désactivé.';
 
@@ -169,6 +100,6 @@ class LoginController extends Controller
             return response()->json(['message' => $message], 403);
         }
 
-        return back()->withErrors([$errorField => $message])->withInput();
+        return back()->withErrors(['email' => $message])->withInput();
     }
 }

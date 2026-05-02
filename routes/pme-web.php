@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth', 'verified.phone', 'profile:sme'])
+Route::middleware(['web', 'auth', 'verified.email', 'profile:sme'])
     ->prefix('pme')->name('pme.')
     ->group(function () {
         // TODO: Implement controllers and uncomment these routes

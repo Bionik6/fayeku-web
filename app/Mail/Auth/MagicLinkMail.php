@@ -1,36 +1,36 @@
 <?php
 
-namespace App\Mail\Compta;
+namespace App\Mail\Auth;
 
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AccountantPasswordResetMail extends Mailable
+class MagicLinkMail extends Mailable
 {
     use SerializesModels;
 
     public function __construct(
         public readonly string $firstName,
-        public readonly string $resetUrl,
+        public readonly string $magicUrl,
         public readonly int $expiresInMinutes,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Fayeku Compta - Réinitialisez votre mot de passe',
+            subject: 'Fayeku - Votre lien de connexion',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.compta.accountant-password-reset',
+            markdown: 'emails.auth.magic-link',
             with: [
                 'firstName' => $this->firstName,
-                'resetUrl' => $this->resetUrl,
+                'magicUrl' => $this->magicUrl,
                 'expiresInMinutes' => $this->expiresInMinutes,
             ],
         );

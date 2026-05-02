@@ -3,7 +3,7 @@
 use App\Mail\Compta\AccountantActivationLinkMail;
 use App\Models\Compta\AccountantLead;
 use App\Models\Shared\User;
-use App\Notifications\AccountantPasswordResetNotification;
+use App\Notifications\PasswordResetNotification;
 use App\Services\Compta\AccountantLeadActivator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -66,43 +66,41 @@ test('full accountant onboarding: lead → activation → dashboard → logout �
     $this->post(route('auth.logout'))->assertRedirect(route('login'));
     $this->assertGuest();
 
-    // --- 5. Connexion avec email + password (profile=accountant) ---
+    // --- 5. Connexion avec email + password ---
     $this->post(route('login'), [
-        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
         'password' => 'Init@P4ssw0rd!',
     ])->assertRedirect(route('dashboard'));
     $this->assertAuthenticatedAs($user);
 
-    // --- 6. Logout, puis demande de reset par email (profile=accountant) ---
+    // --- 6. Logout, puis demande de reset par email ---
     $this->post(route('auth.logout'));
 
     Notification::fake();
     $this->post(route('password.email'), [
-        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
     ])->assertRedirect();
 
-    /** @var AccountantPasswordResetNotification|null $sent */
+    /** @var PasswordResetNotification|null $sent */
     $sent = null;
     Notification::assertSentTo(
         $user,
-        AccountantPasswordResetNotification::class,
-        function (AccountantPasswordResetNotification $n) use (&$sent) {
+        PasswordResetNotification::class,
+        function (PasswordResetNotification $n) use (&$sent) {
             $sent = $n;
 
             return true;
         }
     );
 
-    // Le lien envoyé pointe vers /accountant/reset-password/{token}
-    expect($sent->resetUrl)->toContain('/accountant/reset-password/');
+    // Le lien envoyé pointe vers /auth/reset-password/{token}
+    expect($sent->resetUrl)->toContain('/auth/reset-password/');
     expect($sent->resetUrl)->toContain('email='.urlencode('cabinet@diallo.sn'));
 
     // --- 7. Reset avec un nouveau token (Password::broker pour reproduire) ---
     $token = Password::broker()->createToken($user);
 
-    $this->post(route('accountant.auth.reset-password.submit'), [
+    $this->post(route('auth.reset-password.submit'), [
         'token' => $token,
         'email' => 'cabinet@diallo.sn',
         'password' => 'NewSecure@P4ssw0rd!',
@@ -115,7 +113,6 @@ test('full accountant onboarding: lead → activation → dashboard → logout �
     // --- 8. Old password no longer works ---
     $this->post(route('auth.logout'));
     $this->post(route('login'), [
-        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
         'password' => 'Init@P4ssw0rd!',
     ])->assertSessionHasErrors('email');
@@ -123,7 +120,6 @@ test('full accountant onboarding: lead → activation → dashboard → logout �
 
     // --- 9. New password works ---
     $this->post(route('login'), [
-        'profile' => 'accountant',
         'email' => 'cabinet@diallo.sn',
         'password' => 'NewSecure@P4ssw0rd!',
     ])->assertRedirect(route('dashboard'));
@@ -136,7 +132,7 @@ test('accountant is redirected to /compta/dashboard if they try to access /pme/*
     $this->actingAs($user)->get('/pme/dashboard')->assertRedirect(route('dashboard'));
 });
 
-test('accountant activation flow rejects accountant from logging in via sme portal afterwards', function () {
+test('accountant phone is captured during lead/activation but cannot be used for login (email-only for now)', function () {
     Mail::fake();
 
     $lead = AccountantLead::create([
@@ -167,20 +163,20 @@ test('accountant activation flow rejects accountant from logging in via sme port
         'cgu_accepted' => '1',
     ])->assertRedirect(route('dashboard'));
 
+    // The phone is persisted on the User (for SMS OTP later) but login by phone
+    // is disabled until Orange SMS is live — only email is accepted.
+    $user = User::where('email', 'awa@sow.sn')->firstOrFail();
+    expect($user->phone)->toBe('+221770000077');
+
     $this->post(route('auth.logout'));
 
-    // Tentative de login avec le profil PME et le téléphone du cabinet → refusé.
     $this->post(route('login'), [
-        'profile' => 'sme',
-        'phone' => '770000077',
+        'email' => '770000077',
         'password' => 'Init@P4ssw0rd!',
-        'country_code' => 'SN',
-    ])->assertSessionHasErrors('phone');
+    ])->assertSessionHasErrors('email');
     $this->assertGuest();
 
-    // Login avec le profil Cabinet → OK.
     $this->post(route('login'), [
-        'profile' => 'accountant',
         'email' => 'awa@sow.sn',
         'password' => 'Init@P4ssw0rd!',
     ])->assertRedirect(route('dashboard'));

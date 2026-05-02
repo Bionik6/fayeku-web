@@ -1,8 +1,8 @@
 <x-layouts::auth :title="__('Connexion')">
-    <div class="flex flex-col gap-6" x-data="{ profile: @js(old('profile', 'sme')) }">
+    <div class="flex flex-col gap-6">
         <x-auth-header
             :title="__('Connexion')"
-            :description="__('Choisissez votre profil et entrez vos identifiants pour accéder à Fayeku.')"
+            :description="__('Saisissez votre adresse email et votre mot de passe pour accéder à Fayeku.')"
         />
 
         <x-auth-session-status :status="session('status')" />
@@ -10,44 +10,21 @@
         <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-5">
             @csrf
 
-            <x-auth.profile-toggle :value="old('profile', 'sme')" />
-
-            {{-- Champs PME : téléphone (required dynamique via Alpine, suit le profil sélectionné) --}}
-            <div x-show="profile === 'sme'" x-cloak class="flex flex-col gap-1">
-                <x-phone-input
-                    :label="__('Téléphone')"
-                    country-name="country_code"
-                    :country-value="old('country_code', 'SN')"
-                    phone-name="phone"
-                    :phone-value="old('phone')"
-                    required-when="profile === 'sme'"
-                    phone-placeholder="XX XXX XX XX"
-                    :countries="['SN' => config('fayeku.countries.SN.label', 'SEN (+221)')]"
+            <label class="auth-label">
+                <span>{{ __('Email') }} *</span>
+                <input
+                    name="email"
+                    type="email"
+                    value="{{ old('email') }}"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    placeholder="vous@example.com"
+                    class="auth-input"
                 />
-                <div class="-mt-0.5 space-y-1">
-                    <x-auth-field-error name="country_code" />
-                    <x-auth-field-error name="phone" />
-                </div>
-            </div>
+                <x-auth-field-error name="email" />
+            </label>
 
-            {{-- Champs Cabinet : email (required dynamique via Alpine) --}}
-            <div x-show="profile === 'accountant'" x-cloak>
-                <label class="auth-label">
-                    <span>{{ __('Email') }} *</span>
-                    <input
-                        name="email"
-                        type="email"
-                        value="{{ old('email') }}"
-                        x-bind:required="profile === 'accountant'"
-                        autocomplete="username"
-                        placeholder="cabinet@example.com"
-                        class="auth-input"
-                    />
-                    <x-auth-field-error name="email" />
-                </label>
-            </div>
-
-            {{-- Champ commun : mot de passe --}}
             <div class="auth-field-stack">
                 <div class="flex items-center justify-between gap-1">
                     <span class="auth-field-label">{{ __('Mot de passe') }} *</span>
@@ -80,18 +57,19 @@
         </form>
 
         <p class="text-center text-sm leading-6 text-slate-600">
-            <template x-if="profile === 'sme'">
-                <span>
-                    {{ __('Pas encore de compte ?') }}
-                    <a href="{{ route('register') }}" wire:navigate class="auth-link">{{ __('Créer un compte') }}</a>
-                </span>
-            </template>
-            <template x-if="profile === 'accountant'">
-                <span>
-                    {{ __('Vous souhaitez rejoindre Fayeku Compta ?') }}
-                    <a href="{{ route('marketing.accountants.join') }}" class="auth-link">{{ __("S'inscrire") }}</a>
-                </span>
-            </template>
+            <a href="{{ route('auth.magic-link.request') }}" wire:navigate class="auth-link">
+                {{ __('Recevoir un lien de connexion par email') }}
+            </a>
+        </p>
+
+        <hr class="border-slate-200" />
+
+        <p class="text-center text-sm leading-6 text-slate-600">
+            <span>{{ __('Pas encore de compte PME ?') }}</span>
+            <a href="{{ route('register') }}" wire:navigate class="auth-link">{{ __('Créer un compte') }}</a>
+            <br>
+            <span class="text-xs text-slate-500">{{ __('Vous êtes expert-comptable ?') }}</span>
+            <a href="{{ route('marketing.accountants.join') }}" class="auth-link text-xs">{{ __("Inscrire mon cabinet") }}</a>
         </p>
     </div>
 </x-layouts::auth>

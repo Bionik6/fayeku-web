@@ -71,12 +71,12 @@ test('guest cannot access company setup page', function () {
         ->assertRedirect(route('login'));
 });
 
-test('unverified phone cannot access company setup page', function () {
+test('unverified email cannot access company setup page', function () {
     $user = User::factory()->unverified()->create(['profile_type' => 'sme']);
 
     $this->actingAs($user)
         ->get(route('auth.company-setup'))
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 });
 
 test('sme can complete company setup', function () {
@@ -196,26 +196,26 @@ test('double submission of company setup is idempotent', function () {
     expect($company->fresh()->name)->toBe('First Name');
 });
 
-test('otp verification redirects sme without company setup to company setup page', function () {
-    $user = User::factory()->unverified()->create(['phone' => '+221771234567', 'profile_type' => 'sme']);
+test('email verification redirects sme without company setup to company setup page', function () {
+    $user = User::factory()->unverified()->create(['email' => 'sme@example.com', 'profile_type' => 'sme']);
     $company = Company::factory()->create(['type' => 'sme', 'setup_completed_at' => null]);
     $company->users()->attach($user->id, ['role' => 'owner']);
-    createOtpCode('+221771234567', '123456');
+    createOtpCode('sme@example.com', '123456');
 
     $this->actingAs($user)
-        ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('sme.auth.otp.verify'), ['code' => '123456'])
+        ->withSession(['verification_email' => 'sme@example.com'])
+        ->post(route('auth.verify-email.verify'), ['code' => '123456'])
         ->assertRedirect(route('auth.company-setup'));
 });
 
-test('otp verification redirects sme with completed setup to pme dashboard', function () {
-    $user = User::factory()->unverified()->create(['phone' => '+221771234567', 'profile_type' => 'sme']);
+test('email verification redirects sme with completed setup to pme dashboard', function () {
+    $user = User::factory()->unverified()->create(['email' => 'sme@example.com', 'profile_type' => 'sme']);
     $company = Company::factory()->create(['type' => 'sme', 'setup_completed_at' => now()]);
     $company->users()->attach($user->id, ['role' => 'owner']);
-    createOtpCode('+221771234567', '123456');
+    createOtpCode('sme@example.com', '123456');
 
     $this->actingAs($user)
-        ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('sme.auth.otp.verify'), ['code' => '123456'])
+        ->withSession(['verification_email' => 'sme@example.com'])
+        ->post(route('auth.verify-email.verify'), ['code' => '123456'])
         ->assertRedirect(route('pme.dashboard'));
 });

@@ -121,12 +121,13 @@ test('POST /sme/register crée le user, la company SME, la subscription et la li
         ->post(route('register.submit'), [
             'first_name' => 'Aïssatou',
             'last_name' => 'Diop',
+            'email' => 'aissatou.diop@example.com',
             'phone' => '770000123',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $user = User::where('phone', '+221770000123')->first();
     expect($user)->not->toBeNull();
@@ -154,12 +155,13 @@ test('POST /register via /join/{code} crée une PartnerInvitation synthétique v
         ->post(route('register.submit'), [
             'first_name' => 'Aïssatou',
             'last_name' => 'Diop',
+            'email' => 'aissatou.diop@example.com',
             'phone' => '770000123',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $invitation = PartnerInvitation::where('accountant_firm_id', $firm->id)->first();
     expect($invitation)->not->toBeNull();
@@ -184,6 +186,7 @@ test('POST /register via /join/{code} positionne la SME sur le plan Essentiel pa
         ->post(route('register.submit'), [
             'first_name' => 'Aïssatou',
             'last_name' => 'Diop',
+            'email' => 'aissatou.diop@example.com',
             'phone' => '770000123',
             'country_code' => 'SN',
             'password' => 'password123',
@@ -204,6 +207,7 @@ test('POST /register via /join/{code} crée une Commission pour le cabinet (esse
         ->post(route('register.submit'), [
             'first_name' => 'Aïssatou',
             'last_name' => 'Diop',
+            'email' => 'aissatou.diop@example.com',
             'phone' => '770000123',
             'country_code' => 'SN',
             'password' => 'password123',
@@ -241,6 +245,7 @@ test('POST /register avec une PartnerInvitation existante (essentiel) crée la c
     $this->post(route('register.submit'), [
         'first_name' => 'Khady',
         'last_name' => 'Mbaye',
+        'email' => 'khady.mbaye@example.com',
         'phone' => '770000789',
         'country_code' => 'SN',
         'password' => 'password123',
@@ -266,11 +271,12 @@ test('POST /register sans cabinet ne crée ni PartnerInvitation ni Commission', 
     $this->post(route('register.submit'), [
         'first_name' => 'Solo',
         'last_name' => 'Faye',
+        'email' => 'solo.faye@example.com',
         'phone' => '770000111',
         'country_code' => 'SN',
         'password' => 'password123',
         'password_confirmation' => 'password123',
-    ])->assertRedirect(route('sme.auth.otp'));
+    ])->assertRedirect(route('auth.verify-email'));
 
     expect(PartnerInvitation::count())->toBe(0);
     expect(Commission::count())->toBe(0);
@@ -284,22 +290,24 @@ test('OTP verify après inscription via /join/{code} flippe la PartnerInvitation
         ->post(route('register.submit'), [
             'first_name' => 'Aïssatou',
             'last_name' => 'Diop',
+            'email' => 'aissatou.diop@example.com',
             'phone' => '770000123',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $invitation = PartnerInvitation::where('accountant_firm_id', $firm->id)->first();
     expect($invitation->status)->toBe('registering');
 
-    // Step 2: simulate OTP verification (use the auto-generated OTP code)
+    // Step 2: simulate email verification (use the auto-generated OTP code)
     DB::table('otp_codes')
-        ->where('phone', '+221770000123')
+        ->where('identifier', 'aissatou.diop@example.com')
         ->update(['code' => hash('sha256', '123456')]);
 
-    $this->post(route('sme.auth.otp.verify'), ['code' => '123456']);
+    $this->withSession(['verification_email' => 'aissatou.diop@example.com'])
+        ->post(route('auth.verify-email.verify'), ['code' => '123456']);
 
     $invitation->refresh();
     expect($invitation->status)->toBe('accepted');
@@ -313,12 +321,13 @@ test('POST /sme/register via referral link bascule la SME sur Essentiel (plan pr
         ->post(route('register.submit'), [
             'first_name' => 'Pape',
             'last_name' => 'Ndiaye',
+            'email' => 'pape.ndiaye@example.com',
             'phone' => '770000999',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $smeCompany = Company::where('type', 'sme')->where('name', 'Pape Ndiaye')->first();
     $subscription = Subscription::where('company_id', $smeCompany->id)->first();
@@ -332,12 +341,13 @@ test('POST /sme/register vide joining_firm_code de la session après inscription
         ->post(route('register.submit'), [
             'first_name' => 'Moussa',
             'last_name' => 'Sarr',
+            'email' => 'moussa.sarr@example.com',
             'phone' => '770000456',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'))
+        ->assertRedirect(route('auth.verify-email'))
         ->assertSessionMissing('joining_firm_code');
 });
 
@@ -345,12 +355,13 @@ test('POST /sme/register sans joining_firm_code ni token ne crée pas de liaison
     $this->post(route('register.submit'), [
         'first_name' => 'Solo',
         'last_name' => 'Faye',
+        'email' => 'solo.faye@example.com',
         'phone' => '770000111',
         'country_code' => 'SN',
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     expect(AccountantCompany::count())->toBe(0);
 
@@ -380,12 +391,13 @@ test('POST /sme/register associe automatiquement une PartnerInvitation existante
         ->post(route('register.submit'), [
             'first_name' => 'Khady',
             'last_name' => 'Mbaye',
+            'email' => 'khady.mbaye2@example.com',
             'phone' => '770000789',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $invitation->refresh();
     expect($invitation->status)->toBe('registering');
@@ -413,12 +425,13 @@ test('POST /sme/register lie le cabinet sans toucher à une PartnerInvitation d\
         ->post(route('register.submit'), [
             'first_name' => 'Direct',
             'last_name' => 'Jonction',
+            'email' => 'direct.jonction@example.com',
             'phone' => '770000333',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $other->refresh();
     expect($other->status)->toBe('pending');
@@ -451,12 +464,13 @@ test('flow complet : GET /join/{code} → POST /sme/register lie le SME au cabin
         ->post(route('register.submit'), [
             'first_name' => 'Bineta',
             'last_name' => 'Lo',
+            'email' => 'bineta.lo@example.com',
             'phone' => '770000555',
             'country_code' => 'SN',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 
     $smeCompany = Company::where('type', 'sme')->where('name', 'Bineta Lo')->first();
     expect($smeCompany)->not->toBeNull();

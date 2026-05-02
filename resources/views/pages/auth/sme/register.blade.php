@@ -1,6 +1,7 @@
 @php
     $inviteeFirstName = '';
     $inviteeLastName = '';
+    $inviteeEmail = $invitation?->invitee_email ?? '';
 
     if (isset($invitation) && $invitation?->invitee_name) {
         $parts = explode(' ', $invitation->invitee_name, 2);
@@ -100,6 +101,20 @@
                     <x-auth-field-error name="last_name" />
                 </label>
             </div>
+
+            <label class="auth-label">
+                <span>{{ __('Email') }} *</span>
+                <input
+                    name="email"
+                    type="email"
+                    value="{{ old('email', $inviteeEmail) }}"
+                    required
+                    autocomplete="email"
+                    placeholder="vous@example.com"
+                    class="auth-input"
+                />
+                <x-auth-field-error name="email" />
+            </label>
 
             <x-phone-input
                 :label="__('Téléphone')"

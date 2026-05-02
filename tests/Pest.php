@@ -50,11 +50,11 @@ function something()
     // ..
 }
 
-function createOtpCode(string $phone, string $code, string $purpose = 'verification', ?string $expiresAt = null): void
+function createOtpCode(string $identifier, string $code, string $purpose = 'email_verification', ?string $expiresAt = null): void
 {
     DB::table('otp_codes')->insert([
         'id' => (string) Str::ulid(),
-        'phone' => $phone,
+        'identifier' => $identifier,
         'code' => hash('sha256', $code),
         'purpose' => $purpose,
         'expires_at' => $expiresAt ?? now()->addMinutes(10),

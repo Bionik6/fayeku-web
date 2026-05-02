@@ -32,7 +32,7 @@ Route::get('/contact', [MarketingPageController::class, 'contact'])->name('marke
 Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defaults('page', 'mentions-legales')->name('marketing.legal');
 Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defaults('page', 'confidentialite')->name('marketing.privacy');
 
-Route::middleware(['auth', 'verified.phone', 'profile:accountant_firm'])->prefix('compta')->group(function () {
+Route::middleware(['auth', 'verified.email', 'profile:accountant_firm'])->prefix('compta')->group(function () {
     Route::redirect('/', '/compta/dashboard');
     Route::livewire('dashboard', 'pages::compta.dashboard.index')->name('dashboard');
     Route::livewire('alertes', 'pages::compta.alerts.index')->name('alerts.index');
@@ -53,7 +53,7 @@ Route::get('f/{invoice:public_code}/pdf', InvoicePdfController::class)->name('pm
 Route::get('d/{quotePublic:public_code}/pdf', ProposalDocumentPdfController::class)->name('pme.quotes.pdf');
 Route::get('p/{proformaPublic:public_code}/pdf', ProposalDocumentPdfController::class)->name('pme.proformas.pdf');
 
-Route::middleware(['auth', 'verified.phone', 'profile:sme'])->prefix('pme')->group(function () {
+Route::middleware(['auth', 'verified.email', 'profile:sme'])->prefix('pme')->group(function () {
     Route::redirect('/', '/pme/dashboard');
     Route::livewire('dashboard', 'pages::pme.dashboard.index')->name('pme.dashboard');
     Route::livewire('invoices/create', 'pages::pme.invoices.form')->name('pme.invoices.create');

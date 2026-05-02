@@ -22,9 +22,11 @@ return [
     'otp_expiry_minutes' => (int) env('OTP_EXPIRY_MINUTES', 10),
     'otp_max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 3),
     'otp_bypass_code' => env('OTP_BYPASS_CODE'),
-    // Canal de livraison OTP : `whatsapp` (défaut, en attendant la validation
-    // Orange IAM) ou `sms` (Orange SMS, à activer une fois le compte validé).
-    'otp_channel' => env('OTP_CHANNEL', 'whatsapp'),
+    // Canal de livraison OTP : `email` (défaut, prêt en prod), `whatsapp`
+    // (à activer quand le template Meta est validé) ou `sms` (Orange SMS,
+    // à activer une fois le compte IAM validé).
+    'otp_channel' => env('OTP_CHANNEL', 'email'),
+    'require_email_verification' => (bool) env('FAYEKU_REQUIRE_EMAIL_VERIFICATION', true),
     'fne_api_url' => env('FNE_API_URL', ''),
     'fne_test_url' => env('FNE_TEST_URL', 'http://54.247.95.108/ws'),
     'countries' => [

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class LoginRequest extends FormRequest
 {
@@ -17,21 +16,11 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
-            'profile' => ['required', Rule::in(['sme', 'accountant'])],
+        return [
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean'],
         ];
-
-        if ($this->input('profile') === 'sme') {
-            $rules['phone'] = ['required', 'string'];
-            $rules['country_code'] = ['required', 'string', Rule::in(['SN', 'CI'])];
-        }
-
-        if ($this->input('profile') === 'accountant') {
-            $rules['email'] = ['required', 'string', 'email', 'max:255'];
-        }
-
-        return $rules;
     }
 
     /**
@@ -40,10 +29,6 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'profile.required' => 'Veuillez sélectionner votre profil.',
-            'profile.in' => 'Le profil sélectionné est invalide.',
-            'phone.required' => 'Le numéro de téléphone est obligatoire.',
-            'country_code.required' => 'Le pays est obligatoire.',
             'email.required' => "L'adresse email est obligatoire.",
             'email.email' => "L'adresse email n'est pas valide.",
             'password.required' => 'Le mot de passe est obligatoire.',

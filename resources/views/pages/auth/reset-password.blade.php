@@ -1,30 +1,29 @@
-<x-layouts::auth :title="__('Réinitialiser le mot de passe')">
+<x-layouts::auth :title="__('Nouveau mot de passe')">
     <div class="flex flex-col gap-6">
         <x-auth-header
-            :title="__('Réinitialiser le mot de passe')"
-            :description="__('Entrez le code reçu par SMS et votre nouveau mot de passe')"
+            :title="__('Choisir un nouveau mot de passe')"
+            :description="__('Définissez un nouveau mot de passe pour votre compte Fayeku.')"
         />
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('sme.auth.reset-password.submit') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('auth.reset-password.submit') }}" class="flex flex-col gap-5">
             @csrf
 
+            <input type="hidden" name="token" value="{{ $token }}" />
+
             <label class="auth-label">
-                <span>{{ __('Code de vérification') }} *</span>
+                <span>{{ __('Email') }} *</span>
                 <input
-                    name="code"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]{6}"
-                    maxlength="6"
+                    name="email"
+                    type="email"
+                    value="{{ old('email', $email) }}"
                     required
-                    autofocus
-                    autocomplete="one-time-code"
-                    placeholder="000000"
-                    class="auth-input text-center text-lg tracking-[0.35em]"
+                    autocomplete="username"
+                    placeholder="vous@example.com"
+                    class="auth-input"
                 />
-                <x-auth-field-error name="code" />
+                <x-auth-field-error name="email" />
             </label>
 
             <label class="auth-label">
@@ -33,8 +32,10 @@
                     name="password"
                     type="password"
                     required
+                    autofocus
                     autocomplete="new-password"
-                    placeholder="{{ __('Entrez votre nouveau mot de passe...') }}"
+                    minlength="8"
+                    placeholder="{{ __('Minimum 8 caractères') }}"
                     class="auth-input"
                 />
                 <x-auth-field-error name="password" />
@@ -47,7 +48,7 @@
                     type="password"
                     required
                     autocomplete="new-password"
-                    placeholder="{{ __('Confirmez votre mot de passe...') }}"
+                    placeholder="{{ __('Confirmez votre mot de passe') }}"
                     class="auth-input"
                 />
             </label>

@@ -114,17 +114,23 @@ test('pme sidebar shows fayeku pme logo label', function () {
     $response->assertSee('PME');
 });
 
-test('sme user is redirected to pme dashboard after otp verification', function () {
+test('sme user is redirected to pme dashboard after email verification (when company already set up)', function () {
     $user = User::factory()->unverified()->create([
-        'phone' => '+221771234567',
+        'email' => 'sme@example.com',
         'profile_type' => 'sme',
     ]);
 
-    createOtpCode('+221771234567', '654321');
+    $company = Company::factory()->create([
+        'type' => 'sme',
+        'setup_completed_at' => now(),
+    ]);
+    $company->users()->attach($user->id, ['role' => 'owner']);
+
+    createOtpCode('sme@example.com', '654321');
 
     $this->actingAs($user)
-        ->withSession(['otp_phone' => '+221771234567'])
-        ->post(route('sme.auth.otp.verify'), ['code' => '654321'])
+        ->withSession(['verification_email' => 'sme@example.com'])
+        ->post(route('auth.verify-email.verify'), ['code' => '654321'])
         ->assertRedirect(route('pme.dashboard'));
 });
 

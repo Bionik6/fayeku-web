@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ForgotPasswordRequest extends FormRequest
 {
@@ -17,20 +16,9 @@ class ForgotPasswordRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
-            'profile' => ['required', Rule::in(['sme', 'accountant'])],
+        return [
+            'email' => ['required', 'string', 'email', 'max:255'],
         ];
-
-        if ($this->input('profile') === 'sme') {
-            $rules['phone'] = ['required', 'string'];
-            $rules['country_code'] = ['required', 'string', Rule::in(['SN', 'CI'])];
-        }
-
-        if ($this->input('profile') === 'accountant') {
-            $rules['email'] = ['required', 'string', 'email', 'max:255'];
-        }
-
-        return $rules;
     }
 
     /**
@@ -39,10 +27,6 @@ class ForgotPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'profile.required' => 'Veuillez sélectionner votre profil.',
-            'profile.in' => 'Le profil sélectionné est invalide.',
-            'phone.required' => 'Le numéro de téléphone est obligatoire.',
-            'country_code.required' => 'Le pays est obligatoire.',
             'email.required' => "L'adresse email est obligatoire.",
             'email.email' => "L'adresse email n'est pas valide.",
         ];

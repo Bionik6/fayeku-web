@@ -11,27 +11,29 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
-class OtpController extends Controller
+class EmailVerificationController extends Controller
 {
+    private const PURPOSE = 'email_verification';
+
     public function show(): View|RedirectResponse
     {
-        $phone = session('otp_phone') ?? auth()->user()?->phone;
+        $email = $this->resolveEmail();
 
-        if (! $phone) {
+        if (! $email) {
             return redirect()->route('login');
         }
 
-        return view('pages.auth.sme.verify-otp', [
-            'maskedPhone' => $this->maskPhone($phone),
-            'otpExpiresAt' => $this->latestOtpExpiresAt($phone),
+        return view('pages.auth.verify-email', [
+            'maskedEmail' => $this->maskEmail($email),
+            'otpExpiresAt' => $this->latestOtpExpiresAt($email),
         ]);
     }
 
     public function verify(VerifyOtpRequest $request, OtpService $otpService): JsonResponse|RedirectResponse
     {
-        $phone = session('otp_phone') ?? auth()->user()?->phone;
+        $email = $this->resolveEmail();
 
-        if (! $phone) {
+        if (! $email) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Session expirée.'], 422);
             }
@@ -39,7 +41,7 @@ class OtpController extends Controller
             return redirect()->route('login');
         }
 
-        if (! $otpService->verify($phone, $request->input('code'))) {
+        if (! $otpService->verify($email, $request->input('code'), self::PURPOSE)) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Code invalide ou expiré.'], 422);
             }
@@ -50,7 +52,7 @@ class OtpController extends Controller
         $user = auth()->user();
 
         if ($user) {
-            $user->forceFill(['phone_verified_at' => now()])->save();
+            $user->forceFill(['email_verified_at' => now()])->save();
         }
 
         $invitationToken = session('invitation_token');
@@ -70,10 +72,10 @@ class OtpController extends Controller
             session()->forget('invitation_token');
         }
 
-        session()->forget('otp_phone');
+        session()->forget('verification_email');
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'Téléphone vérifié avec succès.']);
+            return response()->json(['message' => 'Email vérifié avec succès.']);
         }
 
         if ($user?->profile_type === 'sme') {
@@ -84,14 +86,14 @@ class OtpController extends Controller
             }
         }
 
-        return redirect()->route($this->dashboardRouteNameForUser());
+        return redirect()->to($user?->dashboardUrl() ?? route('login'));
     }
 
     public function resend(OtpService $otpService): JsonResponse|RedirectResponse
     {
-        $phone = session('otp_phone') ?? auth()->user()?->phone;
+        $email = $this->resolveEmail();
 
-        if (! $phone) {
+        if (! $email) {
             if (request()->expectsJson()) {
                 return response()->json(['message' => 'Session expirée.'], 422);
             }
@@ -99,7 +101,7 @@ class OtpController extends Controller
             return redirect()->route('login');
         }
 
-        if (! $otpService->canResend($phone)) {
+        if (! $otpService->canResend($email, self::PURPOSE)) {
             $message = 'Veuillez patienter avant de renvoyer un code.';
 
             if (request()->expectsJson()) {
@@ -109,7 +111,7 @@ class OtpController extends Controller
             return back()->with('status', $message);
         }
 
-        $otpService->generate($phone);
+        $otpService->generate($email, self::PURPOSE);
 
         if (request()->expectsJson()) {
             return response()->json(['message' => 'Un nouveau code a été envoyé.']);
@@ -118,18 +120,18 @@ class OtpController extends Controller
         return back()->with('status', 'Un nouveau code a été envoyé.');
     }
 
-    private function dashboardRouteNameForUser(): string
+    private function resolveEmail(): ?string
     {
-        $user = auth()->user();
+        $email = session('verification_email') ?? auth()->user()?->email;
 
-        return $user?->profile_type === 'sme' ? 'pme.dashboard' : 'dashboard';
+        return $email ? mb_strtolower((string) $email) : null;
     }
 
-    private function latestOtpExpiresAt(string $phone, string $purpose = 'verification'): ?int
+    private function latestOtpExpiresAt(string $email): ?int
     {
         $record = DB::table('otp_codes')
-            ->where('phone', $phone)
-            ->where('purpose', $purpose)
+            ->where('identifier', $email)
+            ->where('purpose', self::PURPOSE)
             ->whereNull('used_at')
             ->latest('created_at')
             ->first();
@@ -137,14 +139,20 @@ class OtpController extends Controller
         return $record ? strtotime($record->expires_at) : null;
     }
 
-    private function maskPhone(string $phone): string
+    private function maskEmail(string $email): string
     {
-        $length = mb_strlen($phone);
+        [$local, $domain] = array_pad(explode('@', $email, 2), 2, '');
 
-        if ($length <= 6) {
-            return $phone;
+        if (! $domain) {
+            return $email;
         }
 
-        return mb_substr($phone, 0, 4).str_repeat('*', $length - 6).mb_substr($phone, -2);
+        $localLength = mb_strlen($local);
+
+        if ($localLength <= 2) {
+            return $local.'***@'.$domain;
+        }
+
+        return mb_substr($local, 0, 2).str_repeat('*', max(2, $localLength - 2)).'@'.$domain;
     }
 }

@@ -11,13 +11,13 @@ class OtpService
 {
     public function __construct(private OtpChannelInterface $channel) {}
 
-    public function generate(string $phone, string $purpose = 'verification'): string
+    public function generate(string $identifier, string $purpose = 'verification'): string
     {
         $code = (string) random_int(100000, 999999);
 
         DB::table('otp_codes')->insert([
             'id' => (string) Str::ulid(),
-            'phone' => $phone,
+            'identifier' => $identifier,
             'code' => hash('sha256', $code),
             'purpose' => $purpose,
             'expires_at' => now()->addMinutes((int) config('fayeku.otp_expiry_minutes', 10)),
@@ -28,19 +28,19 @@ class OtpService
 
         if (config('fayeku.demo')) {
             Log::info('[Demo] OTP simulé — aucun envoi externe.', [
-                'phone' => $phone,
+                'identifier' => $identifier,
                 'purpose' => $purpose,
             ]);
 
             return $code;
         }
 
-        $this->channel->send($phone, $code);
+        $this->channel->send($identifier, $code);
 
         return $code;
     }
 
-    public function verify(string $phone, string $code, string $purpose = 'verification'): bool
+    public function verify(string $identifier, string $code, string $purpose = 'verification'): bool
     {
         $bypassCode = config('fayeku.otp_bypass_code');
         $bypassAllowed = app()->environment('local') || (bool) config('fayeku.demo');
@@ -50,7 +50,7 @@ class OtpService
         }
 
         $record = DB::table('otp_codes')
-            ->where('phone', $phone)
+            ->where('identifier', $identifier)
             ->where('purpose', $purpose)
             ->whereNull('used_at')
             ->where('expires_at', '>=', now())
@@ -74,10 +74,10 @@ class OtpService
         return true;
     }
 
-    public function canResend(string $phone, string $purpose = 'verification'): bool
+    public function canResend(string $identifier, string $purpose = 'verification'): bool
     {
         $lastOtp = DB::table('otp_codes')
-            ->where('phone', $phone)
+            ->where('identifier', $identifier)
             ->where('purpose', $purpose)
             ->latest('created_at')
             ->first();

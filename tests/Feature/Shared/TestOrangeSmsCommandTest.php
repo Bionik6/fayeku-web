@@ -47,7 +47,7 @@ test('avec --otp et OTP_CHANNEL=sms, genere un OTP et le persiste', function () 
         ->expectsOutputToContain('OTP genere et stocke dans otp_codes')
         ->assertExitCode(0);
 
-    $row = DB::table('otp_codes')->where('phone', '+221771112233')->first();
+    $row = DB::table('otp_codes')->where('identifier', '+221771112233')->first();
 
     expect($row)->not->toBeNull()
         ->and($row->purpose)->toBe('verification')

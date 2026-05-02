@@ -25,15 +25,24 @@ class UserFactory extends Factory
             'first_name' => SenegalFaker::firstName(),
             'last_name' => SenegalFaker::lastName(),
             'phone' => SenegalFaker::phone(),
+            'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'profile_type' => 'sme',
             'country_code' => 'SN',
             'is_active' => true,
             'phone_verified_at' => now(),
+            'email_verified_at' => now(),
         ];
     }
 
     public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+
+    public function unverifiedPhone(): static
     {
         return $this->state(fn (array $attributes) => [
             'phone_verified_at' => null,

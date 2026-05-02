@@ -5,9 +5,9 @@ namespace App\Interfaces\Shared;
 interface OtpChannelInterface
 {
     /**
-     * Envoie un code OTP à un numéro de téléphone via le canal concret
-     * (WhatsApp template, SMS Orange, etc.). Le canal est responsable du
-     * rendu du message et de la livraison.
+     * Envoie un code OTP à un destinataire via le canal concret
+     * (email, WhatsApp template, SMS Orange, etc.). L'identifiant est
+     * interprété selon le canal : email, téléphone normalisé, etc.
      */
-    public function send(string $phone, string $code): bool;
+    public function send(string $identifier, string $code): bool;
 }

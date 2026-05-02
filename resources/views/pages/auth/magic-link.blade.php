@@ -1,13 +1,13 @@
-<x-layouts::auth :title="__('Mot de passe oublié')">
+<x-layouts::auth :title="__('Lien de connexion')">
     <div class="flex flex-col gap-6">
         <x-auth-header
-            :title="__('Mot de passe oublié')"
-            :description="__('Saisissez votre adresse email. Nous vous enverrons un lien pour réinitialiser votre mot de passe.')"
+            :title="__('Recevoir un lien de connexion')"
+            :description="__('Saisissez votre adresse email. Nous vous enverrons un lien magique pour vous connecter sans mot de passe.')"
         />
 
         <x-auth-session-status :status="session('status')" />
 
-        <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('auth.magic-link.send') }}" class="flex flex-col gap-5">
             @csrf
 
             <label class="auth-label">

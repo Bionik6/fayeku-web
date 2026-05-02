@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['api', 'auth:sanctum', 'verified.phone'])
+Route::middleware(['api', 'auth:sanctum', 'verified.email'])
     ->prefix('api/pme')
     ->group(function () {
         // TODO: Implement controllers and uncomment these routes

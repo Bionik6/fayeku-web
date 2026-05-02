@@ -9,10 +9,10 @@ use App\Models\Auth\Subscription;
 use App\Models\Compta\Commission;
 use App\Models\Compta\PartnerInvitation;
 use App\Models\Shared\User;
+use App\Services\Compta\AccountantLeadActivator;
 use App\Services\Compta\CommissionService;
 use App\Services\Shared\OtpService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthService
@@ -66,17 +66,25 @@ class AuthService
         ];
     }
 
+    /**
+     * Register a new SME user + company.
+     *
+     * Accountants don't go through this path — they are activated by an admin
+     * via {@see AccountantLeadActivator}.
+     */
     public function register(array $data, ?PartnerInvitation &$invitation = null, ?Company $invitingFirm = null): User
     {
         return DB::transaction(function () use ($data, &$invitation, $invitingFirm) {
             $phone = self::normalizePhone($data['phone'], $data['country_code']);
+            $email = Str::lower(trim((string) $data['email']));
 
             $user = User::create([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'phone' => $phone,
+                'email' => $email,
                 'password' => $data['password'],
-                'profile_type' => $data['profile_type'],
+                'profile_type' => 'sme',
                 'country_code' => $data['country_code'],
             ]);
 
@@ -86,11 +94,10 @@ class AuthService
             // plan promised in every referral message ("2 mois offerts sur Essentiel").
             // Only standalone signups (no firm context) stay on Basique.
             $planSlug = $invitation?->recommended_plan ?? ($firm ? 'essentiel' : 'basique');
-            $type = $data['profile_type'] === 'sme' ? 'sme' : 'accountant_firm';
 
             $company = Company::create([
                 'name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
-                'type' => $type,
+                'type' => 'sme',
                 'country_code' => $data['country_code'],
                 'plan' => $planSlug,
             ]);
@@ -163,44 +170,9 @@ class AuthService
                 );
             }
 
-            $this->otpService->generate($phone);
+            $this->otpService->generate($email, 'email_verification');
 
             return $user;
         });
-    }
-
-    public function requestPasswordReset(string $phone): void
-    {
-        $user = User::where('phone', $phone)
-            ->where('profile_type', 'sme')
-            ->first();
-
-        if (! $user) {
-            return;
-        }
-
-        $this->otpService->generate($phone, 'password_reset');
-    }
-
-    public function resetPassword(string $phone, string $code, string $newPassword): bool
-    {
-        if (! $this->otpService->verify($phone, $code, 'password_reset')) {
-            return false;
-        }
-
-        $user = User::where('phone', $phone)
-            ->where('profile_type', 'sme')
-            ->first();
-
-        if (! $user) {
-            return false;
-        }
-
-        $user->forceFill([
-            'password' => Hash::make($newPassword),
-            'phone_verified_at' => $user->phone_verified_at ?? now(),
-        ])->save();
-
-        return true;
     }
 }

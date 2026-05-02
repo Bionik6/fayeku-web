@@ -24,11 +24,21 @@ class RegisterRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', Password::defaults(), 'confirmed'],
             'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
             'invitation_token' => ['nullable', 'string', 'max:100'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('email')) {
+            $this->merge([
+                'email' => mb_strtolower(trim((string) $this->input('email'))),
+            ]);
+        }
     }
 
     /**
@@ -39,6 +49,9 @@ class RegisterRequest extends FormRequest
         return [
             'first_name.required' => 'Le prénom est obligatoire.',
             'last_name.required' => 'Le nom est obligatoire.',
+            'email.required' => "L'adresse email est obligatoire.",
+            'email.email' => "L'adresse email n'est pas valide.",
+            'email.unique' => 'Cette adresse email est déjà utilisée.',
             'phone.required' => 'Le numéro de téléphone est obligatoire.',
             'password.required' => 'Le mot de passe est obligatoire.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
@@ -75,23 +88,5 @@ class RegisterRequest extends FormRequest
                 }
             }
         });
-    }
-
-    /**
-     * SME registration always sets profile_type to 'sme'.
-     *
-     * @param  array<string>|string|null  $key
-     * @return mixed
-     */
-    public function validated($key = null, $default = null)
-    {
-        $data = parent::validated();
-        $data['profile_type'] = 'sme';
-
-        if ($key === null) {
-            return $data;
-        }
-
-        return data_get($data, $key, $default);
     }
 }

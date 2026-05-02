@@ -74,6 +74,7 @@ test('inscription via invitation crée la subscription avec le plan recommandé 
     $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
+        'email' => 'moussa@example.com',
         'phone' => '770000099',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -81,7 +82,7 @@ test('inscription via invitation crée la subscription avec le plan recommandé 
         'country_code' => 'SN',
         'company_name' => 'PME Invitée SARL',
         'invitation_token' => $invitation->token,
-    ])->assertRedirect(route('sme.auth.otp'));
+    ])->assertRedirect(route('auth.verify-email'));
 
     $subscription = Subscription::first();
     expect($subscription)->not->toBeNull();
@@ -95,6 +96,7 @@ test('inscription via invitation crée la relation AccountantCompany', function 
     $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
+        'email' => 'moussa@example.com',
         'phone' => '770000099',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -116,6 +118,7 @@ test('inscription via invitation met le statut à registering', function () {
     $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
+        'email' => 'moussa@example.com',
         'phone' => '770000099',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -136,6 +139,7 @@ test('inscription via invitation définit le plan de la company', function () {
     $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
+        'email' => 'moussa@example.com',
         'phone' => '770000099',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -153,6 +157,7 @@ test('inscription sans invitation reste sur le plan basique', function () {
     $this->post(route('register.submit'), [
         'first_name' => 'Amadou',
         'last_name' => 'Ba',
+        'email' => 'amadou@example.com',
         'phone' => '770000011',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -170,6 +175,7 @@ test('inscription avec token invalide échoue', function () {
     $this->post(route('register.submit'), [
         'first_name' => 'Test',
         'last_name' => 'User',
+        'email' => 'test@example.com',
         'phone' => '770000022',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -182,13 +188,14 @@ test('inscription avec token invalide échoue', function () {
 
 // ─── OTP finalisation ────────────────────────────────────────────────────────
 
-test('vérification OTP finalise le statut de l\'invitation à accepted', function () {
+test('vérification email finalise le statut de l\'invitation à accepted', function () {
     ['invitation' => $invitation] = createInvitation();
 
     // Register via invitation
     $this->post(route('register.submit'), [
         'first_name' => 'Moussa',
         'last_name' => 'Diallo',
+        'email' => 'moussa@example.com',
         'phone' => '770000099',
         'password' => 'P@ssword123!',
         'password_confirmation' => 'P@ssword123!',
@@ -201,32 +208,16 @@ test('vérification OTP finalise le statut de l\'invitation à accepted', functi
     $invitation->refresh();
     expect($invitation->status)->toBe('registering');
 
-    // Simulate OTP verification
-    $user = User::where('phone', '+221770000099')->first();
-    $otpService = app(OtpService::class);
+    $user = User::where('email', 'moussa@example.com')->first();
 
-    // Get OTP from database
-    $otp = DB::table('otp_codes')
-        ->where('phone', '+221770000099')
-        ->latest()
-        ->first();
-
-    // We need to use the actual OTP - let's generate a fresh one and verify it
-    $otpService->generate('+221770000099');
-    $otpCode = DB::table('otp_codes')
-        ->where('phone', '+221770000099')
-        ->latest()
-        ->first();
-
-    // Since OTP is hashed, we need to mock the verify or use a known approach
-    // Let's test by directly calling the controller with a mocked OtpService
+    // Mock the OtpService to bypass actual code verification.
     $mockOtpService = Mockery::mock(OtpService::class);
     $mockOtpService->shouldReceive('verify')->andReturn(true);
     app()->instance(OtpService::class, $mockOtpService);
 
     $this->actingAs($user)
-        ->withSession(['otp_phone' => '+221770000099', 'invitation_token' => $invitation->token])
-        ->post(route('sme.auth.otp.verify'), ['code' => '123456'])
+        ->withSession(['verification_email' => 'moussa@example.com', 'invitation_token' => $invitation->token])
+        ->post(route('auth.verify-email.verify'), ['code' => '123456'])
         ->assertRedirect(route('auth.company-setup'));
 
     $invitation->refresh();
@@ -287,13 +278,14 @@ test('inscription via /join/{code} avec invitation existante crée la relation',
         ->post(route('register.submit'), [
             'first_name' => 'Ibrahima',
             'last_name' => 'Ciss',
+            'email' => 'ibrahima@example.com',
             'phone' => '770000099',
             'password' => 'P@ssword123!',
             'password_confirmation' => 'P@ssword123!',
             'profile_type' => 'sme',
             'country_code' => 'SN',
             'company_name' => 'Khalil Soft',
-        ])->assertRedirect(route('sme.auth.otp'));
+        ])->assertRedirect(route('auth.verify-email'));
 
     $subscription = Subscription::first();
     expect($subscription->plan_slug)->toBe('essentiel');
@@ -310,13 +302,14 @@ test('inscription via /join/{code} sans invitation existante lie quand même au 
         ->post(route('register.submit'), [
             'first_name' => 'Omar',
             'last_name' => 'Sy',
+            'email' => 'omar@example.com',
             'phone' => '770000077',
             'password' => 'P@ssword123!',
             'password_confirmation' => 'P@ssword123!',
             'profile_type' => 'sme',
             'country_code' => 'SN',
             'company_name' => 'Omar Co',
-        ])->assertRedirect(route('sme.auth.otp'));
+        ])->assertRedirect(route('auth.verify-email'));
 
     $subscription = Subscription::first();
     expect($subscription->invited_by_firm_id)->toBe($firm->id);

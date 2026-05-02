@@ -90,13 +90,13 @@ class RegisterController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Inscription réussie. Veuillez vérifier votre téléphone.',
+                'message' => 'Inscription réussie. Veuillez vérifier votre adresse email.',
                 'user' => $user,
                 'token' => $user->createToken('auth')->plainTextToken,
             ], 201);
         }
 
-        session(['otp_phone' => $user->phone]);
+        session(['verification_email' => $user->email]);
 
         if ($invitation) {
             session(['invitation_token' => $invitation->token]);
@@ -108,6 +108,6 @@ class RegisterController extends Controller
 
         session()->forget('joining_firm_code');
 
-        return redirect()->route('sme.auth.otp');
+        return redirect()->route('auth.verify-email');
     }
 }

@@ -15,9 +15,7 @@ class JoinController extends Controller
             ->firstOrFail();
 
         if (auth()->check()) {
-            $route = auth()->user()->profile_type === 'sme' ? 'pme.dashboard' : 'dashboard';
-
-            return redirect()->route($route);
+            return redirect()->to(auth()->user()->dashboardUrl());
         }
 
         session(['joining_firm_code' => $firm->invite_code]);

@@ -15,12 +15,12 @@ test('security settings are available on the settings page', function () {
         ->assertOk();
 });
 
-test('unverified users are redirected to otp from the settings page', function () {
+test('unverified users are redirected to verify-email from the settings page', function () {
     $user = User::factory()->accountantFirm()->unverified()->create();
 
     $this->actingAs($user)
         ->get(route('settings.index'))
-        ->assertRedirect(route('sme.auth.otp'));
+        ->assertRedirect(route('auth.verify-email'));
 });
 
 test('password can be updated', function () {

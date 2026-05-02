@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Auth\Accountant;
+namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\Accountant\ResetPasswordRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\Shared\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
@@ -18,20 +18,19 @@ class PasswordResetController extends Controller
 {
     public function showResetForm(string $token, Request $request): View
     {
-        return view('pages.auth.accountant.reset-password', [
+        return view('pages.auth.reset-password', [
             'token' => $token,
-            'email' => $request->query('email', ''),
+            'email' => (string) $request->query('email', ''),
         ]);
     }
 
     public function reset(ResetPasswordRequest $request): RedirectResponse
     {
-        $email = Str::lower($request->input('email'));
+        $email = Str::lower((string) $request->input('email'));
 
         $status = Password::broker()->reset(
             [
                 'email' => $email,
-                'profile_type' => 'accountant_firm',
                 'password' => $request->input('password'),
                 'password_confirmation' => $request->input('password_confirmation'),
                 'token' => $request->input('token'),
@@ -53,14 +52,12 @@ class PasswordResetController extends Controller
                 ->withErrors(['email' => __($status)]);
         }
 
-        $user = User::where('email', $email)
-            ->where('profile_type', 'accountant_firm')
-            ->first();
+        $user = User::where('email', $email)->first();
 
         if ($user) {
             Auth::login($user);
 
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended($user->dashboardUrl());
         }
 
         return redirect()->route('login')

@@ -5,6 +5,7 @@ namespace App\Providers\Shared;
 use App\Interfaces\Shared\OtpChannelInterface;
 use App\Interfaces\Shared\SmsProviderInterface;
 use App\Interfaces\Shared\WhatsAppProviderInterface;
+use App\Services\Shared\EmailOtpChannel;
 use App\Services\Shared\FakeSmsProvider;
 use App\Services\Shared\FakeWhatsAppProvider;
 use App\Services\Shared\MetaTemplateFetcher;
@@ -74,9 +75,10 @@ class SharedServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(OtpChannelInterface::class, function ($app) {
-            return match (config('fayeku.otp_channel', 'whatsapp')) {
+            return match (config('fayeku.otp_channel', 'email')) {
                 'sms' => $app->make(SmsOtpChannel::class),
-                default => $app->make(WhatsAppOtpChannel::class),
+                'whatsapp' => $app->make(WhatsAppOtpChannel::class),
+                default => $app->make(EmailOtpChannel::class),
             };
         });
     }

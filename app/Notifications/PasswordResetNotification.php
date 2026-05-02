@@ -2,11 +2,11 @@
 
 namespace App\Notifications;
 
-use App\Mail\Compta\AccountantPasswordResetMail;
+use App\Mail\Auth\PasswordResetMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class AccountantPasswordResetNotification extends Notification
+class PasswordResetNotification extends Notification
 {
     use Queueable;
 
@@ -23,9 +23,9 @@ class AccountantPasswordResetNotification extends Notification
         return ['mail'];
     }
 
-    public function toMail(object $notifiable): AccountantPasswordResetMail
+    public function toMail(object $notifiable): PasswordResetMail
     {
-        return (new AccountantPasswordResetMail(
+        return (new PasswordResetMail(
             firstName: (string) ($notifiable->first_name ?? ''),
             resetUrl: $this->resetUrl,
             expiresInMinutes: $this->expiresInMinutes,

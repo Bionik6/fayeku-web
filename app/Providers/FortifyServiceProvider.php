@@ -32,9 +32,15 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureRateLimiting(): void
     {
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = $request->input('phone', '').'|'.$request->ip();
+            $throttleKey = mb_strtolower((string) $request->input('email', '')).'|'.$request->ip();
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        RateLimiter::for('magic-link', function (Request $request) {
+            $throttleKey = mb_strtolower((string) $request->input('email', '')).'|'.$request->ip();
+
+            return Limit::perMinutes(15, 3)->by($throttleKey);
         });
     }
 }
