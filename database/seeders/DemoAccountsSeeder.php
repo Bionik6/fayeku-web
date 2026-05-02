@@ -16,11 +16,11 @@ use Illuminate\Support\Str;
  * autour desquels gravite la démo (cabinet Ndiaye + 2 PME). Tout le monde se
  * connecte avec « password ».
  *
- * Les comptables se connectent par email (/accountant/login), les PME par
- * téléphone (/sme/login). Les colonnes `phone_verified_at` et
- * `email_verified_at` ne sont pas mass-assignables : on les pose via
- * forceFill() pour garantir que les comptes seedés peuvent se connecter
- * sans passer par l'OTP / le lien d'activation.
+ * Tous les comptes se connectent par email sur /login (PME comme cabinet).
+ * Le téléphone reste stocké pour l'avenir SMS OTP. Les colonnes
+ * `phone_verified_at` et `email_verified_at` ne sont pas mass-assignables :
+ * on les pose via forceFill() pour que les comptes seedés se connectent
+ * directement sans passer par la page de vérification email.
  */
 class DemoAccountsSeeder extends Seeder
 {
@@ -194,7 +194,7 @@ class DemoAccountsSeeder extends Seeder
     }
 
     /**
-     * @param  array{first_name: string, last_name: string, phone: string, email?: string, profile_type: string}  $attributes
+     * @param  array{first_name: string, last_name: string, phone: string, email: string, profile_type: string}  $attributes
      */
     private function createUser(array $attributes): User
     {
@@ -202,19 +202,19 @@ class DemoAccountsSeeder extends Seeder
             'first_name' => $attributes['first_name'],
             'last_name' => $attributes['last_name'],
             'phone' => $attributes['phone'],
-            'email' => $attributes['email'] ?? null,
+            'email' => $attributes['email'],
             'password' => 'password',
             'profile_type' => $attributes['profile_type'],
             'country_code' => 'SN',
             'is_active' => true,
         ]);
 
-        // phone_verified_at et email_verified_at ne sont pas dans $fillable —
-        // on doit les poser explicitement via forceFill, sinon les comptes
-        // seedés sont systématiquement renvoyés vers l'OTP au login.
+        // email_verified_at et phone_verified_at ne sont pas dans $fillable —
+        // on doit les poser explicitement via forceFill pour que les comptes
+        // seedés sautent la vérification email au premier login.
         $user->forceFill([
+            'email_verified_at' => now(),
             'phone_verified_at' => now(),
-            'email_verified_at' => $attributes['email'] ?? null ? now() : null,
         ])->save();
 
         return $user;

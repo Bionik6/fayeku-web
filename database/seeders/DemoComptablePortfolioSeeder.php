@@ -63,29 +63,29 @@ class DemoComptablePortfolioSeeder extends Seeder
         $smes = [];
 
         // ─── 3 Critiques (overdue > 60 jours) ──────────────────────────────
-        $smes['transatlantique'] = $this->createSme($cabinet, 'Transatlantique Import-Export SARL', 'essentiel', '+221338710101');
+        $smes['transatlantique'] = $this->createSme($cabinet, 'transatlantique', 'Transatlantique Import-Export SARL', 'essentiel', '+221338710101');
         $this->seedHeavyOverdue($smes['transatlantique'], paidCount: 10, paidAmount: 1_120_000, overdueCount: 8, overdueAmount: 590_000, overdueAgo: 68);
 
-        $smes['groupe_batisseur'] = $this->createSme($cabinet, 'Groupe Bâtisseur SA', 'essentiel', '+221338710102');
+        $smes['groupe_batisseur'] = $this->createSme($cabinet, 'groupe_batisseur', 'Groupe Bâtisseur SA', 'essentiel', '+221338710102');
         $this->seedHeavyOverdue($smes['groupe_batisseur'], paidCount: 8, paidAmount: 1_480_000, overdueCount: 6, overdueAmount: 840_000, overdueAgo: 72);
 
-        $smes['senechimie'] = $this->createSme($cabinet, 'SénéChimie SARL', 'essentiel', '+221338710103');
+        $smes['senechimie'] = $this->createSme($cabinet, 'senechimie', 'SénéChimie SARL', 'essentiel', '+221338710103');
         $this->seedHeavyOverdue($smes['senechimie'], paidCount: 7, paidAmount: 920_000, overdueCount: 5, overdueAmount: 500_000, overdueAgo: 61);
 
         // ─── 5 À surveiller (overdue < 60j ou inactif) ─────────────────────
-        $smes['coury_textile'] = $this->createSme($cabinet, 'Coury Textile SARL', 'basique', '+221338710104');
+        $smes['coury_textile'] = $this->createSme($cabinet, 'coury_textile', 'Coury Textile SARL', 'basique', '+221338710104');
         $this->seedWatchOverdue($smes['coury_textile'], overdueAgoDays: 38);
 
-        $smes['transport_ngor'] = $this->createSme($cabinet, 'Transport Ngor SARL', 'essentiel', '+221338710105');
+        $smes['transport_ngor'] = $this->createSme($cabinet, 'transport_ngor', 'Transport Ngor SARL', 'essentiel', '+221338710105');
         $this->seedWatchOverdue($smes['transport_ngor'], overdueAgoDays: 28);
 
-        $smes['sahel_commerce'] = $this->createSme($cabinet, 'Sahel Commerce', 'basique', '+221338710106');
+        $smes['sahel_commerce'] = $this->createSme($cabinet, 'sahel_commerce', 'Sahel Commerce', 'basique', '+221338710106');
         $this->seedInactive($smes['sahel_commerce'], lastInvoiceAgoDays: 42);
 
-        $smes['ndioum_agro'] = $this->createSme($cabinet, 'Ndioum Agro SA', 'essentiel', '+221338710107');
+        $smes['ndioum_agro'] = $this->createSme($cabinet, 'ndioum_agro', 'Ndioum Agro SA', 'essentiel', '+221338710107');
         $this->seedInactive($smes['ndioum_agro'], lastInvoiceAgoDays: 32);
 
-        $smes['digital_creation'] = $this->createSme($cabinet, 'Digital Création SARL', 'basique', '+221338710108');
+        $smes['digital_creation'] = $this->createSme($cabinet, 'digital_creation', 'Digital Création SARL', 'basique', '+221338710108');
         $this->seedWatchOverdue($smes['digital_creation'], overdueAgoDays: 18);
 
         // ─── 15 À jour ──────────────────────────────────────────────────────
@@ -108,26 +108,30 @@ class DemoComptablePortfolioSeeder extends Seeder
         ];
 
         foreach ($healthy as [$key, $name, $plan, $phone, $invoiceCount, $invoiceAmount]) {
-            $smes[$key] = $this->createSme($cabinet, $name, $plan, $phone);
+            $smes[$key] = $this->createSme($cabinet, $key, $name, $plan, $phone);
             $this->seedHealthy($smes[$key], count: $invoiceCount, totalPerInvoice: $invoiceAmount);
         }
 
         return $smes;
     }
 
-    private function createSme(Company $cabinet, string $name, string $plan, string $phone): Company
+    private function createSme(Company $cabinet, string $key, string $name, string $plan, string $phone): Company
     {
         $owner = User::create([
             'first_name' => SenegalFaker::firstNameMale(),
             'last_name' => SenegalFaker::lastName(),
             'phone' => $phone,
+            'email' => "owner@{$key}.test",
             'password' => 'password',
             'profile_type' => 'sme',
             'country_code' => 'SN',
             'is_active' => true,
         ]);
 
-        $owner->forceFill(['phone_verified_at' => now()])->save();
+        $owner->forceFill([
+            'email_verified_at' => now(),
+            'phone_verified_at' => now(),
+        ])->save();
 
         $sme = Company::create([
             'name' => $name,
@@ -364,6 +368,7 @@ class DemoComptablePortfolioSeeder extends Seeder
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
                 'invitee_phone' => $phone,
+                'invitee_email' => "owner@{$key}.test",
                 'recommended_plan' => $plan,
                 'channel' => 'whatsapp',
                 'status' => 'accepted',
@@ -398,6 +403,7 @@ class DemoComptablePortfolioSeeder extends Seeder
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
                 'invitee_phone' => $phone,
+                'invitee_email' => "owner@{$key}.test",
                 'recommended_plan' => $plan,
                 'channel' => 'whatsapp',
                 'status' => 'accepted',
@@ -426,6 +432,7 @@ class DemoComptablePortfolioSeeder extends Seeder
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
                 'invitee_phone' => $phone,
+                'invitee_email' => $this->inviteeEmailFor($company),
                 'recommended_plan' => $plan,
                 'channel' => 'whatsapp',
                 'status' => 'pending',
@@ -452,6 +459,7 @@ class DemoComptablePortfolioSeeder extends Seeder
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
                 'invitee_phone' => $phone,
+                'invitee_email' => $this->inviteeEmailFor($company),
                 'recommended_plan' => $plan,
                 'channel' => 'whatsapp',
                 'status' => 'pending',
@@ -477,6 +485,7 @@ class DemoComptablePortfolioSeeder extends Seeder
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
                 'invitee_phone' => $phone,
+                'invitee_email' => $this->inviteeEmailFor($company),
                 'recommended_plan' => 'essentiel',
                 'channel' => $channel,
                 'status' => 'registering',
@@ -503,6 +512,7 @@ class DemoComptablePortfolioSeeder extends Seeder
                 'invitee_company_name' => $company,
                 'invitee_name' => $contact,
                 'invitee_phone' => $phone,
+                'invitee_email' => $this->inviteeEmailFor($company),
                 'recommended_plan' => 'basique',
                 'channel' => 'whatsapp',
                 'status' => 'expired',
@@ -519,6 +529,16 @@ class DemoComptablePortfolioSeeder extends Seeder
     private function invoiceRef(): string
     {
         return 'FYK-FAC-'.Str::upper(Str::random(6));
+    }
+
+    /**
+     * Synthesize a deterministic invitee email from a company name. Used so
+     * pending/registering/expired invitations carry an `invitee_email` that
+     * pre-fills the SME registration form when the link is clicked.
+     */
+    private function inviteeEmailFor(string $companyName): string
+    {
+        return 'contact@'.Str::slug($companyName).'.test';
     }
 
     /**
