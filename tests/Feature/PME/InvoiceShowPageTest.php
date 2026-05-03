@@ -159,7 +159,7 @@ test('nextUpcomingReminder est null pour une facture payée', function () {
 
 // ─── Carte client ─────────────────────────────────────────────────────────────
 
-test('la carte client affiche les coordonnées et un lien « Voir la fiche client »', function () {
+test('la carte client affiche les coordonnées et un lien « Voir la fiche »', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
 
     $client = Client::factory()->create([
@@ -191,7 +191,7 @@ test('la carte client affiche les coordonnées et un lien « Voir la fiche clien
         ->assertSee('LafargeHolcim Sénégal')
         ->assertSee('dsi@lafarge.sn')
         ->assertSee('SN2024LAF0007')
-        ->assertSee('Voir la fiche client')
+        ->assertSee('Voir la fiche')
         ->assertSee(route('pme.clients.show', $client->id), escape: false);
 });
 

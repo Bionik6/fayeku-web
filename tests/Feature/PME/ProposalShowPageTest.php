@@ -68,3 +68,60 @@ test('proforma show page renders po_received and converted events when present',
         ->assertSee('Bon de commande reçu')
         ->assertSee('BC-2026-001');
 });
+
+test('client card shows the avatar fallback when client has neither email nor phone', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForProposal();
+
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'name' => 'Sabira SASU',
+        'email' => null,
+        'phone' => null,
+    ]);
+
+    $proforma = ProposalDocument::factory()
+        ->proforma()
+        ->forCompany($company)
+        ->withClient($client)
+        ->withLines(1)
+        ->create();
+
+    $this->actingAs($user)
+        ->get(route('pme.proformas.show', $proforma))
+        ->assertOk()
+        ->assertSee('Sabira SASU')
+        ->assertSee('Nouveau client')
+        ->assertSee('Coordonnées non renseignées')
+        ->assertSee('SS'); // initials avatar
+});
+
+test('client card shows NINEA and RCCM when set, in regular text', function () {
+    ['user' => $user, 'company' => $company] = createSmeUserForProposal();
+
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'name' => 'CBAO Groupe Attijariwafa',
+        'email' => 'it@cbao.sn',
+        'phone' => '+221338600008',
+        'tax_id' => 'SN2024CBA0008',
+        'rccm' => 'SN-DKR-2008-B-15422',
+    ]);
+
+    $quote = ProposalDocument::factory()
+        ->quote()
+        ->forCompany($company)
+        ->withClient($client)
+        ->withLines(1)
+        ->create();
+
+    $response = $this->actingAs($user)
+        ->get(route('pme.quotes.show', $quote))
+        ->assertOk()
+        ->assertSee('NINEA')
+        ->assertSee('SN2024CBA0008')
+        ->assertSee('RCCM')
+        ->assertSee('SN-DKR-2008-B-15422');
+
+    // No font-mono on NINEA / RCCM lines.
+    expect($response->getContent())->not->toMatch('/font-mono[^"]*">[^<]*NINEA/');
+});

@@ -562,41 +562,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         {{-- Colonne droite : client + actions. Full width sur mobile, col 3 sur lg+ --}}
         <div class="flex w-full flex-col gap-6">
             {{-- Carte client --}}
-            <article class="app-shell-panel p-6">
-                <div class="mb-4 flex items-center justify-between gap-3">
-                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Client') }}</h3>
-                    @if ($p->client)
-                        <a href="{{ route('pme.clients.show', $p->client_id) }}" wire:navigate class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-primary transition hover:text-primary-strong">
-                            {{ __('Voir la fiche') }} <flux:icon name="arrow-right" class="size-4" />
-                        </a>
-                    @endif
-                </div>
-                @if ($p->client)
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                        <p class="font-semibold text-ink">{{ $p->client->name }}</p>
-                        <div class="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-slate-700">
-                            @if ($p->client->email) <span class="break-all">{{ $p->client->email }}</span> @endif
-                            @if ($p->client->email && $p->client->phone) <span class="text-slate-500">⋅</span> @endif
-                            @if ($p->client->phone) <span>{{ format_phone($p->client->phone) }}</span> @endif
-                        </div>
-                        @if ($p->client->address || $p->client->tax_id)
-                            <div class="mt-3 border-t border-slate-200/70 pt-3 text-sm text-slate-600">
-                                @if ($p->client->address)
-                                    <p class="flex items-start gap-1.5">
-                                        <flux:icon name="map-pin" class="mt-0.5 size-3.5 shrink-0 text-slate-400" />
-                                        <span>{{ $p->client->address }}</span>
-                                    </p>
-                                @endif
-                                @if ($p->client->tax_id)
-                                    <p class="mt-1 font-mono text-sm text-slate-500">{{ __('NINEA') }} : {{ $p->client->tax_id }}</p>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-700">{{ __('Aucun client renseigné sur cette proforma.') }}</div>
-                @endif
-            </article>
+            <x-client-card :client="$p->client" no-client-message="Aucun client renseigné sur cette proforma." />
 
             {{-- Actions rapides --}}
             <article class="app-shell-panel p-6 lg:sticky lg:top-6">
