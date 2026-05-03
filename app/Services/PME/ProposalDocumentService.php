@@ -170,7 +170,10 @@ class ProposalDocumentService
 
     public function markAsSent(ProposalDocument $document): ProposalDocument
     {
-        $document->update(['status' => ProposalDocumentStatus::Sent]);
+        $document->update([
+            'status' => ProposalDocumentStatus::Sent,
+            'sent_at' => $document->sent_at ?? now(),
+        ]);
 
         return $document;
     }
@@ -178,7 +181,10 @@ class ProposalDocumentService
     public function markAsAccepted(ProposalDocument $document): ProposalDocument
     {
         $this->assertTypeAllows($document, ProposalDocumentStatus::Accepted);
-        $document->update(['status' => ProposalDocumentStatus::Accepted]);
+        $document->update([
+            'status' => ProposalDocumentStatus::Accepted,
+            'accepted_at' => $document->accepted_at ?? now(),
+        ]);
 
         return $document;
     }
@@ -217,7 +223,10 @@ class ProposalDocumentService
 
     public function markAsDeclined(ProposalDocument $document): ProposalDocument
     {
-        $document->update(['status' => ProposalDocumentStatus::Declined]);
+        $document->update([
+            'status' => ProposalDocumentStatus::Declined,
+            'declined_at' => $document->declined_at ?? now(),
+        ]);
 
         return $document;
     }
@@ -275,9 +284,15 @@ class ProposalDocumentService
             }
 
             if ($document->isQuote() && $document->status === ProposalDocumentStatus::Sent) {
-                $document->update(['status' => ProposalDocumentStatus::Accepted]);
+                $document->update([
+                    'status' => ProposalDocumentStatus::Accepted,
+                    'accepted_at' => $document->accepted_at ?? now(),
+                ]);
             } elseif ($document->isProforma()) {
-                $document->update(['status' => ProposalDocumentStatus::Converted]);
+                $document->update([
+                    'status' => ProposalDocumentStatus::Converted,
+                    'converted_at' => $document->converted_at ?? now(),
+                ]);
             }
 
             ProposalDocumentConverted::dispatch($document->refresh(), $invoice);

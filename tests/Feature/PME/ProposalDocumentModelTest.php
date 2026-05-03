@@ -167,3 +167,47 @@ test('belongs to a company and a client', function () {
     expect($document->company->id)->toBe($company->id)
         ->and($document->client->id)->toBe($client->id);
 });
+
+// ─── Model: timeline ────────────────────────────────────────────────────────
+
+test('timeline emits created + valid_until events for a fresh proforma', function () {
+    $proforma = ProposalDocument::factory()->proforma()->create([
+        'issued_at' => '2026-04-01',
+        'valid_until' => '2026-05-15',
+    ]);
+
+    $types = $proforma->timeline()->pluck('type')->all();
+
+    expect($types)->toContain('created')
+        ->and($types)->toContain('valid_until');
+});
+
+test('timeline includes sent, accepted and converted events when timestamps are set', function () {
+    $proforma = ProposalDocument::factory()->proforma()->create([
+        'issued_at' => '2026-04-01',
+        'valid_until' => '2026-05-15',
+        'sent_at' => '2026-04-02 09:00:00',
+        'accepted_at' => '2026-04-05 14:30:00',
+        'converted_at' => '2026-04-08 10:00:00',
+    ]);
+
+    $types = $proforma->timeline()->pluck('type')->all();
+
+    expect($types)->toContain('sent')
+        ->and($types)->toContain('accepted')
+        ->and($types)->toContain('converted');
+});
+
+test('timeline orders events chronologically', function () {
+    $quote = ProposalDocument::factory()->quote()->create([
+        'issued_at' => '2026-04-01',
+        'valid_until' => '2026-05-01',
+        'sent_at' => '2026-04-03 09:00:00',
+        'declined_at' => '2026-04-10 16:00:00',
+    ]);
+
+    $events = $quote->timeline();
+
+    expect($events->pluck('type')->all())
+        ->toBe(['created', 'sent', 'declined', 'valid_until']);
+});

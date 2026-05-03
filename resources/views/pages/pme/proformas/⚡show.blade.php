@@ -380,7 +380,6 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                     {{ __('← Retour aux devis & proformas') }}
                 </a>
                 <div class="mt-3 flex flex-wrap items-center gap-3">
-                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">{{ __('Proforma') }}</span>
                     <h2 class="text-3xl font-semibold tracking-tight text-ink">{{ $p->reference ?? '—' }}</h2>
                     <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $status['class'] }}">
                         {{ __($status['label']) }}
@@ -404,7 +403,13 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     </section>
 
     {{-- KPIs --}}
-    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="app-shell-stat-card">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Type') }}</p>
+            <p class="mt-2 text-2xl font-semibold tracking-tight text-ink">{{ __('Proforma') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Préfacture pour obtenir un bon de commande') }}</p>
+        </article>
+
         <article class="app-shell-stat-card">
             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Montant TTC') }}</p>
             <p class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ format_money($p->total, $p->currency) }}</p>
@@ -548,61 +553,9 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             <article class="app-shell-panel p-6">
                 <h3 class="text-lg font-semibold text-ink">{{ __('Activité') }}</h3>
                 <p class="mt-1 text-sm text-slate-500">{{ __('Les jalons clés de cette proforma.') }}</p>
-                <ol class="mt-5 space-y-4">
-                    <li class="flex items-start gap-3">
-                        <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                            <flux:icon name="document-plus" class="size-4" />
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold text-ink">{{ __('Proforma créée') }}</p>
-                            <p class="text-sm text-slate-500">{{ format_date($p->created_at) }}</p>
-                        </div>
-                    </li>
-                    @if ($p->valid_until)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                                <flux:icon name="calendar" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Date de validité') }}</p>
-                                <p class="text-sm text-slate-500">{{ format_date($p->valid_until) }} @if ($this->validityLabel) · {{ $this->validityLabel }} @endif</p>
-                            </div>
-                        </li>
-                    @endif
-                    @if ($p->status === ProposalDocumentStatus::PoReceived)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                                <flux:icon name="check-circle" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Bon de commande reçu') }}</p>
-                                <p class="text-sm text-slate-500">{{ format_date($p->updated_at) }}</p>
-                            </div>
-                        </li>
-                    @endif
-                    @if ($p->status === ProposalDocumentStatus::Declined)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-                                <flux:icon name="x-circle" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Proforma refusée') }}</p>
-                                <p class="text-sm text-slate-500">{{ format_date($p->updated_at) }}</p>
-                            </div>
-                        </li>
-                    @endif
-                    @if ($p->invoice)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
-                                <flux:icon name="document-arrow-up" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Convertie en facture') }}</p>
-                                <a href="{{ route('pme.invoices.show', $p->invoice) }}" wire:navigate class="text-sm font-medium text-primary hover:text-primary-strong">{{ $p->invoice->reference }}</a>
-                            </div>
-                        </li>
-                    @endif
-                </ol>
+                <div class="mt-5">
+                    <x-proposals.activity-feed :document="$p" />
+                </div>
             </article>
         </div>
 

@@ -164,6 +164,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         $this->invoice->update([
             'status' => InvoiceStatus::Sent,
+            'sent_at' => $this->invoice->sent_at ?? now(),
         ]);
 
         $this->invoice->refresh();
@@ -291,7 +292,10 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         // Draft → Sent : l'utilisateur a validé l'envoi, on bascule la facture.
         $statusChanged = false;
         if ($this->invoice->status === InvoiceStatus::Draft) {
-            $this->invoice->update(['status' => InvoiceStatus::Sent]);
+            $this->invoice->update([
+                'status' => InvoiceStatus::Sent,
+                'sent_at' => $this->invoice->sent_at ?? now(),
+            ]);
             $this->invoice->refresh();
             unset($this->statusDisplay);
             $statusChanged = true;

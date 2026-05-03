@@ -48,6 +48,18 @@ $events = $invoice->timeline();
                             $iconColor = 'text-slate-500';
                             break;
 
+                        case 'sent':
+                            $iconName = 'paper-airplane';
+                            $iconBg = 'bg-blue-50';
+                            $iconColor = 'text-blue-600';
+                            break;
+
+                        case 'cancelled':
+                            $iconName = 'x-circle';
+                            $iconBg = 'bg-rose-50';
+                            $iconColor = 'text-rose-600';
+                            break;
+
                         case 'due_date':
                             $iconName = 'calendar';
                             $iconBg = 'bg-slate-100';

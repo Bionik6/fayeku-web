@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
-use App\Enums\PME\InvoiceStatus;
 use App\Models\PME\Invoice;
 use App\Services\PME\InvoiceService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -222,14 +222,29 @@ test('update replaces lines and recalculates totals', function () {
 
 // ─── Mark as sent ────────────────────────────────────────────────────────────
 
-test('markAsSent changes status to Sent', function () {
+test('markAsSent changes status to Sent and stamps sent_at', function () {
     $company = Company::factory()->create(['type' => 'sme']);
     $invoice = Invoice::factory()->forCompany($company)->draft()->create();
     $service = new InvoiceService;
 
     $result = $service->markAsSent($invoice);
 
-    expect($result->status)->toBe(InvoiceStatus::Sent);
+    expect($result->status)->toBe(InvoiceStatus::Sent)
+        ->and($result->sent_at)->not->toBeNull();
+});
+
+test('markAsSent preserves the original sent_at on re-mark', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $invoice = Invoice::factory()->forCompany($company)->draft()->create();
+    $service = new InvoiceService;
+
+    $service->markAsSent($invoice);
+    $original = $invoice->fresh()->sent_at;
+
+    $this->travel(5)->minutes();
+    $service->markAsSent($invoice->fresh());
+
+    expect($invoice->fresh()->sent_at?->toIso8601String())->toBe($original->toIso8601String());
 });
 
 // ─── canEdit ─────────────────────────────────────────────────────────────────
