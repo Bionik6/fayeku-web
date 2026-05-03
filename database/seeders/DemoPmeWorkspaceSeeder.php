@@ -22,13 +22,15 @@ use Illuminate\Support\Facades\DB;
  *
  * - Diop Services SARL (services numériques) — 12 clients (Orange, CBAO,
  *   SENELEC…), 5 mois d'historique, 4 retards (dont 2 critiques), 10 émises
- *   en attente, 2 brouillons, 7 devis variés.
+ *   en attente, 2 brouillons, 7 devis variés et 6 proformas (envoyées,
+ *   PO reçus, converties, refusées, expirées, brouillon).
  * - Sow BTP SARL (BTP / promotion immobilière) — 8 clients (promoteurs,
  *   syndics, collectivités), 4 mois d'historique, 3 retards (dont 1
- *   critique J+72), 4 émises, 1 brouillon, 4 devis.
+ *   critique J+72), 4 émises, 1 brouillon, 4 devis et 5 proformas
+ *   (envoyée, PO reçu, convertie, refusée, brouillon).
  *
  * Permet de valider tous les écrans PME (dashboard, factures, devis,
- * relances, trésorerie) sur deux profils sectoriels distincts.
+ * proformas, relances, trésorerie) sur deux profils sectoriels distincts.
  */
 class DemoPmeWorkspaceSeeder extends Seeder
 {
@@ -51,6 +53,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
 
         $this->seedDiopInvoices();
         $this->seedDiopQuotes();
+        $this->seedDiopProformas();
     }
 
     private function seedSowBtpWorkspace(): void
@@ -62,6 +65,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
 
         $this->seedSowBtpInvoices();
         $this->seedSowBtpQuotes();
+        $this->seedSowBtpProformas();
     }
 
     private function seedDiopInvoices(): void
@@ -514,6 +518,112 @@ class DemoPmeWorkspaceSeeder extends Seeder
         );
     }
 
+    private function seedDiopProformas(): void
+    {
+        $orange = Client::where('company_id', $this->company->id)->where('name', 'Orange Sénégal SA')->first();
+        $cbao = Client::where('company_id', $this->company->id)->where('name', 'CBAO Groupe Attijariwafa')->first();
+        $adie = Client::where('company_id', $this->company->id)->where('name', 'Agence de l\'Informatique de l\'État')->first();
+        $auchan = Client::where('company_id', $this->company->id)->where('name', 'AUCHAN Sénégal')->first();
+        $airSenegal = Client::where('company_id', $this->company->id)->where('name', 'Air Sénégal SA')->first();
+        $totalEnergies = Client::where('company_id', $this->company->id)->where('name', 'TotalEnergies Marketing SN')->first();
+
+        // ── Envoyée — en attente de bon de commande ────────────────────────
+        $this->proforma($orange, 'FYK-PRO-DS0101', ProposalDocumentStatus::Sent, 4_200_000,
+            issuedAt: now()->subDays(7)->toDateString(),
+            validUntil: now()->subDays(7)->addDays(45)->toDateString(),
+            lines: [
+                ['Conception architecture IA — détection de fraudes Orange Money', 1, 3_200_000],
+                ['Modèles ML & infrastructure GPU (3 mois)', 1, 1_000_000],
+            ],
+            dossierReference: 'DOSS-2026-ORA-IA-001',
+            paymentTerms: '30% à la commande, 40% à mi-parcours, 30% à la livraison',
+            deliveryTerms: 'Démarrage sous 15 jours après réception du bon de commande',
+        );
+
+        // ── PO reçu — conversion en facture en cours ───────────────────────
+        $this->proforma($cbao, 'FYK-PRO-DS0102', ProposalDocumentStatus::PoReceived, 5_800_000,
+            issuedAt: now()->subDays(20)->toDateString(),
+            validUntil: now()->subDays(20)->addDays(45)->toDateString(),
+            lines: [
+                ['Plateforme open banking CBAO — étude de cadrage et architecture', 1, 1_800_000],
+                ['Développement MVP (3 mois — 4 développeurs)', 1, 4_000_000],
+            ],
+            dossierReference: 'DOSS-2026-CBAO-OB-002',
+            paymentTerms: '40% à la commande, 60% à la livraison',
+            deliveryTerms: '4 mois après bon de commande',
+            poReference: 'CBAO-PO-2026-0048',
+            poReceivedAt: now()->subDays(3)->toDateString(),
+            poNotes: 'Bon de commande validé par la DSI le 30/04, démarrage prévu courant mai.',
+        );
+
+        // ── Convertie — facture associée créée ─────────────────────────────
+        $proformaAdie = $this->proforma($adie, 'FYK-PRO-DS0103', ProposalDocumentStatus::Converted, 6_500_000,
+            issuedAt: now()->subDays(50)->toDateString(),
+            validUntil: now()->subDays(50)->addDays(45)->toDateString(),
+            lines: [
+                ['Refonte portail e-Sénégal — migration cloud souverain (DataCenter ADIE)', 1, 4_500_000],
+                ['Sécurisation et certification ANSSI', 1, 2_000_000],
+            ],
+            dossierReference: 'DOSS-2026-ADIE-INFRA-003',
+            paymentTerms: '50% à la commande, 50% à la livraison',
+            deliveryTerms: '3 mois après bon de commande',
+            poReference: 'ADIE-MP-2026-0124',
+            poReceivedAt: now()->subDays(35)->toDateString(),
+            poNotes: 'Marché public 0124 — notification le 28/03/2026.',
+        );
+        $this->invoice($adie, 'FYK-FAC-DS0801', InvoiceStatus::Paid, 6_500_000,
+            issuedAt: now()->subDays(30)->toDateString(),
+            dueAt: now()->subDays(30)->addDays(30)->toDateString(),
+            paidAt: now()->subDays(8)->toDateString(),
+            lines: [
+                ['Refonte portail e-Sénégal — migration cloud souverain (DataCenter ADIE)', 1, 4_500_000],
+                ['Sécurisation et certification ANSSI', 1, 2_000_000],
+            ],
+            proposalDocumentId: $proformaAdie->id,
+        );
+
+        // ── Refusée ────────────────────────────────────────────────────────
+        $this->proforma($auchan, 'FYK-PRO-DS0104', ProposalDocumentStatus::Declined, 8_200_000,
+            issuedAt: now()->subDays(40)->toDateString(),
+            validUntil: now()->subDays(40)->addDays(45)->toDateString(),
+            lines: [
+                ['Plateforme SCM AUCHAN — modules achats, stocks, logistique', 1, 6_800_000],
+                ['Intégration ERP existant et formation utilisateurs', 1, 1_400_000],
+            ],
+            dossierReference: 'DOSS-2026-AUCHAN-SCM-004',
+            paymentTerms: '30% à la commande, 30% à mi-parcours, 40% à la livraison',
+            deliveryTerms: '6 mois',
+            notes: 'Budget non validé — projet reporté à l\'exercice suivant.',
+        );
+
+        // ── Expirée ────────────────────────────────────────────────────────
+        $this->proforma($airSenegal, 'FYK-PRO-DS0105', ProposalDocumentStatus::Expired, 4_800_000,
+            issuedAt: now()->subDays(70)->toDateString(),
+            validUntil: now()->subDays(40)->toDateString(),
+            lines: [
+                ['Système de gestion des pièces de rechange aéronautique', 1, 3_900_000],
+                ['Interfaçage avec maintenance MRO (catalogues OEM)', 1, 900_000],
+            ],
+            dossierReference: 'DOSS-2026-AIRSN-MRO-005',
+            paymentTerms: '40% à la commande, 60% à la livraison',
+            deliveryTerms: '4 mois',
+        );
+
+        // ── Brouillon — en cours de finalisation interne ───────────────────
+        $this->proforma($totalEnergies, 'FYK-PRO-DS0106', ProposalDocumentStatus::Draft, 3_500_000,
+            issuedAt: now()->toDateString(),
+            validUntil: now()->addDays(45)->toDateString(),
+            lines: [
+                ['Plateforme HSE temps réel — IoT terrain (capteurs + dashboards)', 1, 2_700_000],
+                ['Application mobile inspecteurs et workflows correctifs', 1, 800_000],
+            ],
+            dossierReference: 'DOSS-2026-TOTAL-HSE-006',
+            paymentTerms: '30% à la commande, 70% à la recette finale',
+            deliveryTerms: '5 mois',
+            notes: 'En attente de validation du périmètre par la direction HSE.',
+        );
+    }
+
     private function seedSowBtpInvoices(): void
     {
         // ── Clients BTP / promotion immobilière ────────────────────────────
@@ -815,6 +925,98 @@ class DemoPmeWorkspaceSeeder extends Seeder
         );
     }
 
+    private function seedSowBtpProformas(): void
+    {
+        $socofim = Client::where('company_id', $this->company->id)->where('name', 'SOCOFIM SA — Promotion Immobilière')->first();
+        $poleDiamniadio = Client::where('company_id', $this->company->id)->where('name', 'Pôle Urbain de Diamniadio')->first();
+        $ucad = Client::where('company_id', $this->company->id)->where('name', 'Université Cheikh Anta Diop')->first();
+        $almadiesPlaza = Client::where('company_id', $this->company->id)->where('name', 'SCI Almadies Plaza')->first();
+        $mairieDiamniadio = Client::where('company_id', $this->company->id)->where('name', 'Mairie de Diamniadio')->first();
+
+        // ── Envoyée — gros chantier en attente de PO ───────────────────────
+        $this->proforma($socofim, 'FYK-PRO-SB0101', ProposalDocumentStatus::Sent, 18_500_000,
+            issuedAt: now()->subDays(10)->toDateString(),
+            validUntil: now()->subDays(10)->addDays(60)->toDateString(),
+            lines: [
+                ['Résidence Les Jardins de Yoff — Tranche 5 (R+5, 36 logements, 1 800 m²)', 1, 15_500_000],
+                ['Maîtrise d\'œuvre d\'exécution et coordination SPS', 1, 3_000_000],
+            ],
+            dossierReference: 'DOSS-2026-SOCOFIM-T5',
+            paymentTerms: '20% à la commande, puis situations mensuelles à 30 jours',
+            deliveryTerms: 'Démarrage Mai 2026 — livraison T1 2027',
+        );
+
+        // ── PO reçu — école primaire publique ──────────────────────────────
+        $this->proforma($poleDiamniadio, 'FYK-PRO-SB0102', ProposalDocumentStatus::PoReceived, 14_200_000,
+            issuedAt: now()->subDays(25)->toDateString(),
+            validUntil: now()->subDays(25)->addDays(60)->toDateString(),
+            lines: [
+                ['Construction école primaire publique — gros œuvre R+1 (lot 1)', 1, 9_500_000],
+                ['Second œuvre + clos couvert (lot 2)', 1, 4_700_000],
+            ],
+            dossierReference: 'DOSS-2026-PUD-EPP-001',
+            paymentTerms: 'Paiement à 60 jours fin de mois sur situations',
+            deliveryTerms: '8 mois après ordre de service',
+            poReference: 'PUD-MP-2026-0072',
+            poReceivedAt: now()->subDays(2)->toDateString(),
+            poNotes: 'Marché public 0072 — ordre de service attendu sous 10 jours.',
+        );
+
+        // ── Convertie — facture associée créée ─────────────────────────────
+        $proformaUcad = $this->proforma($ucad, 'FYK-PRO-SB0103', ProposalDocumentStatus::Converted, 5_400_000,
+            issuedAt: now()->subDays(60)->toDateString(),
+            validUntil: now()->subDays(60)->addDays(60)->toDateString(),
+            lines: [
+                ['Réhabilitation pavillon C — Faculté de Médecine (gros œuvre)', 1, 3_800_000],
+                ['Mise aux normes électriques et SSI', 1, 1_600_000],
+            ],
+            dossierReference: 'DOSS-2026-UCAD-PAV-C',
+            paymentTerms: '30% à la commande, 40% à mi-parcours, 30% à réception',
+            deliveryTerms: '3 mois après ordre de service',
+            poReference: 'UCAD-MP-2026-0156',
+            poReceivedAt: now()->subDays(45)->toDateString(),
+            poNotes: 'Marché interne UCAD — ordre de service signé le 18/03.',
+        );
+        $this->invoice($ucad, 'FYK-FAC-SB0801', InvoiceStatus::Paid, 5_400_000,
+            issuedAt: now()->subDays(40)->toDateString(),
+            dueAt: now()->subDays(40)->addDays(30)->toDateString(),
+            paidAt: now()->subDays(12)->toDateString(),
+            lines: [
+                ['Réhabilitation pavillon C — Faculté de Médecine (gros œuvre)', 1, 3_800_000],
+                ['Mise aux normes électriques et SSI', 1, 1_600_000],
+            ],
+            proposalDocumentId: $proformaUcad->id,
+        );
+
+        // ── Refusée ────────────────────────────────────────────────────────
+        $this->proforma($almadiesPlaza, 'FYK-PRO-SB0104', ProposalDocumentStatus::Declined, 5_200_000,
+            issuedAt: now()->subDays(50)->toDateString(),
+            validUntil: now()->subDays(50)->addDays(60)->toDateString(),
+            lines: [
+                ['Réfection complète copropriété — façades + ravalement (Bâtiments A, B, C)', 1, 3_800_000],
+                ['Reprise étanchéité toitures-terrasses (3 niveaux)', 1, 1_400_000],
+            ],
+            dossierReference: 'DOSS-2026-ALMA-RAVAL',
+            paymentTerms: '30% à la commande, 70% à la recette finale',
+            deliveryTerms: '4 mois',
+            notes: 'Devis non retenu — choix d\'un prestataire concurrent par l\'AG des copropriétaires.',
+        );
+
+        // ── Brouillon — en cours de chiffrage avec services techniques ─────
+        $this->proforma($mairieDiamniadio, 'FYK-PRO-SB0105', ProposalDocumentStatus::Draft, 4_800_000,
+            issuedAt: now()->toDateString(),
+            validUntil: now()->addDays(60)->toDateString(),
+            lines: [
+                ['Aménagement places publiques — quartier Cité Mbaye (3 places)', 3, 1_200_000],
+                ['Mobilier urbain (bancs, jeux d\'enfants, lampadaires solaires)', 1, 1_200_000],
+            ],
+            dossierReference: 'DOSS-2026-MAD-PLACES',
+            paymentTerms: 'Paiement à 60 jours sur situations',
+            deliveryTerms: '5 mois',
+            notes: 'En cours de finalisation avec les services techniques municipaux.',
+        );
+    }
+
     private function client(string $name, string $phone, string $email, string $address, string $taxId): Client
     {
         return Client::create([
@@ -840,6 +1042,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         ?string $paidAt,
         array $lines = [],
         int $amountPaid = 0,
+        ?string $proposalDocumentId = null,
     ): Invoice {
         $taxAmount = (int) round($subtotal * 0.18);
         $total = $subtotal + $taxAmount;
@@ -851,6 +1054,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         $invoice = Invoice::create([
             'company_id' => $this->company->id,
             'client_id' => $client->id,
+            'proposal_document_id' => $proposalDocumentId,
             'reference' => $reference,
             'status' => $status,
             'issued_at' => $issuedAt,
@@ -916,5 +1120,61 @@ class DemoPmeWorkspaceSeeder extends Seeder
         }
 
         return $quote;
+    }
+
+    /**
+     * @param  array<int, array{string, int, int}>  $lines  [description, quantity, unit_price]
+     */
+    private function proforma(
+        Client $client,
+        string $reference,
+        ProposalDocumentStatus $status,
+        int $subtotal,
+        string $issuedAt,
+        string $validUntil,
+        array $lines = [],
+        ?string $dossierReference = null,
+        ?string $paymentTerms = null,
+        ?string $deliveryTerms = null,
+        ?string $poReference = null,
+        ?string $poReceivedAt = null,
+        ?string $poNotes = null,
+        ?string $notes = null,
+    ): ProposalDocument {
+        $taxAmount = (int) round($subtotal * 0.18);
+        $total = $subtotal + $taxAmount;
+
+        $proforma = ProposalDocument::create([
+            'company_id' => $this->company->id,
+            'client_id' => $client->id,
+            'type' => ProposalDocumentType::Proforma,
+            'reference' => $reference,
+            'status' => $status,
+            'issued_at' => $issuedAt,
+            'valid_until' => $validUntil,
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'total' => $total,
+            'dossier_reference' => $dossierReference,
+            'payment_terms' => $paymentTerms,
+            'delivery_terms' => $deliveryTerms,
+            'po_reference' => $poReference,
+            'po_received_at' => $poReceivedAt,
+            'po_notes' => $poNotes,
+            'notes' => $notes,
+        ]);
+
+        foreach ($lines as [$description, $quantity, $unitPrice]) {
+            ProposalDocumentLine::create([
+                'proposal_document_id' => $proforma->id,
+                'description' => $description,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'tax_rate' => 18,
+                'total' => $quantity * $unitPrice,
+            ]);
+        }
+
+        return $proforma;
     }
 }
