@@ -3,6 +3,7 @@
 use App\Enums\PME\ProposalDocumentStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\ProposalDocument;
+use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
 use Livewire\Attributes\Computed;
@@ -84,20 +85,32 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $days = (int) now()->startOfDay()->diffInDays($this->quote->valid_until->copy()->startOfDay(), false);
 
         if ($days < 0) {
-            return __('Expiré depuis :days jour(s)', ['days' => abs($days)]);
+            $abs = abs($days);
+
+            return $abs > 1
+                ? __('Expiré depuis :days jours', ['days' => $abs])
+                : __('Expiré depuis :days jour', ['days' => $abs]);
         }
 
         if ($days === 0) {
             return __("Expire aujourd'hui");
         }
 
-        return __('Dans :days jour(s)', ['days' => $days]);
+        return $days > 1
+            ? __('Dans :days jours', ['days' => $days])
+            : __('Dans :days jour', ['days' => $days]);
     }
 
     #[Computed]
     public function isEditable(): bool
     {
         return in_array($this->quote->status, ProposalDocumentStatus::editable(), true);
+    }
+
+    #[Computed]
+    public function lifecycleState(): array
+    {
+        return app(DocumentLifecycleService::class)->forQuote($this->quote);
     }
 
     public function markAsAccepted(): void
@@ -107,6 +120,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         }
         app(ProposalDocumentService::class)->markAsAccepted($this->quote);
         $this->quote->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme accepté.'));
     }
 
@@ -117,6 +131,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         }
         app(ProposalDocumentService::class)->markAsDeclined($this->quote);
         $this->quote->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme refusé.'));
     }
 
@@ -284,7 +299,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         if ($this->quote->status === ProposalDocumentStatus::Draft) {
             app(ProposalDocumentService::class)->markAsSent($this->quote);
             $this->quote->refresh();
-            unset($this->statusDisplay);
+            unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
             $statusChanged = true;
         }
 
@@ -377,6 +392,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             @endif
         </article>
     </section>
+
+    <x-documents.lifecycle-card :lifecycle="$this->lifecycleState" />
 
     {{-- Corps 2 colonnes : Aperçu en premier (full width sur mobile, 2/3 sur lg+),
          sidebar Client+Actions en 2e (full width sur mobile, 1/3 sur lg+).

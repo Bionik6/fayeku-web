@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
             DunningTemplateSeeder::class,
             DemoAccountsSeeder::class,
             DemoPmeWorkspaceSeeder::class,
+            DemoPmeLifecycleShowcaseSeeder::class,
             DemoComptablePortfolioSeeder::class,
             RealAccountsSeeder::class,
         ]);

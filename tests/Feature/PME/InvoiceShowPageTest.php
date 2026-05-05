@@ -157,6 +157,64 @@ test('nextUpcomingReminder est null pour une facture payée', function () {
         ->assertSet('nextUpcomingReminder', null);
 });
 
+// ─── Cycle de vie ───────────────────────────────────────────────────────────
+
+test('le cycle de vie facture est rendu juste après les KPIs', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company);
+
+    $html = (string) $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('data-document-lifecycle')
+        ->and(strpos($html, 'Prochaine relance'))->toBeLessThan(strpos($html, 'data-document-lifecycle'))
+        ->and(strpos($html, 'data-document-lifecycle'))->toBeLessThan(strpos($html, 'Aperçu de la facture'));
+});
+
+test('la fiche facture affiche le cycle de vie courant pour chaque état', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+
+    $cases = [
+        'draft' => [
+            ['status' => InvoiceStatus::Draft->value],
+            ['État : Brouillon — non encore envoyée', 'Le cycle de vie démarre à l’envoi'],
+        ],
+        'sent' => [
+            ['status' => InvoiceStatus::Sent->value, 'sent_at' => now()->subDays(2), 'due_at' => now()->addDays(20)],
+            ['État : Envoyée — en attente de paiement', 'FACTURE'],
+        ],
+        'overdue-derived' => [
+            ['status' => InvoiceStatus::Sent->value, 'sent_at' => now()->subDays(30), 'due_at' => now()->subDays(12), 'amount_paid' => 0],
+            ['État : Envoyée + en retard — alerte temporelle', 'En retard · J+12'],
+        ],
+        'partial' => [
+            ['status' => InvoiceStatus::PartiallyPaid->value, 'sent_at' => now()->subDays(5), 'total' => 100_000, 'amount_paid' => 40_000],
+            ['État : Partiellement payée — paiement en cours', '40 000 / 100 000 reçus'],
+        ],
+        'paid' => [
+            ['status' => InvoiceStatus::Paid->value, 'sent_at' => now()->subDays(8), 'paid_at' => now()->subDay(), 'amount_paid' => 118_000],
+            ['État : Payée — encaissement complet', 'Payée'],
+        ],
+        'cancelled' => [
+            ['status' => InvoiceStatus::Cancelled->value, 'sent_at' => now()->subDays(8), 'cancelled_at' => now()->subDay()],
+            ['État : Annulée — sortie de cycle', 'La facture a été annulée'],
+        ],
+    ];
+
+    foreach ($cases as [$overrides, $expectedTexts]) {
+        $invoice = makeShowPageInvoice($company, $overrides);
+        $response = $this->actingAs($user)
+            ->get(route('pme.invoices.show', $invoice))
+            ->assertOk();
+
+        foreach ($expectedTexts as $text) {
+            $response->assertSeeText($text);
+        }
+    }
+});
+
 // ─── Carte client ─────────────────────────────────────────────────────────────
 
 test('la carte client affiche les coordonnées et un lien « Voir la fiche »', function () {

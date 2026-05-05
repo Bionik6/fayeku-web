@@ -3,6 +3,7 @@
 use App\Enums\PME\ProposalDocumentStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\ProposalDocument;
+use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
 use Livewire\Attributes\Computed;
@@ -94,20 +95,32 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         $days = (int) now()->startOfDay()->diffInDays($this->proforma->valid_until->copy()->startOfDay(), false);
 
         if ($days < 0) {
-            return __('Expirée depuis :days jour(s)', ['days' => abs($days)]);
+            $abs = abs($days);
+
+            return $abs > 1
+                ? __('Expirée depuis :days jours', ['days' => $abs])
+                : __('Expirée depuis :days jour', ['days' => $abs]);
         }
 
         if ($days === 0) {
             return __("Expire aujourd'hui");
         }
 
-        return __('Dans :days jour(s)', ['days' => $days]);
+        return $days > 1
+            ? __('Dans :days jours', ['days' => $days])
+            : __('Dans :days jour', ['days' => $days]);
     }
 
     #[Computed]
     public function isEditable(): bool
     {
         return in_array($this->proforma->status, [ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent], true);
+    }
+
+    #[Computed]
+    public function lifecycleState(): array
+    {
+        return app(DocumentLifecycleService::class)->forProforma($this->proforma);
     }
 
     // ─── Bon de commande ─────────────────────────────────────────────────────
@@ -154,6 +167,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         ]);
         $this->proforma->refresh();
         $this->showPoModal = false;
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Bon de commande enregistré. La proforma peut être convertie en facture.'));
     }
 
@@ -168,6 +182,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         }
         app(ProposalDocumentService::class)->markAsPoReceived($this->proforma);
         $this->proforma->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Bon de commande reçu : la proforma peut être convertie en facture.'));
     }
 
@@ -294,6 +309,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         if ($this->proforma->status === ProposalDocumentStatus::Draft) {
             app(ProposalDocumentService::class)->markAsSent($this->proforma);
             $this->proforma->refresh();
+            unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
             $statusChanged = true;
         }
 
@@ -313,6 +329,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         }
         app(ProposalDocumentService::class)->markAsDeclined($this->proforma);
         $this->proforma->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('La proforma a été marquée comme refusée.'));
     }
 
@@ -453,6 +470,8 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             @endif
         </article>
     </section>
+
+    <x-documents.lifecycle-card :lifecycle="$this->lifecycleState" />
 
     {{-- Corps 2 colonnes : Aperçu en premier (full width sur mobile, 2/3 sur lg+),
          sidebar Client+Actions en 2e (full width sur mobile, 1/3 sur lg+). --}}

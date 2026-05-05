@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
+use App\Models\PME\Invoice;
 use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,6 +45,100 @@ test('quote show page renders the activity feed with lifecycle events', function
         ->assertSee('Date de validité');
 });
 
+test('quote show page renders the current lifecycle after KPIs', function () {
+    ['user' => $user, 'company' => $company, 'client' => $client] = createSmeUserForProposal();
+
+    $quote = ProposalDocument::factory()
+        ->quote()
+        ->sent()
+        ->forCompany($company)
+        ->withClient($client)
+        ->withLines(1)
+        ->create([
+            'sent_at' => now()->subDays(2),
+            'valid_until' => now()->addDays(20),
+        ]);
+
+    $html = (string) $this->actingAs($user)
+        ->get(route('pme.quotes.show', $quote))
+        ->assertOk()
+        ->assertSeeText('État : Envoyé — en attente de réponse client')
+        ->getContent();
+
+    expect($html)->toContain('data-document-lifecycle')
+        ->and(strpos($html, 'Conversion'))->toBeLessThan(strpos($html, 'data-document-lifecycle'))
+        ->and(strpos($html, 'data-document-lifecycle'))->toBeLessThan(strpos($html, 'Aperçu du devis'));
+});
+
+test('quote show page renders accepted factured declined and derived expired lifecycles', function () {
+    ['user' => $user, 'company' => $company, 'client' => $client] = createSmeUserForProposal();
+
+    $accepted = ProposalDocument::factory()
+        ->quote()
+        ->accepted()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(8),
+            'accepted_at' => now()->subDay(),
+        ]);
+
+    $factured = ProposalDocument::factory()
+        ->quote()
+        ->accepted()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(10),
+            'accepted_at' => now()->subDays(5),
+        ]);
+    Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'proposal_document_id' => $factured->id,
+            'reference' => 'FYK-FAC-DS0701',
+            'status' => InvoiceStatus::Draft,
+        ]);
+
+    $declined = ProposalDocument::factory()
+        ->quote()
+        ->declined()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(12),
+            'declined_at' => now()->subDays(3),
+        ]);
+
+    $expired = ProposalDocument::factory()
+        ->quote()
+        ->sent()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(40),
+            'valid_until' => now()->subDays(5),
+        ]);
+
+    $cases = [
+        [$accepted, ['État : Accepté — à convertir en facture']],
+        [$factured, ['État : Facturé — facture créée', 'FYK-FAC-DS0701']],
+        [$declined, ['État : Refusé — sortie de cycle', 'Le devis a été marqué comme refusé']],
+        [$expired, ['État : Expiré — durée de validité dépassée', 'La date de validité est dépassée']],
+    ];
+
+    foreach ($cases as [$quote, $expectedTexts]) {
+        $response = $this->actingAs($user)
+            ->get(route('pme.quotes.show', $quote))
+            ->assertOk();
+
+        foreach ($expectedTexts as $text) {
+            $response->assertSeeText($text);
+        }
+    }
+});
+
 test('proforma show page renders po_received and converted events when present', function () {
     ['user' => $user, 'company' => $company, 'client' => $client] = createSmeUserForProposal();
 
@@ -67,6 +163,88 @@ test('proforma show page renders po_received and converted events when present',
         ->assertSee('Proforma envoyée')
         ->assertSee('Bon de commande reçu')
         ->assertSee('BC-2026-001');
+});
+
+test('proforma show page renders sent purchase order factured declined and derived expired lifecycles', function () {
+    ['user' => $user, 'company' => $company, 'client' => $client] = createSmeUserForProposal();
+
+    $sent = ProposalDocument::factory()
+        ->proforma()
+        ->sent()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(2),
+            'valid_until' => now()->addDays(20),
+        ]);
+
+    $poReceived = ProposalDocument::factory()
+        ->proforma()
+        ->poReceived()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(8),
+            'po_reference' => 'BC-2026/0142',
+            'po_received_at' => now()->subDay(),
+        ]);
+
+    $factured = ProposalDocument::factory()
+        ->proforma()
+        ->poReceived()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(10),
+            'po_reference' => 'BC-2026/0143',
+            'po_received_at' => now()->subDays(4),
+        ]);
+    Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'proposal_document_id' => $factured->id,
+            'reference' => 'FYK-FAC-DS0801',
+            'status' => InvoiceStatus::Draft,
+        ]);
+
+    $declined = ProposalDocument::factory()
+        ->proforma()
+        ->declined()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(12),
+            'declined_at' => now()->subDays(2),
+        ]);
+
+    $expired = ProposalDocument::factory()
+        ->proforma()
+        ->sent()
+        ->forCompany($company)
+        ->withClient($client)
+        ->create([
+            'sent_at' => now()->subDays(35),
+            'valid_until' => now()->subDays(4),
+        ]);
+
+    $cases = [
+        [$sent, ['État : Envoyée — en attente du BC']],
+        [$poReceived, ['État : BC reçu — prêt à facturer', 'BC-2026/0142']],
+        [$factured, ['État : Facturée — facture créée', 'FYK-FAC-DS0801']],
+        [$declined, ['État : Refusée — sortie de cycle', 'La proforma a été marquée comme refusée']],
+        [$expired, ['État : Expirée — validité dépassée', 'Aucun BC reçu avant la date de validité']],
+    ];
+
+    foreach ($cases as [$proforma, $expectedTexts]) {
+        $response = $this->actingAs($user)
+            ->get(route('pme.proformas.show', $proforma))
+            ->assertOk();
+
+        foreach ($expectedTexts as $text) {
+            $response->assertSeeText($text);
+        }
+    }
 });
 
 test('client card shows the avatar fallback when client has neither email nor phone', function () {
