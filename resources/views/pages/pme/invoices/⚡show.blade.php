@@ -7,6 +7,7 @@ use App\Enums\PME\ReminderMode;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
+use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\PaymentService;
 use App\Services\PME\ReminderService;
 use Livewire\Attributes\Computed;
@@ -109,14 +110,20 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $days = (int) now()->startOfDay()->diffInDays($due->copy()->startOfDay(), false);
 
         if ($days < 0) {
-            return __('Retard de :days jour(s)', ['days' => abs($days)]);
+            $abs = abs($days);
+
+            return $abs > 1
+                ? __('Retard de :days jours', ['days' => $abs])
+                : __('Retard de :days jour', ['days' => $abs]);
         }
 
         if ($days === 0) {
             return __("Échéance aujourd'hui");
         }
 
-        return __('Dans :days jour(s)', ['days' => $days]);
+        return $days > 1
+            ? __('Dans :days jours', ['days' => $days])
+            : __('Dans :days jour', ['days' => $days]);
     }
 
     #[Computed]
@@ -150,6 +157,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         return $this->invoice->timeline();
     }
 
+    #[Computed]
+    public function lifecycleState(): array
+    {
+        return app(DocumentLifecycleService::class)->forInvoice($this->invoice);
+    }
+
     public function sendInvoice(): void
     {
         // Conservé pour compat — passe rapidement la facture en Sent sans modal.
@@ -164,10 +177,11 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         $this->invoice->update([
             'status' => InvoiceStatus::Sent,
+            'sent_at' => $this->invoice->sent_at ?? now(),
         ]);
 
         $this->invoice->refresh();
-        unset($this->statusDisplay);
+        unset($this->statusDisplay, $this->lifecycleState);
 
         $this->dispatch('toast', type: 'success', title: __('Facture marquée comme envoyée.'));
     }
@@ -291,9 +305,12 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         // Draft → Sent : l'utilisateur a validé l'envoi, on bascule la facture.
         $statusChanged = false;
         if ($this->invoice->status === InvoiceStatus::Draft) {
-            $this->invoice->update(['status' => InvoiceStatus::Sent]);
+            $this->invoice->update([
+                'status' => InvoiceStatus::Sent,
+                'sent_at' => $this->invoice->sent_at ?? now(),
+            ]);
             $this->invoice->refresh();
-            unset($this->statusDisplay);
+            unset($this->statusDisplay, $this->lifecycleState);
             $statusChanged = true;
         }
 
@@ -319,7 +336,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         ]);
 
         $this->invoice->refresh();
-        unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents);
+        unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents, $this->lifecycleState);
 
         $this->dispatch('toast', type: 'success', title: __('Facture marquée comme payée.'));
     }
@@ -395,7 +412,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
         $this->invoice = $this->invoice->fresh(['client', 'lines', 'reminders', 'payments']);
         $this->showPaymentModal = false;
-        unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents);
+        unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents, $this->lifecycleState);
 
         if ($this->company) {
             $notifier = app(\App\Services\PME\WhatsAppNotificationService::class);
@@ -445,7 +462,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         app(PaymentService::class)->delete($payment);
 
         $this->invoice = $this->invoice->fresh(['client', 'lines', 'reminders', 'payments']);
-        unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents);
+        unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents, $this->lifecycleState);
 
         $this->dispatch('toast', type: 'success', title: __('Paiement supprimé.'));
     }
@@ -671,6 +688,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             @endif
         </article>
     </section>
+
+    <x-documents.lifecycle-card :lifecycle="$this->lifecycleState" />
 
     {{-- Corps 2 colonnes : Aperçu en premier (full width sur mobile, 2/3 sur lg+),
          sidebar Client+Actions à droite (full width sur mobile, 1/3 sur lg+). --}}

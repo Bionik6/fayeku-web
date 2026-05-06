@@ -25,8 +25,10 @@ return new class extends Migration
             $table->string('status')->default('draft');
             $table->string('currency', 3)->default('XOF');
             $table->date('issued_at')->nullable();
+            $table->datetime('sent_at')->nullable();
             $table->date('due_at')->nullable();
             $table->datetime('paid_at')->nullable();
+            $table->datetime('cancelled_at')->nullable();
             $table->integer('subtotal')->default(0);
             $table->integer('tax_amount')->default(0);
             $table->integer('total')->default(0);

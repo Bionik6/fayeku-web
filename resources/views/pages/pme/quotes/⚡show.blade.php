@@ -3,6 +3,7 @@
 use App\Enums\PME\ProposalDocumentStatus;
 use App\Models\Auth\Company;
 use App\Models\PME\ProposalDocument;
+use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
 use Livewire\Attributes\Computed;
@@ -84,20 +85,32 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $days = (int) now()->startOfDay()->diffInDays($this->quote->valid_until->copy()->startOfDay(), false);
 
         if ($days < 0) {
-            return __('Expiré depuis :days jour(s)', ['days' => abs($days)]);
+            $abs = abs($days);
+
+            return $abs > 1
+                ? __('Expiré depuis :days jours', ['days' => $abs])
+                : __('Expiré depuis :days jour', ['days' => $abs]);
         }
 
         if ($days === 0) {
             return __("Expire aujourd'hui");
         }
 
-        return __('Dans :days jour(s)', ['days' => $days]);
+        return $days > 1
+            ? __('Dans :days jours', ['days' => $days])
+            : __('Dans :days jour', ['days' => $days]);
     }
 
     #[Computed]
     public function isEditable(): bool
     {
         return in_array($this->quote->status, ProposalDocumentStatus::editable(), true);
+    }
+
+    #[Computed]
+    public function lifecycleState(): array
+    {
+        return app(DocumentLifecycleService::class)->forQuote($this->quote);
     }
 
     public function markAsAccepted(): void
@@ -107,6 +120,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         }
         app(ProposalDocumentService::class)->markAsAccepted($this->quote);
         $this->quote->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme accepté.'));
     }
 
@@ -117,6 +131,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         }
         app(ProposalDocumentService::class)->markAsDeclined($this->quote);
         $this->quote->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme refusé.'));
     }
 
@@ -284,7 +299,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         if ($this->quote->status === ProposalDocumentStatus::Draft) {
             app(ProposalDocumentService::class)->markAsSent($this->quote);
             $this->quote->refresh();
-            unset($this->statusDisplay);
+            unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
             $statusChanged = true;
         }
 
@@ -314,7 +329,6 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                     {{ __('← Retour aux devis & proformas') }}
                 </a>
                 <div class="mt-3 flex flex-wrap items-center gap-3">
-                    <span class="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">{{ __('Devis') }}</span>
                     <h2 class="text-3xl font-semibold tracking-tight text-ink">{{ $q->reference ?? '—' }}</h2>
                     <span class="inline-flex whitespace-nowrap items-center rounded-full px-3 py-1 text-sm font-semibold {{ $status['class'] }}">
                         {{ __($status['label']) }}
@@ -338,7 +352,13 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     </section>
 
     {{-- KPIs --}}
-    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="app-shell-stat-card">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Type') }}</p>
+            <p class="mt-2 text-2xl font-semibold tracking-tight text-ink">{{ __('Devis') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Proposition commerciale envoyée au client') }}</p>
+        </article>
+
         <article class="app-shell-stat-card">
             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">{{ __('Montant TTC') }}</p>
             <p class="mt-2 text-3xl font-semibold tracking-tight text-ink">{{ format_money($q->total, $q->currency) }}</p>
@@ -372,6 +392,8 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             @endif
         </article>
     </section>
+
+    <x-documents.lifecycle-card :lifecycle="$this->lifecycleState" />
 
     {{-- Corps 2 colonnes : Aperçu en premier (full width sur mobile, 2/3 sur lg+),
          sidebar Client+Actions en 2e (full width sur mobile, 1/3 sur lg+).
@@ -445,102 +467,16 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             <article class="app-shell-panel p-6">
                 <h3 class="text-lg font-semibold text-ink">{{ __('Activité') }}</h3>
                 <p class="mt-1 text-sm text-slate-500">{{ __('Les jalons clés de ce devis.') }}</p>
-                <ol class="mt-5 space-y-4">
-                    <li class="flex items-start gap-3">
-                        <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                            <flux:icon name="document-plus" class="size-4" />
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold text-ink">{{ __('Devis créé') }}</p>
-                            <p class="text-sm text-slate-500">{{ format_date($q->created_at) }}</p>
-                        </div>
-                    </li>
-                    @if ($q->valid_until)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                                <flux:icon name="calendar" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Date de validité') }}</p>
-                                <p class="text-sm text-slate-500">{{ format_date($q->valid_until) }} @if ($this->validityLabel) · {{ $this->validityLabel }} @endif</p>
-                            </div>
-                        </li>
-                    @endif
-                    @if ($q->status === ProposalDocumentStatus::Accepted)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                                <flux:icon name="check-circle" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Devis accepté') }}</p>
-                                <p class="text-sm text-slate-500">{{ format_date($q->updated_at) }}</p>
-                            </div>
-                        </li>
-                    @endif
-                    @if ($q->status === ProposalDocumentStatus::Declined)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-                                <flux:icon name="x-circle" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Devis refusé') }}</p>
-                                <p class="text-sm text-slate-500">{{ format_date($q->updated_at) }}</p>
-                            </div>
-                        </li>
-                    @endif
-                    @if ($q->invoice)
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
-                                <flux:icon name="document-arrow-up" class="size-4" />
-                            </span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-ink">{{ __('Converti en facture') }}</p>
-                                <a href="{{ route('pme.invoices.show', $q->invoice) }}" wire:navigate class="text-sm font-medium text-primary hover:text-primary-strong">{{ $q->invoice->reference }}</a>
-                            </div>
-                        </li>
-                    @endif
-                </ol>
+                <div class="mt-5">
+                    <x-proposals.activity-feed :document="$q" />
+                </div>
             </article>
         </div>
 
         {{-- Colonne droite : client + actions. Full width sur mobile, col 3 sur lg+ --}}
         <div class="flex w-full flex-col gap-6">
             {{-- Carte client --}}
-            <article class="app-shell-panel p-6">
-                <div class="mb-4 flex items-center justify-between gap-3">
-                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Client') }}</h3>
-                    @if ($q->client)
-                        <a href="{{ route('pme.clients.show', $q->client_id) }}" wire:navigate class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-primary transition hover:text-primary-strong">
-                            {{ __('Voir la fiche') }} <flux:icon name="arrow-right" class="size-4" />
-                        </a>
-                    @endif
-                </div>
-                @if ($q->client)
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                        <p class="font-semibold text-ink">{{ $q->client->name }}</p>
-                        <div class="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-slate-700">
-                            @if ($q->client->email) <span class="break-all">{{ $q->client->email }}</span> @endif
-                            @if ($q->client->email && $q->client->phone) <span class="text-slate-500">⋅</span> @endif
-                            @if ($q->client->phone) <span>{{ format_phone($q->client->phone) }}</span> @endif
-                        </div>
-                        @if ($q->client->address || $q->client->tax_id)
-                            <div class="mt-3 border-t border-slate-200/70 pt-3 text-sm text-slate-600">
-                                @if ($q->client->address)
-                                    <p class="flex items-start gap-1.5">
-                                        <flux:icon name="map-pin" class="mt-0.5 size-3.5 shrink-0 text-slate-400" />
-                                        <span>{{ $q->client->address }}</span>
-                                    </p>
-                                @endif
-                                @if ($q->client->tax_id)
-                                    <p class="mt-1 font-mono text-sm text-slate-500">{{ __('NINEA') }} : {{ $q->client->tax_id }}</p>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-700">{{ __('Aucun client renseigné sur ce devis.') }}</div>
-                @endif
-            </article>
+            <x-client-card :client="$q->client" no-client-message="Aucun client renseigné sur ce devis." />
 
             {{-- Actions rapides --}}
             <article class="app-shell-panel p-6 lg:sticky lg:top-6">

@@ -187,7 +187,10 @@ class InvoiceService
      */
     public function markAsSent(Invoice $invoice): Invoice
     {
-        $invoice->update(['status' => InvoiceStatus::Sent]);
+        $invoice->update([
+            'status' => InvoiceStatus::Sent,
+            'sent_at' => $invoice->sent_at ?? now(),
+        ]);
 
         return $invoice;
     }

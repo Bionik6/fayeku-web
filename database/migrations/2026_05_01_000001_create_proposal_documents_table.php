@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('status')->default('draft');
             $table->date('issued_at')->nullable();
             $table->date('valid_until')->nullable();
+            $table->datetime('sent_at')->nullable();
+            $table->datetime('accepted_at')->nullable();
+            $table->datetime('declined_at')->nullable();
+            $table->datetime('converted_at')->nullable();
             $table->integer('subtotal')->default(0);
             $table->integer('tax_amount')->default(0);
             $table->integer('total')->default(0);

@@ -199,12 +199,28 @@ test('markAsSent transitions to Sent for both types', function (ProposalDocument
     expect($document->fresh()->status)->toBe(ProposalDocumentStatus::Sent);
 })->with('document_types');
 
+test('markAsSent stamps sent_at on first transition and preserves it on re-mark', function () {
+    $document = ProposalDocument::factory()->create();
+    $service = new ProposalDocumentService;
+
+    $service->markAsSent($document);
+    $original = $document->fresh()->sent_at;
+    expect($original)->not->toBeNull();
+
+    $this->travel(5)->minutes();
+    $service->markAsSent($document->fresh());
+
+    expect($document->fresh()->sent_at?->toIso8601String())->toBe($original->toIso8601String());
+});
+
 test('markAsAccepted is allowed for quotes', function () {
     $document = ProposalDocument::factory()->quote()->sent()->create();
 
     (new ProposalDocumentService)->markAsAccepted($document);
 
-    expect($document->fresh()->status)->toBe(ProposalDocumentStatus::Accepted);
+    $fresh = $document->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted)
+        ->and($fresh->accepted_at)->not->toBeNull();
 });
 
 test('markAsAccepted throws DomainException for proformas', function () {
@@ -240,7 +256,9 @@ test('markAsDeclined is allowed for both types', function (ProposalDocumentType 
 
     (new ProposalDocumentService)->markAsDeclined($document);
 
-    expect($document->fresh()->status)->toBe(ProposalDocumentStatus::Declined);
+    $fresh = $document->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Declined)
+        ->and($fresh->declined_at)->not->toBeNull();
 })->with('document_types');
 
 // ─── canEdit ────────────────────────────────────────────────────────────────
@@ -294,7 +312,9 @@ test('convertToInvoice transitions a sent quote to Accepted', function () {
 
     (new ProposalDocumentService)->convertToInvoice($quote, $company);
 
-    expect($quote->fresh()->status)->toBe(ProposalDocumentStatus::Accepted);
+    $fresh = $quote->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted)
+        ->and($fresh->accepted_at)->not->toBeNull();
 });
 
 test('convertToInvoice transitions a proforma to Converted', function () {
@@ -310,7 +330,9 @@ test('convertToInvoice transitions a proforma to Converted', function () {
 
     $invoice = (new ProposalDocumentService)->convertToInvoice($proforma, $company);
 
-    expect($proforma->fresh()->status)->toBe(ProposalDocumentStatus::Converted)
+    $fresh = $proforma->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Converted)
+        ->and($fresh->converted_at)->not->toBeNull()
         ->and($invoice->payment_terms)->toBe('Net 60');
 });
 

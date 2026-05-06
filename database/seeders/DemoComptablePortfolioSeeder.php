@@ -562,6 +562,20 @@ class DemoComptablePortfolioSeeder extends Seeder
         $subtotal = $attributes['subtotal'] ?? (int) round($total / 1.18);
         $taxAmount = $total - $subtotal;
 
+        // Derive lifecycle timestamps so portfolio invoices have a coherent
+        // activity feed when accountants drill in: sent_at on issue day, paid_at
+        // shortly before due date for paid invoices.
+        $status = $attributes['status'] ?? null;
+        $issuedAt = $attributes['issued_at'] ?? null;
+        $dueAt = $attributes['due_at'] ?? null;
+
+        if (! array_key_exists('sent_at', $attributes) && $issuedAt && $status !== InvoiceStatus::Draft) {
+            $attributes['sent_at'] = $issuedAt;
+        }
+        if (! array_key_exists('paid_at', $attributes) && $status === InvoiceStatus::Paid && $dueAt) {
+            $attributes['paid_at'] = (clone $dueAt)->subDays(rand(1, 5));
+        }
+
         /** @var Invoice $invoice */
         $invoice = Invoice::unguarded(fn () => Invoice::create(array_merge([
             'company_id' => $sme->id,

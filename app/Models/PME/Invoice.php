@@ -30,7 +30,7 @@ class Invoice extends Model
     protected $fillable = [
         'company_id', 'client_id', 'proposal_document_id',
         'reference', 'currency', 'status',
-        'issued_at', 'due_at', 'paid_at',
+        'issued_at', 'sent_at', 'due_at', 'paid_at', 'cancelled_at',
         'subtotal', 'tax_amount', 'total', 'discount', 'discount_type', 'amount_paid',
         'notes', 'payment_terms', 'payment_instructions',
         'payment_method', 'payment_details', 'reminders_enabled',
@@ -39,8 +39,10 @@ class Invoice extends Model
 
     protected $casts = [
         'issued_at' => 'date',
+        'sent_at' => 'datetime',
         'due_at' => 'date',
         'paid_at' => 'datetime',
+        'cancelled_at' => 'datetime',
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
@@ -131,12 +133,30 @@ class Invoice extends Model
             ]);
         }
 
+        if ($this->sent_at) {
+            $events->push([
+                'at' => $this->sent_at,
+                'type' => 'sent',
+                'label' => 'Facture envoyée',
+                'meta' => [],
+            ]);
+        }
+
         if ($this->due_at) {
             $events->push([
                 'at' => $this->due_at->copy()->startOfDay(),
                 'type' => 'due_date',
                 'label' => 'Date d\'échéance',
                 'meta' => ['amount_due' => (int) $this->total - (int) $this->amount_paid],
+            ]);
+        }
+
+        if ($this->cancelled_at) {
+            $events->push([
+                'at' => $this->cancelled_at,
+                'type' => 'cancelled',
+                'label' => 'Facture annulée',
+                'meta' => [],
             ]);
         }
 

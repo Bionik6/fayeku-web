@@ -24,8 +24,30 @@ class Client extends Model
     }
 
     protected $fillable = [
-        'company_id', 'name', 'phone', 'email', 'address', 'tax_id', 'dunning_strategy',
+        'company_id', 'name', 'phone', 'email', 'address', 'tax_id', 'rccm', 'dunning_strategy',
     ];
+
+    /**
+     * True when neither an email nor a phone number is recorded.
+     */
+    public function lacksContact(): bool
+    {
+        return blank($this->email) && blank($this->phone);
+    }
+
+    /**
+     * Two-letter initials derived from the client name (e.g. "Sabira Sasu" → "SS").
+     */
+    public function initials(): string
+    {
+        $words = preg_split('/\s+/', trim((string) $this->name)) ?: [];
+        $initials = '';
+        foreach (array_slice($words, 0, 2) as $word) {
+            $initials .= mb_strtoupper(mb_substr($word, 0, 1));
+        }
+
+        return $initials !== '' ? $initials : '?';
+    }
 
     protected $casts = [
         'dunning_strategy' => DunningStrategy::class,

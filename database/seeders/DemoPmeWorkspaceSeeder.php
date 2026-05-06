@@ -13,6 +13,7 @@ use App\Models\PME\InvoiceLine;
 use App\Models\PME\ProposalDocument;
 use App\Models\PME\ProposalDocumentLine;
 use App\Models\PME\Reminder;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -20,10 +21,11 @@ use Illuminate\Support\Facades\DB;
  * Étoffe les deux PME nominales créées par DemoAccountsSeeder avec des
  * espaces de travail riches et exploitables :
  *
- * - Diop Services SARL (services numériques) — 12 clients (Orange, CBAO,
+ * - Diop Services SARL (services numériques) — 13 clients (Orange, CBAO,
  *   SENELEC…), 5 mois d'historique, 4 retards (dont 2 critiques), 10 émises
- *   en attente, 2 brouillons, 7 devis variés et 6 proformas (envoyées,
- *   PO reçus, converties, refusées, expirées, brouillon).
+ *   en attente, 2 brouillons, 7 devis variés et 7 proformas (envoyées,
+ *   PO reçus, converties, refusées, expirées, brouillons — dont une pour
+ *   un nouveau prospect sans coordonnées renseignées).
  * - Sow BTP SARL (BTP / promotion immobilière) — 8 clients (promoteurs,
  *   syndics, collectivités), 4 mois d'historique, 3 retards (dont 1
  *   critique J+72), 4 émises, 1 brouillon, 4 devis et 5 proformas
@@ -71,18 +73,20 @@ class DemoPmeWorkspaceSeeder extends Seeder
     private function seedDiopInvoices(): void
     {
         // ── Clients ────────────────────────────────────────────────────────
-        $orange = $this->client('Orange Sénégal SA', '+221338600001', 'dsi@orange.sn', '21 Rue Léopold Sédar Senghor, Plateau', 'SN2024ORA0001');
-        $ecobank = $this->client('Ecobank Sénégal SA', '+221338600002', 'compta@ecobank.sn', '4 Allée Robert Delmas, Plateau', 'SN2024ECO0002');
+        $orange = $this->client('Orange Sénégal SA', '+221338600001', 'dsi@orange.sn', '21 Rue Léopold Sédar Senghor, Plateau', 'SN2024ORA0001', rccm: 'SN-DKR-1996-B-12345');
+        $ecobank = $this->client('Ecobank Sénégal SA', '+221338600002', 'compta@ecobank.sn', '4 Allée Robert Delmas, Plateau', 'SN2024ECO0002', rccm: 'SN-DKR-1999-B-08712');
         $adie = $this->client('Agence de l\'Informatique de l\'État', '+221338600003', 'dsi@adie.sn', 'Route de l\'Aéroport Km 3, Dakar', 'SN2024ADI0003');
-        $planInternational = $this->client('Plan International Sénégal', '+221338600004', 'finance@plan-senegal.org', 'Mermoz Nord, Rue 1, Dakar', 'SN2024PLN0004');
-        $wari = $this->client('Wari Sénégal SA', '+221338600005', 'direction@wari.sn', 'Immeuble Fayçal, Rue Huart, Dakar', 'SN2024WAR0005');
-        $totalEnergies = $this->client('TotalEnergies Marketing SN', '+221338600006', 'compta@totalenergies.sn', 'Route de la Corniche Ouest, Dakar', 'SN2024TOT0006');
-        $lafarge = $this->client('LafargeHolcim Sénégal', '+221338600007', 'dsi@lafarge.sn', 'Zone Industrielle de Rufisque, Dakar', 'SN2024LAF0007');
-        $cbao = $this->client('CBAO Groupe Attijariwafa', '+221338600008', 'it@cbao.sn', '1 Place de l\'Indépendance, Plateau', 'SN2024CBA0008');
-        $auchan = $this->client('AUCHAN Sénégal', '+221338600009', 'dsi@auchan.sn', 'Route du Front de Terre, Liberté 6', 'SN2024AUC0009');
-        $kirene = $this->client('Kirène SA', '+221338600010', 'direction@kirene.sn', 'Route de Rufisque, Diamniadio', 'SN2024KIR0010');
+        $planInternational = $this->client('Plan International Sénégal', '+221338600004', 'finance@plan-senegal.org', 'Mermoz Nord, Rue 1, Dakar', 'SN2024PLN0004', rccm: 'SN-DKR-2003-A-04521');
+        $wari = $this->client('Wari Sénégal SA', '+221338600005', 'direction@wari.sn', 'Immeuble Fayçal, Rue Huart, Dakar', 'SN2024WAR0005', rccm: 'SN-DKR-2008-B-19033');
+        $totalEnergies = $this->client('TotalEnergies Marketing SN', '+221338600006', 'compta@totalenergies.sn', 'Route de la Corniche Ouest, Dakar', 'SN2024TOT0006', rccm: 'SN-DKR-2001-B-03478');
+        $lafarge = $this->client('LafargeHolcim Sénégal', '+221338600007', 'dsi@lafarge.sn', 'Zone Industrielle de Rufisque, Dakar', 'SN2024LAF0007', rccm: 'SN-DKR-1998-B-02145');
+        $cbao = $this->client('CBAO Groupe Attijariwafa', '+221338600008', 'it@cbao.sn', '1 Place de l\'Indépendance, Plateau', 'SN2024CBA0008', rccm: 'SN-DKR-2008-B-15422');
+        $auchan = $this->client('AUCHAN Sénégal', '+221338600009', 'dsi@auchan.sn', 'Route du Front de Terre, Liberté 6', 'SN2024AUC0009', rccm: 'SN-DKR-2014-B-23187');
+        $kirene = $this->client('Kirène SA', '+221338600010', 'direction@kirene.sn', 'Route de Rufisque, Diamniadio', 'SN2024KIR0010', rccm: 'SN-DKR-2002-B-09810');
         $senelec = $this->client('SENELEC', '+221338600011', 'it@senelec.sn', '28 Rue Vincent, Plateau', 'SN2024SEN0011');
-        $airSenegal = $this->client('Air Sénégal SA', '+221338600012', 'compta@airsenegal.sn', 'Aéroport International AIBD, Diass', 'SN2024AIR0012');
+        $airSenegal = $this->client('Air Sénégal SA', '+221338600012', 'compta@airsenegal.sn', 'Aéroport International AIBD, Diass', 'SN2024AIR0012', rccm: 'SN-DKR-2017-B-26854');
+        // Client incomplet (sans coordonnées) — illustre la carte client « Nouveau client ».
+        $sabiraSasu = $this->client('Sabira SASU', null, null, null, null);
 
         // ── Décembre 2025 — 4 factures payées ─────────────────────────────
         $this->invoice($orange, 'FYK-FAC-DS0101', InvoiceStatus::Paid, 1_200_000,
@@ -526,6 +530,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         $auchan = Client::where('company_id', $this->company->id)->where('name', 'AUCHAN Sénégal')->first();
         $airSenegal = Client::where('company_id', $this->company->id)->where('name', 'Air Sénégal SA')->first();
         $totalEnergies = Client::where('company_id', $this->company->id)->where('name', 'TotalEnergies Marketing SN')->first();
+        $sabiraSasu = Client::where('company_id', $this->company->id)->where('name', 'Sabira SASU')->first();
 
         // ── Envoyée — en attente de bon de commande ────────────────────────
         $this->proforma($orange, 'FYK-PRO-DS0101', ProposalDocumentStatus::Sent, 4_200_000,
@@ -621,6 +626,20 @@ class DemoPmeWorkspaceSeeder extends Seeder
             paymentTerms: '30% à la commande, 70% à la recette finale',
             deliveryTerms: '5 mois',
             notes: 'En attente de validation du périmètre par la direction HSE.',
+        );
+
+        // ── Brouillon — nouveau prospect, fiche client encore vide ─────────
+        $this->proforma($sabiraSasu, 'FYK-PRO-DS0107', ProposalDocumentStatus::Draft, 1_200_000,
+            issuedAt: now()->toDateString(),
+            validUntil: now()->addDays(30)->toDateString(),
+            lines: [
+                ['Site web vitrine — design + intégration (5 pages)', 1, 900_000],
+                ['Hébergement et nom de domaine (1 an)', 1, 300_000],
+            ],
+            dossierReference: 'DOSS-2026-SABIRA-WEB',
+            paymentTerms: '50% à la commande, 50% à la livraison',
+            deliveryTerms: '6 semaines',
+            notes: 'Premier contact via recommandation — coordonnées à compléter.',
         );
     }
 
@@ -1017,7 +1036,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
         );
     }
 
-    private function client(string $name, string $phone, string $email, string $address, string $taxId): Client
+    private function client(string $name, ?string $phone, ?string $email, ?string $address, ?string $taxId, ?string $rccm = null): Client
     {
         return Client::create([
             'company_id' => $this->company->id,
@@ -1026,6 +1045,7 @@ class DemoPmeWorkspaceSeeder extends Seeder
             'email' => $email,
             'address' => $address,
             'tax_id' => $taxId,
+            'rccm' => $rccm,
         ]);
     }
 
@@ -1042,6 +1062,8 @@ class DemoPmeWorkspaceSeeder extends Seeder
         ?string $paidAt,
         array $lines = [],
         int $amountPaid = 0,
+        ?string $sentAt = null,
+        ?string $cancelledAt = null,
         ?string $proposalDocumentId = null,
     ): Invoice {
         $taxAmount = (int) round($subtotal * 0.18);
@@ -1051,6 +1073,15 @@ class DemoPmeWorkspaceSeeder extends Seeder
             $amountPaid = $total;
         }
 
+        // Auto-derive sent_at: any status other than Draft means the invoice was sent.
+        if ($sentAt === null && $status !== InvoiceStatus::Draft) {
+            $sentAt = $issuedAt;
+        }
+
+        if ($cancelledAt === null && $status === InvoiceStatus::Cancelled) {
+            $cancelledAt = Carbon::parse($issuedAt)->addDays(2)->toDateTimeString();
+        }
+
         $invoice = Invoice::create([
             'company_id' => $this->company->id,
             'client_id' => $client->id,
@@ -1058,8 +1089,10 @@ class DemoPmeWorkspaceSeeder extends Seeder
             'reference' => $reference,
             'status' => $status,
             'issued_at' => $issuedAt,
+            'sent_at' => $sentAt,
             'due_at' => $dueAt,
             'paid_at' => $paidAt,
+            'cancelled_at' => $cancelledAt,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'total' => $total,
@@ -1091,9 +1124,24 @@ class DemoPmeWorkspaceSeeder extends Seeder
         string $issuedAt,
         string $validUntil,
         array $lines = [],
+        ?string $sentAt = null,
+        ?string $acceptedAt = null,
+        ?string $declinedAt = null,
     ): ProposalDocument {
         $taxAmount = (int) round($subtotal * 0.18);
         $total = $subtotal + $taxAmount;
+
+        // Auto-derive lifecycle timestamps from the document's issued date so
+        // every status carries a coherent activity feed in the demo.
+        if ($sentAt === null && $status !== ProposalDocumentStatus::Draft) {
+            $sentAt = $issuedAt;
+        }
+        if ($acceptedAt === null && $status === ProposalDocumentStatus::Accepted) {
+            $acceptedAt = Carbon::parse($issuedAt)->addDays(5)->toDateTimeString();
+        }
+        if ($declinedAt === null && $status === ProposalDocumentStatus::Declined) {
+            $declinedAt = Carbon::parse($issuedAt)->addDays(7)->toDateTimeString();
+        }
 
         $quote = ProposalDocument::create([
             'company_id' => $this->company->id,
@@ -1103,6 +1151,9 @@ class DemoPmeWorkspaceSeeder extends Seeder
             'status' => $status,
             'issued_at' => $issuedAt,
             'valid_until' => $validUntil,
+            'sent_at' => $sentAt,
+            'accepted_at' => $acceptedAt,
+            'declined_at' => $declinedAt,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'total' => $total,
@@ -1140,9 +1191,26 @@ class DemoPmeWorkspaceSeeder extends Seeder
         ?string $poReceivedAt = null,
         ?string $poNotes = null,
         ?string $notes = null,
+        ?string $sentAt = null,
+        ?string $declinedAt = null,
+        ?string $convertedAt = null,
     ): ProposalDocument {
         $taxAmount = (int) round($subtotal * 0.18);
         $total = $subtotal + $taxAmount;
+
+        // Auto-derive lifecycle timestamps so demo proformas have a coherent
+        // activity feed in the UI for every status.
+        if ($sentAt === null && $status !== ProposalDocumentStatus::Draft) {
+            $sentAt = $issuedAt;
+        }
+        if ($declinedAt === null && $status === ProposalDocumentStatus::Declined) {
+            $declinedAt = Carbon::parse($issuedAt)->addDays(7)->toDateTimeString();
+        }
+        if ($convertedAt === null && $status === ProposalDocumentStatus::Converted) {
+            $convertedAt = $poReceivedAt
+                ? Carbon::parse($poReceivedAt)->addDays(3)->toDateTimeString()
+                : Carbon::parse($issuedAt)->addDays(10)->toDateTimeString();
+        }
 
         $proforma = ProposalDocument::create([
             'company_id' => $this->company->id,
@@ -1152,6 +1220,9 @@ class DemoPmeWorkspaceSeeder extends Seeder
             'status' => $status,
             'issued_at' => $issuedAt,
             'valid_until' => $validUntil,
+            'sent_at' => $sentAt,
+            'declined_at' => $declinedAt,
+            'converted_at' => $convertedAt,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'total' => $total,
