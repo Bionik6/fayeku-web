@@ -73,4 +73,12 @@ return [
         'sender_name' => env('ORANGE_SMS_SENDER_NAME'),
     ],
 
+    'lafricamobile_sms' => [
+        'base_url' => env('LAFRICAMOBILE_SMS_BASE_URL', 'https://lamsms.lafricamobile.com/api'),
+        'account_id' => env('LAFRICAMOBILE_SMS_ACCOUNT_ID'),
+        'password' => env('LAFRICAMOBILE_SMS_PASSWORD'),
+        'sender' => env('LAFRICAMOBILE_SMS_SENDER', 'FAYEKU'),
+        'callback_url' => env('LAFRICAMOBILE_SMS_CALLBACK_URL'),
+    ],
+
 ];
