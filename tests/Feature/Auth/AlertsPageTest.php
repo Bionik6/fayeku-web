@@ -1,11 +1,11 @@
 <?php
 
+use App\Enums\PME\InvoiceStatus;
+use App\Models\Compta\DismissedAlert;
+use App\Models\Compta\PartnerInvitation;
+use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use App\Models\Compta\PartnerInvitation;
-use App\Models\Compta\DismissedAlert;
-use App\Enums\PME\InvoiceStatus;
-use App\Models\Shared\User;
 
 uses(RefreshDatabase::class);
 
@@ -199,7 +199,7 @@ test('une nouvelle inscription utilise le copy harmonisé', function () {
     Livewire::actingAs($user)
         ->test('pages::compta.alerts.index')
         ->assertSee('Bâ Industries · Nouvelle inscription')
-        ->assertSee('Via votre lien partenaire · Offre Essentiel · Essai 2 mois');
+        ->assertSee('Via votre lien partenaire · Offre Essentiel · Essai 30 jours');
 });
 
 test('une invitation acceptée il y a plus de 7 jours ne génère pas d\'alerte nouvelle', function () {

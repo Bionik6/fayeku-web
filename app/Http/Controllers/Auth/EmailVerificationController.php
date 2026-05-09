@@ -82,7 +82,7 @@ class EmailVerificationController extends Controller
             $company = $user->smeCompany();
 
             if ($company && ! $company->isSetupComplete()) {
-                return redirect()->route('auth.company-setup');
+                return redirect()->route('pme.onboarding');
             }
         }
 

@@ -5,7 +5,7 @@
         <div class="space-y-8">
           <div class="space-y-4">
             <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Tarifs</p>
-            <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl lg:text-[52px] lg:leading-[60px]">Profitez de 2 mois d’essai sur chaque plan</h1>
+            <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl lg:text-[52px] lg:leading-[60px]">Profitez de 30 jours d’essai sur chaque plan</h1>
             <p class="max-w-2xl text-pretty text-lg leading-8 text-slate-600">Sans engagement et résiliable à tout moment. Choisissez un plan simple, clair, et adapté à la maturité de votre facturation.</p>
           </div>
 
@@ -16,7 +16,7 @@
         <div class="rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft">
           <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Paiement</p>
           <p class="mt-4 text-3xl font-semibold text-ink">Wave, Orange Money, virement bancaire</p>
-          <p class="mt-4 text-base leading-7 text-slate-600">Sans frais de setup. Tous les plans incluent 2 mois d’essai, puis un choix mensuel ou annuel.</p>
+          <p class="mt-4 text-base leading-7 text-slate-600">Sans frais de setup. Tous les plans incluent 30 jours d’essai, puis un choix mensuel ou annuel.</p>
           <div class="mt-6 rounded-3xl bg-mist p-5 text-sm text-primary">Payez 10 mois, utilisez 12.</div>
         </div>
       </div>
@@ -82,7 +82,7 @@
                   <span class="pb-1 text-lg font-medium leading-none text-slate-500">/mois HT</span>
                 </div>
               
-          <p class="text-sm text-slate-500">100 000 FCFA/an · 2 mois d’essai</p>
+          <p class="text-sm text-slate-500">100 000 FCFA/an · 30 jours d’essai</p>
         </div>
       </div>
 
@@ -144,7 +144,7 @@
                   <span class="pb-1 text-lg font-medium leading-none text-white/65">/mois HT</span>
                 </div>
               
-          <p class="text-sm text-white/75">200 000 FCFA/an · 2 mois d’essai</p>
+          <p class="text-sm text-white/75">200 000 FCFA/an · 30 jours d’essai</p>
         </div>
       </div>
 
@@ -221,7 +221,7 @@
                   <span class="pb-1 text-lg font-medium leading-none text-slate-500">/mois HT</span>
                 </div>
               
-          <p class="text-sm text-slate-500">Sur devis · 2 mois d’essai</p>
+          <p class="text-sm text-slate-500">Sur devis · 30 jours d’essai</p>
         </div>
       </div>
 
@@ -343,15 +343,15 @@
                   <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Essai inclus</th>
                   
                         <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-700">
-                          2 mois
+                          30 jours
                         </td>
                       
                         <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] text-slate-700">
-                          2 mois
+                          30 jours
                         </td>
                       
                         <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-700">
-                          2 mois
+                          30 jours
                         </td>
                       
                 </tr>
@@ -549,12 +549,12 @@
   
         <div class="grid gap-6 lg:grid-cols-3">
           <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-            <h2 class="text-2xl font-semibold text-ink">2 mois d’essai</h2>
-            <p class="mt-4 text-base leading-7 text-slate-600">Chaque plan démarre avec 2 mois d’essai pour valider votre usage avant facturation.</p>
+            <h2 class="text-2xl font-semibold text-ink">30 jours d’essai</h2>
+            <p class="mt-4 text-base leading-7 text-slate-600">Chaque plan démarre avec 30 jours d’essai pour valider votre usage avant facturation.</p>
           </article>
           <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
             <h2 class="text-2xl font-semibold text-ink">Annuel</h2>
-            <p class="mt-4 text-base leading-7 text-slate-600">Bénéficiez de 2 mois offerts avec l’offre annuelle: 10 mois payés, 12 mois utilisés.</p>
+            <p class="mt-4 text-base leading-7 text-slate-600">Bénéficiez de 2 mois offerts avec l’offre annuelle : 10 mois payés, 12 mois utilisés.</p>
           </article>
           <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
             <h2 class="text-2xl font-semibold text-ink">Sans frais de setup</h2>
@@ -698,15 +698,15 @@
                   <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Période d’essai incluse</th>
                   
                         <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-700">
-                          2 mois
+                          30 jours
                         </td>
                       
                         <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] text-slate-700">
-                          2 mois
+                          30 jours
                         </td>
                       
                         <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-700">
-                          2 mois
+                          30 jours
                         </td>
                       
                 </tr>

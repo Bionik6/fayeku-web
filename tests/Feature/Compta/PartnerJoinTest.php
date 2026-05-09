@@ -85,7 +85,7 @@ test('GET /register sans session ni token n\'expose pas de cabinet et montre la 
         ->assertOk()
         ->assertViewHas('joiningFirm', null)
         ->assertViewHas('invitation', null)
-        ->assertSee('Cette page est réservée aux PME');
+        ->assertSee('Vous êtes expert-comptable ?');
 });
 
 test('le middleware web est appliqué sur /join/{code} (sinon la session ne persiste pas)', function () {

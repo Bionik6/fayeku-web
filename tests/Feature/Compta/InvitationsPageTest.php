@@ -333,7 +333,7 @@ test('composeWhatsAppMessage en plan essentiel utilise le label et le prix essen
         ->toContain('Bonjour Awa,')
         ->toContain($firm->name)
         ->toContain('/join/'.$firm->invite_code)
-        ->toContain('*2 mois offerts*')
+        ->toContain('*30 jours offerts*')
         ->toContain('plan Essentiel')
         ->toContain('20 000 FCFA')
         ->toContain('✓ Factures pro')
@@ -359,7 +359,7 @@ test('composeWhatsAppMessage en plan basique utilise le label et le prix basique
 
     expect($message)
         ->toContain('Bonjour Omar,')
-        ->toContain('*2 mois offerts*')
+        ->toContain('*30 jours offerts*')
         ->toContain('plan Basique')
         ->toContain('10 000 FCFA');
 });
@@ -467,7 +467,7 @@ test('composePartnerShareMessage produit le message générique avec le lien et 
 
     expect($message)
         ->toContain('*Fayeku*')
-        ->toContain('*2 mois offerts*')
+        ->toContain('*30 jours offerts*')
         ->toContain('✓ Factures pro')
         ->toContain('✓ Relances WhatsApp/Email automatiques')
         ->toContain('✓ Vision claire de votre trésorerie à 30 et 90 jours')

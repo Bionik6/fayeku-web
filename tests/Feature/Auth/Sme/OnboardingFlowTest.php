@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\Auth\LegalForm;
+use App\Enums\Auth\OnboardingIntent;
 use App\Models\Auth\Company;
 use App\Models\Shared\User;
 use App\Notifications\PasswordResetNotification;
@@ -8,16 +10,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 /**
  * Battle-test : un nouveau PME suit l'intégralité du parcours
- * inscription → vérification email → company-setup → dashboard → logout
- * → forgot-password → reset (lien email) → login. Aucune étape ne doit
- * être sautable.
+ * inscription → vérification email → onboarding (wizard 4 étapes) → dashboard
+ * → logout → forgot-password → reset (lien email) → re-login. Aucune étape
+ * ne doit être sautable.
  */
-test('full sme onboarding: register, verify-email, company-setup, dashboard, logout, reset password, login again', function () {
+test('full sme onboarding: register, verify-email, wizard, dashboard, logout, reset password, login again', function () {
     Notification::fake();
 
     // --- 1. Inscription ---
@@ -47,33 +50,60 @@ test('full sme onboarding: register, verify-email, company-setup, dashboard, log
 
     $this->withSession(['verification_email' => 'awa@example.com'])
         ->post(route('auth.verify-email.verify'), ['code' => '123456'])
-        ->assertRedirect(route('auth.company-setup'));
+        ->assertRedirect(route('pme.onboarding'));
 
     expect($user->fresh()->email_verified_at)->not->toBeNull();
 
-    // --- 4. Company setup ---
-    $this->post(route('auth.company-setup.submit'), [
-        'company_name' => 'Awa Ndiaye SARL',
-        'sector' => 'Commerce général',
-    ])->assertRedirect(route('pme.dashboard'));
+    // --- 4. Tentative d'accéder au dashboard avant onboarding : refusé ---
+    $this->get('/pme/dashboard')->assertRedirect(route('pme.onboarding'));
+
+    // --- 5. Onboarding — étape 1 : intention ---
+    $component = Livewire::test('pages::pme.onboarding.index')
+        ->assertSet('currentStep', 0)
+        ->call('selectIntent', OnboardingIntent::InvoiceFaster->value)
+        ->call('goToStep', 1)
+        ->assertSet('currentStep', 1);
+
+    // --- 6. Onboarding — étape 2 : identité ---
+    $component
+        ->set('companyName', 'Awa Ndiaye SARL')
+        ->set('legalForm', LegalForm::Sarl->value)
+        ->set('sector', 'Commerce de gros')
+        ->call('saveIdentity')
+        ->assertHasNoErrors()
+        ->assertSet('currentStep', 2);
+
+    // --- 7. Onboarding — étape 3 : signature ---
+    $component
+        ->set('senderName', 'Awa Ndiaye SARL')
+        ->call('saveSignature')
+        ->assertHasNoErrors()
+        ->assertSet('currentStep', 3);
+
+    // --- 8. Onboarding — étape 4 : skip premier client puis confirmation ---
+    $component
+        ->call('skipFirstClient')
+        ->assertSet('currentStep', 4)
+        ->call('complete')
+        ->assertRedirect(route('pme.dashboard'));
 
     expect(Company::where('type', 'sme')->first()->setup_completed_at)->not->toBeNull();
 
-    // --- 5. Dashboard accessible ---
+    // --- 9. Dashboard accessible ---
     $this->get('/pme/dashboard')->assertOk();
 
-    // --- 6. Logout : redirige vers /login (unifié) ---
+    // --- 10. Logout : redirige vers /login (unifié) ---
     $this->post(route('auth.logout'))->assertRedirect(route('login'));
     $this->assertGuest();
 
-    // --- 7. Forgot password (email) ---
+    // --- 11. Forgot password (email) ---
     $this->post(route('password.email'), [
         'email' => 'awa@example.com',
     ])->assertRedirect();
 
     Notification::assertSentTo($user, PasswordResetNotification::class);
 
-    // --- 8. Reset password via lien email ---
+    // --- 12. Reset password via lien email ---
     $token = Password::broker()->createToken($user->fresh());
 
     $this->post(route('auth.reset-password.submit'), [
@@ -86,7 +116,7 @@ test('full sme onboarding: register, verify-email, company-setup, dashboard, log
     $this->assertAuthenticated();
     expect(Hash::check('NewP@ssword456!', $user->fresh()->password))->toBeTrue();
 
-    // --- 9. Re-logout, re-login with new password (par email) ---
+    // --- 13. Re-logout, re-login with new password (par email) ---
     $this->post(route('auth.logout'));
 
     $this->post(route('login'), [
@@ -96,7 +126,7 @@ test('full sme onboarding: register, verify-email, company-setup, dashboard, log
 
     $this->assertAuthenticatedAs($user);
 
-    // --- 10. Old password no longer works ---
+    // --- 14. Old password no longer works ---
     $this->post(route('auth.logout'));
 
     $this->post(route('login'), [
@@ -108,6 +138,8 @@ test('full sme onboarding: register, verify-email, company-setup, dashboard, log
 
 test('sme is redirected to /pme/dashboard if they try to access /compta/*', function () {
     $user = User::factory()->create(['profile_type' => 'sme']);
+    $company = Company::factory()->create(['type' => 'sme', 'setup_completed_at' => now()]);
+    $company->users()->attach($user->id, ['role' => 'owner']);
 
     $this->actingAs($user)->get('/compta/dashboard')->assertRedirect(route('pme.dashboard'));
 });

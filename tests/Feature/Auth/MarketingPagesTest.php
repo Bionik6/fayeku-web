@@ -5,7 +5,7 @@ dataset('marketing pages', [
     ['/entreprises', 'Une facturation simple. Une trésorerie plus claire.'],
     ['/accountants', 'Fayeku Compta: le cockpit de vos PME clientes'],
     ['/accountant/join', 'Vous êtes un cabinet d\'expertise comptable'],
-    ['/pricing', 'Profitez de 2 mois d’essai sur chaque plan'],
+    ['/pricing', 'Profitez de 30 jours d’essai sur chaque plan'],
     ['/conformite', 'Conformité fiscale: Fayeku vous prépare à l’avance.'],
     ['/contact', 'Parlons de votre mise en place Fayeku'],
     ['/mentions-legales', 'Mentions légales'],
@@ -33,5 +33,5 @@ test('login and register pages reuse the Fayeku branding', function () {
     $this->get(route('register'))
         ->assertOk()
         ->assertSee('Fayeku')
-        ->assertSee('Espace sécurisé');
+        ->assertSee('Créer votre compte');
 });

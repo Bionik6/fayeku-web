@@ -592,7 +592,7 @@ it('computes signature preview live (both name and role)', function () {
         ->call('setSection', 'signature')
         ->set('senderName', 'Moussa Diop')
         ->set('senderRole', 'Directeur commercial')
-        ->assertSee('Moussa Diop, Directeur commercial Khalil Softwares');
+        ->assertSee('Moussa Diop, Directeur commercial · Khalil Softwares');
 });
 
 it('computes signature preview with name only', function () {
@@ -604,10 +604,10 @@ it('computes signature preview with name only', function () {
         ->call('setSection', 'signature')
         ->set('senderName', 'Moussa Diop')
         ->set('senderRole', '')
-        ->assertSee('Moussa Diop, Khalil Softwares');
+        ->assertSee('Moussa Diop · Khalil Softwares');
 });
 
-it('computes signature preview fallback (L\'equipe)', function () {
+it('computes signature preview fallback (organisation seule)', function () {
     ['user' => $user, 'company' => $company] = createSmeSettingsUser();
     $company->update(['name' => 'Khalil Softwares']);
 
@@ -616,7 +616,7 @@ it('computes signature preview fallback (L\'equipe)', function () {
         ->call('setSection', 'signature')
         ->set('senderName', '')
         ->set('senderRole', '')
-        ->assertSee("L'équipe Khalil Softwares");
+        ->assertSee('Khalil Softwares');
 });
 
 it('saves signature (name + role)', function () {

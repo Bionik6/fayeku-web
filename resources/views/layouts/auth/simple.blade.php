@@ -1,53 +1,59 @@
+@props(['title' => null])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        @include('partials.head', ['title' => $title ?? null])
+        @include('partials.head', ['title' => $title])
     </head>
     <body class="marketing-site">
         <div class="min-h-screen overflow-x-hidden bg-[#024D4D]">
             <div class="grid min-h-screen lg:grid-cols-[0.94fr_1.06fr]">
-                <div class="bg-[#D9EEE6] px-6 py-12 sm:px-10 lg:px-14 lg:py-16">
-                    <div class="max-w-xl space-y-8 lg:ml-auto lg:mr-10 lg:mt-10">
+
+                {{-- Section gauche : mint avec contenu personnalisable par page --}}
+                <div class="relative flex overflow-hidden bg-[#D9EEE6] px-6 py-10 sm:px-10 lg:px-14 lg:py-12">
+                    {{-- Cercles décoratifs en arrière-plan --}}
+                    <div class="pointer-events-none absolute -left-20 top-10 hidden h-72 w-72 rounded-full bg-white/40 blur-2xl lg:block" aria-hidden="true"></div>
+                    <div class="pointer-events-none absolute -bottom-20 left-32 hidden h-80 w-80 rounded-full bg-white/30 blur-3xl lg:block" aria-hidden="true"></div>
+
+                    <div class="relative flex w-full max-w-xl flex-col gap-7 lg:ml-auto lg:mr-10">
+                        {{-- Header logo en haut --}}
                         <a href="{{ route('home') }}" class="inline-flex items-center gap-3 text-[#024D4D]" wire:navigate aria-label="Accueil Fayeku">
-                            <img src="/logo-mark.svg" alt="Fayeku" class="h-14 w-14" />
+                            <img src="/logo-mark.svg" alt="Fayeku" class="h-12 w-12" />
                             <div>
-                                <p class="text-2xl font-semibold">Fayeku</p>
-                                <p class="text-sm text-[#1D5D5D]">Facturation & trésorerie</p>
+                                <p class="text-lg font-semibold leading-tight">Fayeku</p>
+                                <p class="text-xs text-[#1D5D5D]">Facturation & trésorerie</p>
                             </div>
                         </a>
 
-                        <div class="space-y-4">
-                            <span class="inline-flex rounded-full border border-[#024D4D]/10 bg-white/70 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-teal">
-                                AUTHENTIFICATION
-                            </span>
-                            <h1 class="max-w-xl text-balance text-4xl font-semibold leading-[1.08] text-[#024D4D] sm:text-5xl lg:text-[52px] lg:leading-[60px]">
-                                Entrez dans votre espace Fayeku.
-                            </h1>
-                            <p class="max-w-xl text-xl leading-9 text-[#1D5D5D]">
-                                Accédez à un espace sécurisé pour gérer la facturation, suivre les paiements et collaborer efficacement entre entreprise et cabinet comptable.
-                            </p>
-                        </div>
-
-                        <div class="space-y-6 pt-2 text-lg leading-8 text-[#1D5D5D]">
-                            <p class="max-w-2xl"><span class="font-semibold text-accent">✓</span> Accès sécurisé par téléphone</p>
-                            <p class="max-w-2xl"><span class="font-semibold text-accent">✓</span> Suivi clair de la facturation et des paiements</p>
-                            <p class="max-w-2xl"><span class="font-semibold text-accent">✓</span> Pensé pour les PME et les cabinets comptables</p>
-                        </div>
+                        @isset($aside)
+                            {{ $aside }}
+                        @else
+                            {{-- Fallback : contenu par défaut pour les pages auth qui ne fournissent pas d'aside --}}
+                            <div class="space-y-4">
+                                <span class="inline-flex items-center gap-2 rounded-full border border-[#024D4D]/10 bg-white/70 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-teal">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+                                    {{ __('Authentification') }}
+                                </span>
+                                <h1 class="text-balance text-3xl font-semibold leading-[1.08] text-[#024D4D] sm:text-4xl lg:text-[44px] lg:leading-[52px]">
+                                    {{ __('Entrez dans votre espace Fayeku.') }}
+                                </h1>
+                                <p class="text-base leading-7 text-[#1D5D5D]">
+                                    {{ __('Accédez à un espace sécurisé pour gérer la facturation, suivre les paiements et collaborer efficacement entre entreprise et cabinet comptable.') }}
+                                </p>
+                            </div>
+                        @endisset
                     </div>
                 </div>
 
+                {{-- Section droite : carte du formulaire --}}
                 <div class="relative overflow-hidden px-5 py-12 sm:px-8 lg:px-14 lg:py-16">
-                    <div class="absolute left-1/2 top-0 hidden h-full w-px bg-white/18 lg:block"></div>
-                    <div class="absolute -right-24 top-24 hidden h-56 w-56 rounded-full border-[12px] border-white/40 lg:block"></div>
-                    <div class="absolute -bottom-16 right-24 hidden h-64 w-64 rounded-full border-[12px] border-white/40 lg:block"></div>
+                    <div class="absolute -right-24 top-24 hidden h-56 w-56 rounded-full border-[14px] border-white/15 lg:block" aria-hidden="true"></div>
+                    <div class="absolute -bottom-16 right-24 hidden h-72 w-72 rounded-full border-[14px] border-white/15 lg:block" aria-hidden="true"></div>
 
-                    <div class="mx-auto max-w-xl lg:ml-10 lg:mr-auto lg:mt-4">
-                        <div class="relative">
-                            <div class="absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] bg-accent" aria-hidden="true"></div>
-                            <div class="relative rounded-[2rem] border border-[#024D4D]/10 bg-white p-6 shadow-soft sm:p-8">
-                                <div class="flex flex-col gap-6">
-                                    {{ $slot }}
-                                </div>
+                    <div class="relative mx-auto max-w-xl lg:ml-10 lg:mr-auto lg:mt-4">
+                        <div class="relative rounded-3xl border border-[#024D4D]/10 bg-white p-6 shadow-[0_30px_60px_-15px_rgba(2,77,77,0.45)] sm:p-8">
+                            <div class="flex flex-col gap-6">
+                                {{ $slot }}
                             </div>
                         </div>
                     </div>

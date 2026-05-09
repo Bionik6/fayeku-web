@@ -26,7 +26,7 @@ class RegisterRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+            'password' => ['required', 'string', Password::defaults()],
             'country_code' => ['required', 'string', Rule::in(['SN', 'CI'])],
             'invitation_token' => ['nullable', 'string', 'max:100'],
         ];
@@ -54,7 +54,6 @@ class RegisterRequest extends FormRequest
             'email.unique' => 'Cette adresse email est déjà utilisée.',
             'phone.required' => 'Le numéro de téléphone est obligatoire.',
             'password.required' => 'Le mot de passe est obligatoire.',
-            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
             'country_code.required' => 'Le pays est obligatoire.',
             'country_code.in' => 'Le pays sélectionné est invalide.',
         ];

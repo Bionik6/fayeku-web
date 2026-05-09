@@ -180,7 +180,7 @@ test('invoiceVariables expose les 7 clés attendues depuis l\'invoice', function
         ->and($vars['invoice_number'])->toBe('FAC-VAR-01')
         ->and($vars['invoice_amount'])->toContain('250 000')
         ->and($vars['due_date'])->toBe($vars['invoice_due_date'])
-        ->and($vars['sender_signature'])->toBe('Moussa Diop, Directeur commercial Khalil Softwares');
+        ->and($vars['sender_signature'])->toBe('Moussa Diop, Directeur commercial · Khalil Softwares');
 });
 
 test('invoiceVariables fallback proprement sur les valeurs par défaut', function () {
@@ -212,7 +212,7 @@ test('invoiceVariables fallback proprement sur les valeurs par défaut', functio
     expect($vars['client_name'])->toBe('Cher client')
         ->and($vars['invoice_number'])->toBe('')
         ->and($vars['due_date'])->toBe('')
-        ->and($vars['sender_signature'])->toBe("L'équipe Default Co");
+        ->and($vars['sender_signature'])->toBe('Default Co');
 });
 
 // ─── renderManualReminder ──────────────────────────────────────────────────

@@ -80,7 +80,7 @@ class MarketingPageController extends Controller
     public function contact(): View
     {
         return $this->render('marketing.contact', [
-            'title' => 'Contact Fayeku | Demander une démo ou démarrer 2 mois d’essai',
+            'title' => 'Contact Fayeku | Demander une démo ou démarrer 30 jours d’essai',
             'description' => 'Contactez Fayeku pour lancer un essai, organiser une démo ou discuter de vos besoins de facturation et conformité.',
         ]);
     }

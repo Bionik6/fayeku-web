@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\AccountantActivationController;
-use App\Http\Controllers\Auth\CompanySetupController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -56,9 +55,4 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/auth/verify-email/resend', [EmailVerificationController::class, 'resend'])->name('auth.verify-email.resend');
 
     Route::post('/logout', [LogoutController::class, 'destroy'])->name('auth.logout');
-});
-
-Route::middleware(['web', 'auth', 'verified.email'])->group(function () {
-    Route::get('/company-setup', [CompanySetupController::class, 'show'])->name('auth.company-setup');
-    Route::post('/company-setup', [CompanySetupController::class, 'store'])->name('auth.company-setup.submit');
 });

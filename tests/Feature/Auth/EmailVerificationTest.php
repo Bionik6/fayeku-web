@@ -13,7 +13,7 @@ test('verify-email page renders for an authenticated user with email in session'
         ->withSession(['verification_email' => $user->email])
         ->get(route('auth.verify-email'))
         ->assertOk()
-        ->assertSee('Code de vérification');
+        ->assertSee('Vérifiez votre email');
 });
 
 test('verify-email page redirects to login when no session and no auth user', function () {
@@ -21,12 +21,12 @@ test('verify-email page redirects to login when no session and no auth user', fu
         ->assertRedirect(route('login'));
 });
 
-test('valid code marks email_verified_at and redirects sme to company-setup when company not set up', function () {
+test('valid code marks email_verified_at and redirects sme to onboarding when company not set up', function () {
     $user = User::factory()->unverified()->create([
         'email' => 'sme@example.com',
         'profile_type' => 'sme',
     ]);
-    $company = Company::factory()->create(['type' => 'sme', 'setup_completed_at' => null]);
+    $company = Company::factory()->pendingOnboarding()->create(['type' => 'sme']);
     $user->companies()->attach($company->id, ['role' => 'owner']);
     createOtpCode('sme@example.com', '123456');
 
@@ -34,7 +34,7 @@ test('valid code marks email_verified_at and redirects sme to company-setup when
         ->withSession(['verification_email' => 'sme@example.com'])
         ->post(route('auth.verify-email.verify'), ['code' => '123456']);
 
-    $response->assertRedirect(route('auth.company-setup'));
+    $response->assertRedirect(route('pme.onboarding'));
     expect($user->fresh()->email_verified_at)->not->toBeNull();
 });
 

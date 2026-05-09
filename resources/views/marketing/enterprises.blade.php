@@ -15,7 +15,7 @@
                         href="/contact/"
                         class="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 bg-primary text-accent"
                       >
-                        Essayer 2 mois
+                        Essayer 30 jours
                       </a>
                     
                       <a
@@ -159,7 +159,7 @@
                   <span class="pb-1 text-lg font-medium leading-none text-slate-500">/mois HT</span>
                 </div>
               
-          <p class="text-sm text-slate-500">100 000 FCFA/an · 2 mois d’essai</p>
+          <p class="text-sm text-slate-500">100 000 FCFA/an · 30 jours d’essai</p>
         </div>
       </div>
 
@@ -221,7 +221,7 @@
                   <span class="pb-1 text-lg font-medium leading-none text-white/65">/mois HT</span>
                 </div>
               
-          <p class="text-sm text-white/75">200 000 FCFA/an · 2 mois d’essai</p>
+          <p class="text-sm text-white/75">200 000 FCFA/an · 30 jours d’essai</p>
         </div>
       </div>
 
@@ -298,7 +298,7 @@
                   <span class="pb-1 text-lg font-medium leading-none text-slate-500">/mois HT</span>
                 </div>
               
-          <p class="text-sm text-slate-500">Sur devis · 2 mois d’essai</p>
+          <p class="text-sm text-slate-500">Sur devis · 30 jours d’essai</p>
         </div>
       </div>
 

@@ -9,7 +9,14 @@ use Illuminate\Support\Str;
 
 class OtpService
 {
-    public function __construct(private OtpChannelInterface $channel) {}
+    /**
+     * @param  OtpChannelInterface  $defaultChannel  Canal par défaut (téléphone), résolu via OTP_CHANNEL.
+     * @param  EmailOtpChannel  $emailChannel  Canal toujours utilisé quand l'identifiant est un email.
+     */
+    public function __construct(
+        private OtpChannelInterface $defaultChannel,
+        private EmailOtpChannel $emailChannel,
+    ) {}
 
     public function generate(string $identifier, string $purpose = 'verification'): string
     {
@@ -35,17 +42,30 @@ class OtpService
             return $code;
         }
 
-        $this->channel->send($identifier, $code);
+        $this->channelFor($identifier)->send($identifier, $code);
 
         return $code;
+    }
+
+    /**
+     * Résout le canal d'envoi à utiliser pour un identifiant donné.
+     * Un identifiant qui ressemble à un email passe forcément par l'email,
+     * peu importe le canal par défaut configuré pour les téléphones.
+     */
+    private function channelFor(string $identifier): OtpChannelInterface
+    {
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            return $this->emailChannel;
+        }
+
+        return $this->defaultChannel;
     }
 
     public function verify(string $identifier, string $code, string $purpose = 'verification'): bool
     {
         $bypassCode = config('fayeku.otp_bypass_code');
-        $bypassAllowed = app()->environment('local') || (bool) config('fayeku.demo');
 
-        if ($bypassCode && $bypassAllowed && $code === $bypassCode) {
+        if ($bypassCode && (bool) config('fayeku.demo') && $code === $bypassCode) {
             return true;
         }
 

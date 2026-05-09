@@ -2,6 +2,8 @@
 
 namespace App\Models\Auth;
 
+use App\Enums\Auth\LegalForm;
+use App\Models\PME\Client;
 use App\Models\Shared\User;
 use App\Traits\Shared\HasUlid;
 use Database\Factories\CompanyFactory;
@@ -32,6 +34,7 @@ class Company extends Model
         'rccm',
         'logo_path',
         'sector',
+        'legal_form',
         'setup_completed_at',
     ];
 
@@ -52,6 +55,7 @@ class Company extends Model
 
     protected $casts = [
         'setup_completed_at' => 'datetime',
+        'legal_form' => LegalForm::class,
     ];
 
     protected static function newFactory(): CompanyFactory
@@ -83,6 +87,11 @@ class Company extends Model
             ->whereNull('ended_at');
     }
 
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
+    }
+
     public function isSetupComplete(): bool
     {
         return $this->setup_completed_at !== null;
@@ -90,18 +99,24 @@ class Company extends Model
 
     public function composeSenderSignature(): string
     {
-        $name = $this->sender_name;
-        $role = $this->sender_role;
-        $companyName = $this->name;
+        $name = trim((string) $this->sender_name);
+        $role = trim((string) $this->sender_role);
+        $companyName = (string) $this->name;
 
-        if ($name && $role) {
-            return "{$name}, {$role} {$companyName}";
+        if ($name !== '' && $role !== '') {
+            $leading = "{$name}, {$role}";
+        } elseif ($name !== '') {
+            $leading = $name;
+        } elseif ($role !== '') {
+            $leading = $role;
+        } else {
+            $leading = '';
         }
 
-        if ($name) {
-            return "{$name}, {$companyName}";
+        if ($leading === '') {
+            return $companyName;
         }
 
-        return "L'équipe {$companyName}";
+        return "{$leading} · {$companyName}";
     }
 }

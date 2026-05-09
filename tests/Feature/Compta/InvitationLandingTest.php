@@ -218,7 +218,7 @@ test('vérification email finalise le statut de l\'invitation à accepted', func
     $this->actingAs($user)
         ->withSession(['verification_email' => 'moussa@example.com', 'invitation_token' => $invitation->token])
         ->post(route('auth.verify-email.verify'), ['code' => '123456'])
-        ->assertRedirect(route('auth.company-setup'));
+        ->assertRedirect(route('pme.onboarding'));
 
     $invitation->refresh();
     expect($invitation->status)->toBe('accepted');

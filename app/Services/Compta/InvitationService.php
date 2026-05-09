@@ -34,7 +34,7 @@ class InvitationService
 
 Petit rappel de la part de {$firmName} : votre invitation à rejoindre *Fayeku* est toujours active.
 
-Pour rappel, vous bénéficiez de *2 mois offerts* sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite).
+Pour rappel, vous bénéficiez de *30 jours offerts* sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite).
 
 Activez votre compte ici 👉 {$link}
 
@@ -50,7 +50,7 @@ TXT;
 
 {$firmName} vous invite à rejoindre *Fayeku*, la plateforme qui simplifie votre facturation et vos relances clients.
 
-En passant par mon lien partenaire, vous bénéficiez de *2 mois offerts* sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite).
+En passant par mon lien partenaire, vous bénéficiez de *30 jours offerts* sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite).
 
 Ce que Fayeku vous apporte concrètement :
 ✓ Factures pro en quelques clics
@@ -89,7 +89,7 @@ TXT;
 
 Petit rappel : votre invitation à rejoindre Fayeku, transmise par {$firmName}, est toujours active.
 
-Vous bénéficiez toujours de 2 mois offerts sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite, sans engagement).
+Vous bénéficiez toujours de 30 jours offerts sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite, sans engagement).
 
 Activer mon compte Fayeku :
 {$link}
@@ -118,7 +118,7 @@ Fayeku vous permet concrètement de :
   • Suivre votre trésorerie prévisionnelle à 30 et 90 jours
   • Collaborer plus simplement avec notre cabinet (transmission de pièces, exports comptables)
 
-En passant par le lien ci-dessous, vous bénéficiez de 2 mois offerts sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite, sans engagement).
+En passant par le lien ci-dessous, vous bénéficiez de 30 jours offerts sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite, sans engagement).
 
 Activer mon compte Fayeku :
 {$link}
@@ -209,7 +209,7 @@ Bonjour,
 
 Je tenais à vous partager *Fayeku*, la plateforme que notre cabinet utilise pour simplifier la facturation et le suivi des paiements de nos clients PME.
 
-En passant par mon lien partenaire, vous bénéficiez de *2 mois offerts* pour démarrer.
+En passant par mon lien partenaire, vous bénéficiez de *30 jours offerts* pour démarrer.
 
 Ce que Fayeku change concrètement :
 ✓ Factures pro en quelques clics, conformes au contexte sénégalais

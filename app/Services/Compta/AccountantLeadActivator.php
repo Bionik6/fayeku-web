@@ -55,9 +55,9 @@ class AccountantLeadActivator
                 'price_paid' => 0,
                 'billing_cycle' => 'trial',
                 'status' => 'trial',
-                'trial_ends_at' => now()->addDays(60),
+                'trial_ends_at' => now()->addDays(30),
                 'current_period_start' => now(),
-                'current_period_end' => now()->addDays(60),
+                'current_period_end' => now()->addDays(30),
             ]);
 
             $lead->forceFill([

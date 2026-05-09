@@ -1,6 +1,7 @@
 <?php
 
 use App\Middleware\EnsureEmailVerified;
+use App\Middleware\EnsureOnboardingCompleted;
 use App\Middleware\EnsureProfileType;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'profile' => EnsureProfileType::class,
             'verified.email' => EnsureEmailVerified::class,
+            'onboarding.completed' => EnsureOnboardingCompleted::class,
         ]);
 
         $middleware->redirectGuestsTo('/login');

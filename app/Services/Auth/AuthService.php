@@ -91,7 +91,7 @@ class AuthService
             // The linking firm is either from a specific invitation or a firm-level join
             $firm = $invitation?->accountantFirm ?? $invitingFirm;
             // Referred SMEs (any cabinet entry point) land on Essentiel — that's the
-            // plan promised in every referral message ("2 mois offerts sur Essentiel").
+            // plan promised in every referral message ("30 jours offerts sur Essentiel").
             // Only standalone signups (no firm context) stay on Basique.
             $planSlug = $invitation?->recommended_plan ?? ($firm ? 'essentiel' : 'basique');
 
@@ -110,9 +110,9 @@ class AuthService
                 'price_paid' => 0,
                 'billing_cycle' => 'trial',
                 'status' => 'trial',
-                'trial_ends_at' => now()->addDays(60),
+                'trial_ends_at' => now()->addDays(30),
                 'current_period_start' => now(),
-                'current_period_end' => now()->addDays(60),
+                'current_period_end' => now()->addDays(30),
                 'invited_by_firm_id' => $firm?->id,
             ]);
 

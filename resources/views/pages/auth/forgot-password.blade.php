@@ -11,7 +11,7 @@
             @csrf
 
             <label class="auth-label">
-                <span>{{ __('Email') }} *</span>
+                <span>{{ __('Email') }} <span class="text-rose-500">*</span></span>
                 <input
                     name="email"
                     type="email"

@@ -61,7 +61,7 @@ test('WhatsAppReminderService resout le template auto a partir du dayOffset', fu
                     && $bodyParameters['company_name'] === 'Sow BTP'
                     && $bodyParameters['invoice_number'] === 'FAC-WA-P15'
                     && str_contains($bodyParameters['invoice_amount'], '250 000')
-                    && $bodyParameters['sender_signature'] === 'Ibrahima Ciss, Manager Sow BTP'
+                    && $bodyParameters['sender_signature'] === 'Ibrahima Ciss, Manager · Sow BTP'
                     && $urlButton === $invoice->public_code.'/pdf';
             })
             ->andReturnTrue();
@@ -75,7 +75,7 @@ test('WhatsAppReminderService resout le template auto a partir du dayOffset', fu
     expect($reminder->day_offset)->toBe(15)
         ->and($reminder->message_body)->toContain('Dakar Pharma')
         ->and($reminder->message_body)->toContain('FAC-WA-P15')
-        ->and($reminder->message_body)->toContain('Ibrahima Ciss, Manager Sow BTP');
+        ->and($reminder->message_body)->toContain('Ibrahima Ciss, Manager · Sow BTP');
 });
 
 test('WhatsAppReminderService utilise templateKey explicite pour les tons manuels', function () {

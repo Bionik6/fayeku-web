@@ -13,7 +13,7 @@
             <input type="hidden" name="token" value="{{ $token }}" />
 
             <label class="auth-label">
-                <span>{{ __('Email') }} *</span>
+                <span>{{ __('Email') }} <span class="text-rose-500">*</span></span>
                 <input
                     name="email"
                     type="email"
@@ -27,7 +27,7 @@
             </label>
 
             <label class="auth-label">
-                <span>{{ __('Nouveau mot de passe') }} *</span>
+                <span>{{ __('Nouveau mot de passe') }} <span class="text-rose-500">*</span></span>
                 <input
                     name="password"
                     type="password"
@@ -42,7 +42,7 @@
             </label>
 
             <label class="auth-label">
-                <span>{{ __('Confirmer le mot de passe') }} *</span>
+                <span>{{ __('Confirmer le mot de passe') }} <span class="text-rose-500">*</span></span>
                 <input
                     name="password_confirmation"
                     type="password"

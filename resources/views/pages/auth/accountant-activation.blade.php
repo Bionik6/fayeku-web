@@ -26,7 +26,7 @@
             </label>
 
             <label class="auth-label">
-                <span>{{ __('Mot de passe') }} *</span>
+                <span>{{ __('Mot de passe') }} <span class="text-rose-500">*</span></span>
                 <input
                     name="password"
                     type="password"
@@ -41,7 +41,7 @@
             </label>
 
             <label class="auth-label">
-                <span>{{ __('Confirmer le mot de passe') }} *</span>
+                <span>{{ __('Confirmer le mot de passe') }} <span class="text-rose-500">*</span></span>
                 <input
                     name="password_confirmation"
                     type="password"

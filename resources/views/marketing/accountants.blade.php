@@ -185,7 +185,7 @@
   
             <div class="space-y-6">
               <div class="grid gap-3">
-                <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">15% de commission mensuelle récurrente, à vie</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Bonus première signature : +1 mois de MRR</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Les PME invitées via votre lien reçoivent 2 mois Essentiel offerts</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Versement : Wave le 5 du mois</div>
+                <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">15% de commission mensuelle récurrente, à vie</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Bonus première signature : +1 mois de MRR</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Les PME invitées via votre lien reçoivent 30 jours Essentiel offerts</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Versement : Wave le 5 du mois</div>
               </div>
               <div class="overflow-hidden rounded-4xl border border-white/10 bg-white/5">
                 <table class="w-full border-collapse text-sm">
@@ -203,7 +203,7 @@
                         
                           <tr class="border-b border-white/10 last:border-b-0">
                             <th class="px-5 py-4 text-left font-semibold text-white">Trial PMEs invitées via lien comptable</th>
-                            <td class="px-5 py-4 text-white/80">2 mois Essentiel offerts</td>
+                            <td class="px-5 py-4 text-white/80">30 jours Essentiel offerts</td>
                           </tr>
                         
                           <tr class="border-b border-white/10 last:border-b-0">

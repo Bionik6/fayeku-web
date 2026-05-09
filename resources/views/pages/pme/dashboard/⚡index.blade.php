@@ -286,50 +286,8 @@ new #[Title('Tableau de bord')] #[Layout('layouts::pme')] class extends Componen
     {{-- Bannière quota --}}
     <x-shared.quota-banner :company="$this->company" />
 
-    {{-- Bienvenue nouvel utilisateur --}}
-    @if (session('welcome_new_user'))
-        <div
-            x-data="{ visible: true }"
-            x-show="visible"
-            x-transition:leave="transition duration-300"
-            x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 -translate-y-2"
-            class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-teal-500 px-6 py-5 text-white shadow-sm"
-        >
-            <div class="flex items-start justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
-                        <flux:icon name="sparkles" class="size-5 text-white" />
-                    </div>
-                    <div>
-                        <p class="font-semibold">
-                            {{ __('Bienvenue sur Fayeku,') }} {{ $company?->name ?? auth()->user()->first_name }} ! 🎉
-                        </p>
-                        <p class="mt-0.5 text-sm text-teal-100">
-                            {{ __('Votre compte est prêt. Créez votre première facture pour commencer à suivre vos encaissements.') }}
-                        </p>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <a
-                                href="{{ route('pme.invoices.create') }}"
-                                wire:navigate
-                                class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-1.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
-                            >
-                                <flux:icon name="plus" class="size-4" />
-                                {{ __('Créer ma première facture') }}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <button
-                    @click="visible = false"
-                    class="shrink-0 rounded-lg p-1 text-teal-100 transition hover:bg-white/20 hover:text-white"
-                    aria-label="{{ __('Fermer') }}"
-                >
-                    <flux:icon name="x-mark" class="size-4" />
-                </button>
-            </div>
-        </div>
-    @endif
+    {{-- Checklist d'onboarding (auto-masquée quand tout est fait ou quand dismissée) --}}
+    <livewire:onboarding-checklist :company="$this->company" />
 
     {{-- Bloc A — En-tête --}}
     <section class="app-shell-panel overflow-hidden">

@@ -6,7 +6,7 @@
           <div class="space-y-4">
             <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Contact</p>
             <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl lg:text-[52px] lg:leading-[60px]">Parlons de votre mise en place Fayeku.</h1>
-            <p class="max-w-2xl text-pretty text-lg leading-8 text-slate-600">Demandez vos 2 mois d’essai, une démo ou un échange sur vos besoins PME, cabinet ou conformité.</p>
+            <p class="max-w-2xl text-pretty text-lg leading-8 text-slate-600">Demandez vos 30 jours d’essai, une démo ou un échange sur vos besoins PME, cabinet ou conformité.</p>
           </div>
 
           

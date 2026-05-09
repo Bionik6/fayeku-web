@@ -1,5 +1,5 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
-<section class="relative overflow-hidden" data-home-persona="{&quot;entreprise&quot;:{&quot;badge&quot;:&quot;&quot;,&quot;eyebrow&quot;:&quot;Plateforme PME ↔ cabinet comptable&quot;,&quot;subtitle&quot;:&quot;Fayeku connecte votre entreprise et votre comptable autour d’une seule plateforme : factures conformes, relances WhatsApp automatiques, et trésorerie visible à 90 jours.&quot;,&quot;proof&quot;:&quot;2 mois d’essai inclus sur chaque plan. Sans engagement. Résiliable à tout moment.&quot;,&quot;primaryCta&quot;:{&quot;label&quot;:&quot;Essayer 2 mois&quot;,&quot;href&quot;:&quot;/contact/&quot;},&quot;secondaryCta&quot;:{&quot;label&quot;:&quot;Voir les tarifs&quot;,&quot;href&quot;:&quot;/pricing/&quot;},&quot;statTitle&quot;:&quot;Mise en route&quot;,&quot;statText&quot;:&quot;Onboarding guidé, sans configuration lourde, avec accès Fayeku Compta activable en quelques clics.&quot;,&quot;image&quot;:&quot;/screenshots/hero-pme-dashboard.png&quot;},&quot;expert&quot;:{&quot;badge&quot;:&quot;Fayeku Compta est gratuit&quot;,&quot;eyebrow&quot;:&quot;Cockpit multi-clients pour cabinets&quot;,&quot;subtitle&quot;:&quot;Centralisez les factures de vos PME clientes, collectez les pièces, exportez vers vos outils comptables et activez un programme partenaire récurrent.&quot;,&quot;proof&quot;:&quot;Cabinet gratuit. PMEs invitées via votre lien : 2 mois Essentiel offerts.&quot;,&quot;primaryCta&quot;:{&quot;label&quot;:&quot;Découvrir Fayeku Compta&quot;,&quot;href&quot;:&quot;/accountants/&quot;},&quot;secondaryCta&quot;:{&quot;label&quot;:&quot;Voir le programme partenaire&quot;,&quot;href&quot;:&quot;/accountants/#partenaires&quot;},&quot;statTitle&quot;:&quot;Gain de temps immédiat&quot;,&quot;statText&quot;:&quot;Accédez aux factures de vos clients en temps réel, exportez en un clic, sans ressaisie manuelle.&quot;,&quot;image&quot;:&quot;/screenshots/hero-compta-dashboard.png&quot;}}">
+<section class="relative overflow-hidden" data-home-persona="{&quot;entreprise&quot;:{&quot;badge&quot;:&quot;&quot;,&quot;eyebrow&quot;:&quot;Plateforme PME ↔ cabinet comptable&quot;,&quot;subtitle&quot;:&quot;Fayeku connecte votre entreprise et votre comptable autour d’une seule plateforme : factures conformes, relances WhatsApp automatiques, et trésorerie visible à 90 jours.&quot;,&quot;proof&quot;:&quot;30 jours d’essai inclus sur chaque plan. Sans engagement. Résiliable à tout moment.&quot;,&quot;primaryCta&quot;:{&quot;label&quot;:&quot;Essayer 30 jours&quot;,&quot;href&quot;:&quot;/contact/&quot;},&quot;secondaryCta&quot;:{&quot;label&quot;:&quot;Voir les tarifs&quot;,&quot;href&quot;:&quot;/pricing/&quot;},&quot;statTitle&quot;:&quot;Mise en route&quot;,&quot;statText&quot;:&quot;Onboarding guidé, sans configuration lourde, avec accès Fayeku Compta activable en quelques clics.&quot;,&quot;image&quot;:&quot;/screenshots/hero-pme-dashboard.png&quot;},&quot;expert&quot;:{&quot;badge&quot;:&quot;Fayeku Compta est gratuit&quot;,&quot;eyebrow&quot;:&quot;Cockpit multi-clients pour cabinets&quot;,&quot;subtitle&quot;:&quot;Centralisez les factures de vos PME clientes, collectez les pièces, exportez vers vos outils comptables et activez un programme partenaire récurrent.&quot;,&quot;proof&quot;:&quot;Cabinet gratuit. PMEs invitées via votre lien : 30 jours Essentiel offerts.&quot;,&quot;primaryCta&quot;:{&quot;label&quot;:&quot;Découvrir Fayeku Compta&quot;,&quot;href&quot;:&quot;/accountants/&quot;},&quot;secondaryCta&quot;:{&quot;label&quot;:&quot;Voir le programme partenaire&quot;,&quot;href&quot;:&quot;/accountants/#partenaires&quot;},&quot;statTitle&quot;:&quot;Gain de temps immédiat&quot;,&quot;statText&quot;:&quot;Accédez aux factures de vos clients en temps réel, exportez en un clic, sans ressaisie manuelle.&quot;,&quot;image&quot;:&quot;/screenshots/hero-compta-dashboard.png&quot;}}">
       <div class="absolute inset-x-0 top-0 -z-10 h-[42rem] bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.22),transparent_48%),linear-gradient(180deg,#EAF7F2_0%,rgba(234,247,242,0)_100%)]"></div>
       <div class="absolute inset-0 -z-10 bg-grid bg-[size:22px_22px] opacity-40"></div>
 
@@ -44,12 +44,12 @@
           </div>
 
           <div class="flex flex-col gap-3 sm:flex-row">
-            <a href="/contact/" data-persona-link="primary" class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent transition-transform hover:-translate-y-0.5">Essayer 2 mois</a>
+            <a href="/contact/" data-persona-link="primary" class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent transition-transform hover:-translate-y-0.5">Essayer 30 jours</a>
             <a href="/pricing/" data-persona-link="secondary" class="inline-flex items-center justify-center rounded-full border border-primary/10 bg-white px-6 py-3 text-sm font-semibold text-primary">Voir les tarifs</a>
           </div>
 
           <div class="flex flex-col gap-4 rounded-4xl border border-primary/10 bg-white/85 p-5 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm font-medium text-slate-600" data-persona-field="proof">✅ 2 mois d’essai inclus sur chaque plan. Sans engagement. Résiliable à tout moment.</p>
+            <p class="text-sm font-medium text-slate-600" data-persona-field="proof">✅ 30 jours d’essai inclus sur chaque plan. Sans engagement. Résiliable à tout moment.</p>
             <div class="rounded-3xl bg-mist px-4 py-3 text-sm text-primary">
               <span class="block font-semibold" data-persona-field="stat-title">Mise en route</span>
               <span data-persona-field="stat-text">Onboarding guidé, sans configuration lourde, avec accès Fayeku Compta activable en quelques clics.</span>
@@ -452,7 +452,7 @@
                 <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
               </button>
               <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Oui. Chaque plan Fayeku inclut 2 mois d’essai pour vous laisser le temps de tester la facturation, les relances et la collaboration cabinet.
+                Oui. Chaque plan Fayeku inclut 30 jours d’essai pour vous laisser le temps de tester la facturation, les relances et la collaboration cabinet.
               </p>
             </div>
           
@@ -462,7 +462,7 @@
                 <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
               </button>
               <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Le cabinet touche 15% récurrent à vie sur les plans actifs, reçoit un bonus de +1 mois de MRR sur la première signature et offre 2 mois Essentiel aux PME invitées via son lien.
+                Le cabinet touche 15% récurrent à vie sur les plans actifs, reçoit un bonus de +1 mois de MRR sur la première signature et offre 30 jours Essentiel aux PME invitées via son lien.
               </p>
             </div>
           
@@ -526,7 +526,7 @@
         <div class="rounded-[2rem] border border-primary/10 bg-mist px-6 py-12 text-center shadow-soft sm:px-10">
           <h2 class="mt-4 text-balance text-3xl font-semibold text-ink sm:text-4xl">Prêt à reprendre le contrôle de votre trésorerie ?</h2>
           <p class="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600">Démarrez en 2 minutes. Aucun engagement. Vous pouvez arrêter quand vous voulez.</p>
-          <a href="/contact/" class="mt-8 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent">Essayer 2 mois</a>
+          <a href="/contact/" class="mt-8 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent">Essayer 30 jours</a>
         </div>
       </div>
     </section>

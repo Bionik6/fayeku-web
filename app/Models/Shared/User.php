@@ -2,6 +2,7 @@
 
 namespace App\Models\Shared;
 
+use App\Enums\Auth\OnboardingIntent;
 use App\Models\Auth\Company;
 use App\Notifications\PasswordResetNotification;
 use App\Traits\Shared\HasUlid;
@@ -19,6 +20,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name', 'last_name', 'phone', 'email',
         'password', 'profile_type', 'country_code', 'is_active',
+        'onboarding_intent', 'onboarding_checklist_dismissed_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -28,6 +30,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
         'password' => 'hashed',
+        'onboarding_intent' => OnboardingIntent::class,
+        'onboarding_checklist_dismissed_at' => 'datetime',
     ];
 
     protected static function newFactory(): UserFactory

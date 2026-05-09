@@ -54,6 +54,11 @@ Route::get('d/{quotePublic:public_code}/pdf', ProposalDocumentPdfController::cla
 Route::get('p/{proformaPublic:public_code}/pdf', ProposalDocumentPdfController::class)->name('pme.proformas.pdf');
 
 Route::middleware(['auth', 'verified.email', 'profile:sme'])->prefix('pme')->group(function () {
+    // Wizard d'onboarding : exclu de `onboarding.completed` (sinon boucle de redirect).
+    Route::livewire('onboarding', 'pages::pme.onboarding.index')->name('pme.onboarding');
+});
+
+Route::middleware(['auth', 'verified.email', 'profile:sme', 'onboarding.completed'])->prefix('pme')->group(function () {
     Route::redirect('/', '/pme/dashboard');
     Route::livewire('dashboard', 'pages::pme.dashboard.index')->name('pme.dashboard');
     Route::livewire('invoices/create', 'pages::pme.invoices.form')->name('pme.invoices.create');

@@ -2,13 +2,13 @@
 
 namespace App\Services\Compta;
 
-use Illuminate\Support\Collection;
-use App\Models\Auth\Company;
-use App\Models\Compta\PartnerInvitation;
-use App\Models\Compta\DismissedAlert;
 use App\Enums\PME\InvoiceStatus;
+use App\Models\Auth\Company;
+use App\Models\Compta\DismissedAlert;
+use App\Models\Compta\PartnerInvitation;
 use App\Models\PME\Invoice;
 use App\Models\Shared\User;
+use Illuminate\Support\Collection;
 
 class AlertService
 {
@@ -188,7 +188,7 @@ class AlertService
                 'invoice_id' => null,
                 'company_id' => $invitation->sme_company_id,
                 'title' => ($newSme?->name ?? $invitation->invitee_name).' · Nouvelle inscription',
-                'subtitle' => 'Via votre lien partenaire · Offre '.ucfirst($invitation->recommended_plan ?? 'Essentiel').' · Essai 2 mois',
+                'subtitle' => 'Via votre lien partenaire · Offre '.ucfirst($invitation->recommended_plan ?? 'Essentiel').' · Essai 30 jours',
             ];
         }
     }
