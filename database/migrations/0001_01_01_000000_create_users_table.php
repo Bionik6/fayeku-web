@@ -23,6 +23,8 @@ return new class extends Migration
             $table->char('country_code', 2);
             $table->boolean('is_active')->default(true);
             $table->timestamp('phone_verified_at')->nullable();
+            $table->string('onboarding_intent', 32)->nullable();
+            $table->timestamp('onboarding_checklist_dismissed_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

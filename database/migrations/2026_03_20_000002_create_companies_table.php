@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('ninea')->nullable();
             $table->string('rccm')->nullable();
             $table->string('sector')->nullable();
+            $table->string('legal_form', 32)->nullable();
             $table->timestamp('setup_completed_at')->nullable();
             $table->string('logo_path')->nullable();
             $table->timestamps();
