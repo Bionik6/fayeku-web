@@ -264,6 +264,70 @@ test('remember me sets the recaller cookie', function () {
     expect($cookieNames)->toContain(Auth::guard('web')->getRecallerName());
 });
 
+test('remember me persiste le remember_token sur le user et expire le cookie dans plusieurs années', function () {
+    $user = User::factory()->create(['email' => 'sme@example.com', 'profile_type' => 'sme']);
+
+    expect($user->remember_token)->toBeNull();
+
+    $response = $this->post(route('login'), [
+        'email' => 'sme@example.com',
+        'password' => 'password',
+        'remember' => '1',
+    ]);
+
+    $response->assertRedirect(route('pme.dashboard'));
+
+    expect($user->fresh()->remember_token)->not->toBeNull();
+
+    $recallerCookie = collect($response->headers->getCookies())
+        ->firstWhere(fn (Cookie $c) => $c->getName() === Auth::guard('web')->getRecallerName());
+
+    expect($recallerCookie)->not->toBeNull();
+
+    // La durée par défaut du cookie remember de Laravel est 2 628 000 minutes (~5 ans).
+    // On vérifie au moins une année pour rester robustes face aux changements futurs.
+    $expiresInSeconds = $recallerCookie->getExpiresTime() - time();
+    expect($expiresInSeconds)->toBeGreaterThan(60 * 60 * 24 * 365);
+});
+
+test('sans remember me, aucun cookie de rappel n\'est posé et le remember_token reste vide', function () {
+    User::factory()->create(['email' => 'sme@example.com', 'profile_type' => 'sme']);
+
+    $response = $this->post(route('login'), [
+        'email' => 'sme@example.com',
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect(route('pme.dashboard'));
+
+    $cookieNames = array_map(
+        fn (Cookie $c) => $c->getName(),
+        $response->headers->getCookies()
+    );
+
+    expect($cookieNames)->not->toContain(Auth::guard('web')->getRecallerName());
+});
+
+test('logout vide la session et redirige vers /login (le cookie remember reste seul à expirer côté navigateur)', function () {
+    $user = User::factory()->create(['email' => 'sme@example.com', 'profile_type' => 'sme']);
+
+    // Login avec remember pour amorcer remember_token + recaller cookie.
+    $this->post(route('login'), [
+        'email' => 'sme@example.com',
+        'password' => 'password',
+        'remember' => '1',
+    ])->assertRedirect(route('pme.dashboard'));
+
+    expect($user->fresh()->remember_token)->not->toBeNull();
+
+    // Auth::logout() de Laravel cycle le remember_token uniquement si le recaller
+    // est présent dans la requête en cours. Ici on vérifie au minimum que la session
+    // est bien invalidée et que l'utilisateur est redirigé sur /login.
+    $this->actingAs($user)->post(route('auth.logout'))->assertRedirect(route('login'));
+
+    expect(Auth::check())->toBeFalse();
+});
+
 test('login regenerates the session id', function () {
     User::factory()->create(['email' => 'sme@example.com', 'profile_type' => 'sme']);
 
