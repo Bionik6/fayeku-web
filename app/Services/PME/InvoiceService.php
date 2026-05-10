@@ -3,9 +3,11 @@
 namespace App\Services\PME;
 
 use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\PaymentMethod;
 use App\Events\PME\InvoiceCreated;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
+use App\Models\PME\Payment;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -102,6 +104,19 @@ class InvoiceService
     }
 
     /**
+     * Resolve the final deposit amount in the smallest currency unit.
+     * Capped at the total TTC (a deposit can never exceed the invoice).
+     */
+    public function resolveDepositAmount(int $total, ?int $deposit): int
+    {
+        if (! $deposit || $deposit <= 0 || $total <= 0) {
+            return 0;
+        }
+
+        return min($deposit, $total);
+    }
+
+    /**
      * Create an invoice with its lines inside a transaction.
      *
      * @param  array<string, mixed>  $data
@@ -112,9 +127,11 @@ class InvoiceService
         $taxRate = (int) ($data['tax_rate'] ?? 0);
         $discount = (int) ($data['discount'] ?? 0);
         $discountType = $data['discount_type'] ?? 'percent';
+        $depositAmount = isset($data['deposit_amount']) ? (int) $data['deposit_amount'] : 0;
 
-        return DB::transaction(function () use ($company, $data, $lines, $taxRate, $discount, $discountType) {
+        return DB::transaction(function () use ($company, $data, $lines, $taxRate, $discount, $discountType, $depositAmount) {
             $totals = $this->calculateInvoiceTotals($lines, $taxRate, $discount, $discountType);
+            $resolvedDeposit = $this->resolveDepositAmount($totals['total'], $depositAmount);
 
             $invoice = Invoice::query()->create([
                 'company_id' => $company->id,
@@ -129,7 +146,8 @@ class InvoiceService
                 'total' => $totals['total'],
                 'discount' => $discount,
                 'discount_type' => $discountType,
-                'amount_paid' => 0,
+                'amount_paid' => $resolvedDeposit,
+                'deposit_amount' => $resolvedDeposit,
                 'notes' => $data['notes'] ?? null,
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_details' => $data['payment_details'] ?? null,
@@ -137,6 +155,7 @@ class InvoiceService
             ]);
 
             $this->createLines($invoice, $lines, $taxRate);
+            $this->syncDepositPayment($invoice, $resolvedDeposit, $data);
 
             InvoiceCreated::dispatch($invoice);
 
@@ -155,9 +174,11 @@ class InvoiceService
         $taxRate = (int) ($data['tax_rate'] ?? 0);
         $discount = (int) ($data['discount'] ?? 0);
         $discountType = $data['discount_type'] ?? 'percent';
+        $depositAmount = isset($data['deposit_amount']) ? (int) $data['deposit_amount'] : 0;
 
-        return DB::transaction(function () use ($invoice, $data, $lines, $taxRate, $discount, $discountType) {
+        return DB::transaction(function () use ($invoice, $data, $lines, $taxRate, $discount, $discountType, $depositAmount) {
             $totals = $this->calculateInvoiceTotals($lines, $taxRate, $discount, $discountType);
+            $resolvedDeposit = $this->resolveDepositAmount($totals['total'], $depositAmount);
 
             $invoice->update([
                 'client_id' => $data['client_id'],
@@ -169,6 +190,7 @@ class InvoiceService
                 'total' => $totals['total'],
                 'discount' => $discount,
                 'discount_type' => $discountType,
+                'deposit_amount' => $resolvedDeposit,
                 'notes' => $data['notes'] ?? null,
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_details' => $data['payment_details'] ?? null,
@@ -177,20 +199,38 @@ class InvoiceService
 
             $invoice->lines()->delete();
             $this->createLines($invoice, $lines, $taxRate);
+            $this->syncDepositPayment($invoice->fresh(), $resolvedDeposit, $data);
+            $this->refreshAmountPaid($invoice->fresh());
 
             return $invoice->refresh();
         });
     }
 
     /**
-     * Mark an invoice as sent.
+     * Mark an invoice as sent. If an acompte covers the total, the invoice
+     * is marked Paid; otherwise PartiallyPaid when amount_paid > 0.
      */
     public function markAsSent(Invoice $invoice): Invoice
     {
-        $invoice->update([
-            'status' => InvoiceStatus::Sent,
+        $amountPaid = (int) $invoice->amount_paid;
+        $total = (int) $invoice->total;
+
+        $status = match (true) {
+            $amountPaid >= $total && $total > 0 => InvoiceStatus::Paid,
+            $amountPaid > 0 => InvoiceStatus::PartiallyPaid,
+            default => InvoiceStatus::Sent,
+        };
+
+        $updates = [
+            'status' => $status,
             'sent_at' => $invoice->sent_at ?? now(),
-        ]);
+        ];
+
+        if ($status === InvoiceStatus::Paid) {
+            $updates['paid_at'] = $invoice->paid_at ?? now();
+        }
+
+        $invoice->update($updates);
 
         return $invoice;
     }
@@ -222,5 +262,55 @@ class InvoiceService
                 'total' => $this->calculateLineTotal($line),
             ]);
         }
+    }
+
+    /**
+     * Replace any existing deposit Payment with a fresh one matching the
+     * resolved deposit amount. Removes the deposit Payment when amount is 0.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function syncDepositPayment(Invoice $invoice, int $resolvedDeposit, array $data): void
+    {
+        $invoice->payments()->where('is_deposit', true)->delete();
+
+        if ($resolvedDeposit <= 0) {
+            return;
+        }
+
+        Payment::query()->create([
+            'invoice_id' => $invoice->id,
+            'amount' => $resolvedDeposit,
+            'is_deposit' => true,
+            'paid_at' => $data['issued_at'] ?? now(),
+            'method' => $this->mapPaymentMethod($data['payment_method'] ?? null),
+            'notes' => __('Acompte versé à la création'),
+            'recorded_by' => auth()->id(),
+        ]);
+    }
+
+    /**
+     * Recalculate amount_paid from the sum of all attached payments.
+     */
+    private function refreshAmountPaid(Invoice $invoice): void
+    {
+        $invoice->update([
+            'amount_paid' => (int) $invoice->payments()->sum('amount'),
+        ]);
+    }
+
+    /**
+     * Map the invoice's payment_method string (used in the form: wave,
+     * orange_money, cash, bank_transfer) to the PaymentMethod enum used
+     * on the payments table.
+     */
+    private function mapPaymentMethod(?string $method): PaymentMethod
+    {
+        return match ($method) {
+            'wave', 'orange_money' => PaymentMethod::MobileMoney,
+            'bank_transfer' => PaymentMethod::Transfer,
+            'cash' => PaymentMethod::Cash,
+            default => PaymentMethod::Cash,
+        };
     }
 }

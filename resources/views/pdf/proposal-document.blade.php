@@ -112,12 +112,16 @@
             </td>
             <td class="info-party">
                 <div class="info-label">{{ __('Destinataire') }}</div>
-                <div class="info-value">{{ $document->client->name }}</div>
-                <div class="info-detail">
-                    @if ($document->client->address) {{ $document->client->address }}<br> @endif
-                    @if ($document->client->phone) {{ format_phone($document->client->phone) }}<br> @endif
-                    @if ($document->client->email) {{ $document->client->email }} @endif
-                </div>
+                @if ($document->client)
+                    <div class="info-value">{{ $document->client->name }}</div>
+                    <div class="info-detail">
+                        @if ($document->client->address) {{ $document->client->address }}<br> @endif
+                        @if ($document->client->phone) {{ format_phone($document->client->phone) }}<br> @endif
+                        @if ($document->client->email) {{ $document->client->email }} @endif
+                    </div>
+                @else
+                    <div class="info-value text-muted">—</div>
+                @endif
             </td>
         </tr>
     </table>
@@ -137,7 +141,7 @@
         <tbody>
             @foreach ($document->lines as $line)
                 <tr>
-                    <td>{{ $line->description }}</td>
+                    <td>{!! nl2br(e($line->description)) !!}</td>
                     <td class="center">{{ $line->quantity }}</td>
                     <td class="right">{{ CurrencyService::format($line->unit_price, $document->currency ?? 'XOF') }}</td>
                     <td class="center">{{ $line->tax_rate > 0 ? $line->tax_rate.'%' : '-' }}</td>

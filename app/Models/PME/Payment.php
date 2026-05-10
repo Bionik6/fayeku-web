@@ -22,12 +22,13 @@ class Payment extends Model
     }
 
     protected $fillable = [
-        'invoice_id', 'amount', 'paid_at', 'method',
+        'invoice_id', 'amount', 'is_deposit', 'paid_at', 'method',
         'reference', 'notes', 'recorded_by',
     ];
 
     protected $casts = [
         'amount' => 'integer',
+        'is_deposit' => 'boolean',
         'paid_at' => 'datetime',
         'method' => PaymentMethod::class,
     ];

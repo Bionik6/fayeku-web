@@ -1,10 +1,13 @@
 <?php
 
 use App\Enums\PME\InvoiceStatus;
+use App\Enums\PME\PaymentMethod;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
+use App\Models\PME\Payment;
 use App\Services\PME\InvoiceService;
+use App\Services\PME\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -267,4 +270,386 @@ test('canEdit returns false for paid invoices', function () {
     $paid = Invoice::factory()->forCompany($company)->paid()->create();
 
     expect($service->canEdit($paid))->toBeFalse();
+});
+
+// ─── Deposit: resolveDepositAmount ───────────────────────────────────────────
+
+test('resolveDepositAmount returns 0 when deposit is null, zero, or negative', function () {
+    $service = new InvoiceService;
+
+    expect($service->resolveDepositAmount(100_000, null))->toBe(0)
+        ->and($service->resolveDepositAmount(100_000, 0))->toBe(0)
+        ->and($service->resolveDepositAmount(100_000, -1_000))->toBe(0);
+});
+
+test('resolveDepositAmount returns 0 when total is 0', function () {
+    $service = new InvoiceService;
+
+    expect($service->resolveDepositAmount(0, 50_000))->toBe(0);
+});
+
+test('resolveDepositAmount returns the deposit when below the total', function () {
+    $service = new InvoiceService;
+
+    expect($service->resolveDepositAmount(100_000, 30_000))->toBe(30_000)
+        ->and($service->resolveDepositAmount(100_000, 100_000))->toBe(100_000);
+});
+
+test('resolveDepositAmount caps the deposit at the total', function () {
+    $service = new InvoiceService;
+
+    expect($service->resolveDepositAmount(100_000, 200_000))->toBe(100_000);
+});
+
+// ─── Deposit: create with deposit ────────────────────────────────────────────
+
+test('create with deposit stores deposit_amount and creates a deposit Payment', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-DEPFX',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'deposit_amount' => 30_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+        'payment_method' => 'cash',
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    expect($invoice->total)->toBe(118_000)
+        ->and($invoice->deposit_amount)->toBe(30_000)
+        ->and($invoice->amount_paid)->toBe(30_000)
+        ->and($invoice->status)->toBe(InvoiceStatus::Draft)
+        ->and($invoice->payments)->toHaveCount(1)
+        ->and($invoice->payments->first()->is_deposit)->toBeTrue()
+        ->and($invoice->payments->first()->amount)->toBe(30_000)
+        ->and($invoice->payments->first()->method)->toBe(PaymentMethod::Cash);
+});
+
+test('create caps the deposit_amount at the total when overpaid', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-DEPCAP',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 200_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    expect($invoice->total)->toBe(100_000)
+        ->and($invoice->deposit_amount)->toBe(100_000)
+        ->and($invoice->amount_paid)->toBe(100_000)
+        ->and($invoice->payments->first()->amount)->toBe(100_000);
+});
+
+test('create with full deposit covers the invoice but stays in Draft', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-DEPFULL',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 50_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    expect($invoice->total)->toBe(50_000)
+        ->and($invoice->amount_paid)->toBe(50_000)
+        ->and($invoice->status)->toBe(InvoiceStatus::Draft);
+});
+
+test('create without deposit creates no Payment', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-NODEP',
+        'currency' => 'XOF',
+        'tax_rate' => 18,
+        'discount' => 0,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    expect($invoice->deposit_amount)->toBe(0)
+        ->and($invoice->amount_paid)->toBe(0)
+        ->and($invoice->payments)->toHaveCount(0);
+});
+
+test('create maps payment_method strings to PaymentMethod enum on the deposit Payment', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $cases = [
+        'wave' => PaymentMethod::MobileMoney,
+        'orange_money' => PaymentMethod::MobileMoney,
+        'cash' => PaymentMethod::Cash,
+        'bank_transfer' => PaymentMethod::Transfer,
+    ];
+
+    foreach ($cases as $formMethod => $expectedEnum) {
+        $invoice = $service->create($company, [
+            'client_id' => $client->id,
+            'reference' => 'FYK-FAC-MAP-'.strtoupper(substr($formMethod, 0, 4)),
+            'currency' => 'XOF',
+            'tax_rate' => 0,
+            'discount' => 0,
+            'deposit_amount' => 10_000,
+            'payment_method' => $formMethod,
+            'issued_at' => now()->format('Y-m-d'),
+            'due_at' => now()->addDays(30)->format('Y-m-d'),
+        ], [
+            ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+        ]);
+
+        expect($invoice->payments->first()->method)->toBe($expectedEnum);
+    }
+});
+
+test('create stamps the deposit Payment paid_at with the invoice issued_at', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $issuedAt = '2026-04-15';
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-DEPDT',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 10_000,
+        'issued_at' => $issuedAt,
+        'due_at' => '2026-05-15',
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    expect($invoice->payments->first()->paid_at->format('Y-m-d'))->toBe($issuedAt);
+});
+
+// ─── Deposit: update flow ────────────────────────────────────────────────────
+
+test('update modifies the deposit Payment in place when amount changes', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-UPDDEP',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 10_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->update($invoice, [
+        'client_id' => $client->id,
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 25_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $invoice->refresh();
+
+    expect($invoice->deposit_amount)->toBe(25_000)
+        ->and($invoice->amount_paid)->toBe(25_000)
+        ->and($invoice->payments()->where('is_deposit', true)->count())->toBe(1)
+        ->and((int) $invoice->payments()->where('is_deposit', true)->sum('amount'))->toBe(25_000);
+});
+
+test('update removes the deposit Payment when deposit is cleared', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-CLR',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 10_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->update($invoice, [
+        'client_id' => $client->id,
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 0,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $invoice->refresh();
+
+    expect($invoice->deposit_amount)->toBe(0)
+        ->and($invoice->amount_paid)->toBe(0)
+        ->and($invoice->payments()->where('is_deposit', true)->count())->toBe(0);
+});
+
+test('update preserves non-deposit Payments when syncing the deposit', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+    $paymentService = app(PaymentService::class);
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-MIX',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 10_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    $service->markAsSent($invoice);
+
+    // Manual partial payment recorded after the fact
+    $paymentService->record($invoice->fresh(), [
+        'amount' => 20_000,
+        'paid_at' => now(),
+        'method' => 'transfer',
+    ]);
+
+    // Now bump the deposit to 15 000 — manual payment must remain
+    $service->update($invoice->fresh(), [
+        'client_id' => $client->id,
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 15_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    $invoice->refresh();
+
+    expect($invoice->payments()->where('is_deposit', true)->count())->toBe(1)
+        ->and($invoice->payments()->where('is_deposit', false)->count())->toBe(1)
+        ->and($invoice->amount_paid)->toBe(35_000); // 15 000 deposit + 20 000 manual
+});
+
+// ─── Deposit + markAsSent status logic ───────────────────────────────────────
+
+test('markAsSent transitions to PartiallyPaid when an acompte was set', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-SENTPP',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 30_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    $service->markAsSent($invoice);
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PartiallyPaid)
+        ->and($invoice->fresh()->sent_at)->not->toBeNull();
+});
+
+test('markAsSent transitions to Paid when the deposit covers the total', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-SENTPD',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 50_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    $service->markAsSent($invoice);
+
+    $fresh = $invoice->fresh();
+
+    expect($fresh->status)->toBe(InvoiceStatus::Paid)
+        ->and($fresh->paid_at)->not->toBeNull();
+});
+
+test('markAsSent stays Sent when no acompte was set', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $service = new InvoiceService;
+
+    $invoice = $service->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-SENTNO',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    $service->markAsSent($invoice);
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
 });

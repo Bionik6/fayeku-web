@@ -191,3 +191,102 @@ test('le PDF facture masque NINEA et RCCM quand non renseignés', function () {
         ->not->toContain('NINEA')
         ->not->toContain('RCCM');
 });
+
+// ─── Acompte dans le PDF ─────────────────────────────────────────────────────
+
+test('le PDF facture affiche l\'acompte et le reste à payer', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-ACPT',
+        'currency' => 'XOF',
+        'status' => InvoiceStatus::Draft,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 18_000,
+        'total' => 118_000,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'amount_paid' => 30_000,
+        'deposit_amount' => 30_000,
+    ]));
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('Acompte versé')
+        ->toContain('-30 000')
+        ->toContain('Reste à payer')
+        ->toContain('88 000');
+});
+
+test('le PDF facture n\'affiche pas l\'acompte quand il est nul', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $invoice = createInvoiceForPdf($company);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->not->toContain('Acompte versé')
+        ->not->toContain('Reste à payer');
+});
+
+test('le PDF facture préserve les sauts de ligne dans la désignation des lignes', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = Invoice::factory()
+        ->forCompany($company)
+        ->withClient($client)
+        ->draft()
+        ->create(['currency' => 'XOF']);
+
+    InvoiceLine::query()->create([
+        'invoice_id' => $invoice->id,
+        'description' => "Prestation de conseil\nPhase 1 : audit initial\nPhase 2 : recommandations",
+        'quantity' => 1,
+        'unit_price' => 250_000,
+        'tax_rate' => 18,
+        'total' => 250_000,
+    ]);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('Prestation de conseil<br />')
+        ->toContain('Phase 1 : audit initial<br />')
+        ->toContain('Phase 2 : recommandations');
+});
+
+test('le PDF facture cap l\'acompte au total et affiche reste à payer 0', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    // Cas dégradé : acompte stocké > total (sécurité belt-and-suspenders dans la vue)
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-CAP',
+        'currency' => 'XOF',
+        'status' => InvoiceStatus::Draft,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(30),
+        'subtotal' => 100_000,
+        'tax_amount' => 0,
+        'total' => 100_000,
+        'discount' => 0,
+        'discount_type' => 'percent',
+        'amount_paid' => 100_000,
+        'deposit_amount' => 200_000,
+    ]));
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('-100 000')
+        ->toContain('Reste à payer');
+});

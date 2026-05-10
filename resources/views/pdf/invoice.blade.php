@@ -159,11 +159,21 @@
         .totals-table .discount .value {
             color: #dc2626;
         }
+        .totals-table .deposit .value {
+            color: #059669;
+        }
         .totals-table .total-row td {
             border-top: 1.5px solid #024D4D;
             padding-top: 10px;
             font-weight: bold;
             font-size: 13pt;
+            color: #024D4D;
+        }
+        .totals-table .remaining td {
+            border-top: 1px solid #024D4D;
+            padding-top: 8px;
+            font-weight: bold;
+            font-size: 12pt;
             color: #024D4D;
         }
 
@@ -261,12 +271,16 @@
             </td>
             <td class="info-party">
                 <div class="info-label">{{ __('Destinataire') }}</div>
-                <div class="info-value">{{ $invoice->client->name }}</div>
-                <div class="info-detail">
-                    @if ($invoice->client->address) {{ $invoice->client->address }}<br> @endif
-                    @if ($invoice->client->phone) {{ format_phone($invoice->client->phone) }}<br> @endif
-                    @if ($invoice->client->email) {{ $invoice->client->email }} @endif
-                </div>
+                @if ($invoice->client)
+                    <div class="info-value">{{ $invoice->client->name }}</div>
+                    <div class="info-detail">
+                        @if ($invoice->client->address) {{ $invoice->client->address }}<br> @endif
+                        @if ($invoice->client->phone) {{ format_phone($invoice->client->phone) }}<br> @endif
+                        @if ($invoice->client->email) {{ $invoice->client->email }} @endif
+                    </div>
+                @else
+                    <div class="info-value text-muted">—</div>
+                @endif
             </td>
         </tr>
     </table>
@@ -286,7 +300,7 @@
         <tbody>
             @foreach ($invoice->lines as $line)
                 <tr>
-                    <td>{{ $line->description }}</td>
+                    <td>{!! nl2br(e($line->description)) !!}</td>
                     <td class="center">{{ $line->quantity }}</td>
                     <td class="right">{{ CurrencyService::format($line->unit_price, $invoice->currency) }}</td>
                     <td class="center">{{ $line->tax_rate > 0 ? $line->tax_rate . '%' : '-' }}</td>
@@ -327,6 +341,20 @@
                 <td class="label">{{ __('Total TTC') }}</td>
                 <td class="value">{{ CurrencyService::format($invoice->total, $invoice->currency) }}</td>
             </tr>
+            @if ($invoice->deposit_amount > 0)
+                @php
+                    $depositResolved = min((int) $invoice->deposit_amount, (int) $invoice->total);
+                    $remaining = max(0, (int) $invoice->total - $depositResolved);
+                @endphp
+                <tr class="deposit">
+                    <td class="label">{{ __('Acompte versé') }}</td>
+                    <td class="value">-{{ CurrencyService::format($depositResolved, $invoice->currency) }}</td>
+                </tr>
+                <tr class="remaining">
+                    <td class="label">{{ __('Reste à payer') }}</td>
+                    <td class="value">{{ CurrencyService::format($remaining, $invoice->currency) }}</td>
+                </tr>
+            @endif
         </table>
     </div>
 
