@@ -238,7 +238,7 @@ test('LIVE FORM — proforma : changer lines.X.quantity met à jour computedTota
         ->set('lines', [
             ['description' => 'Climatiseur', 'quantity' => 1, 'unit_price' => 245_000],
         ])
-        ->set('taxMode', '0');
+        ->set('hasTax', false);
 
     expect($component->get('computedTotals')['subtotal'])->toBe(245_000);
 
@@ -256,7 +256,7 @@ test('LIVE FORM — proforma : ajouter une ligne reflète immédiatement dans le
         ->test('pages::pme.proformas.form')
         ->set('clientId', $client->id)
         ->set('lines', [['description' => 'A', 'quantity' => 1, 'unit_price' => 100_000]])
-        ->set('taxMode', '0');
+        ->set('hasTax', false);
 
     expect($component->get('computedTotals')['subtotal'])->toBe(100_000);
 
@@ -272,7 +272,7 @@ test('LIVE FORM — proforma : reproduire EXACTEMENT le scénario du screenshot 
     $component = Livewire::actingAs($user)
         ->test('pages::pme.proformas.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', collect(reportedScreenshotLines())->map(fn ($l) => [
             'description' => 'Item',
             'quantity' => $l['quantity'],
@@ -289,7 +289,7 @@ test('LIVE FORM — proforma : saveDraft persiste un total cohérent avec les li
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', collect(reportedScreenshotLines())->map(fn ($l) => [
             'description' => 'Item',
             'quantity' => $l['quantity'],
@@ -312,7 +312,7 @@ test('LIVE FORM — proforma : rouvrir en édition après save donne les mêmes 
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', collect(reportedScreenshotLines())->map(fn ($l) => [
             'description' => 'Item',
             'quantity' => $l['quantity'],
@@ -339,7 +339,7 @@ test('LIVE FORM — devis : changer quantity met à jour computedTotals immédia
     $component = Livewire::actingAs($user)
         ->test('pages::pme.quotes.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', [['description' => 'X', 'quantity' => 1, 'unit_price' => 245_000]]);
 
     expect($component->get('computedTotals')['subtotal'])->toBe(245_000);
@@ -355,7 +355,7 @@ test('LIVE FORM — facture : changer quantity met à jour computedTotals imméd
     $component = Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', [['description' => 'X', 'quantity' => 1, 'unit_price' => 245_000]]);
 
     expect($component->get('computedTotals')['subtotal'])->toBe(245_000);
@@ -377,13 +377,13 @@ test('LIVE FORM — devis et facture : screenshot scenario donne 2 285 000', fun
     $devis = Livewire::actingAs($user)
         ->test('pages::pme.quotes.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', $lines);
 
     $facture = Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
         ->set('clientId', $client->id)
-        ->set('taxMode', '0')
+        ->set('hasTax', false)
         ->set('lines', $lines);
 
     expect($devis->get('computedTotals')['subtotal'])->toBe(2_285_000);

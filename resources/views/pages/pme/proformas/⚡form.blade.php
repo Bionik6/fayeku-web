@@ -1,19 +1,22 @@
 <?php
 
+use App\Enums\PME\ProposalDocumentStatus;
+use App\Enums\PME\ProposalDocumentType;
+use App\Http\Controllers\PME\ProposalDocumentPreviewController;
+use App\Models\Auth\Company;
+use App\Models\PME\Client;
+use App\Models\PME\ProposalDocument;
+use App\Services\PME\CurrencyService;
+use App\Services\PME\ProposalDocumentService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use App\Models\Auth\Company;
-use App\Models\PME\Client;
-use App\Enums\PME\ProposalDocumentStatus;
-use App\Enums\PME\ProposalDocumentType;
-use App\Models\PME\ProposalDocument;
-use App\Services\PME\CurrencyService;
-use App\Services\PME\ProposalDocumentService;
 
 new #[Title('Proforma')]
 #[Layout('layouts::pme')]
@@ -37,7 +40,11 @@ class extends Component {
 
     public string $currency = 'XOF';
 
-    public int $taxRate = 18;
+    public int $taxRate = 0;
+
+    public bool $hasTax = false;
+
+    public bool $hasDiscount = false;
 
     public ?int $discount = 0;
 
@@ -46,6 +53,8 @@ class extends Component {
     public int $customTaxRate = 0;
 
     public string $taxMode = '18';
+
+    public bool $hasNotes = false;
 
     public string $notes = '';
 
@@ -62,15 +71,7 @@ class extends Component {
 
     public bool $showCancelModal = false;
 
-    public bool $showSendModal = false;
-
     public bool $showSaveDraftModal = false;
-
-    public string $sendChannel = 'email';
-
-    public string $sendRecipient = '';
-
-    public string $sendMessage = '';
 
     public ?string $lastSavedAt = null;
 
@@ -110,7 +111,9 @@ class extends Component {
             $this->currency = $proforma->currency ?? 'XOF';
             $this->discount = $proforma->discount ?? 0;
             $this->discountType = $proforma->discount_type ?? 'percent';
+            $this->hasDiscount = ($this->discount ?? 0) > 0;
             $this->notes = $proforma->notes ?? '';
+            $this->hasNotes = $this->notes !== '';
             $this->dossierReference = $proforma->dossier_reference ?? '';
             $this->paymentTerms = $proforma->payment_terms ?? '';
             $this->deliveryTerms = $proforma->delivery_terms ?? '';
@@ -119,11 +122,9 @@ class extends Component {
             $firstLine = $proforma->lines->first();
             $rate = $firstLine?->tax_rate ?? 18;
             $this->taxRate = $rate;
+            $this->hasTax = $rate > 0;
 
-            if ($rate === 0) {
-                $this->taxMode = '0';
-            }
-            elseif ($rate === 18) {
+            if ($rate === 18 || $rate === 0) {
                 $this->taxMode = '18';
             }
             else {
@@ -202,7 +203,9 @@ class extends Component {
     #[Computed]
     public function computedTotals(): array
     {
-        return app(ProposalDocumentService::class)->calculateTotals($this->lines, $this->taxRate, $this->discount ?? 0, $this->discountType);
+        $discount = $this->hasDiscount ? ($this->discount ?? 0) : 0;
+
+        return app(ProposalDocumentService::class)->calculateTotals($this->lines, $this->taxRate, $discount, $this->discountType);
     }
 
     #[Computed]
@@ -232,11 +235,15 @@ class extends Component {
             }
         }
 
-        if ($this->notes !== '' || $this->dossierReference !== '' || $this->paymentTerms !== '' || $this->deliveryTerms !== '') {
+        if ($this->dossierReference !== '' || $this->paymentTerms !== '' || $this->deliveryTerms !== '') {
             return true;
         }
 
-        return ($this->discount ?? 0) > 0;
+        if ($this->hasNotes && $this->notes !== '') {
+            return true;
+        }
+
+        return $this->hasDiscount && ($this->discount ?? 0) > 0;
     }
 
     public function confirmCancel(): void
@@ -255,6 +262,22 @@ class extends Component {
         $this->redirect(route('pme.proformas.index'), navigate: true);
     }
 
+    public function updatedHasDiscount(bool $value): void
+    {
+        if (! $value) {
+            $this->discount = 0;
+            $this->resetErrorBag('discount');
+        }
+    }
+
+    public function updatedHasNotes(bool $value): void
+    {
+        if (! $value) {
+            $this->notes = '';
+            $this->resetErrorBag('notes');
+        }
+    }
+
     public function updatedDiscountType(): void
     {
         $this->discount = 0;
@@ -267,10 +290,27 @@ class extends Component {
         }
     }
 
+    public function updatedHasTax(bool $value): void
+    {
+        if (! $value) {
+            $this->taxRate = 0;
+
+            return;
+        }
+
+        $this->taxRate = match ($this->taxMode) {
+            'custom' => max(0, min(100, $this->customTaxRate ?? 0)),
+            default => 18,
+        };
+    }
+
     public function updatedTaxMode(string $value): void
     {
+        if (! $this->hasTax) {
+            return;
+        }
+
         $this->taxRate = match ($value) {
-            '0' => 0,
             '18' => 18,
             'custom' => $this->customTaxRate,
             default => 18,
@@ -281,7 +321,9 @@ class extends Component {
     {
         if ($this->taxMode === 'custom') {
             $this->customTaxRate = max(0, min(100, $value ?? 0));
-            $this->taxRate = $this->customTaxRate;
+            if ($this->hasTax) {
+                $this->taxRate = $this->customTaxRate;
+            }
         }
     }
 
@@ -314,19 +356,12 @@ class extends Component {
         $this->clientId = $id;
         $this->clientSearch = '';
         $this->resetErrorBag('clientId');
-
-        $client = $this->selectedClient;
-
-        if ($client) {
-            $this->sendRecipient = $client->email ?? $client->phone ?? '';
-        }
     }
 
     public function clearClient(): void
     {
         $this->clientId = '';
         $this->clientSearch = '';
-        $this->sendRecipient = '';
     }
 
     public function addLine(): void
@@ -409,7 +444,13 @@ class extends Component {
         }
     }
 
-    public function openSendModal(): void
+    /**
+     * Save the proforma as Draft and redirect to its show page with `?send=1`,
+     * which auto-opens the send modal (WhatsApp/email + public PDF link).
+     * The Draft → Sent transition happens when the user clicks "Envoyer
+     * maintenant" inside that modal.
+     */
+    public function saveAndSend(): void
     {
         $totals = $this->computedTotals;
 
@@ -420,52 +461,36 @@ class extends Component {
             return;
         }
 
-        $client = $this->selectedClient;
+        $this->saveDraft(notify: false);
 
-        if ($client) {
-            $this->sendRecipient = $client->email ?? $client->phone ?? '';
+        if ($this->proforma) {
+            $this->redirect(route('pme.proformas.show', $this->proforma).'?send=1', navigate: true);
         }
-
-        $formattedTotal = CurrencyService::format($totals['total'], $this->currency);
-        $this->sendMessage = __("Bonjour,\n\nVeuillez trouver ci-joint votre facture proforma :reference d'un montant de :total.\n\nCordialement.", [
-            'reference' => $this->reference,
-            'total'     => $formattedTotal,
-        ]);
-
-        $this->showSendModal = true;
     }
 
     public function previewPdf(): void
     {
-        $this->saveDraft(notify: false);
+        try {
+            $this->validateForm();
+        } catch (ValidationException $e) {
+            $this->dispatch('validation-errors', messages: $e->validator->errors()->all());
 
-        if ($this->proforma) {
-            $this->dispatch('open-pdf', url: route('pme.proformas.pdf', $this->proforma));
-        }
-    }
-
-    public function send(): void
-    {
-        $this->saveDraft();
-
-        if ($this->sendChannel === 'pdf') {
-            $this->showSendModal = false;
-            $this->dispatch('open-pdf', url: route('pme.proformas.pdf', $this->proforma));
-
-            return;
+            throw $e;
         }
 
-        $service = app(ProposalDocumentService::class);
-        $service->markAsSent($this->proforma);
+        $tempId = (string) Str::uuid();
 
-        if ($this->sendChannel === 'whatsapp' && $this->proforma->company) {
-            $this->proforma->loadMissing(['client', 'company']);
-            app(\App\Services\PME\WhatsAppNotificationService::class)
-                ->sendProposalSent($this->proforma, $this->proforma->company);
-        }
+        Cache::put(
+            ProposalDocumentPreviewController::PROFORMA_CACHE_PREFIX.$tempId,
+            [
+                'company_id' => $this->company->id,
+                'data' => $this->buildData(),
+                'lines' => $this->buildLines(),
+            ],
+            now()->addMinutes(15),
+        );
 
-        session()->flash('success', __('Proforma envoyée avec succès.'));
-        $this->redirect(route('pme.proformas.index'), navigate: true);
+        $this->dispatch('open-pdf', url: route('pme.proformas.preview', ['tempId' => $tempId]));
     }
 
     #[On('client-created')]
@@ -529,12 +554,12 @@ class extends Component {
             'issued_at'         => $this->issuedAt,
             'valid_until'       => $this->validUntil,
             'tax_rate'          => $this->taxRate,
-            'discount'          => $this->discount ?? 0,
+            'discount'          => $this->hasDiscount ? ($this->discount ?? 0) : 0,
             'discount_type'     => $this->discountType,
             'dossier_reference' => $this->emptyToNull($this->dossierReference),
             'payment_terms'     => $this->emptyToNull($this->paymentTerms),
             'delivery_terms'    => $this->emptyToNull($this->deliveryTerms),
-            'notes'             => $this->emptyToNull($this->notes),
+            'notes'             => $this->hasNotes ? $this->emptyToNull($this->notes) : null,
         ];
     }
 
@@ -814,10 +839,16 @@ class extends Component {
             {{-- Proforma lines --}}
             <x-invoicing.line-items :title="__('Lignes de la proforma')" :lines="$lines" :currency="$currency" />
 
-            {{-- Montants et taxes --}}
+            {{-- TVA --}}
             <x-invoicing.amounts-and-taxes
+                :has-tax="$hasTax"
                 :tax-mode="$taxMode"
                 :custom-tax-rate="$customTaxRate"
+            />
+
+            {{-- Remise globale --}}
+            <x-invoicing.global-discount
+                :has-discount="$hasDiscount"
                 :discount-type="$discountType"
                 :discount="$discount"
                 :currency="$currency"
@@ -825,25 +856,31 @@ class extends Component {
             />
 
             {{-- Notes --}}
-            <section class="app-shell-panel p-6" x-data="{ open: false }">
-                <button type="button" @click="open = !open"
-                        class="flex w-full items-center justify-between">
-                    <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Notes') }}</h3>
-                    <svg class="size-5 text-slate-500 transition"
-                         :class="open && 'rotate-180'" fill="none" stroke="currentColor"
-                         stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                    </svg>
-                </button>
-                <div x-show="open" x-collapse class="mt-4">
+            <section class="app-shell-panel p-6">
+                <div class="flex items-start justify-between gap-4">
                     <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Notes (visibles sur la proforma)') }}</label>
-                        <textarea wire:model.blur="notes" rows="2"
+                        <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">{{ __('Notes') }}</h3>
+                        <p class="mt-1 text-sm text-slate-500">{{ __('Ajoutez un message qui apparaîtra sur la proforma pour le client.') }}</p>
+                    </div>
+                    <button
+                        type="button"
+                        wire:click="$toggle('hasNotes')"
+                        class="relative flex h-7 w-12 shrink-0 items-center rounded-full transition
+                            {{ $hasNotes ? 'bg-primary' : 'bg-slate-300' }}"
+                        aria-label="{{ __('Activer les notes') }}"
+                    >
+                        <span class="absolute size-5 rounded-full bg-white shadow transition-all
+                            {{ $hasNotes ? 'left-[1.4rem]' : 'left-1' }}"></span>
+                    </button>
+                </div>
+
+                @if ($hasNotes)
+                    <div class="mt-5">
+                        <textarea wire:model.blur="notes" rows="3"
                                   placeholder="{{ __('Ex : Mentions complémentaires…') }}"
                                   class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                     </div>
-                </div>
+                @endif
             </section>
         </div>
 
@@ -925,16 +962,16 @@ class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round"
                                   d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
                         </svg>
-                        {{ __('Enregistrer brouillon') }}
+                        {{ __('Enregistrer comme brouillon') }}
                     </button>
-                    <button type="button" wire:click="openSendModal"
+                    <button type="button" wire:click="saveAndSend"
                             class="flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong">
                         <svg class="mr-2 size-4" fill="none" stroke="currentColor"
                              stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                   d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/>
                         </svg>
-                        {{ __('Envoyer la proforma') }}
+                        {{ $isEditing ? __('Envoyer la proforma') : __('Enregistrer et Envoyer la proforma') }}
                     </button>
                 </section>
 
@@ -948,7 +985,7 @@ class extends Component {
                         <div class="flex gap-2">
                             <button type="button" wire:click="saveDraft"
                                     class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800">{{ __('Brouillon') }}</button>
-                            <button type="button" wire:click="openSendModal"
+                            <button type="button" wire:click="saveAndSend"
                                     class="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white">{{ __('Envoyer') }}</button>
                         </div>
                     </div>
@@ -1002,50 +1039,6 @@ class extends Component {
                             class="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30">{{ __('Continuer') }}</button>
                     <button type="button" wire:click="cancel"
                             class="rounded-2xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700">{{ __('Quitter') }}</button>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- Send modal --}}
-    @if ($showSendModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-             wire:click.self="$set('showSendModal', false)" x-data
-             @keydown.escape.window="$wire.set('showSendModal', false)">
-            <div class="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div class="border-b border-slate-100 px-7 py-6">
-                    <h2 class="text-lg font-semibold text-ink">{{ __('Envoyer la proforma') }}</h2>
-                    <p class="mt-1 text-sm text-slate-500">{{ __('Choisissez le canal d\'envoi pour votre proforma.') }}</p>
-                </div>
-                <div class="px-7 py-6">
-                    <div class="mb-5 flex gap-2">
-                        <button type="button" wire:click="$set('sendChannel', 'pdf')"
-                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'pdf' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">{{ __('Télécharger PDF') }}</button>
-                        <button type="button" wire:click="$set('sendChannel', 'email')"
-                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'email' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">{{ __('Email') }}</button>
-                    </div>
-                    @if ($sendChannel === 'email')
-                        <div class="space-y-4">
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Destinataire') }}</label>
-                                <input wire:model="sendRecipient" type="email"
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
-                                @error('sendRecipient') <p
-                                        class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Message') }}</label>
-                                <textarea wire:model="sendMessage" rows="4"
-                                          class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-                <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                    <button type="button" wire:click="$set('showSendModal', false)"
-                            class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30">{{ __('Annuler') }}</button>
-                    <button type="button" wire:click="send"
-                            class="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">{{ __('Envoyer') }}</button>
                 </div>
             </div>
         </div>

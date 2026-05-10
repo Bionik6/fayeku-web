@@ -1122,7 +1122,7 @@ public function viewInvoice(string $id): void
                                     <tbody class="divide-y divide-slate-50">
                                         @forelse ($q->lines as $line)
                                             <tr>
-                                                <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
+                                                <td class="py-3 pr-4 text-ink">{!! nl2br(e($line->description)) !!}</td>
                                                 <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
                                                 <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">
                                                     {{ format_money($line->unit_price, $q->currency) }}

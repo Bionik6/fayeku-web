@@ -33,10 +33,10 @@
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-800">{{ __('Désignation') }}
                             <span class="text-rose-500">*</span></label>
-                        <input wire:model.live.debounce.300ms="lines.{{ $index }}.description"
-                               type="text"
-                               placeholder="{{ __('Ex : Ciment, prestation…') }}"
-                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"/>
+                        <textarea wire:model.live.debounce.300ms="lines.{{ $index }}.description"
+                                  rows="1"
+                                  placeholder="{{ __('Ex : Ciment, prestation…') }}"
+                                  class="w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                         @error("lines.{$index}.description") <p
                                 class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                     </div>

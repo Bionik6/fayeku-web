@@ -5,7 +5,9 @@ use App\Http\Controllers\Compta\ExportDownloadController;
 use App\Http\Controllers\MarketingPageController;
 use App\Http\Controllers\PME\CompanyLogoController;
 use App\Http\Controllers\PME\InvoicePdfController;
+use App\Http\Controllers\PME\InvoicePreviewController;
 use App\Http\Controllers\PME\ProposalDocumentPdfController;
+use App\Http\Controllers\PME\ProposalDocumentPreviewController;
 use App\Http\Controllers\PME\TreasuryExportController;
 use App\Models\PME\ProposalDocument;
 use Illuminate\Support\Facades\Route;
@@ -65,13 +67,16 @@ Route::middleware(['auth', 'verified.email', 'profile:sme', 'onboarding.complete
     Route::livewire('invoices/{invoice}/edit', 'pages::pme.invoices.form')->name('pme.invoices.edit');
     Route::livewire('invoices', 'pages::pme.invoices.index')->name('pme.invoices.index');
     Route::livewire('invoices/{invoice}', 'pages::pme.invoices.show')->name('pme.invoices.show');
+    Route::get('invoices/preview/{tempId}', InvoicePreviewController::class)->name('pme.invoices.preview');
     Route::livewire('quotes/create', 'pages::pme.quotes.form')->name('pme.quotes.create');
     Route::livewire('quotes/{quote}/edit', 'pages::pme.quotes.form')->name('pme.quotes.edit');
     Route::livewire('quotes/{quote}', 'pages::pme.quotes.show')->name('pme.quotes.show');
+    Route::get('quotes/preview/{tempId}', [ProposalDocumentPreviewController::class, 'quote'])->name('pme.quotes.preview');
     Route::livewire('quotes', 'pages::pme.quotes.index')->name('pme.quotes.index');
     Route::livewire('proformas/create', 'pages::pme.proformas.form')->name('pme.proformas.create');
     Route::livewire('proformas/{proforma}/edit', 'pages::pme.proformas.form')->name('pme.proformas.edit');
     Route::livewire('proformas/{proforma}', 'pages::pme.proformas.show')->name('pme.proformas.show');
+    Route::get('proformas/preview/{tempId}', [ProposalDocumentPreviewController::class, 'proforma'])->name('pme.proformas.preview');
     // Liste unifiée : /pme/proformas redirige vers la page Devis & Proformas
     Route::redirect('proformas', '/pme/quotes')->name('pme.proformas.index');
     Route::livewire('clients', 'pages::pme.clients.index')->name('pme.clients.index');

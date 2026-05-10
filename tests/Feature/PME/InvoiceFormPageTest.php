@@ -1,14 +1,13 @@
 <?php
 
 use App\Enums\PME\InvoiceStatus;
-use App\Mail\PME\InvoiceMail;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\PME\InvoiceLine;
 use App\Models\Shared\User;
+use App\Services\PME\InvoiceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -361,29 +360,52 @@ test('client-created sélectionne le nouveau client dans le formulaire facture',
 
 // ─── Send flow ───────────────────────────────────────────────────────────────
 
-test('envoyer une facture change son statut en Sent', function () {
+test('saveAndSend persiste la facture en Brouillon et redirige vers la page show avec ?send=1', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
-    $invoice = createDraftInvoice($company);
+    $client = Client::factory()->create(['company_id' => $company->id]);
 
     Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
-        ->set('sendChannel', 'whatsapp')
-        ->call('send')
-        ->assertRedirect(route('pme.invoices.index'));
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 50_000)
+        ->call('saveAndSend');
 
-    $invoice->refresh();
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
 
-    expect($invoice->status)->toBe(InvoiceStatus::Sent);
+    expect($invoice)->not->toBeNull()
+        ->and($invoice->status)->toBe(InvoiceStatus::Draft);
 });
 
-test('on ne peut pas envoyer une facture à 0 FCFA', function () {
+test('saveAndSend ne change pas le statut Sent → reste Brouillon avant la confirmation modale', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 50_000)
+        ->call('saveAndSend');
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    // Le clic n'envoie pas — il faut passer par le modal du show page.
+    expect($invoice->status)->toBe(InvoiceStatus::Draft);
+});
+
+test('saveAndSend refuse une facture à 0 FCFA et ne persiste rien', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
-        ->call('openSendModal')
-        ->assertSet('showSendModal', false)
-        ->assertHasErrors('lines');
+        ->call('saveAndSend')
+        ->assertHasErrors('lines')
+        ->assertNoRedirect();
+
+    expect(Invoice::query()->where('company_id', $company->id)->count())->toBe(0);
 });
 
 // ─── Due date presets ────────────────────────────────────────────────────────
@@ -418,6 +440,7 @@ test('le taux de TVA personnalisé applique la valeur saisie', function () {
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
+        ->set('hasTax', true)
         ->set('taxMode', 'custom')
         ->set('customTaxRate', 10)
         ->assertSet('taxRate', 10);
@@ -428,6 +451,7 @@ test('le taux de TVA personnalisé est limité entre 0 et 100', function () {
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
+        ->set('hasTax', true)
         ->set('taxMode', 'custom')
         ->set('customTaxRate', 150)
         ->assertSet('taxRate', 100);
@@ -438,6 +462,7 @@ test('le champ customTaxRate est lui-même clampé à 100 quand la valeur dépas
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
+        ->set('hasTax', true)
         ->set('taxMode', 'custom')
         ->set('customTaxRate', 999)
         ->assertSet('customTaxRate', 100);
@@ -448,6 +473,7 @@ test('le taux de TVA personnalisé accepte exactement 100', function () {
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
+        ->set('hasTax', true)
         ->set('taxMode', 'custom')
         ->set('customTaxRate', 100)
         ->assertSet('customTaxRate', 100)
@@ -459,10 +485,166 @@ test('le taux de TVA personnalisé est clampé à 0 si une valeur négative est 
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
+        ->set('hasTax', true)
         ->set('taxMode', 'custom')
         ->set('customTaxRate', -5)
         ->assertSet('customTaxRate', 0)
         ->assertSet('taxRate', 0);
+});
+
+// ─── TVA toggle (hasTax) ────────────────────────────────────────────────────
+
+test('hasTax est désactivé par défaut sur une nouvelle facture', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->assertSet('hasTax', false)
+        ->assertSet('taxRate', 0);
+});
+
+test('activer hasTax depuis le défaut désactivé applique 18%', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasTax', true)
+        ->assertSet('taxMode', '18')
+        ->assertSet('taxRate', 18);
+});
+
+test('désactiver hasTax force taxRate à 0 sans toucher au taxMode', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasTax', false)
+        ->assertSet('taxRate', 0)
+        ->assertSet('taxMode', '18');
+});
+
+test('réactiver hasTax restaure 18% depuis le mode 18', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasTax', false)
+        ->set('hasTax', true)
+        ->assertSet('taxRate', 18);
+});
+
+test('réactiver hasTax restaure le taux personnalisé saisi précédemment', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('customTaxRate', 7)
+        ->set('hasTax', false)
+        ->assertSet('taxRate', 0)
+        ->set('hasTax', true)
+        ->assertSet('taxRate', 7);
+});
+
+test('changer le taxMode ne fait rien quand hasTax est désactivé', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasTax', false)
+        ->set('taxMode', 'custom')
+        ->assertSet('taxRate', 0);
+});
+
+test('saisir un customTaxRate ne change pas le taxRate quand hasTax est désactivé', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('taxMode', 'custom')
+        ->set('hasTax', false)
+        ->set('customTaxRate', 7)
+        ->assertSet('customTaxRate', 7)
+        ->assertSet('taxRate', 0);
+});
+
+test('sauvegarder avec hasTax désactivé crée des lignes sans TVA', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->set('hasTax', false)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->total)->toBe(100_000)
+        ->and($invoice->tax_amount)->toBe(0)
+        ->and($invoice->lines->first()->tax_rate)->toBe(0);
+});
+
+test('édition d\'une facture sans TVA initialise hasTax à false', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = app(InvoiceService::class)->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-NOTAX',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasTax', false)
+        ->assertSet('taxRate', 0)
+        ->assertSet('taxMode', '18');
+});
+
+test('édition d\'une facture avec TVA 18% initialise hasTax à true et taxMode 18', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company); // line tax_rate = 18
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasTax', true)
+        ->assertSet('taxRate', 18)
+        ->assertSet('taxMode', '18');
+});
+
+test('édition d\'une facture avec TVA personnalisée initialise hasTax à true et taxMode custom', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = app(InvoiceService::class)->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-CTX',
+        'currency' => 'XOF',
+        'tax_rate' => 7,
+        'discount' => 0,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasTax', true)
+        ->assertSet('taxRate', 7)
+        ->assertSet('taxMode', 'custom')
+        ->assertSet('customTaxRate', 7);
 });
 
 // ─── Discount percentage cap ─────────────────────────────────────────────────
@@ -597,13 +779,13 @@ test('la page d\'édition charge le moyen de paiement existant', function () {
 
 // ─── Reminder schedule ──────────────────────────────────────────────────────
 
-test('remindersEnabled est à true par défaut', function () {
+test('remindersEnabled est à false par défaut', function () {
     ['user' => $user] = createSmeUser();
 
     $component = Livewire::actingAs($user)
         ->test('pages::pme.invoices.form');
 
-    expect($component->get('remindersEnabled'))->toBeTrue();
+    expect($component->get('remindersEnabled'))->toBeFalse();
 });
 
 test('toggleReminders bascule la valeur', function () {
@@ -611,11 +793,11 @@ test('toggleReminders bascule la valeur', function () {
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
-        ->assertSet('remindersEnabled', true)
-        ->call('toggleReminders')
         ->assertSet('remindersEnabled', false)
         ->call('toggleReminders')
-        ->assertSet('remindersEnabled', true);
+        ->assertSet('remindersEnabled', true)
+        ->call('toggleReminders')
+        ->assertSet('remindersEnabled', false);
 });
 
 test('l\'état reminders_enabled est sauvegardé avec la facture', function () {
@@ -634,7 +816,8 @@ test('l\'état reminders_enabled est sauvegardé avec la facture', function () {
 
     $invoice = Invoice::query()->where('company_id', $company->id)->first();
 
-    expect($invoice->reminders_enabled)->toBeFalse();
+    // Default false → toggle once → true → save
+    expect($invoice->reminders_enabled)->toBeTrue();
 });
 
 test('la page d\'édition charge l\'état reminders_enabled existant', function () {
@@ -694,9 +877,93 @@ test('annuler affiche la modale si des notes sont saisies', function () {
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.form')
+        ->set('hasNotes', true)
         ->set('notes', 'Merci pour votre confiance')
         ->call('confirmCancel')
         ->assertSet('showCancelModal', true);
+});
+
+// ─── Notes toggle (hasNotes) ────────────────────────────────────────────────
+
+test('hasNotes est désactivé par défaut sur une nouvelle facture', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->assertSet('hasNotes', false)
+        ->assertSet('notes', '');
+});
+
+test('désactiver hasNotes vide les notes', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasNotes', true)
+        ->set('notes', 'Merci pour votre confiance')
+        ->set('hasNotes', false)
+        ->assertSet('notes', '');
+});
+
+test('saveDraft avec hasNotes activé persiste les notes', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 50_000)
+        ->set('hasNotes', true)
+        ->set('notes', 'Merci pour votre confiance')
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->notes)->toBe('Merci pour votre confiance');
+});
+
+test('saveDraft avec hasNotes désactivé ignore les notes saisies', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 50_000)
+        ->set('hasNotes', true)
+        ->set('notes', 'À ignorer')
+        ->set('hasNotes', false)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->notes)->toBeNull();
+});
+
+test('édition d\'une facture avec notes initialise hasNotes à true', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+    $invoice->update(['notes' => 'Notes existantes']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasNotes', true)
+        ->assertSet('notes', 'Notes existantes');
+});
+
+test('édition d\'une facture sans notes initialise hasNotes à false', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasNotes', false);
 });
 
 test('confirmer l\'annulation redirige vers la liste', function () {
@@ -710,7 +977,7 @@ test('confirmer l\'annulation redirige vers la liste', function () {
 
 // ─── PDF & Envoi ─────────────────────────────────────────────────────────────
 
-test('previewPdf sauvegarde le brouillon et dispatch l\'event open-pdf', function () {
+test('previewPdf ne persiste rien et dispatch l\'event open-pdf vers la route preview', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
     $client = Client::factory()->create(['company_id' => $company->id]);
 
@@ -721,70 +988,39 @@ test('previewPdf sauvegarde le brouillon et dispatch l\'event open-pdf', functio
         ->set('lines.0.quantity', 1)
         ->set('lines.0.unit_price', 10_000)
         ->call('previewPdf')
-        ->assertDispatched('open-pdf');
+        ->assertDispatched('open-pdf', function (string $name, array $params) {
+            return isset($params['url']) && str_contains($params['url'], '/pme/invoices/preview/');
+        });
+
+    expect(Invoice::query()->where('company_id', $company->id)->count())->toBe(0);
 });
 
-test('envoyer par email envoie un mail avec PDF en pièce jointe', function () {
-    Mail::fake();
-
+test('previewPdf invalide ne persiste rien et lève des erreurs de validation', function () {
     ['user' => $user, 'company' => $company] = createSmeUser();
-    $invoice = createDraftInvoice($company);
 
     Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
-        ->set('sendChannel', 'email')
-        ->set('sendRecipient', 'client@example.com')
-        ->set('sendMessage', 'Voici votre facture.')
-        ->call('send')
+        ->test('pages::pme.invoices.form')
+        ->call('previewPdf')
+        ->assertHasErrors(['clientId', 'lines.0.description']);
+
+    expect(Invoice::query()->where('company_id', $company->id)->count())->toBe(0);
+});
+
+test('annuler une nouvelle facture sans cliquer Enregistrer ne crée aucun brouillon en base', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->call('previewPdf')
+        ->call('cancel')
         ->assertRedirect(route('pme.invoices.index'));
 
-    Mail::assertQueued(InvoiceMail::class, fn ($mail) => $mail->hasTo('client@example.com'));
-
-    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
-});
-
-test('envoyer par email échoue avec un email invalide', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-    $invoice = createDraftInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
-        ->set('sendChannel', 'email')
-        ->set('sendRecipient', 'pas-un-email')
-        ->call('send')
-        ->assertHasErrors('sendRecipient');
-});
-
-test('envoyer par whatsapp marque la facture comme envoyée sans envoyer d\'email', function () {
-    Mail::fake();
-
-    ['user' => $user, 'company' => $company] = createSmeUser();
-    $invoice = createDraftInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
-        ->set('sendChannel', 'whatsapp')
-        ->set('sendRecipient', '+221771234567')
-        ->call('send')
-        ->assertRedirect(route('pme.invoices.index'));
-
-    Mail::assertNothingQueued();
-
-    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
-});
-
-test('envoyer en PDF ne marque pas la facture comme envoyée', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-    $invoice = createDraftInvoice($company);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
-        ->set('sendChannel', 'pdf')
-        ->call('send')
-        ->assertDispatched('open-pdf')
-        ->assertNoRedirect();
-
-    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Draft);
+    expect(Invoice::query()->where('company_id', $company->id)->count())->toBe(0);
 });
 
 // ─── openSaveDraftModal ──────────────────────────────────────────────────────
@@ -860,32 +1096,6 @@ test('le client est pré-sélectionné quand clientId est passé via URL', funct
         ->assertSet('clientId', $client->id);
 });
 
-test('sendRecipient est initialisé avec l\'email du client quand il en a un', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-    $client = Client::factory()->create([
-        'company_id' => $company->id,
-        'email' => 'contact@acme.sn',
-        'phone' => '+221771234567',
-    ]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['clientId' => $client->id])
-        ->assertSet('sendRecipient', 'contact@acme.sn');
-});
-
-test('sendRecipient est initialisé avec le téléphone quand le client n\'a pas d\'email', function () {
-    ['user' => $user, 'company' => $company] = createSmeUser();
-    $client = Client::factory()->create([
-        'company_id' => $company->id,
-        'email' => null,
-        'phone' => '+221771234567',
-    ]);
-
-    Livewire::actingAs($user)
-        ->test('pages::pme.invoices.form', ['clientId' => $client->id])
-        ->assertSet('sendRecipient', '+221771234567');
-});
-
 test('clientId est remis à vide si le client appartient à une autre entreprise', function () {
     ['user' => $user] = createSmeUser();
     $otherCompany = Company::factory()->create(['type' => 'sme']);
@@ -926,4 +1136,265 @@ test('le bouton Nouvelle facture sur la fiche client pointe vers create avec le 
     Livewire::actingAs($user)
         ->test('pages::pme.clients.show', ['client' => $client])
         ->assertSee($expectedUrl, escape: false);
+});
+
+// ─── Deposit (acompte) ───────────────────────────────────────────────────────
+
+test('hasDeposit est désactivé par défaut', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->assertSet('hasDeposit', false)
+        ->assertSet('depositAmount', 0);
+});
+
+test('désactiver hasDeposit remet depositAmount à 0', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasDeposit', true)
+        ->set('depositAmount', 25_000)
+        ->set('hasDeposit', false)
+        ->assertSet('depositAmount', 0);
+});
+
+test('on peut sauvegarder un brouillon avec un acompte', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->set('hasDeposit', true)
+        ->set('depositAmount', 30_000)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->deposit_amount)->toBe(30_000)
+        ->and($invoice->amount_paid)->toBe(30_000)
+        ->and($invoice->payments()->where('is_deposit', true)->count())->toBe(1);
+});
+
+test('désactiver hasDeposit avant de sauver ne crée pas de Payment', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 50_000)
+        ->set('hasDeposit', true)
+        ->set('depositAmount', 10_000)
+        ->set('hasDeposit', false)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->deposit_amount)->toBe(0)
+        ->and($invoice->amount_paid)->toBe(0)
+        ->and($invoice->payments)->toHaveCount(0);
+});
+
+test('la page d\'édition réhydrate hasDeposit et depositAmount', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+    $invoice->update(['deposit_amount' => 25_000]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasDeposit', true)
+        ->assertSet('depositAmount', 25_000);
+});
+
+test('depositAmount ne peut pas dépasser le maximum pour la devise', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('currency', 'XOF')
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 10_000)
+        ->set('hasDeposit', true)
+        ->set('depositAmount', 1_000_000_000)
+        ->call('saveDraft')
+        ->assertHasErrors(['depositAmount']);
+});
+
+test('mettre à jour une facture remplace l\'acompte existant', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = app(InvoiceService::class)->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-EDITDEP',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 0,
+        'deposit_amount' => 10_000,
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 50_000],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->set('depositAmount', 20_000)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice->refresh();
+
+    expect($invoice->deposit_amount)->toBe(20_000)
+        ->and($invoice->amount_paid)->toBe(20_000)
+        ->and($invoice->payments()->where('is_deposit', true)->count())->toBe(1);
+});
+
+// ─── Bug fix: discount suffix renders FCFA in fixed mode ─────────────────────
+
+test('le suffixe de la remise globale affiche % en mode pourcentage', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasDiscount', true)
+        ->set('discountType', 'percent')
+        ->assertSeeHtml('wire:key="discount-suffix-percent"');
+});
+
+test('le suffixe de la remise globale affiche FCFA en mode montant fixe pour XOF', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('currency', 'XOF')
+        ->set('hasDiscount', true)
+        ->set('discountType', 'fixed')
+        ->assertSeeHtml('wire:key="discount-suffix-fixed"')
+        ->assertSeeHtml('FCFA');
+});
+
+test('le suffixe de la remise globale affiche EUR en mode montant fixe pour EUR', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('currency', 'EUR')
+        ->set('hasDiscount', true)
+        ->set('discountType', 'fixed')
+        ->assertSeeHtml('wire:key="discount-suffix-fixed"')
+        ->assertSeeHtml('EUR');
+});
+
+// ─── Discount toggle (hasDiscount) ──────────────────────────────────────────
+
+test('hasDiscount est désactivé par défaut', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->assertSet('hasDiscount', false)
+        ->assertSet('discount', 0);
+});
+
+test('désactiver hasDiscount remet le discount à 0', function () {
+    ['user' => $user] = createSmeUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('hasDiscount', true)
+        ->set('discount', 25)
+        ->set('hasDiscount', false)
+        ->assertSet('discount', 0);
+});
+
+test('saveDraft avec hasDiscount désactivé persiste discount = 0 même si une valeur a été saisie', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->set('hasDiscount', true)
+        ->set('discountType', 'percent')
+        ->set('discount', 30)
+        ->set('hasDiscount', false)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->discount)->toBe(0);
+});
+
+test('saveDraft avec hasDiscount activé persiste la remise en pourcentage', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form')
+        ->set('clientId', $client->id)
+        ->set('lines.0.description', 'Service')
+        ->set('lines.0.quantity', 1)
+        ->set('lines.0.unit_price', 100_000)
+        ->set('hasDiscount', true)
+        ->set('discountType', 'percent')
+        ->set('discount', 10)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $invoice = Invoice::query()->where('company_id', $company->id)->first();
+
+    expect($invoice->discount)->toBe(10)
+        ->and($invoice->discount_type)->toBe('percent');
+});
+
+test('édition d\'une facture avec remise initialise hasDiscount à true', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $client = Client::factory()->create(['company_id' => $company->id]);
+
+    $invoice = app(InvoiceService::class)->create($company, [
+        'client_id' => $client->id,
+        'reference' => 'FYK-FAC-DSC',
+        'currency' => 'XOF',
+        'tax_rate' => 0,
+        'discount' => 10,
+        'discount_type' => 'percent',
+        'issued_at' => now()->format('Y-m-d'),
+        'due_at' => now()->addDays(30)->format('Y-m-d'),
+    ], [
+        ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100_000],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasDiscount', true)
+        ->assertSet('discount', 10)
+        ->assertSet('discountType', 'percent');
+});
+
+test('édition d\'une facture sans remise initialise hasDiscount à false', function () {
+    ['user' => $user, 'company' => $company] = createSmeUser();
+    $invoice = createDraftInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.form', ['invoice' => $invoice])
+        ->assertSet('hasDiscount', false)
+        ->assertSet('discount', 0);
 });
