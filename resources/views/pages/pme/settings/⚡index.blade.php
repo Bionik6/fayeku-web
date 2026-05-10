@@ -177,6 +177,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                 'rccm' => $validated['firmRccm'],
             ]);
             unset($this->company);
+            $this->dispatch('company-updated');
         }
 
         session()->flash('firm-saved', true);
@@ -221,6 +222,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
         $company->update(['logo_path' => $path]);
         $this->logoUpload = null;
         unset($this->company);
+        $this->dispatch('company-updated');
 
         $this->dispatch('toast', type: 'success', title: __('Logo mis à jour.'));
     }
@@ -240,6 +242,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
         $company->update(['logo_path' => null]);
         $this->logoUpload = null;
         unset($this->company);
+        $this->dispatch('company-updated');
 
         $this->dispatch('toast', type: 'success', title: __('Logo supprimé.'));
     }
@@ -272,6 +275,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                 'sender_role' => filled($validated['senderRole']) ? trim($validated['senderRole']) : null,
             ]);
             unset($this->company);
+            $this->dispatch('company-updated');
         }
 
         session()->flash('signature-saved', true);
@@ -291,6 +295,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
             'last_name' => $validated['lastName'],
             'email' => $validated['userEmail'] ?: null,
         ]);
+        $this->dispatch('account-updated');
 
         session()->flash('account-saved', true);
     }

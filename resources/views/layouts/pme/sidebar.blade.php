@@ -288,15 +288,7 @@
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="flex size-9 items-center justify-center rounded-xl bg-mist text-xs font-bold text-primary">
-                                    {{ $user->initials() }}
-                                </div>
-                                <div class="hidden min-w-0 sm:block">
-                                    <p class="truncate text-sm font-semibold text-ink">{{ $user->full_name }}</p>
-                                    <p class="truncate text-xs text-slate-500">{{ $smeCompany?->name ?? __('Mon entreprise') }}</p>
-                                </div>
-                            </div>
+                            <livewire:account-badge />
                         </div>
                     </div>
                 </header>
