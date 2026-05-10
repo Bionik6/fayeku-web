@@ -756,44 +756,79 @@ test('le template facture suit le format demandé (Bonjour, prestation, échéan
 
     expect($message)
         ->toStartWith('Bonjour,')
-        ->not->toContain('M.')
-        ->toContain('Suite à notre prestation')
-        ->toContain($invoice->reference)
-        ->toContain('TTC')
-        ->toContain('échéance le')
+        ->toContain('Veuillez trouver notre facture n° '.$invoice->reference)
+        ->toContain('Consulter la facture :')
         ->toContain(route('pme.invoices.pdf', $invoice->public_code))
-        ->toContain('Wave, Orange Money, virement bancaire')
+        ->toContain('Échéance de paiement :')
+        ->toContain('Moyens de paiement acceptés : Wave, Orange Money, virement bancaire.')
         ->toEndWith("Cordialement,\nMoussa Diop\nRassoul Electronique Services");
 });
 
-test('confirmSend WhatsApp construit wa.me/<international> + ouvre le canal', function () {
+test('le bouton Envoyer de la modale rend une URL wa.me/<international> en data-send-url pour WhatsApp', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
     $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
 
-    Livewire::actingAs($user)
+    $component = Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
-        ->call('openSendModal')
-        ->call('confirmSend')
-        ->assertDispatched('open-external-url', function ($name, $params) {
-            return str_starts_with($params['url'], 'https://wa.me/221770000000?text=');
-        });
+        ->call('openSendModal');
+
+    $component->assertSeeHtml('data-send-url="https://wa.me/221770000000?text=')
+        ->assertSeeHtml('data-can-send="1"');
 });
 
-test('confirmSend Email construit mailto:client@... + ouvre le canal', function () {
+test('le bouton Envoyer de la modale rend un mailto:client@... en data-send-url pour Email', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $client = Client::factory()->create(['company_id' => $company->id, 'email' => 'jean@client.sn']);
     $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
 
-    Livewire::actingAs($user)
+    $component = Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
         ->call('openSendModal')
         ->set('sendChannel', 'email')
-        ->set('sendRecipient', 'jean@client.sn')
+        ->set('sendRecipient', 'jean@client.sn');
+
+    $component->assertSeeHtml('data-send-url="mailto:jean@client.sn?subject=')
+        ->assertSeeHtml('data-can-send="1"');
+});
+
+test('confirmSend ne dispatch plus open-external-url (l\'ouverture est faite côté client)', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
         ->call('confirmSend')
-        ->assertDispatched('open-external-url', function ($name, $params) {
-            return str_starts_with($params['url'], 'mailto:jean@client.sn?subject=');
-        });
+        ->assertNotDispatched('open-external-url');
+});
+
+test('le bouton Envoyer expose data-can-send=0 quand le destinataire est vide (popup non ouvert côté client)', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => null, 'email' => null]);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->set('sendRecipient', '');
+
+    $component->assertSeeHtml('data-can-send="0"');
+});
+
+test('le bouton Envoyer appelle wire:click confirmSend via Alpine click handler', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal');
+
+    // Le click handler Alpine exécute window.open puis $wire.confirmSend()
+    $component->assertSeeHtml('$wire.confirmSend()')
+        ->assertSeeHtml('window.open($el.dataset.sendUrl');
 });
 
 test('confirmSend sur une facture Draft la passe automatiquement en Sent + toast', function () {
@@ -806,7 +841,6 @@ test('confirmSend sur une facture Draft la passe automatiquement en Sent + toast
         ->call('openSendModal')
         ->call('confirmSend')
         ->assertHasNoErrors()
-        ->assertDispatched('open-external-url')
         ->assertDispatched('toast', function ($name, $params) {
             return ($params['type'] ?? null) === 'success'
                 && str_contains((string) ($params['title'] ?? ''), 'envoyée');
@@ -919,11 +953,80 @@ test('confirmSend sur une facture déjà Sent ne ré-affiche pas le toast de bas
         ->call('openSendModal')
         ->call('confirmSend');
 
-    $component->assertDispatched('open-external-url');
-
     $events = collect($component->effects['dispatches'] ?? []);
     $statusToast = $events->first(fn ($e) => ($e['name'] ?? null) === 'toast' && str_contains((string) ($e['params']['title'] ?? ''), 'envoyée'));
     expect($statusToast)->toBeNull();
+});
+
+test('?send=1 dans l\'URL auto-ouvre la modale d\'envoi', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Draft->value]);
+
+    $this->actingAs($user)->withSession([])
+        ->get(route('pme.invoices.show', $invoice).'?send=1')
+        ->assertOk()
+        ->assertSeeLivewire('pages::pme.invoices.show');
+
+    Livewire::actingAs($user)
+        ->withQueryParams(['send' => '1'])
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSet('showSendModal', true);
+});
+
+test('?send=1 ne rouvre pas la modale si la facture est Paid', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Paid->value]);
+
+    Livewire::actingAs($user)
+        ->withQueryParams(['send' => '1'])
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSet('showSendModal', false);
+});
+
+test('confirmSend transitionne une Draft avec acompte vers PartiallyPaid', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::Draft->value,
+        'subtotal' => 100_000,
+        'tax_amount' => 0,
+        'total' => 100_000,
+        'amount_paid' => 30_000,
+        'deposit_amount' => 30_000,
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 30_000,
+        'is_deposit' => true,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Cash,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->call('confirmSend');
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PartiallyPaid);
+});
+
+test('confirmSend transitionne une Draft sans acompte vers Sent', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::Draft->value,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->call('confirmSend');
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
 });
 
 test('openSendModal n\'ouvre pas si la facture est Paid ou Cancelled', function () {
@@ -937,4 +1040,232 @@ test('openSendModal n\'ouvre pas si la facture est Paid ou Cancelled', function 
             ->call('openSendModal')
             ->assertSet('showSendModal', false);
     }
+});
+
+// ─── Acompte section ────────────────────────────────────────────────────────
+
+test('la section Acompte s\'affiche quand un acompte a été versé même en brouillon', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Draft->value,
+        'amount_paid' => 30_000,
+        'deposit_amount' => 30_000,
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 30_000,
+        'is_deposit' => true,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Cash,
+        'notes' => 'Acompte versé à la création',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSee('Avance / acompte déjà payé', escape: false)
+        ->assertSee('Acompte versé à la création de la facture', escape: false);
+});
+
+test('la section Acompte n\'apparaît pas en l\'absence d\'acompte', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertDontSee('Acompte versé à la création');
+});
+
+test('le tableau Paiements enregistrés exclut le Payment is_deposit', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'amount_paid' => 75_000,
+        'deposit_amount' => 30_000,
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 30_000,
+        'is_deposit' => true,
+        'paid_at' => now()->subDays(2),
+        'method' => PaymentMethod::Cash,
+        'reference' => 'DEPOSIT-REF',
+        'notes' => 'Acompte',
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 45_000,
+        'is_deposit' => false,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Transfer,
+        'reference' => 'MANUAL-REF',
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice]);
+
+    // Manual payment reference appears in the Paiements table
+    $component->assertSee('MANUAL-REF');
+    // Deposit reference must NOT appear in the Paiements table
+    $component->assertDontSee('DEPOSIT-REF');
+});
+
+test('l\'aperçu de la facture affiche Acompte versé et Reste à payer quand un acompte est présent', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Draft->value,
+        'subtotal' => 1_000_000,
+        'tax_amount' => 0,
+        'total' => 1_000_000,
+        'amount_paid' => 250_000,
+        'deposit_amount' => 250_000,
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 250_000,
+        'is_deposit' => true,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Cash,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSee('Acompte versé', escape: false)
+        ->assertSee('Reste à payer', escape: false)
+        ->assertSee('750 000', escape: false);
+});
+
+test('le message d\'envoi mentionne l\'acompte et le reste à payer quand un acompte est présent', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'subtotal' => 1_000_000,
+        'tax_amount' => 0,
+        'total' => 1_000_000,
+        'amount_paid' => 250_000,
+        'deposit_amount' => 250_000,
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 250_000,
+        'is_deposit' => true,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Cash,
+    ]);
+
+    $message = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->get('sendMessage');
+
+    expect($message)
+        ->toContain('Veuillez trouver notre facture n°')
+        ->toContain("d'un montant total de")
+        ->toContain('TTC')
+        ->toContain('Acompte déjà versé : 250 000')
+        ->toContain('Reste à payer : 750 000')
+        ->toContain('Consulter la facture :')
+        ->toContain('Échéance de paiement :')
+        ->toContain('Moyens de paiement acceptés :');
+});
+
+test('le message d\'envoi ne mentionne pas l\'acompte en son absence', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    $message = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->get('sendMessage');
+
+    expect($message)
+        ->not->toContain('Acompte déjà versé')
+        ->not->toContain('Reste à payer');
+});
+
+test('le message d\'envoi commence toujours par Bonjour générique sans nom de client', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'name' => 'CBAO Groupe Attijariwafa',
+        'phone' => '+221770000000',
+    ]);
+    $invoice = makeShowPageInvoice($company, ['client_id' => $client->id]);
+
+    $message = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->get('sendMessage');
+
+    expect($message)
+        ->toStartWith('Bonjour,')
+        ->not->toContain('CBAO Groupe Attijariwafa');
+});
+
+test('le message d\'envoi utilise le moyen de paiement spécifique quand un seul est sélectionné', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'payment_method' => 'wave',
+    ]);
+
+    $message = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->get('sendMessage');
+
+    expect($message)->toContain('Moyens de paiement acceptés : Wave.');
+});
+
+test('le message d\'envoi utilise la liste par défaut quand aucun moyen de paiement n\'est sélectionné', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'payment_method' => null,
+    ]);
+
+    $message = Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openSendModal')
+        ->get('sendMessage');
+
+    expect($message)->toContain('Moyens de paiement acceptés : Wave, Orange Money, virement bancaire.');
+});
+
+test('l\'aperçu de la facture n\'affiche pas Reste à payer en l\'absence d\'acompte', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertDontSee('Reste à payer');
+});
+
+test('la section Paiements enregistrés affiche dont acompte quand un acompte existe', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'amount_paid' => 30_000,
+        'deposit_amount' => 30_000,
+    ]);
+
+    Payment::query()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 30_000,
+        'is_deposit' => true,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Cash,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->assertSee('dont acompte', escape: false);
 });

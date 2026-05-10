@@ -53,6 +53,12 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $this->sendPhoneCountries = collect(config('fayeku.phone_countries', []))
             ->map(fn ($c) => $c['label'])
             ->all();
+
+        // Auto-ouvre la modale d'envoi quand on arrive depuis le formulaire
+        // de création/édition (`?send=1`) — flow "Créer et envoyer le devis".
+        if (request()->boolean('send')) {
+            $this->openSendModal();
+        }
     }
 
     #[Computed]
@@ -232,17 +238,18 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         $link = route('pme.quotes.pdf', $this->quote->public_code);
         $total = format_money($this->quote->total, $this->quote->currency);
         $validUntil = $this->quote->valid_until ? format_date($this->quote->valid_until) : '—';
+        $reference = $this->quote->reference;
         $signature = $this->buildSignature();
 
         return <<<MSG
             Bonjour,
 
-            Suite à votre demande, je vous transmets le devis n° {$this->quote->reference} d'un montant de {$total} TTC, valable jusqu'au {$validUntil}.
+            Suite à votre demande, veuillez trouver notre devis n° {$reference}, d'un montant de {$total}.
 
-            Vous pouvez consulter le détail en cliquant ici :
+            Consulter le devis :
             {$link}
 
-            N'hésitez pas à revenir vers moi pour toute question ou ajustement.
+            Ce devis est valable jusqu'au {$validUntil}. Nous restons disponibles pour toute question ou modification.
 
             {$signature}
             MSG;
@@ -303,9 +310,10 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             $statusChanged = true;
         }
 
-        $url = $this->sendOpenUrl;
+        // L'ouverture du canal externe (WhatsApp / mailto) se fait côté client
+        // dans le click-handler de la modale (cf. send-modal.blade.php) pour ne
+        // pas déclencher le popup-blocker.
         $this->showSendModal = false;
-        $this->dispatch('open-external-url', url: $url);
 
         if ($statusChanged) {
             $this->dispatch('toast', type: 'success', title: __('Devis marqué comme envoyé.'));
@@ -313,9 +321,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     }
 }; ?>
 
-<div class="flex h-full w-full flex-1 flex-col gap-6"
-     x-data
-     x-on:open-external-url.window="window.open($event.detail.url, '_blank')">
+<div class="flex h-full w-full flex-1 flex-col gap-6">
     @php
         $q = $this->quote;
         $status = $this->statusDisplay;
@@ -422,7 +428,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                         <tbody class="divide-y divide-slate-50">
                             @forelse ($q->lines as $line)
                                 <tr>
-                                    <td class="py-3 pr-4 text-ink">{{ $line->description }}</td>
+                                    <td class="py-3 pr-4 text-ink">{!! nl2br(e($line->description)) !!}</td>
                                     <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ $line->quantity }}</td>
                                     <td class="py-3 px-4 text-right tabular-nums text-slate-600 whitespace-nowrap">{{ format_money($line->unit_price, $q->currency) }}</td>
                                     <td class="py-3 px-4 text-right tabular-nums text-slate-500 whitespace-nowrap">{{ $line->tax_rate }} %</td>
@@ -557,110 +563,13 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         :confirm-label="__('Supprimer')"
     />
 
-    {{-- Modal : Envoyer le devis --}}
-    @if ($showSendModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-             wire:click.self="closeSendModal" x-data
-             @keydown.escape.window="$wire.closeSendModal()">
-            <div class="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div class="flex items-start justify-between border-b border-slate-100 px-7 py-5">
-                    <div>
-                        <h2 class="text-lg font-semibold text-ink">{{ __('Envoyer le devis') }}</h2>
-                        <p class="mt-1 text-sm text-slate-500">{{ __('Choisissez le canal. Le lien public du PDF est inclus dans le message — vous l\'envoyez depuis votre propre WhatsApp ou messagerie.') }}</p>
-                    </div>
-                    <button type="button" wire:click="closeSendModal" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
-                        <flux:icon name="x-mark" class="size-5" />
-                    </button>
-                </div>
-
-                <div class="px-7 py-6">
-                    <div class="mb-5 flex gap-2">
-                        <button type="button" wire:click="$set('sendChannel', 'whatsapp')"
-                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'whatsapp' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
-                            <flux:icon name="chat-bubble-left-right" class="mr-1 inline size-4" /> {{ __('WhatsApp') }}
-                        </button>
-                        <button type="button" wire:click="$set('sendChannel', 'email')"
-                                class="rounded-xl border px-4 py-2.5 text-sm font-medium transition {{ $sendChannel === 'email' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
-                            <flux:icon name="envelope" class="mr-1 inline size-4" /> {{ __('Email') }}
-                        </button>
-                    </div>
-
-                    <div class="space-y-4">
-                        @if ($sendChannel === 'whatsapp')
-                            <div wire:key="send-phone-{{ $sendChannel }}">
-                                <x-phone-input
-                                    :label="__('Téléphone du client (WhatsApp)')"
-                                    country-name="sendCountry"
-                                    :country-value="$sendCountry"
-                                    country-model="sendCountry"
-                                    phone-name="sendRecipient"
-                                    :phone-value="$sendRecipient"
-                                    phone-model="sendRecipient"
-                                    :countries="$sendPhoneCountries"
-                                    container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
-                                    text-size="text-sm"
-                                    placeholder-class="placeholder:text-slate-500"
-                                    required
-                                />
-                                @error('sendRecipient') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                        @else
-                            <div wire:key="send-email-{{ $sendChannel }}">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">
-                                    {{ __('Adresse email du client') }} <span class="text-rose-500">*</span>
-                                </label>
-                                <input wire:model.live.debounce.300ms="sendRecipient" type="email"
-                                       placeholder="contact@client.sn"
-                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                                @error('sendRecipient') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                        @endif
-
-                        <div>
-                            <div class="mb-1.5 flex items-center justify-between gap-2">
-                                <label class="block text-sm font-medium text-slate-700">{{ __('Message') }}</label>
-                                <button type="button"
-                                        x-data="{ copied: false }"
-                                        x-on:click="navigator.clipboard.writeText($wire.sendMessage).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
-                                        class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-primary/30 hover:text-primary">
-                                    <template x-if="!copied">
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <flux:icon name="document-duplicate" class="size-3.5" />
-                                            {{ __('Copier le message') }}
-                                        </span>
-                                    </template>
-                                    <template x-if="copied">
-                                        <span class="inline-flex items-center gap-1.5 text-emerald-600">
-                                            <flux:icon name="check" class="size-3.5" />
-                                            {{ __('Copié') }}
-                                        </span>
-                                    </template>
-                                </button>
-                            </div>
-                            <textarea wire:model.live.debounce.300ms="sendMessage" rows="10"
-                                      class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 font-mono text-[15px] leading-relaxed text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
-                            @error('sendMessage') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-                            <flux:icon name="information-circle" class="mr-1 inline size-3.5" />
-                            {{ __('Le PDF ne peut pas être joint via WhatsApp Web ou mailto. Le lien public dans le message reste accessible 24/24 — votre client pourra le télécharger en cliquant.') }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-7 py-4">
-                    <button type="button" wire:click="closeSendModal" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30">{{ __('Annuler') }}</button>
-                    <button type="button" wire:click="confirmSend"
-                            class="rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
-                        @if ($sendChannel === 'whatsapp')
-                            {{ __('Envoyer depuis WhatsApp') }}
-                        @else
-                            {{ __('Envoyer depuis ma messagerie') }}
-                        @endif
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
+    <x-invoicing.send-modal
+        :title="__('Envoyer le devis')"
+        :show-send-modal="$showSendModal"
+        :send-channel="$sendChannel"
+        :send-recipient="$sendRecipient"
+        :send-country="$sendCountry"
+        :send-phone-countries="$sendPhoneCountries"
+        :send-open-url="$this->sendOpenUrl"
+    />
 </div>
