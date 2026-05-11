@@ -184,6 +184,7 @@ test('le PDF facture masque NINEA et RCCM quand non renseignés', function () {
     ['company' => $company] = createSmeUserForPdf();
     $company->update(['ninea' => null, 'rccm' => null]);
     $invoice = createInvoiceForPdf($company);
+    $invoice->client->update(['tax_id' => null, 'rccm' => null]);
 
     $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
 
@@ -233,6 +234,45 @@ test('le PDF facture n\'affiche pas l\'acompte quand il est nul', function () {
     expect($html)
         ->not->toContain('Acompte versé')
         ->not->toContain('Reste à payer');
+});
+
+test('le PDF facture affiche la carte FACTURÉ À avec le NINEA client', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $client = Client::factory()->create([
+        'company_id' => $company->id,
+        'name' => 'Sayar Distribution',
+        'tax_id' => 'SN008891234',
+    ]);
+    $invoice = Invoice::factory()->forCompany($company)->withClient($client)->draft()->create(['currency' => 'XOF']);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->toContain('FACTURÉ À')
+        ->toContain('Sayar Distribution')
+        ->toContain('NINEA: SN008891234');
+});
+
+test('le PDF facture n\'affiche aucun badge quand il n\'y a pas de logo', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $invoice = createInvoiceForPdf($company);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->not->toContain('logo-badge')
+        ->not->toContain('<img class="logo-img"');
+});
+
+test('le PDF facture n\'affiche plus la pastille PAYER VIA', function () {
+    ['company' => $company] = createSmeUserForPdf();
+    $invoice = createInvoiceForPdf($company);
+
+    $html = view('pdf.invoice', ['invoice' => $invoice->load(['company', 'client', 'lines']), 'logoBase64' => null])->render();
+
+    expect($html)
+        ->not->toContain('PAYER VIA')
+        ->not->toContain('pay-pill');
 });
 
 test('le PDF facture préserve les sauts de ligne dans la désignation des lignes', function () {
