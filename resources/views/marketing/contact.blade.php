@@ -25,14 +25,14 @@
 
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-16 pb-12 lg:pt-24 lg:pb-16 relative">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-24 lg:pb-16 relative">
         <p class="eyebrow mb-4">Contact</p>
         <h1 class="h1 mb-6 max-w-3xl">Parlons de votre <span style="color: var(--color-teal-fayeku);">trésorerie.</span></h1>
         <p class="text-lg max-w-2xl leading-relaxed" style="color: var(--color-marketing-slate);">Démo personnalisée, accompagnement, partenariat cabinet : l'équipe Fayeku vous répond en moins de 24h ouvrées.</p>
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-5 gap-10">
         <form action="{{ route('marketing.contact.store') }}" method="POST" class="lg:col-span-3 card p-8 space-y-5">
             @csrf

@@ -1,25 +1,30 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
 
+<div x-data="{ p: 'monthly' }">
+
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-16 pb-12 lg:pt-24 lg:pb-16 text-center relative">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-8 sm:pt-14 sm:pb-12 lg:pt-24 lg:pb-16 text-center relative">
         <p class="eyebrow mb-4">Tarifs</p>
         <h1 class="h1 mb-6 max-w-3xl mx-auto">Simple, transparent, <span style="color: var(--color-teal-fayeku);">sans surprise.</span></h1>
         <p class="text-lg max-w-2xl mx-auto mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">30 jours d'essai sur tous les plans. Sans engagement, sans carte bancaire. Payez au mois ou bénéficiez de 2 mois offerts à l'année.</p>
-        <div class="inline-flex pill-toggle" x-data="{ p: 'monthly' }">
+        <div class="inline-flex pill-toggle">
             <button type="button" @click="p='monthly'" :class="p==='monthly' && 'active'">Mensuel</button>
             <button type="button" @click="p='yearly'" :class="p==='yearly' && 'active'">Annuel · −2 mois</button>
         </div>
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid md:grid-cols-3 gap-5">
         <article class="card p-7 flex flex-col">
             <div class="eyebrow mb-3">Solo</div>
             <h3 class="text-2xl font-bold mb-2">Solo</h3>
             <p class="text-sm mb-5" style="color: var(--color-marketing-slate);">Pour les indépendants et TPE qui démarrent.</p>
-            <div class="mb-6"><span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);">9 900</span><span class="ml-1" style="color: var(--color-marketing-slate);">FCFA/mois</span></div>
+            <div class="mb-6">
+                <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);" x-text="p === 'monthly' ? '9 900' : '99 000'">9 900</span><span class="ml-1" style="color: var(--color-marketing-slate);" x-text="p === 'monthly' ? 'FCFA/mois' : 'FCFA/an'">FCFA/mois</span>
+                <div class="text-[11px] mt-1" style="color: var(--color-vivid);" x-show="p === 'yearly'" x-cloak>Soit 8 250 FCFA/mois · 2 mois offerts</div>
+            </div>
             <ul class="space-y-2.5 text-sm mb-7" style="color: var(--color-marketing-ink);">
                 <li class="flex items-start gap-2"><span class="check"></span>50 factures/mois</li>
                 <li class="flex items-start gap-2"><span class="check"></span>Devis &amp; factures récurrentes</li>
@@ -34,7 +39,10 @@
             <div class="eyebrow mb-3">Essentiel</div>
             <h3 class="text-2xl font-bold mb-2">Essentiel</h3>
             <p class="text-sm mb-5" style="color: var(--color-marketing-slate);">Pour les PME qui veulent automatiser leurs relances.</p>
-            <div class="mb-6"><span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);">24 900</span><span class="ml-1" style="color: var(--color-marketing-slate);">FCFA/mois</span></div>
+            <div class="mb-6">
+                <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);" x-text="p === 'monthly' ? '24 900' : '249 000'">24 900</span><span class="ml-1" style="color: var(--color-marketing-slate);" x-text="p === 'monthly' ? 'FCFA/mois' : 'FCFA/an'">FCFA/mois</span>
+                <div class="text-[11px] mt-1" style="color: var(--color-vivid);" x-show="p === 'yearly'" x-cloak>Soit 20 750 FCFA/mois · 2 mois offerts</div>
+            </div>
             <ul class="space-y-2.5 text-sm mb-7" style="color: var(--color-marketing-ink);">
                 <li class="flex items-start gap-2"><span class="check"></span>Factures illimitées</li>
                 <li class="flex items-start gap-2"><span class="check"></span>Relances WhatsApp automatiques</li>
@@ -49,7 +57,10 @@
             <div class="eyebrow mb-3">Entreprise</div>
             <h3 class="text-2xl font-bold mb-2">Entreprise</h3>
             <p class="text-sm mb-5" style="color: var(--color-marketing-slate);">Pour les structures établies avec besoins avancés.</p>
-            <div class="mb-6"><span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);">59 900</span><span class="ml-1" style="color: var(--color-marketing-slate);">FCFA/mois</span></div>
+            <div class="mb-6">
+                <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);" x-text="p === 'monthly' ? '59 900' : '599 000'">59 900</span><span class="ml-1" style="color: var(--color-marketing-slate);" x-text="p === 'monthly' ? 'FCFA/mois' : 'FCFA/an'">FCFA/mois</span>
+                <div class="text-[11px] mt-1" style="color: var(--color-vivid);" x-show="p === 'yearly'" x-cloak>Soit 49 917 FCFA/mois · 2 mois offerts</div>
+            </div>
             <ul class="space-y-2.5 text-sm mb-7" style="color: var(--color-marketing-ink);">
                 <li class="flex items-start gap-2"><span class="check"></span>Tout Essentiel inclus</li>
                 <li class="flex items-start gap-2"><span class="check"></span>Score fiabilité client IA</li>
@@ -62,7 +73,10 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+</div>
+{{-- /x-data Mensuel/Annuel --}}
+
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="border rounded-3xl px-6 sm:px-8 lg:px-10 py-8 flex flex-col lg:flex-row items-start lg:items-center gap-6" style="background: var(--color-mint-50); border-color: var(--color-mint-200);">
             <div class="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style="background: var(--color-teal-fayeku);">
@@ -77,7 +91,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-10">
             <p class="eyebrow mb-3">Comparatif</p>
@@ -132,7 +146,7 @@
     ];
 @endphp
 
-<section class="pb-20 lg:pb-24" x-data="{ open: null }">
+<section class="pb-12 sm:pb-16 lg:pb-24" x-data="{ open: null }">
     <div class="max-w-4xl mx-auto px-5 lg:px-8">
         <div class="mb-10 text-center">
             <p class="eyebrow mb-3">FAQ Tarifs</p>

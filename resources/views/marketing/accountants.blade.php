@@ -2,7 +2,7 @@
 
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-24 grid lg:grid-cols-12 gap-10 items-center relative">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-24 grid lg:grid-cols-12 gap-10 items-center relative">
         <div class="lg:col-span-6">
             <p class="eyebrow mb-4">Pour les experts-comptables</p>
             <h1 class="h1 mb-6">Fayeku Compta. <span style="color: var(--color-teal-fayeku);">Gratuit. Complet.</span></h1>
@@ -75,24 +75,35 @@
                             <div class="text-[11px] font-bold" style="color: var(--color-marketing-ink);">Aperçu du portefeuille</div>
                             <span class="text-[9px] font-semibold" style="color: var(--color-teal-fayeku);">Voir tout →</span>
                         </div>
-                        <div class="divide-y divide-gray-100">
-                            @foreach ([
-                                ['init' => 'SH', 'name' => 'Saatys Home & Design', 'plan' => 'Essentiel', 'amt' => '9 213 400F', 'status' => 'Critique', 'color' => '#dc2626'],
-                                ['init' => 'SB', 'name' => 'Sow BTP SARL', 'plan' => 'Essentiel', 'amt' => '9 853 000F', 'status' => 'Critique', 'color' => '#dc2626'],
-                                ['init' => 'CT', 'name' => 'Coury Textile SARL', 'plan' => 'Basique', 'amt' => '420 000F', 'status' => 'Attente', 'color' => '#b45309'],
-                                ['init' => 'NA', 'name' => 'Ndioum Agro SA', 'plan' => 'Essentiel', 'amt' => '—', 'status' => 'À jour', 'color' => 'var(--color-vivid)'],
-                            ] as $row)
-                                <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div>
-                                        <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
-                                    </div>
-                                    <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['plan'] }}</span>
-                                    <span class="font-mono text-[10px] font-bold text-right" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</span>
-                                    <span class="text-[8px] font-semibold" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
+                        <table class="w-full" style="table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: 44%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 16%;">
+                            </colgroup>
+                            <tbody>
+                                @foreach ([
+                                    ['init' => 'SH', 'name' => 'Saatys Home & Design', 'plan' => 'Essentiel', 'amt' => '9 213 400F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                    ['init' => 'SB', 'name' => 'Sow BTP SARL', 'plan' => 'Essentiel', 'amt' => '9 853 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                    ['init' => 'CT', 'name' => 'Coury Textile SARL', 'plan' => 'Basique', 'amt' => '420 000F', 'status' => 'Attente', 'color' => '#b45309'],
+                                    ['init' => 'NA', 'name' => 'Ndioum Agro SA', 'plan' => 'Essentiel', 'amt' => '—', 'status' => 'À jour', 'color' => 'var(--color-vivid)'],
+                                ] as $row)
+                                    @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                    <tr>
+                                        <td class="py-1.5 {{ $bb }}">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div>
+                                                <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
+                                            </div>
+                                        </td>
+                                        <td class="py-1.5 text-center {{ $bb }}"><span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['plan'] }}</span></td>
+                                        <td class="py-1.5 font-mono text-[10px] font-bold text-right whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</td>
+                                        <td class="py-1.5 text-[8px] font-semibold text-right whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -122,7 +133,7 @@
     </div>
 </section>
 
-<section class="py-20 lg:py-24">
+<section class="py-12 sm:py-16 lg:py-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Espace cabinet</p>
@@ -150,8 +161,8 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24" style="background: rgba(241, 250, 244, 0.4);">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-24">
+<section class="pb-12 sm:pb-16 lg:pb-24" style="background: rgba(241, 250, 244, 0.4);">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-12 sm:py-16 lg:py-24">
         <h2 class="h2 text-center mb-16">Un cockpit pensé pour votre quotidien.</h2>
 
         {{-- Row 1 — Portefeuille (text left, mockup right) --}}
@@ -205,24 +216,42 @@
                         <span class="text-amber-700 px-2 py-0.5 rounded-full">● Surveiller 3</span>
                         <span class="text-rose-600 px-2 py-0.5 rounded-full">● Critiques 3</span>
                     </div>
-                    <div class="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
-                        <div>Client</div><div>Offre</div><div>Impayés</div><div class="text-right">En attente</div><div>Statut</div>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        @foreach ([
-                            ['init' => 'HN', 'name' => 'Horizon Negoces SARL', 'plan' => 'Essentiel', 'inv' => '8 factures', 'amt' => '4 720 000F', 'status' => 'Critique', 'color' => '#dc2626'],
-                            ['init' => 'AC', 'name' => 'Atlas Chantier SA', 'plan' => 'Essentiel', 'inv' => '6 factures', 'amt' => '5 040 000F', 'status' => 'Critique', 'color' => '#dc2626'],
-                            ['init' => 'NC', 'name' => 'Nova Chimie SARL', 'plan' => 'Basique', 'inv' => '1 facture', 'amt' => '420 000F', 'status' => 'Surveiller', 'color' => '#b45309'],
-                        ] as $row)
-                            <div class="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-center px-1 py-1.5">
-                                <div class="flex items-center gap-2 min-w-0"><div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div><div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div></div>
-                                <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['plan'] }}</span>
-                                <span class="font-mono text-[9px] font-bold" style="color: {{ $row['color'] }};">{{ $row['inv'] }}</span>
-                                <span class="font-mono text-[10px] font-bold text-right" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</span>
-                                <span class="text-[8px] font-semibold" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</span>
-                            </div>
-                        @endforeach
-                    </div>
+                    <table class="w-full text-[9px]" style="table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 32%;">
+                            <col style="width: 16%;">
+                            <col style="width: 16%;">
+                            <col style="width: 20%;">
+                            <col style="width: 16%;">
+                        </colgroup>
+                        <thead>
+                            <tr class="text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Client</th>
+                                <th class="text-center pb-1.5 border-b border-gray-100 font-bold">Offre</th>
+                                <th class="text-center pb-1.5 border-b border-gray-100 font-bold">Impayés</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">En attente</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ([
+                                ['init' => 'HN', 'name' => 'Horizon Negoces SARL', 'plan' => 'Essentiel', 'inv' => '8 factures', 'amt' => '4 720 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                ['init' => 'AC', 'name' => 'Atlas Chantier SA', 'plan' => 'Essentiel', 'inv' => '6 factures', 'amt' => '5 040 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                ['init' => 'NC', 'name' => 'Nova Chimie SARL', 'plan' => 'Basique', 'inv' => '1 facture', 'amt' => '420 000F', 'status' => 'Surveiller', 'color' => '#b45309'],
+                            ] as $row)
+                                @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                <tr>
+                                    <td class="py-1.5 {{ $bb }}">
+                                        <div class="flex items-center gap-2 min-w-0"><div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div><div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div></div>
+                                    </td>
+                                    <td class="py-1.5 text-center {{ $bb }}"><span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['plan'] }}</span></td>
+                                    <td class="py-1.5 font-mono text-[9px] font-bold text-center whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">{{ $row['inv'] }}</td>
+                                    <td class="py-1.5 font-mono text-[10px] font-bold text-right whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</td>
+                                    <td class="py-1.5 text-[8px] font-semibold text-right whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -281,36 +310,48 @@
                     <div class="relative h-1.5 bg-gray-100 rounded-full overflow-hidden mb-1"><div class="absolute inset-y-0 left-0 w-full" style="background: linear-gradient(to right, var(--color-mint-200), var(--color-vivid), var(--color-teal-deep));"></div></div>
                     <div class="grid grid-cols-3 text-[8px] mb-3" style="color: var(--color-marketing-slate);"><div>Partner 1–4</div><div class="text-center">Gold 5–14</div><div class="text-right text-blue-700 font-bold">Platinum 15+</div></div>
                     <div class="text-[9px] font-bold tracking-widest uppercase mb-1.5" style="color: var(--color-marketing-slate);">Dernières commissions</div>
-                    <div class="divide-y divide-gray-100 -mx-1">
-                        @foreach ([
-                            ['init' => 'SH', 'bg' => 'mint', 'name' => 'Saatys Home & Design', 'meta' => 'Pro · récurrent · J+18', 'tag' => '15 % MRR', 'tag_class' => 'mint', 'amount' => '+5 250F'],
-                            ['init' => 'DN', 'bg' => 'mint', 'name' => 'Dakar Negoces SARL', 'meta' => 'Essentiel · 1ʳᵉ signature', 'tag' => 'Bonus +1 mois', 'tag_class' => 'amber', 'amount' => '+12 500F'],
-                            ['init' => 'TS', 'bg' => 'violet', 'name' => 'Teranga Services', 'meta' => 'Essentiel · récurrent', 'tag' => '15 % MRR', 'tag_class' => 'mint', 'amount' => '+2 250F'],
-                        ] as $row)
-                            <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center px-1 py-1.5">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    @if ($row['bg'] === 'mint')
-                                        <div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div>
-                                    @else
-                                        <div class="w-5 h-5 rounded-md bg-violet-100 text-violet-700 font-bold text-[8px] flex items-center justify-center shrink-0">{{ $row['init'] }}</div>
-                                    @endif
-                                    <div class="min-w-0">
-                                        <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
-                                        <div class="text-[8px]" style="color: var(--color-marketing-slate);">{{ $row['meta'] }}</div>
-                                    </div>
-                                </div>
-                                @if ($row['tag_class'] === 'mint')
-                                    <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['tag'] }}</span>
-                                @else
-                                    <span class="text-[8px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">{{ $row['tag'] }}</span>
-                                @endif
-                                <span class="font-mono text-[10px] font-bold whitespace-nowrap" style="color: var(--color-vivid);">{{ $row['amount'] }}</span>
-                            </div>
-                        @endforeach
-                    </div>
+                    <table class="w-full" style="table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 56%;">
+                            <col style="width: 26%;">
+                            <col style="width: 18%;">
+                        </colgroup>
+                        <tbody>
+                            @foreach ([
+                                ['init' => 'SH', 'bg' => 'mint', 'name' => 'Saatys Home & Design', 'meta' => 'Pro · récurrent · J+18', 'tag' => '15 % MRR', 'tag_class' => 'mint', 'amount' => '+5 250F'],
+                                ['init' => 'DN', 'bg' => 'mint', 'name' => 'Dakar Negoces SARL', 'meta' => 'Essentiel · 1ʳᵉ signature', 'tag' => 'Bonus +1 mois', 'tag_class' => 'amber', 'amount' => '+12 500F'],
+                                ['init' => 'TS', 'bg' => 'violet', 'name' => 'Teranga Services', 'meta' => 'Essentiel · récurrent', 'tag' => '15 % MRR', 'tag_class' => 'mint', 'amount' => '+2 250F'],
+                            ] as $row)
+                                @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                <tr>
+                                    <td class="py-1.5 {{ $bb }}">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            @if ($row['bg'] === 'mint')
+                                                <div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div>
+                                            @else
+                                                <div class="w-5 h-5 rounded-md bg-violet-100 text-violet-700 font-bold text-[8px] flex items-center justify-center shrink-0">{{ $row['init'] }}</div>
+                                            @endif
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
+                                                <div class="text-[8px]" style="color: var(--color-marketing-slate);">{{ $row['meta'] }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-1.5 text-center {{ $bb }}">
+                                        @if ($row['tag_class'] === 'mint')
+                                            <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['tag'] }}</span>
+                                        @else
+                                            <span class="text-[8px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap">{{ $row['tag'] }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-1.5 font-mono text-[10px] font-bold text-right whitespace-nowrap {{ $bb }}" style="color: var(--color-vivid);">{{ $row['amount'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="order-1 lg:order-2">
+            <div class="order-1 lg:order-2 flex flex-col justify-center">
                 <p class="eyebrow mb-3">Commissions</p>
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Suivez vos revenus partenaire</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Progression de tiers Partner → Gold → Platinum, commission du mois et nombre de PME actives référées. Tout est transparent.</p>
@@ -376,37 +417,53 @@
                         <span class="text-amber-700 px-2 py-0.5 rounded-full">● Surveiller 5</span>
                         <span class="px-2 py-0.5 rounded-full" style="color: var(--color-marketing-slate);">● Inactivité 3</span>
                     </div>
-                    <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
-                        <div>Client</div><div>Factures</div><div class="text-right">Montant</div><div>Statut</div>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        @foreach ([
-                            ['icon' => '!', 'icon_bg' => 'bg-rose-50 text-rose-600', 'name' => 'Atlas Chantier SA', 'sub' => 'Impayé critique · J74 max', 'inv' => '6', 'amt' => '5 040 000F', 'status' => 'Critique', 'color' => '#dc2626'],
-                            ['icon' => '!', 'icon_bg' => 'bg-rose-50 text-rose-600', 'name' => 'Horizon Negoces SARL', 'sub' => 'Impayé critique · J70 max', 'inv' => '8', 'amt' => '4 720 000F', 'status' => 'Critique', 'color' => '#dc2626'],
-                            ['icon' => '~', 'icon_bg' => 'bg-amber-50 text-amber-700', 'name' => 'Nova Chimie SARL', 'sub' => 'Retard anormal · J45', 'inv' => '3', 'amt' => '1 350 000F', 'status' => 'Surveiller', 'color' => '#b45309'],
-                            ['icon' => '·', 'icon_bg' => 'bg-gray-100', 'name' => 'Teranga Services', 'sub' => 'Inactif depuis 84 jours', 'inv' => '—', 'amt' => '—', 'status' => 'Inactif', 'color' => 'var(--color-marketing-slate)'],
-                        ] as $row)
-                            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <div class="w-5 h-5 rounded-md {{ $row['icon_bg'] }} font-bold text-[10px] flex items-center justify-center shrink-0" @if ($row['icon_bg'] === 'bg-gray-100') style="color: var(--color-marketing-slate);" @endif>{{ $row['icon'] }}</div>
-                                    <div class="min-w-0">
-                                        <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
-                                        <div class="text-[8px] truncate" style="color: var(--color-marketing-slate);">{{ $row['sub'] }}</div>
-                                    </div>
-                                </div>
-                                <span class="font-mono text-[9px] font-bold" style="color: {{ $row['color'] }};">{{ $row['inv'] }}</span>
-                                <span class="font-mono text-[10px] font-bold text-right whitespace-nowrap" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</span>
-                                <span class="text-[8px] font-semibold" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</span>
-                            </div>
-                        @endforeach
-                    </div>
+                    <table class="w-full text-[9px]" style="table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 46%;">
+                            <col style="width: 14%;">
+                            <col style="width: 22%;">
+                            <col style="width: 18%;">
+                        </colgroup>
+                        <thead>
+                            <tr class="text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Client</th>
+                                <th class="text-center pb-1.5 border-b border-gray-100 font-bold">Factures</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Montant</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ([
+                                ['icon' => '!', 'icon_bg' => 'bg-rose-50 text-rose-600', 'name' => 'Atlas Chantier SA', 'sub' => 'Impayé critique · J74 max', 'inv' => '6', 'amt' => '5 040 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                ['icon' => '!', 'icon_bg' => 'bg-rose-50 text-rose-600', 'name' => 'Horizon Negoces SARL', 'sub' => 'Impayé critique · J70 max', 'inv' => '8', 'amt' => '4 720 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                ['icon' => '~', 'icon_bg' => 'bg-amber-50 text-amber-700', 'name' => 'Nova Chimie SARL', 'sub' => 'Retard anormal · J45', 'inv' => '3', 'amt' => '1 350 000F', 'status' => 'Surveiller', 'color' => '#b45309'],
+                                ['icon' => '·', 'icon_bg' => 'bg-gray-100', 'name' => 'Teranga Services', 'sub' => 'Inactif depuis 84 jours', 'inv' => '—', 'amt' => '—', 'status' => 'Inactif', 'color' => 'var(--color-marketing-slate)'],
+                            ] as $row)
+                                @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                <tr>
+                                    <td class="py-1.5 {{ $bb }}">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <div class="w-5 h-5 rounded-md {{ $row['icon_bg'] }} font-bold text-[10px] flex items-center justify-center shrink-0" @if ($row['icon_bg'] === 'bg-gray-100') style="color: var(--color-marketing-slate);" @endif>{{ $row['icon'] }}</div>
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
+                                                <div class="text-[8px] truncate" style="color: var(--color-marketing-slate);">{{ $row['sub'] }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-1.5 font-mono text-[9px] font-bold text-center whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">{{ $row['inv'] }}</td>
+                                    <td class="py-1.5 font-mono text-[10px] font-bold text-right whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</td>
+                                    <td class="py-1.5 text-[8px] font-semibold text-right whitespace-nowrap {{ $bb }}" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
         <div>
             <p class="eyebrow mb-3">Pièces &amp; exports</p>
@@ -459,7 +516,7 @@
 
 <section id="programme" class="relative overflow-hidden" style="background: var(--color-teal-fayeku);">
     <div class="grain absolute inset-0 opacity-40"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-24 relative grid lg:grid-cols-2 gap-12 items-start">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-12 sm:py-16 lg:py-24 relative grid lg:grid-cols-2 gap-12 items-start">
         <div>
             <p class="eyebrow-mint mb-5">Experts-comptables</p>
             <h2 class="h2 text-white mb-6 leading-[1.05]">Programme Partenaire<br/>Experts-Comptables</h2>
@@ -496,8 +553,8 @@
     </div>
 </section>
 
-<section class="px-5 lg:px-8 py-20 lg:py-24">
-    <div class="max-w-7xl mx-auto rounded-3xl py-16 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
+<section class="px-5 lg:px-8 py-12 sm:py-16 lg:py-24">
+    <div class="max-w-7xl mx-auto rounded-3xl py-10 px-5 sm:py-14 sm:px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
         <div class="relative">
             <h2 class="h2 mb-4 max-w-2xl mx-auto">Activez votre espace cabinet en 5 minutes.</h2>
             <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Fayeku Compta est gratuit et le restera. Aucun engagement, aucune carte bancaire.</p>

@@ -233,17 +233,30 @@ select:focus[data-flux-control] {
     }
 
     .marketing-site .h1 {
-        font-size: clamp(2.25rem, 5vw, 4.25rem);
-        line-height: 1.04;
+        font-size: clamp(1.875rem, 7vw, 4.25rem);
+        line-height: 1.1;
         letter-spacing: -0.025em;
         font-weight: 700;
     }
 
     .marketing-site .h2 {
-        font-size: clamp(1.75rem, 3.5vw, 2.75rem);
-        line-height: 1.1;
+        font-size: clamp(1.5rem, 5vw, 2.75rem);
+        line-height: 1.18;
         letter-spacing: -0.02em;
         font-weight: 700;
+    }
+
+    /* Reduce H3 size on mobile too (used in cockpit feature rows) */
+    .marketing-site h3.text-3xl {
+        font-size: 1.5rem;
+        line-height: 1.2;
+    }
+
+    @media (min-width: 640px) {
+        .marketing-site h3.text-3xl {
+            font-size: 1.875rem;
+            line-height: 1.25;
+        }
     }
 
     .marketing-site .hero-bg {

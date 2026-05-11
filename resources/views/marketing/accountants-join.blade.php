@@ -166,7 +166,7 @@
           @enderror
         </label>
 
-        <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-[#024D4E] px-5 py-4 text-base font-semibold text-[#0FB85C] transition hover:bg-[#013838]">
+        <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl px-5 py-4 text-base font-semibold transition hover:brightness-110" style="background: var(--color-teal-fayeku); color: var(--color-vivid);">
           {{ __('Soumettre') }}
         </button>
 

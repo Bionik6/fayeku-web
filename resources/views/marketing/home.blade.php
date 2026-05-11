@@ -1,33 +1,64 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
 
-<section class="hero-bg relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+<section class="hero-bg relative overflow-hidden" x-data="{ persona: 'entreprise' }">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-28 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
         <div class="lg:col-span-6">
             <div class="pill-toggle mb-7" role="tablist" aria-label="Type d'audience">
-                <a href="{{ route('home') }}" class="active">Je suis une entreprise</a>
-                <a href="{{ route('marketing.accountants') }}">Je suis expert-comptable</a>
+                <button type="button" @click="persona = 'entreprise'" :class="persona === 'entreprise' && 'active'">Je suis une entreprise</button>
+                <button type="button" @click="persona = 'expert'" :class="persona === 'expert' && 'active'">Je suis expert-comptable</button>
             </div>
 
-            <p class="eyebrow mb-4">Plateforme PME · Cabinet comptable · Trésorerie</p>
-            <h1 class="h1 mb-6">
-                Facturez proprement.<br/>
-                <span style="color: var(--color-teal-fayeku);">Récupérez votre argent plus vite.</span>
-            </h1>
-            <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
-                Fayeku aide les PME sénégalaises à créer leurs factures, suivre leurs impayés et relancer automatiquement leurs clients sur WhatsApp. Reprenez le contrôle de votre trésorerie.
-            </p>
+            {{-- Variante Entreprise --}}
+            <div x-show="persona === 'entreprise'">
+                <p class="eyebrow mb-4">Plateforme PME · Cabinet comptable · Trésorerie</p>
+                <h1 class="h1 mb-6">
+                    Facturez proprement.<br/>
+                    <span style="color: var(--color-teal-fayeku);">Récupérez votre argent plus vite.</span>
+                </h1>
+                <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
+                    Fayeku aide les PME sénégalaises à créer leurs factures, suivre leurs impayés et relancer automatiquement leurs clients sur WhatsApp. Reprenez le contrôle de votre trésorerie.
+                </p>
 
-            <div class="flex flex-wrap gap-3 mb-8">
-                <a href="{{ route('register') }}" class="btn-primary">Essayer 30 jours
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </a>
-                <a href="{{ route('marketing.pricing') }}" class="btn-secondary">Voir les tarifs</a>
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <a href="{{ route('register') }}" class="btn-primary">Essayer 30 jours
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                    <a href="{{ route('marketing.pricing') }}" class="btn-secondary">Voir les tarifs</a>
+                </div>
+
+                <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30 jours d'essai</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sans carte bancaire</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Pensé à Dakar</span>
+                </div>
             </div>
 
-            <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
-                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30 jours d'essai</span>
-                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sans carte bancaire</span>
-                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Pensé à Dakar</span>
+            {{-- Variante Expert-comptable --}}
+            <div x-show="persona === 'expert'" x-cloak>
+                <div class="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full bg-white border border-gray-100 shadow-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#0FB85C" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span class="text-sm font-semibold" style="color: var(--color-marketing-ink);">Fayeku Compta est gratuit</span>
+                </div>
+                <p class="eyebrow mb-4">Cockpit multi-clients pour cabinets</p>
+                <h1 class="h1 mb-6">
+                    Facturez proprement.<br/>
+                    <span style="color: var(--color-teal-fayeku);">Contrôlez votre trésorerie.</span>
+                </h1>
+                <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
+                    Centralisez les factures de vos PME clientes, collectez les pièces, exportez vers vos outils comptables et activez un programme partenaire récurrent.
+                </p>
+
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <a href="{{ route('marketing.accountants') }}" class="btn-primary">Découvrir Fayeku Compta
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                    <a href="{{ route('marketing.accountants') }}#programme" class="btn-secondary">Voir le programme partenaire</a>
+                </div>
+
+                <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0 FCFA · à vie</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>15% commission récurrente</span>
+                </div>
             </div>
         </div>
 
@@ -35,6 +66,8 @@
             <div class="absolute -top-10 -right-8 w-72 h-72 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
             <div class="absolute -bottom-10 -left-8 w-56 h-56 rounded-full blur-3xl -z-0" style="background: rgba(15, 184, 92, 0.15);"></div>
 
+            {{-- Mockup Entreprise --}}
+            <div x-show="persona === 'entreprise'" class="relative">
             <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
             <div class="relative browser">
                 <div class="browser-bar">
@@ -134,11 +167,117 @@
                     <div class="text-[10px] font-semibold" style="color: var(--color-vivid);">Demain · 9h00</div>
                 </div>
             </div>
+            </div>
+            {{-- /Mockup Entreprise --}}
+
+            {{-- Mockup Expert-comptable --}}
+            <div x-show="persona === 'expert'" x-cloak class="relative">
+                <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
+                <div class="relative bg-white rounded-2xl border border-gray-100 overflow-hidden" style="box-shadow: var(--shadow-float);">
+                    <div class="p-5 lg:p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <div class="text-[9px] font-bold tracking-widest uppercase mb-1" style="color: var(--color-vivid);">Vue principale</div>
+                                <div class="text-[15px] font-bold leading-tight" style="color: var(--color-marketing-ink);">Bonjour, Cabinet Nio Far SA</div>
+                                <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">Avril 2026 · 3 impayés critiques à traiter · Versement partenaire le 05 Mai</div>
+                            </div>
+                            <span class="text-[9px] font-bold tracking-wider text-white px-2 py-1 rounded-full inline-flex items-center gap-1 whitespace-nowrap" style="background: var(--color-teal-deep);">Platinum <span style="color: var(--color-vivid);">★</span></span>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2 mb-3">
+                            <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="w-5 h-5 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                    </div>
+                                    <span class="text-[7px] bg-gray-100 px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap" style="color: var(--color-marketing-slate);">Portef.</span>
+                                </div>
+                                <div class="text-[9px] font-semibold leading-tight" style="color: var(--color-marketing-slate);">Clients suivis</div>
+                                <div class="font-mono text-[18px] font-bold leading-none mt-1" style="color: var(--color-marketing-ink);">25</div>
+                            </div>
+                            <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="w-5 h-5 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-vivid);">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </div>
+                                    <span class="text-[7px] px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-vivid);">À jour</span>
+                                </div>
+                                <div class="text-[9px] font-semibold leading-tight" style="color: var(--color-marketing-slate);">Clients à jour</div>
+                                <div class="font-mono text-[18px] font-bold leading-none mt-1" style="color: var(--color-vivid);">19</div>
+                            </div>
+                            <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="w-5 h-5 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+                                    </div>
+                                    <span class="text-[7px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap">Surveiller</span>
+                                </div>
+                                <div class="text-[9px] font-semibold leading-tight" style="color: var(--color-marketing-slate);">À relancer</div>
+                                <div class="font-mono text-[18px] font-bold text-amber-700 leading-none mt-1">3</div>
+                            </div>
+                            <div class="bg-white rounded-xl border border-rose-100 p-2.5 ring-1 ring-rose-100">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="w-5 h-5 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0"/></svg>
+                                    </div>
+                                    <span class="text-[7px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap">&gt; 60j</span>
+                                </div>
+                                <div class="text-[9px] font-semibold leading-tight" style="color: var(--color-marketing-slate);">Critiques</div>
+                                <div class="font-mono text-[18px] font-bold text-rose-600 leading-none mt-1">3</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl border border-gray-100 p-3 mb-3">
+                            <div class="flex items-start justify-between mb-1">
+                                <div>
+                                    <div class="w-6 h-6 rounded-lg flex items-center justify-center mb-1.5" style="background: var(--color-mint-100); color: var(--color-vivid);">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+                                    </div>
+                                    <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Commissions du mois</div>
+                                    <div class="font-mono text-[18px] font-bold leading-none mt-0.5" style="color: var(--color-marketing-ink);">63 000 FCFA</div>
+                                    <div class="text-[9px] mt-1" style="color: var(--color-marketing-slate);">Avril 2026 · Versement prévu le 05 Mai</div>
+                                </div>
+                                <span class="text-[8px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap">Avril 2026</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-[11px] font-bold" style="color: var(--color-marketing-ink);">Alertes récentes</div>
+                                <span class="text-[9px] font-semibold" style="color: var(--color-teal-fayeku);">Voir toutes les alertes →</span>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-gray-100">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-5 h-5 rounded-md bg-rose-50 text-rose-600 font-bold text-[10px] flex items-center justify-center shrink-0">!</div>
+                                        <div class="min-w-0">
+                                            <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">Atlas Chantier SA · Impayé critique <span class="text-[8px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold ml-1">Impayé critique</span></div>
+                                            <div class="text-[8px] truncate" style="color: var(--color-marketing-slate);">6 factures impayées · 5 040 000 FCFA · J74 max · Aucune relance envoyée</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[8px] border border-gray-200 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style="color: var(--color-marketing-slate);">Actions ⌄</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-gray-100">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-5 h-5 rounded-md bg-rose-50 text-rose-600 font-bold text-[10px] flex items-center justify-center shrink-0">!</div>
+                                        <div class="min-w-0">
+                                            <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">Horizon Negoces SARL · Impayé critique <span class="text-[8px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold ml-1">Impayé critique</span></div>
+                                            <div class="text-[8px] truncate" style="color: var(--color-marketing-slate);">8 factures impayées · 4 720 000 FCFA · J70 max · Aucune relance envoyée</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[8px] border border-gray-200 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style="color: var(--color-marketing-slate);">Actions ⌄</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{-- /Mockup Expert-comptable --}}
         </div>
     </div>
 </section>
 
-<section class="py-20 lg:py-28">
+<section class="py-12 sm:py-16 lg:py-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Le problème</p>
@@ -169,7 +308,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-28">
+<section class="pb-12 sm:pb-16 lg:pb-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12 text-center mx-auto">
             <p class="eyebrow mb-3">Pourquoi Fayeku</p>
@@ -180,32 +319,25 @@
         </div>
 
         <div class="grid md:grid-cols-3 gap-5">
-            <article class="card p-7">
-                <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Se faire payer plus vite</h3>
-                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Relances WhatsApp automatisées, suivi des impayés en temps réel, messages prêts à envoyer.</p>
-            </article>
-            <article class="card p-7">
-                <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Contrôler le cash</h3>
-                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Délai moyen de paiement, prévision de trésorerie à 90 jours, vision claire de l'argent à encaisser.</p>
-            </article>
-            <article class="card p-7">
-                <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <h3 class="text-lg font-semibold mb-2">Travailler mieux avec son comptable</h3>
-                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Accès cabinet, exports Sage, coffre-fort documents. Moins de WhatsApp, plus de structure.</p>
-            </article>
+            @foreach ([
+                ['title' => 'Se faire payer plus vite', 'desc' => 'Relances WhatsApp automatisées, suivi des impayés en temps réel, messages prêts à envoyer.', 'svg' => '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'],
+                ['title' => 'Contrôler le cash', 'desc' => "Délai moyen de paiement, prévision de trésorerie à 90 jours, vision claire de l'argent à encaisser.", 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
+                ['title' => 'Travailler mieux avec son comptable', 'desc' => 'Accès cabinet, exports Sage, coffre-fort documents. Moins de WhatsApp, plus de structure.', 'svg' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
+            ] as $card)
+                <article class="card p-7">
+                    <div class="relative w-[76px] h-[76px] mb-5">
+                        <span class="absolute bottom-0 right-0 w-[62px] h-[62px] rounded-full" style="background: var(--color-vivid);"></span>
+                        <svg class="absolute top-0 left-0" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-teal-fayeku);">{!! $card['svg'] !!}</svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">{{ $card['title'] }}</h3>
+                    <p class="leading-relaxed" style="color: var(--color-marketing-slate);">{{ $card['desc'] }}</p>
+                </article>
+            @endforeach
         </div>
     </div>
 </section>
 
-<section class="pb-20 lg:pb-28">
+<section class="pb-12 sm:pb-16 lg:pb-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
         <div class="order-2 lg:order-1">
             <p class="eyebrow mb-3">Facturation pro</p>
@@ -225,7 +357,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-28">
+<section class="pb-12 sm:pb-16 lg:pb-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
         <div class="relative">
             <div class="absolute -top-6 -left-6 w-48 h-48 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
@@ -318,7 +450,7 @@
     </div>
 </section>
 
-<section class="py-20 lg:py-28 bg-white">
+<section class="py-12 sm:py-16 lg:py-28 bg-white">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="text-center max-w-3xl mx-auto mb-16">
             <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: var(--color-vivid);">Comment ça marche</p>
@@ -340,7 +472,7 @@
                         </div>
                         <span class="absolute -top-2 -left-2 w-9 h-9 rounded-full text-white font-bold text-sm flex items-center justify-center shadow-md ring-4 ring-white" style="background: var(--color-vivid);">{{ $step['n'] }}</span>
                         @if ($step['n'] < 4)
-                            <span class="hidden lg:block absolute top-1/2 left-full w-[calc(100%+1rem)] border-t-2 border-dashed" style="border-color: var(--color-mint-200);" aria-hidden="true"></span>
+                            <span class="hidden lg:block absolute top-1/2 left-[calc(100%+0.75rem)] w-[calc(200%+1.5rem)] -translate-y-1/2 border-t-2 border-dashed" style="border-color: var(--color-mint-200);" aria-hidden="true"></span>
                         @endif
                     </div>
                     <h3 class="font-semibold text-lg leading-snug mb-2" style="color: var(--color-marketing-ink);">{{ $step['title'] }}</h3>
@@ -351,7 +483,7 @@
     </div>
 </section>
 
-<section class="py-20 lg:py-28">
+<section class="py-12 sm:py-16 lg:py-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Fonctionnalités</p>
@@ -392,7 +524,7 @@
 
 <section class="relative overflow-hidden" style="background: var(--color-teal-fayeku);">
     <div class="grain absolute inset-0 opacity-40"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-12 sm:py-16 lg:py-28 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
         <div>
             <p class="eyebrow-mint mb-3">Fayeku Compta</p>
             <h2 class="h2 text-white mb-5">Fayeku Compta : gratuit et complet</h2>
@@ -423,7 +555,7 @@
     </div>
 </section>
 
-<section class="py-16 lg:py-20">
+<section class="py-10 sm:py-12 lg:py-20">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="border rounded-3xl px-6 sm:px-8 lg:px-10 py-8 lg:py-7 flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8" style="background: var(--color-mint-50); border-color: var(--color-mint-200);">
             <div class="shrink-0 w-16 h-16 lg:w-[72px] lg:h-[72px] rounded-2xl flex items-center justify-center" style="background: var(--color-teal-fayeku);">
@@ -450,7 +582,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-28">
+<section class="pb-12 sm:pb-16 lg:pb-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Repères</p>
@@ -491,7 +623,7 @@
     ];
 @endphp
 
-<section class="pb-20 lg:pb-28" x-data="{ open: null }">
+<section class="pb-12 sm:pb-16 lg:pb-28" x-data="{ open: null }">
     <div class="max-w-4xl mx-auto px-5 lg:px-8">
         <div class="mb-12 text-center">
             <p class="eyebrow mb-3">FAQ</p>
@@ -517,8 +649,8 @@
     </div>
 </section>
 
-<section class="px-5 lg:px-8 pb-20 lg:pb-28">
-    <div class="max-w-7xl mx-auto rounded-3xl py-16 lg:py-20 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
+<section class="px-5 lg:px-8 pb-12 sm:pb-16 lg:pb-28">
+    <div class="max-w-7xl mx-auto rounded-3xl py-10 sm:py-12 lg:py-20 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
         <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(15, 184, 92, 0.10);"></div>
         <div class="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(2, 77, 78, 0.10);"></div>
         <div class="relative">

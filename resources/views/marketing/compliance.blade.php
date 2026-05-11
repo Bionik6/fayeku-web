@@ -2,7 +2,7 @@
 
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-16 pb-16 lg:pt-24 lg:pb-20 relative">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-10 sm:pt-14 sm:pb-12 lg:pt-24 lg:pb-20 relative">
         <p class="eyebrow mb-4">Conformité &amp; sécurité</p>
         <h1 class="h1 mb-6 max-w-4xl">Préparé pour la <span style="color: var(--color-teal-fayeku);">DGID.</span> Sécurisé pour vos données.</h1>
         <p class="text-lg max-w-2xl mb-2 leading-relaxed" style="color: var(--color-marketing-slate);">Fayeku intégrera la conformité DGID dans les plans Essentiel et Entreprise dès publication officielle des modalités techniques. En attendant, vos factures restent juridiquement valables et déjà structurées pour la transition.</p>
@@ -23,7 +23,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Notre engagement</p>
@@ -48,7 +48,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Sécurité &amp; hébergement</p>
@@ -75,7 +75,7 @@
     </div>
 </section>
 
-<section class="px-5 lg:px-8 pb-20 lg:pb-28">
+<section class="px-5 lg:px-8 pb-12 sm:pb-16 lg:pb-28">
     <div class="max-w-7xl mx-auto rounded-3xl py-14 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
         <div class="relative">
             <h2 class="h2 mb-4 max-w-2xl mx-auto">Une question sur la conformité ?</h2>

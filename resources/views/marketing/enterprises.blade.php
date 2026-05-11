@@ -2,7 +2,7 @@
 
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-24 grid lg:grid-cols-12 gap-10 items-center relative">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-24 grid lg:grid-cols-12 gap-10 items-center relative">
         <div class="lg:col-span-6">
             <p class="eyebrow mb-4">Pour les PME sénégalaises</p>
             <h1 class="h1 mb-6">Facturez, suivez, encaissez.<br/><span style="color: var(--color-teal-fayeku);">Tout en un seul endroit.</span></h1>
@@ -74,7 +74,7 @@
     </div>
 </section>
 
-<section class="py-20 lg:py-24">
+<section class="py-12 sm:py-16 lg:py-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Bénéfices concrets</p>
@@ -97,7 +97,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
         <div>
             <p class="eyebrow mb-3">Anatomie d'une facture Fayeku</p>
@@ -168,7 +168,7 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24">
+<section class="pb-12 sm:pb-16 lg:pb-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
             <p class="eyebrow mb-3">Cas d'usage</p>
@@ -195,8 +195,8 @@
     </div>
 </section>
 
-<section class="pb-20 lg:pb-24" style="background: rgba(241, 250, 244, 0.4);">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-24">
+<section class="pb-12 sm:pb-16 lg:pb-24" style="background: rgba(241, 250, 244, 0.4);">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-12 sm:py-16 lg:py-24">
         <div class="max-w-3xl mb-16">
             <p class="eyebrow mb-3">L'admin PME</p>
             <h2 class="h2 mb-5">Un cockpit pensé pour votre quotidien.</h2>
@@ -229,13 +229,47 @@
                     </div>
                     <div class="text-[8px] font-bold tracking-widest uppercase mb-1.5" style="color: var(--color-marketing-slate);">Filtrer par statut</div>
                     <div class="flex gap-1.5 mb-2 text-[9px]"><span class="text-white px-2 py-0.5 rounded-full font-semibold" style="background: var(--color-teal-deep);">Tous 53</span><span class="text-amber-700 px-2 py-0.5 rounded-full border border-gray-100">Brouillon 9</span><span class="text-blue-600 px-2 py-0.5 rounded-full border border-gray-100">Envoyée 15</span><span class="px-2 py-0.5 rounded-full border border-gray-100" style="color: var(--color-vivid);">Payée 21</span><span class="text-rose-600 px-2 py-0.5 rounded-full border border-gray-100">Retard 3</span></div>
-                    <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);"><div>Référence</div><div>Client</div><div>TTC</div><div>Échéance</div><div>Statut</div></div>
-                    <div class="divide-y divide-gray-100 text-[9px]">
-                        <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5"><div class="font-mono truncate" style="color: var(--color-marketing-ink);">FYK-FAC-1QSWKV</div><div class="truncate" style="color: var(--color-marketing-slate);">Ibrahima Ciss</div><span class="font-mono" style="color: var(--color-marketing-ink);">1 500 000F</span><span style="color: var(--color-marketing-slate);">09 Jun</span><span class="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-semibold">Part. payée</span></div>
-                        <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5"><div class="font-mono truncate" style="color: var(--color-marketing-ink);">FYK-FAC-UAZTQT</div><div class="truncate" style="color: var(--color-marketing-slate);">Agence Informatique État</div><span class="font-mono" style="color: var(--color-marketing-ink);">600 000F</span><span style="color: var(--color-marketing-slate);">08 Jun</span><span class="text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-semibold">Envoyée</span></div>
-                        <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5"><div class="font-mono truncate" style="color: var(--color-marketing-ink);">FYK-FAC-DS0501</div><div class="truncate" style="color: var(--color-marketing-slate);">LafargeHolcim Sénégal</div><span class="font-mono text-rose-600 font-bold">3 304 000F</span><span class="text-rose-600 font-bold">J+95</span><span class="text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-semibold">En retard</span></div>
-                        <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5"><div class="font-mono truncate" style="color: var(--color-marketing-ink);">FYK-FAC-DS0801</div><div class="truncate" style="color: var(--color-marketing-slate);">Agence Informatique État</div><span class="font-mono" style="color: var(--color-marketing-ink);">7 670 000F</span><span style="color: var(--color-marketing-slate);">09 Mai</span><span class="px-1.5 py-0.5 rounded font-semibold" style="background: var(--color-mint-100); color: var(--color-vivid);">Payée</span></div>
-                    </div>
+                    <table class="w-full text-[9px]" style="table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 22%;">
+                            <col style="width: 32%;">
+                            <col style="width: 18%;">
+                            <col style="width: 12%;">
+                            <col style="width: 16%;">
+                        </colgroup>
+                        <thead>
+                            <tr class="text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Référence</th>
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Client</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">TTC</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Échéance</th>
+                                <th class="text-center pb-1.5 border-b border-gray-100 font-bold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ([
+                                ['ref' => 'FYK-FAC-1QSWKV', 'client' => 'Ibrahima Ciss', 'amt' => '1 500 000F', 'due' => '09 Jun', 'status' => 'Part. payée', 'amt_cls' => '', 'due_cls' => '', 'status_cls' => 'text-amber-700 bg-amber-50'],
+                                ['ref' => 'FYK-FAC-UAZTQT', 'client' => 'Agence Informatique État', 'amt' => '600 000F', 'due' => '08 Jun', 'status' => 'Envoyée', 'amt_cls' => '', 'due_cls' => '', 'status_cls' => 'text-blue-700 bg-blue-50'],
+                                ['ref' => 'FYK-FAC-DS0501', 'client' => 'LafargeHolcim Sénégal', 'amt' => '3 304 000F', 'due' => 'J+95', 'status' => 'En retard', 'amt_cls' => 'text-rose-600 font-bold', 'due_cls' => 'text-rose-600 font-bold', 'status_cls' => 'text-rose-600 bg-rose-50'],
+                                ['ref' => 'FYK-FAC-DS0801', 'client' => 'Agence Informatique État', 'amt' => '7 670 000F', 'due' => '09 Mai', 'status' => 'Payée', 'amt_cls' => '', 'due_cls' => '', 'status_cls' => 'mint'],
+                            ] as $row)
+                                @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                <tr>
+                                    <td class="py-1.5 font-mono truncate {{ $bb }}" style="color: var(--color-marketing-ink);">{{ $row['ref'] }}</td>
+                                    <td class="py-1.5 truncate {{ $bb }}" style="color: var(--color-marketing-slate);">{{ $row['client'] }}</td>
+                                    <td class="py-1.5 font-mono text-right whitespace-nowrap {{ $row['amt_cls'] }} {{ $bb }}" @if ($row['amt_cls'] === '') style="color: var(--color-marketing-ink);" @endif>{{ $row['amt'] }}</td>
+                                    <td class="py-1.5 text-right whitespace-nowrap {{ $row['due_cls'] }} {{ $bb }}" @if ($row['due_cls'] === '') style="color: var(--color-marketing-slate);" @endif>{{ $row['due'] }}</td>
+                                    <td class="py-1.5 text-center {{ $bb }}">
+                                        @if ($row['status_cls'] === 'mint')
+                                            <span class="px-1.5 py-0.5 rounded font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-vivid);">{{ $row['status'] }}</span>
+                                        @else
+                                            <span class="{{ $row['status_cls'] }} px-1.5 py-0.5 rounded font-semibold whitespace-nowrap">{{ $row['status'] }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -256,17 +290,43 @@
                     </div>
                     <div class="text-[11px] font-bold mb-1" style="color: var(--color-marketing-ink);">Factures à relancer</div>
                     <div class="text-[9px] mb-2" style="color: var(--color-marketing-slate);">Classées par ancienneté de retard.</div>
-                    <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);"><div>Facture</div><div>Client</div><div>Montant</div><div>Retard</div><div></div></div>
-                    <div class="divide-y divide-gray-100 text-[9px]">
-                        @foreach ([
-                            ['ref' => 'FYK-FAC-DS0501', 'client' => 'LafargeHolcim Sénégal', 'amt' => '3 304 000F', 'days' => '95j', 'days_bg' => 'bg-rose-50 text-rose-600'],
-                            ['ref' => 'FYK-FAC-DS0502', 'client' => 'SENELEC', 'amt' => '802 400F', 'days' => '91j', 'days_bg' => 'bg-rose-50 text-rose-600'],
-                            ['ref' => 'FYK-FAC-DS0503', 'client' => 'AUCHAN Sénégal', 'amt' => '649 000F', 'days' => '65j', 'days_bg' => 'bg-rose-50 text-rose-600'],
-                            ['ref' => 'FYK-FAC-DS0504', 'client' => 'TotalEnergies Marketing SN', 'amt' => '1 088 000F', 'days' => '45j', 'days_bg' => 'bg-amber-50 text-amber-700'],
-                        ] as $row)
-                            <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5"><div class="font-mono truncate" style="color: var(--color-marketing-ink);">{{ $row['ref'] }}</div><div class="truncate" style="color: var(--color-marketing-slate);">{{ $row['client'] }}</div><span class="font-mono" style="color: var(--color-marketing-ink);">{{ $row['amt'] }}</span><span class="{{ $row['days_bg'] }} px-1.5 py-0.5 rounded font-semibold">{{ $row['days'] }}</span><span class="font-semibold" style="color: var(--color-teal-fayeku);">Relancer</span></div>
-                        @endforeach
-                    </div>
+                    <table class="w-full text-[9px]" style="table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 22%;">
+                            <col style="width: 36%;">
+                            <col style="width: 18%;">
+                            <col style="width: 12%;">
+                            <col style="width: 12%;">
+                        </colgroup>
+                        <thead>
+                            <tr class="text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Facture</th>
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Client</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Montant</th>
+                                <th class="text-center pb-1.5 border-b border-gray-100 font-bold">Retard</th>
+                                <th class="pb-1.5 border-b border-gray-100"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ([
+                                ['ref' => 'FYK-FAC-DS0501', 'client' => 'LafargeHolcim Sénégal', 'amt' => '3 304 000F', 'days' => '95j', 'days_bg' => 'bg-rose-50 text-rose-600'],
+                                ['ref' => 'FYK-FAC-DS0502', 'client' => 'SENELEC', 'amt' => '802 400F', 'days' => '91j', 'days_bg' => 'bg-rose-50 text-rose-600'],
+                                ['ref' => 'FYK-FAC-DS0503', 'client' => 'AUCHAN Sénégal', 'amt' => '649 000F', 'days' => '65j', 'days_bg' => 'bg-rose-50 text-rose-600'],
+                                ['ref' => 'FYK-FAC-DS0504', 'client' => 'TotalEnergies Marketing SN', 'amt' => '1 088 000F', 'days' => '45j', 'days_bg' => 'bg-amber-50 text-amber-700'],
+                            ] as $row)
+                                @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                <tr>
+                                    <td class="py-1.5 font-mono truncate {{ $bb }}" style="color: var(--color-marketing-ink);">{{ $row['ref'] }}</td>
+                                    <td class="py-1.5 truncate {{ $bb }}" style="color: var(--color-marketing-slate);">{{ $row['client'] }}</td>
+                                    <td class="py-1.5 font-mono text-right whitespace-nowrap {{ $bb }}" style="color: var(--color-marketing-ink);">{{ $row['amt'] }}</td>
+                                    <td class="py-1.5 text-center {{ $bb }}">
+                                        <span class="{{ $row['days_bg'] }} px-1.5 py-0.5 rounded font-semibold whitespace-nowrap">{{ $row['days'] }}</span>
+                                    </td>
+                                    <td class="py-1.5 text-right font-semibold whitespace-nowrap {{ $bb }}" style="color: var(--color-teal-fayeku);">Relancer</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="order-1 lg:order-2">
@@ -307,31 +367,49 @@
                         <div class="border border-gray-100 rounded-xl p-2.5" style="background: var(--color-offwhite);"><div class="flex items-center justify-between"><div class="text-[8px] font-bold tracking-widest uppercase" style="color: var(--color-marketing-slate);">Tendance</div><span class="text-[8px] bg-white px-1.5 py-0.5 rounded-full font-bold" style="color: var(--color-marketing-slate);">0%</span></div><div class="text-[10px] font-semibold mt-1" style="color: var(--color-marketing-slate);">Au-delà</div><div class="font-mono text-[11px] font-bold mt-0.5" style="color: var(--color-marketing-slate);">0 FCFA</div><div class="h-1 bg-white rounded-full mt-1.5 overflow-hidden"></div><div class="text-[7px] mt-1" style="color: var(--color-marketing-slate);">Aucune entrée estimée</div></div>
                     </div>
                     <div class="text-[10px] font-bold mb-1" style="color: var(--color-marketing-ink);">Entrées attendues</div>
-                    <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);"><div>Document</div><div>Client</div><div>Montant</div><div>Confiance</div><div>Statut</div></div>
-                    <div class="divide-y divide-gray-100 text-[9px]">
-                        @foreach ([
-                            ['ref' => 'FYK-FAC-DS0610', 'client' => 'Plan International Sénégal', 'amt' => '1 003 000F', 'conf' => '85%', 'status' => 'Fort', 'class' => 'vivid'],
-                            ['ref' => 'FYK-FAC-1QSWKV', 'client' => 'Ibrahima Ciss', 'amt' => '1 500 000F', 'conf' => '95%', 'status' => 'Fort', 'class' => 'vivid'],
-                            ['ref' => 'FYK-FAC-DS0607', 'client' => 'Wari Sénégal SA', 'amt' => '1 156 400F', 'conf' => '60%', 'status' => 'Moyen', 'class' => 'amber'],
-                            ['ref' => 'FYK-FAC-DS0501', 'client' => 'LafargeHolcim Sénégal', 'amt' => '3 304 000F', 'conf' => '5%', 'status' => 'Risqué', 'class' => 'rose'],
-                        ] as $row)
-                            <div class="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5">
-                                <div class="font-mono truncate" style="color: var(--color-marketing-ink);">{{ $row['ref'] }}</div>
-                                <div class="truncate" style="color: var(--color-marketing-slate);">{{ $row['client'] }}</div>
-                                <span class="font-mono" style="color: var(--color-marketing-ink);">{{ $row['amt'] }}</span>
-                                @if ($row['class'] === 'vivid')
-                                    <span class="font-semibold" style="color: var(--color-vivid);">{{ $row['conf'] }}</span>
-                                    <span class="px-1.5 py-0.5 rounded font-semibold" style="background: var(--color-mint-100); color: var(--color-vivid);">{{ $row['status'] }}</span>
-                                @elseif ($row['class'] === 'amber')
-                                    <span class="text-amber-700 font-semibold">{{ $row['conf'] }}</span>
-                                    <span class="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-semibold">{{ $row['status'] }}</span>
-                                @else
-                                    <span class="text-rose-600 font-semibold">{{ $row['conf'] }}</span>
-                                    <span class="text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-semibold">{{ $row['status'] }}</span>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
+                    <table class="w-full text-[9px]" style="table-layout: fixed;">
+                        <colgroup>
+                            <col style="width: 22%;">
+                            <col style="width: 32%;">
+                            <col style="width: 18%;">
+                            <col style="width: 12%;">
+                            <col style="width: 16%;">
+                        </colgroup>
+                        <thead>
+                            <tr class="text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Document</th>
+                                <th class="text-left pb-1.5 border-b border-gray-100 font-bold">Client</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Montant</th>
+                                <th class="text-right pb-1.5 border-b border-gray-100 font-bold">Confiance</th>
+                                <th class="text-center pb-1.5 border-b border-gray-100 font-bold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ([
+                                ['ref' => 'FYK-FAC-DS0610', 'client' => 'Plan International Sénégal', 'amt' => '1 003 000F', 'conf' => '85%', 'status' => 'Fort', 'class' => 'vivid'],
+                                ['ref' => 'FYK-FAC-1QSWKV', 'client' => 'Ibrahima Ciss', 'amt' => '1 500 000F', 'conf' => '95%', 'status' => 'Fort', 'class' => 'vivid'],
+                                ['ref' => 'FYK-FAC-DS0607', 'client' => 'Wari Sénégal SA', 'amt' => '1 156 400F', 'conf' => '60%', 'status' => 'Moyen', 'class' => 'amber'],
+                                ['ref' => 'FYK-FAC-DS0501', 'client' => 'LafargeHolcim Sénégal', 'amt' => '3 304 000F', 'conf' => '5%', 'status' => 'Risqué', 'class' => 'rose'],
+                            ] as $row)
+                                @php $bb = $loop->last ? '' : 'border-b border-gray-100'; @endphp
+                                <tr>
+                                    <td class="py-1.5 font-mono truncate {{ $bb }}" style="color: var(--color-marketing-ink);">{{ $row['ref'] }}</td>
+                                    <td class="py-1.5 truncate {{ $bb }}" style="color: var(--color-marketing-slate);">{{ $row['client'] }}</td>
+                                    <td class="py-1.5 font-mono text-right whitespace-nowrap {{ $bb }}" style="color: var(--color-marketing-ink);">{{ $row['amt'] }}</td>
+                                    @if ($row['class'] === 'vivid')
+                                        <td class="py-1.5 text-right font-semibold {{ $bb }}" style="color: var(--color-vivid);">{{ $row['conf'] }}</td>
+                                        <td class="py-1.5 text-center {{ $bb }}"><span class="px-1.5 py-0.5 rounded font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-vivid);">{{ $row['status'] }}</span></td>
+                                    @elseif ($row['class'] === 'amber')
+                                        <td class="py-1.5 text-right text-amber-700 font-semibold {{ $bb }}">{{ $row['conf'] }}</td>
+                                        <td class="py-1.5 text-center {{ $bb }}"><span class="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-semibold whitespace-nowrap">{{ $row['status'] }}</span></td>
+                                    @else
+                                        <td class="py-1.5 text-right text-rose-600 font-semibold {{ $bb }}">{{ $row['conf'] }}</td>
+                                        <td class="py-1.5 text-center {{ $bb }}"><span class="text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-semibold whitespace-nowrap">{{ $row['status'] }}</span></td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -375,8 +453,8 @@
     </div>
 </section>
 
-<section class="px-5 lg:px-8 pb-20 lg:pb-28">
-    <div class="max-w-7xl mx-auto rounded-3xl py-16 lg:py-20 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
+<section class="px-5 lg:px-8 pb-12 sm:pb-16 lg:pb-28">
+    <div class="max-w-7xl mx-auto rounded-3xl py-10 sm:py-12 lg:py-20 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
         <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(15, 184, 92, 0.10);"></div>
         <div class="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(2, 77, 78, 0.10);"></div>
         <div class="relative">

@@ -7,6 +7,7 @@
 <header
     x-data="{ scrolled: false, open: false }"
     x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 80)"
+    x-effect="document.body.style.overflow = open ? 'hidden' : ''"
     :class="scrolled ? 'bg-white/80 backdrop-blur-md border-b border-gray-100' : 'bg-transparent'"
     class="fixed top-0 inset-x-0 z-50 transition-all"
 >
