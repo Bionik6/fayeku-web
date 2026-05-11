@@ -72,6 +72,11 @@ class ProposalDocumentFactory extends Factory
         return $this->state(['client_id' => $client->id]);
     }
 
+    public function draft(): static
+    {
+        return $this->state(['status' => ProposalDocumentStatus::Draft]);
+    }
+
     public function sent(): static
     {
         return $this->state(['status' => ProposalDocumentStatus::Sent]);

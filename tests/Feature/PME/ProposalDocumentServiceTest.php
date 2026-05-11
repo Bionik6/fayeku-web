@@ -299,6 +299,45 @@ test('convertToInvoice creates an invoice linked via proposal_document_id', func
     Event::assertDispatched(ProposalDocumentConverted::class);
 })->with('document_types');
 
+test('convertToInvoice transitions a draft quote directly to Accepted (no Sent step required)', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $quote = ProposalDocument::factory()
+        ->quote()
+        ->forCompany($company)
+        ->withClient($client)
+        ->draft()
+        ->withLines(1)
+        ->create();
+
+    $invoice = (new ProposalDocumentService)->convertToInvoice($quote, $company);
+
+    $fresh = $quote->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted)
+        ->and($fresh->accepted_at)->not->toBeNull()
+        ->and($invoice->proposal_document_id)->toBe($quote->id);
+});
+
+test('convertToInvoice transitions a draft proforma directly to Converted (no PO step required)', function () {
+    $company = Company::factory()->create(['type' => 'sme']);
+    $client = Client::factory()->create(['company_id' => $company->id]);
+    $proforma = ProposalDocument::factory()
+        ->proforma()
+        ->forCompany($company)
+        ->withClient($client)
+        ->draft()
+        ->withLines(1)
+        ->create();
+
+    $invoice = (new ProposalDocumentService)->convertToInvoice($proforma, $company);
+
+    $fresh = $proforma->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Converted)
+        ->and($fresh->converted_at)->not->toBeNull()
+        ->and($fresh->po_received_at)->toBeNull()
+        ->and($invoice->proposal_document_id)->toBe($proforma->id);
+});
+
 test('convertToInvoice transitions a sent quote to Accepted', function () {
     $company = Company::factory()->create(['type' => 'sme']);
     $client = Client::factory()->create(['company_id' => $company->id]);

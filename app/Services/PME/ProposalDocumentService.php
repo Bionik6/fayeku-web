@@ -283,7 +283,10 @@ class ProposalDocumentService
                 ]);
             }
 
-            if ($document->isQuote() && $document->status === ProposalDocumentStatus::Sent) {
+            // Quote: convertir vaut acceptation explicite par le client. On bascule
+            // toutes les sources non-Accepted (Draft, Sent) vers Accepted pour que
+            // le cycle de vie reste cohérent.
+            if ($document->isQuote() && $document->status !== ProposalDocumentStatus::Accepted) {
                 $document->update([
                     'status' => ProposalDocumentStatus::Accepted,
                     'accepted_at' => $document->accepted_at ?? now(),

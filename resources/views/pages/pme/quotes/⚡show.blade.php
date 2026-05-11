@@ -489,13 +489,7 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                 <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
 
                 <div class="mt-4 space-y-2">
-                    @if ($q->status === ProposalDocumentStatus::Sent && ! $q->invoice)
-                        <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
-                            <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
-                        </button>
-                    @endif
-
-                    @if ($q->status === ProposalDocumentStatus::Accepted && ! $q->invoice)
+                    @if (! $q->invoice && in_array($q->status, [ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent, ProposalDocumentStatus::Accepted], true))
                         <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
                             <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
                         </button>

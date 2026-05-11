@@ -4,6 +4,7 @@ use App\Enums\PME\ProposalDocumentStatus;
 use App\Enums\PME\ProposalDocumentType;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
+use App\Models\PME\Invoice;
 use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -153,6 +154,29 @@ test('le bouton Envoyer de la proforma rend un mailto en data-send-url pour Emai
 
     $component->assertSeeHtml('data-send-url="mailto:jean@client.sn?subject=')
         ->assertSeeHtml('data-can-send="1"');
+});
+
+test('le bouton Convertir en facture est visible sur une proforma Brouillon', function () {
+    ['user' => $user, 'company' => $company] = createSmeForProformaSend();
+    $proforma = makeProformaForSend($company, ['status' => ProposalDocumentStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->assertSeeText('Convertir en facture');
+});
+
+test('convertToInvoice depuis une proforma Brouillon crée la facture sans passer par le bon de commande', function () {
+    ['user' => $user, 'company' => $company] = createSmeForProformaSend();
+    $proforma = makeProformaForSend($company, ['status' => ProposalDocumentStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('convertToInvoice');
+
+    $fresh = $proforma->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Converted)
+        ->and($fresh->po_received_at)->toBeNull()
+        ->and(Invoice::query()->where('proposal_document_id', $proforma->id)->exists())->toBeTrue();
 });
 
 test('confirmSend de la proforma ne dispatch plus open-external-url', function () {

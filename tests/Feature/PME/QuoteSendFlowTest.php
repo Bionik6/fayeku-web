@@ -4,6 +4,7 @@ use App\Enums\PME\ProposalDocumentStatus;
 use App\Enums\PME\ProposalDocumentType;
 use App\Models\Auth\Company;
 use App\Models\PME\Client;
+use App\Models\PME\Invoice;
 use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -153,6 +154,28 @@ test('le bouton Envoyer du devis rend un mailto en data-send-url pour Email', fu
 
     $component->assertSeeHtml('data-send-url="mailto:jean@client.sn?subject=')
         ->assertSeeHtml('data-can-send="1"');
+});
+
+test('le bouton Convertir en facture est visible sur un devis Brouillon', function () {
+    ['user' => $user, 'company' => $company] = createSmeForQuoteSend();
+    $quote = makeQuoteForSend($company, ['status' => ProposalDocumentStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.show', ['quote' => $quote])
+        ->assertSeeText('Convertir en facture');
+});
+
+test('convertToInvoice depuis un devis Brouillon crée la facture et bascule le devis en Accepted', function () {
+    ['user' => $user, 'company' => $company] = createSmeForQuoteSend();
+    $quote = makeQuoteForSend($company, ['status' => ProposalDocumentStatus::Draft->value]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.show', ['quote' => $quote])
+        ->call('convertToInvoice');
+
+    $fresh = $quote->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted)
+        ->and(Invoice::query()->where('proposal_document_id', $quote->id)->exists())->toBeTrue();
 });
 
 test('confirmSend du devis ne dispatch plus open-external-url', function () {
