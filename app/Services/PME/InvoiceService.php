@@ -8,6 +8,7 @@ use App\Events\PME\InvoiceCreated;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
+use DomainException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -244,6 +245,118 @@ class InvoiceService
             InvoiceStatus::Draft,
             InvoiceStatus::Sent,
         ]);
+    }
+
+    /**
+     * Annule une facture émise avec un motif obligatoire. Refuse depuis Draft
+     * (un brouillon se supprime, ne s'annule pas).
+     */
+    public function markAsCancelled(Invoice $invoice, string $reason): Invoice
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new DomainException('Le motif d\'annulation est requis.');
+        }
+
+        if ($invoice->status === InvoiceStatus::Draft) {
+            throw new DomainException('Un brouillon ne peut pas être annulé — utilisez la suppression.');
+        }
+
+        if ($invoice->status === InvoiceStatus::Cancelled) {
+            throw new DomainException('Cette facture est déjà annulée.');
+        }
+
+        $invoice->update([
+            'status' => InvoiceStatus::Cancelled,
+            'cancelled_at' => $invoice->cancelled_at ?? now(),
+            'cancellation_reason' => $reason,
+        ]);
+
+        return $invoice;
+    }
+
+    /**
+     * Duplique une facture en nouveau brouillon, sans copier les paiements ni
+     * les relances. Génère une nouvelle référence, repart à zéro côté dates.
+     */
+    public function duplicate(Invoice $invoice, Company $company): Invoice
+    {
+        return DB::transaction(function () use ($invoice, $company) {
+            $copy = Invoice::query()->create([
+                'company_id' => $company->id,
+                'client_id' => $invoice->client_id,
+                'reference' => $this->generateReference($company),
+                'currency' => $invoice->currency,
+                'status' => InvoiceStatus::Draft,
+                'issued_at' => now()->toDateString(),
+                'due_at' => now()->addDays(30)->toDateString(),
+                'subtotal' => $invoice->subtotal,
+                'tax_amount' => $invoice->tax_amount,
+                'total' => $invoice->total,
+                'discount' => $invoice->discount ?? 0,
+                'discount_type' => $invoice->discount_type ?? 'percent',
+                'amount_paid' => 0,
+                'deposit_amount' => 0,
+                'notes' => $invoice->notes,
+                'payment_terms' => $invoice->payment_terms,
+                'payment_instructions' => $invoice->payment_instructions,
+                'payment_method' => $invoice->payment_method,
+                'payment_details' => $invoice->payment_details,
+                'reminders_enabled' => $invoice->reminders_enabled,
+            ]);
+
+            foreach ($invoice->lines as $line) {
+                $copy->lines()->create([
+                    'description' => $line->description,
+                    'quantity' => $line->quantity,
+                    'unit_price' => $line->unit_price,
+                    'tax_rate' => $line->tax_rate,
+                    'total' => $line->total,
+                ]);
+            }
+
+            return $copy->refresh();
+        });
+    }
+
+    /**
+     * Archive une facture annulée. Les autres statuts ne sont pas archivables
+     * (Paid reste accessible, Draft se supprime).
+     */
+    public function archive(Invoice $invoice): Invoice
+    {
+        if ($invoice->status !== InvoiceStatus::Cancelled) {
+            throw new DomainException('Seules les factures annulées peuvent être archivées.');
+        }
+
+        $invoice->update(['archived_at' => $invoice->archived_at ?? now()]);
+
+        return $invoice;
+    }
+
+    /**
+     * Supprime un brouillon de facture avec gestion explicite de la
+     * numérotation. `release` = forceDelete (numéro libéré côté comptable),
+     * `vacant` = soft-delete + archived_at (numéro tracé en archives).
+     */
+    public function deleteDraft(Invoice $invoice, string $strategy = 'release'): void
+    {
+        if ($invoice->status !== InvoiceStatus::Draft) {
+            throw new DomainException('Seul un brouillon peut être supprimé.');
+        }
+
+        if (! in_array($strategy, ['release', 'vacant'], true)) {
+            throw new DomainException('Stratégie de suppression invalide.');
+        }
+
+        if ($strategy === 'release') {
+            $invoice->forceDelete();
+
+            return;
+        }
+
+        $invoice->update(['archived_at' => now()]);
+        $invoice->delete();
     }
 
     /**

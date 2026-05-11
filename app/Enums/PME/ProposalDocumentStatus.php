@@ -11,6 +11,7 @@ enum ProposalDocumentStatus: string
     case Converted = 'converted';
     case Declined = 'declined';
     case Expired = 'expired';
+    case Cancelled = 'cancelled';
 
     /**
      * @return array<int, self>
@@ -23,9 +24,16 @@ enum ProposalDocumentStatus: string
     public function isAllowedFor(ProposalDocumentType $type): bool
     {
         return match ($this) {
-            self::Accepted => $type === ProposalDocumentType::Quote,
             self::PoReceived, self::Converted => $type === ProposalDocumentType::Proforma,
             default => true,
         };
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    public static function archivable(): array
+    {
+        return [self::Declined, self::Expired, self::Cancelled];
     }
 }

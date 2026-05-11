@@ -356,6 +356,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
         return $this->allRowsCache = Invoice::query()
             ->where('company_id', $this->company->id)
             ->whereNotIn('status', [InvoiceStatus::Cancelled])
+            ->whereNull('archived_at')
             ->with(['client', 'reminders'])
             ->orderByDesc('issued_at')
             ->orderByDesc('created_at')

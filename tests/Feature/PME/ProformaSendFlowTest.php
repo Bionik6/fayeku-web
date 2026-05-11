@@ -156,13 +156,14 @@ test('le bouton Envoyer de la proforma rend un mailto en data-send-url pour Emai
         ->assertSeeHtml('data-can-send="1"');
 });
 
-test('le bouton Convertir en facture est visible sur une proforma Brouillon', function () {
+test('une proforma Brouillon affiche Envoyer comme action principale (pas Convertir)', function () {
     ['user' => $user, 'company' => $company] = createSmeForProformaSend();
     $proforma = makeProformaForSend($company, ['status' => ProposalDocumentStatus::Draft->value]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.show', ['proforma' => $proforma])
-        ->assertSeeText('Convertir en facture');
+        ->assertSeeText('Envoyer la proforma')
+        ->assertDontSeeText('Convertir en facture');
 });
 
 test('convertToInvoice depuis une proforma Brouillon crée la facture sans passer par le bon de commande', function () {

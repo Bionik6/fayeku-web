@@ -145,6 +145,25 @@ class DocumentLifecycleService
             );
         }
 
+        if ($quote->status === ProposalDocumentStatus::Cancelled) {
+            return $this->proposalLifecycle(
+                documentLabel: 'Devis',
+                documentBadge: 'DEVIS',
+                documentClass: 'bg-amber-50 text-amber-800',
+                title: 'État : Annulé — sortie de cycle',
+                badges: [
+                    ['label' => 'Annulé', 'class' => 'bg-slate-100 text-slate-600'],
+                ],
+                steps: [
+                    $this->step('Envoyé', $this->compactDate($sentAt), 'completed', 'muted'),
+                    $this->step('Annulé', $this->fullDate($quote->cancelled_at), 'muted-failed'),
+                ],
+                note: $quote->cancellation_reason
+                    ? 'Motif : '.$quote->cancellation_reason
+                    : 'Le devis a été annulé.'
+            );
+        }
+
         if ($quote->status === ProposalDocumentStatus::Declined) {
             return $this->proposalLifecycle(
                 documentLabel: 'Devis',
@@ -243,9 +262,28 @@ class DocumentLifecycleService
                 ],
                 steps: [
                     $this->step('Envoyée', $this->compactDate($sentAt), 'completed', 'active'),
-                    $this->step('BC reçu', $this->compactDate($proforma->po_received_at), 'completed', 'active'),
+                    $this->step('Bon de Commande reçu', $this->compactDate($proforma->po_received_at), 'completed', 'active'),
                     $this->step('Facturée', $proforma->invoice?->reference ?? '—', 'completed'),
                 ]
+            );
+        }
+
+        if ($proforma->status === ProposalDocumentStatus::Cancelled) {
+            return $this->proposalLifecycle(
+                documentLabel: 'Proforma',
+                documentBadge: 'PROFORMA',
+                documentClass: 'bg-violet-50 text-violet-700',
+                title: 'État : Annulée — sortie de cycle',
+                badges: [
+                    ['label' => 'Annulée', 'class' => 'bg-slate-100 text-slate-600'],
+                ],
+                steps: [
+                    $this->step('Envoyée', $this->compactDate($sentAt), 'completed', 'muted'),
+                    $this->step('Annulée', $this->fullDate($proforma->cancelled_at), 'muted-failed'),
+                ],
+                note: $proforma->cancellation_reason
+                    ? 'Motif : '.$proforma->cancellation_reason
+                    : 'La proforma a été annulée.'
             );
         }
 
@@ -279,7 +317,7 @@ class DocumentLifecycleService
                     $this->step('Envoyée', $this->compactDate($sentAt), 'completed', 'muted'),
                     $this->step('Expirée', $this->fullDate($proforma->valid_until), 'warning'),
                 ],
-                note: 'Aucun BC reçu avant la date de validité. Dupliquez la proforma avec une nouvelle date pour relancer.'
+                note: 'Aucun Bon de Commande reçu avant la date de validité. Dupliquez la proforma avec une nouvelle date pour relancer.'
             );
         }
 
@@ -292,13 +330,13 @@ class DocumentLifecycleService
                 documentLabel: 'Proforma',
                 documentBadge: 'PROFORMA',
                 documentClass: 'bg-violet-50 text-violet-700',
-                title: 'État : BC reçu — prêt à facturer',
+                title: 'État : Bon de Commande reçu — prêt à facturer',
                 badges: [
-                    ['label' => 'BC reçu', 'class' => 'bg-emerald-50 text-emerald-700'],
+                    ['label' => 'Bon de Commande reçu', 'class' => 'bg-emerald-50 text-emerald-700'],
                 ],
                 steps: [
                     $this->step('Envoyée', $this->compactDate($sentAt), 'completed', 'active'),
-                    $this->step('BC reçu', $poDetail, 'current', 'neutral'),
+                    $this->step('Bon de Commande reçu', $poDetail, 'current', 'neutral'),
                     $this->step('Facturée', '—', 'pending'),
                 ]
             );
@@ -314,7 +352,7 @@ class DocumentLifecycleService
             ],
             steps: [
                 $this->step('Envoyée', $this->fullDate($sentAt), 'current', 'neutral'),
-                $this->step('BC reçu', '—', 'pending', 'neutral'),
+                $this->step('Bon de Commande reçu', '—', 'pending', 'neutral'),
                 $this->step('Facturée', $proforma->valid_until ? $this->compactDate($proforma->valid_until).' au plus tard' : '—', 'pending'),
             ]
         );
@@ -446,6 +484,7 @@ class DocumentLifecycleService
             ProposalDocumentStatus::PoReceived,
             ProposalDocumentStatus::Converted,
             ProposalDocumentStatus::Declined,
+            ProposalDocumentStatus::Cancelled,
         ], true)) {
             return false;
         }

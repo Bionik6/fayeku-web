@@ -31,6 +31,7 @@ class Invoice extends Model
         'company_id', 'client_id', 'proposal_document_id',
         'reference', 'currency', 'status',
         'issued_at', 'sent_at', 'due_at', 'paid_at', 'cancelled_at',
+        'cancellation_reason', 'archived_at',
         'subtotal', 'tax_amount', 'total', 'discount', 'discount_type', 'amount_paid',
         'deposit_amount',
         'notes', 'payment_terms', 'payment_instructions',
@@ -44,6 +45,7 @@ class Invoice extends Model
         'due_at' => 'date',
         'paid_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'archived_at' => 'datetime',
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
@@ -84,6 +86,21 @@ class Invoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
     }
 
     /**
@@ -158,6 +175,15 @@ class Invoice extends Model
                 'at' => $this->cancelled_at,
                 'type' => 'cancelled',
                 'label' => 'Facture annulée',
+                'meta' => ['reason' => $this->cancellation_reason],
+            ]);
+        }
+
+        if ($this->archived_at) {
+            $events->push([
+                'at' => $this->archived_at,
+                'type' => 'archived',
+                'label' => 'Facture archivée',
                 'meta' => [],
             ]);
         }

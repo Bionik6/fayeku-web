@@ -8,6 +8,7 @@ use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
 use App\Services\PME\DocumentLifecycleService;
+use App\Services\PME\InvoiceService;
 use App\Services\PME\PaymentService;
 use App\Services\PME\ReminderService;
 use Livewire\Attributes\Computed;
@@ -39,6 +40,19 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     public ?string $confirmDeletePaymentId = null;
 
     public ?string $confirmDeleteInvoice = null;
+
+    // Modal "Émettre la facture"
+    public bool $showIssueModal = false;
+
+    // Modal "Annuler la facture"
+    public bool $showCancelModal = false;
+
+    public string $cancelReason = '';
+
+    // Modal "Supprimer brouillon"
+    public bool $showDeleteDraftModal = false;
+
+    public string $deleteDraftStrategy = 'release';
 
     public ?string $previewInvoiceId = null;
 
@@ -603,21 +617,120 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     public function duplicateInvoice(): void
     {
         abort_unless($this->company, 403);
-
-        $copy = $this->invoice->replicate(['reference', 'status', 'paid_at', 'amount_paid', 'certification_authority', 'certification_data']);
-        $copy->reference = 'FYK-FAC-'.strtoupper(\Illuminate\Support\Str::random(6));
-        $copy->status = InvoiceStatus::Draft;
-        $copy->paid_at = null;
-        $copy->amount_paid = 0;
-        $copy->issued_at = now();
-        $copy->due_at = now()->addDays(30);
-        $copy->save();
-
-        foreach ($this->invoice->lines as $line) {
-            $copy->lines()->create($line->only(['description', 'quantity', 'unit_price', 'tax_rate', 'total']));
-        }
+        $copy = app(InvoiceService::class)->duplicate($this->invoice, $this->company);
 
         $this->redirect(route('pme.invoices.edit', $copy), navigate: true);
+    }
+
+    // ─── Émission ────────────────────────────────────────────────────────────
+
+    public function openIssueModal(): void
+    {
+        if ($this->invoice->status !== InvoiceStatus::Draft) {
+            return;
+        }
+        $this->showIssueModal = true;
+    }
+
+    public function closeIssueModal(): void
+    {
+        $this->showIssueModal = false;
+    }
+
+    public function confirmIssue(): void
+    {
+        if ($this->invoice->status !== InvoiceStatus::Draft) {
+            $this->showIssueModal = false;
+
+            return;
+        }
+
+        app(InvoiceService::class)->markAsSent($this->invoice);
+        $this->invoice->refresh();
+        $this->showIssueModal = false;
+        unset($this->statusDisplay, $this->remainingAmount, $this->dueLabel, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('La facture a été émise.'));
+    }
+
+    // ─── Annulation ──────────────────────────────────────────────────────────
+
+    public function openCancelModal(): void
+    {
+        $this->cancelReason = '';
+        $this->resetErrorBag();
+        $this->showCancelModal = true;
+    }
+
+    public function closeCancelModal(): void
+    {
+        $this->showCancelModal = false;
+        $this->resetErrorBag();
+    }
+
+    public function confirmCancel(): void
+    {
+        $this->validate(['cancelReason' => ['required', 'string', 'min:3']]);
+
+        try {
+            app(InvoiceService::class)->markAsCancelled($this->invoice, $this->cancelReason);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        $this->invoice->refresh();
+        $this->showCancelModal = false;
+        unset($this->statusDisplay, $this->remainingAmount, $this->dueLabel, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('La facture a été annulée.'));
+    }
+
+    // ─── Suppression de brouillon (Libérer / Vacant) ─────────────────────────
+
+    public function openDeleteDraftModal(): void
+    {
+        if ($this->invoice->status !== InvoiceStatus::Draft) {
+            return;
+        }
+        $this->deleteDraftStrategy = 'release';
+        $this->showDeleteDraftModal = true;
+    }
+
+    public function closeDeleteDraftModal(): void
+    {
+        $this->showDeleteDraftModal = false;
+    }
+
+    public function confirmDeleteDraft(): void
+    {
+        abort_unless($this->company, 403);
+
+        try {
+            app(InvoiceService::class)->deleteDraft($this->invoice, $this->deleteDraftStrategy);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('success', __('La facture brouillon a été supprimée.'));
+        $this->redirect(route('pme.invoices.index'));
+    }
+
+    // ─── Archivage ───────────────────────────────────────────────────────────
+
+    public function archive(): void
+    {
+        try {
+            app(InvoiceService::class)->archive($this->invoice);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('success', __('La facture a été archivée.'));
+        $this->redirect(route('pme.invoices.index'));
     }
 }; ?>
 
@@ -930,120 +1043,120 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             {{-- Carte client --}}
             <x-invoices.client-card :invoice="$inv" />
 
-            {{-- Actions rapides --}}
+            {{-- Actions : principale + menu --}}
             @php
-                $isPayable = in_array($inv->status, [InvoiceStatus::Sent, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid], true);
-                $isClosed = in_array($inv->status, [InvoiceStatus::Paid, InvoiceStatus::Cancelled], true);
-                $canEdit = in_array($inv->status, [InvoiceStatus::Draft, InvoiceStatus::Sent], true);
+                $isOverdue = $inv->status === InvoiceStatus::Overdue
+                    || (in_array($inv->status, [InvoiceStatus::Sent, InvoiceStatus::Certified, InvoiceStatus::CertificationFailed], true)
+                        && $inv->due_at && $inv->due_at->isPast()
+                        && (int) $inv->amount_paid < (int) $inv->total);
+                $isPartial = $inv->status === InvoiceStatus::PartiallyPaid;
+                $isSent = in_array($inv->status, [InvoiceStatus::Sent, InvoiceStatus::Certified, InvoiceStatus::CertificationFailed], true);
+                $isPaid = $inv->status === InvoiceStatus::Paid;
+                $isDraft = $inv->status === InvoiceStatus::Draft;
+                $isCancelled = $inv->status === InvoiceStatus::Cancelled;
+                $canEdit = $isDraft || $isSent;
             @endphp
-            <article class="app-shell-panel p-6 lg:sticky lg:top-6">
-                <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
+            <article class="app-shell-panel p-6 lg:sticky lg:top-6" x-data="{ menuOpen: false }" @click.outside="menuOpen = false">
+                <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions') }}</h3>
 
-                {{-- Actions primaires (3 max selon le statut) --}}
                 <div class="mt-4 space-y-2">
-                    {{-- Enregistrer un paiement : uniquement si la facture peut encore recevoir un paiement --}}
-                    @if ($isPayable && $remaining > 0)
-                        <button type="button" wire:click="openPaymentModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
+                    {{-- Action principale par statut --}}
+                    @if ($isDraft)
+                        <button type="button" wire:click="openIssueModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-issue">
+                            <flux:icon name="paper-airplane" class="size-4" /> {{ __('Émettre la facture') }}
+                        </button>
+                    @elseif ($isOverdue)
+                        <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:opacity-50" data-action="primary-remind">
+                            <flux:icon name="bell-alert" class="size-4" /> {{ __('Relancer') }}
+                        </button>
+                    @elseif (($isSent || $isPartial) && $remaining > 0)
+                        <button type="button" wire:click="openPaymentModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-record-payment">
                             <flux:icon name="banknotes" class="size-4" /> {{ __('Enregistrer un paiement') }}
                         </button>
+                    @elseif ($isPaid)
+                        <a href="{{ route('pme.invoices.pdf', $inv) }}" target="_blank" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-download-receipt">
+                            <flux:icon name="arrow-down-tray" class="size-4" /> {{ __('Télécharger le reçu') }}
+                        </a>
                     @endif
 
-                    {{-- Relancer le client : uniquement quand applicable --}}
-                    @if ($isPayable)
-                        <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50">
-                            <flux:icon name="bell-alert" class="size-4" /> {{ __('Relancer le client') }}
-                        </button>
-                    @endif
-
-                    {{-- Télécharger le PDF : toujours visible --}}
-                    <a href="{{ route('pme.invoices.pdf', $inv) }}" target="_blank" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                        <flux:icon name="arrow-down-tray" class="size-4" /> {{ __('Télécharger le PDF') }}
-                    </a>
-
-                    {{-- Plus d'actions : dropdown teleporté pour échapper au sticky/overflow --}}
-                    <div
-                        x-data="{ open: false, top: 0, right: 0, width: 0 }"
-                        class="relative"
-                        @click.window="open = false"
-                        @keydown.escape.window="open = false"
-                    >
-                        <button
-                            type="button"
-                            x-ref="moreActionsTrigger"
-                            @click.stop="
-                                const wasOpen = open;
-                                if (wasOpen) { open = false; return; }
-                                const rect = $refs.moreActionsTrigger.getBoundingClientRect();
-                                top = rect.bottom + 8;
-                                right = window.innerWidth - rect.right;
-                                width = rect.width;
-                                open = true;
-                            "
-                            class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary"
-                            :aria-expanded="open"
-                        >
+                    {{-- Menu Actions --}}
+                    <div class="relative">
+                        <button type="button" @click="menuOpen = !menuOpen" class="relative flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="menu-toggle">
                             <flux:icon name="ellipsis-horizontal" class="size-4" />
-                            {{ __("Plus d'actions") }}
-                            <svg class="size-3.5 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                            </svg>
+                            <span>{{ __('Autres actions') }}</span>
+                            <flux:icon name="chevron-down" class="absolute right-4 size-4" />
                         </button>
+                        <div x-show="menuOpen" x-cloak x-transition class="absolute right-0 left-0 z-30 mt-2 origin-top overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                            <a href="{{ route('pme.invoices.pdf', $inv) }}" target="_blank" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <flux:icon name="eye" class="size-4 text-slate-400" /> {{ __('Aperçu PDF') }}
+                            </a>
+                            <a href="{{ route('pme.invoices.pdf', $inv) }}" download target="_blank" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <flux:icon name="arrow-down-tray" class="size-4 text-slate-400" /> {{ __('Télécharger PDF') }}
+                            </a>
 
-                        <template x-teleport="body">
-                            <div
-                                x-show="open"
-                                x-cloak
-                                x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="opacity-100 scale-100"
-                                x-transition:leave-end="opacity-0 scale-95"
-                                @click.stop
-                                :style="`position: fixed; z-index: 9999; top: ${top}px; right: ${right}px; min-width: ${width}px`"
-                                class="overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
-                                role="menu"
-                            >
-                                @if (! $isClosed)
-                                    <button type="button" @click="open = false" wire:click="openSendModal" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-                                        <flux:icon name="paper-airplane" class="size-4 text-slate-400" />
-                                        {{ $inv->status === InvoiceStatus::Draft ? __('Envoyer au client') : __('Renvoyer au client') }}
+                            @if ($canEdit)
+                                <a href="{{ route('pme.invoices.edit', $inv) }}" wire:navigate @click="menuOpen = false" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="edit">
+                                    <flux:icon name="pencil-square" class="size-4 text-slate-400" /> {{ __('Modifier') }}
+                                </a>
+                            @endif
+
+                            @if ($isSent && ! $isOverdue)
+                                <button type="button" wire:click="openSendModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="resend">
+                                    <flux:icon name="paper-airplane" class="size-4 text-slate-400" /> {{ __('Renvoyer') }}
+                                </button>
+                                <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50" data-action="remind">
+                                    <flux:icon name="bell-alert" class="size-4 text-slate-400" /> {{ __('Relancer manuellement') }}
+                                </button>
+                            @endif
+
+                            @if ($isOverdue || $isSent || $isPartial)
+                                @if ($isOverdue || $isPartial)
+                                    <button type="button" wire:click="openPaymentModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="record-payment">
+                                        <flux:icon name="banknotes" class="size-4 text-slate-400" /> {{ __('Enregistrer un paiement') }}
                                     </button>
                                 @endif
-                                @if ($canEdit)
-                                    <a href="{{ route('pme.invoices.edit', $inv) }}" @click="open = false" wire:navigate class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-                                        <flux:icon name="pencil-square" class="size-4 text-slate-400" />
-                                        {{ __('Modifier la facture') }}
-                                    </a>
-                                @endif
-                                @if ($isPayable)
-                                    <button type="button" @click="open = false" wire:click="requestMarkPaid" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-                                        <flux:icon name="check-circle" class="size-4 text-slate-400" />
-                                        {{ __('Marquer comme payée') }}
-                                    </button>
-                                @endif
-                                @if (! $isClosed || $canEdit || $isPayable)
-                                    <div class="my-1 border-t border-slate-100"></div>
-                                @endif
-                                @if ($inv->client_id)
-                                    <a href="{{ route('pme.clients.show', $inv->client_id) }}" @click="open = false" wire:navigate class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-                                        <flux:icon name="user" class="size-4 text-slate-400" />
-                                        {{ __('Voir le client') }}
-                                    </a>
-                                @endif
-                                <button type="button" @click="open = false" wire:click="duplicateInvoice" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-                                    <flux:icon name="document-duplicate" class="size-4 text-slate-400" />
-                                    {{ __('Dupliquer') }}
+                            @endif
+
+                            @if ($isPaid || $isPartial)
+                                <button type="button" wire:click="openPaymentModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="view-payments">
+                                    <flux:icon name="banknotes" class="size-4 text-slate-400" /> {{ __('Voir les paiements') }}
                                 </button>
-                                <div class="my-1 border-t border-slate-100"></div>
-                                <button type="button" @click="open = false" wire:click="requestDeleteInvoice" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 transition hover:bg-rose-50">
-                                    <flux:icon name="trash" class="size-4 text-rose-400" />
-                                    {{ __('Supprimer la facture') }}
+                            @endif
+
+                            @if (! $isDraft && ! $isCancelled)
+                                <button type="button" wire:click="duplicateInvoice" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="duplicate">
+                                    <flux:icon name="document-duplicate" class="size-4 text-slate-400" /> {{ __('Dupliquer') }}
                                 </button>
-                            </div>
-                        </template>
+                            @endif
+
+                            @if (! $isDraft && ! $isCancelled && ! $isPaid)
+                                <button type="button" wire:click="openCancelModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50" data-action="cancel">
+                                    <flux:icon name="no-symbol" class="size-4" /> {{ __('Annuler') }}
+                                </button>
+                            @endif
+
+                            @if ($isCancelled)
+                                <button type="button" wire:click="archive" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="archive">
+                                    <flux:icon name="archive-box" class="size-4 text-slate-400" /> {{ __('Archiver') }}
+                                </button>
+                            @endif
+
+                            @if ($isDraft)
+                                <button type="button" wire:click="openDeleteDraftModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50" data-action="delete-draft">
+                                    <flux:icon name="trash" class="size-4" /> {{ __('Supprimer') }}
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
+
+                @if ($inv->client_id)
+                    <div class="mt-5 border-t border-slate-100 pt-4">
+                        <a href="{{ route('pme.clients.show', $inv->client_id) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                            <flux:icon name="user" class="size-4" /> {{ __('Voir le client') }}
+                        </a>
+                    </div>
+                @endif
             </article>
 
         </div>
@@ -1205,6 +1318,19 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         :send-country="$sendCountry"
         :send-phone-countries="$sendPhoneCountries"
         :send-open-url="$this->sendOpenUrl"
+    />
+
+    <x-invoicing.issue-modal :show="$showIssueModal" />
+
+    <x-ui.cancel-with-reason-modal
+        :show="$showCancelModal"
+        :title="__('Annuler la facture')"
+        :description="__('L\'annulation est définitive. La facture conserve sa référence mais sort des encours.')"
+    />
+
+    <x-invoicing.delete-draft-modal
+        :show="$showDeleteDraftModal"
+        :reference="$inv->reference ?? ''"
     />
 
 </div>

@@ -110,7 +110,7 @@ test('proforma lifecycle maps purchase order and conversion states', function ()
 
     $convertedLifecycle = app(DocumentLifecycleService::class)->forProforma($proforma->fresh('invoice'));
 
-    expect($poLifecycle['title'])->toBe('État : BC reçu — prêt à facturer')
+    expect($poLifecycle['title'])->toBe('État : Bon de Commande reçu — prêt à facturer')
         ->and($poLifecycle['steps'][1]['detail'])->toContain('BC-2026/0142')
         ->and($convertedLifecycle['title'])->toBe('État : Facturée — facture créée')
         ->and($convertedLifecycle['steps'][2]['detail'])->toBe('FYK-FAC-DS0801');

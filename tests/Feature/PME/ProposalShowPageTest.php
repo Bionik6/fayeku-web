@@ -230,10 +230,10 @@ test('proforma show page renders sent purchase order factured declined and deriv
 
     $cases = [
         [$sent, ['État : Envoyée — en attente du BC']],
-        [$poReceived, ['État : BC reçu — prêt à facturer', 'BC-2026/0142']],
+        [$poReceived, ['État : Bon de Commande reçu — prêt à facturer', 'BC-2026/0142']],
         [$factured, ['État : Facturée — facture créée', 'FYK-FAC-DS0801']],
         [$declined, ['État : Refusée — sortie de cycle', 'La proforma a été marquée comme refusée']],
-        [$expired, ['État : Expirée — validité dépassée', 'Aucun BC reçu avant la date de validité']],
+        [$expired, ['État : Expirée — validité dépassée', 'Aucun Bon de Commande reçu avant la date de validité']],
     ];
 
     foreach ($cases as [$proforma, $expectedTexts]) {

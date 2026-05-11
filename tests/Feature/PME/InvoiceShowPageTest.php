@@ -253,18 +253,18 @@ test('la carte client affiche les coordonnées et un lien « Voir la fiche »', 
         ->assertSee(route('pme.clients.show', $client->id), escape: false);
 });
 
-test('le bouton « Modifier la facture » apparaît dans les actions rapides pour une facture envoyée', function () {
+test('le bouton « Modifier » apparaît dans le menu Actions pour une facture envoyée', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Sent->value]);
 
     $this->actingAs($user)
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk()
-        ->assertSee('Modifier la facture')
+        ->assertSee('Modifier')
         ->assertSee(route('pme.invoices.edit', $invoice), escape: false);
 });
 
-test('le bouton « Modifier la facture » n\'apparaît pas pour une facture payée', function () {
+test('le bouton « Modifier » n\'apparaît pas pour une facture payée', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, [
         'status' => InvoiceStatus::Paid->value,
@@ -275,7 +275,7 @@ test('le bouton « Modifier la facture » n\'apparaît pas pour une facture pay�
     $this->actingAs($user)
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk()
-        ->assertDontSee('Modifier la facture');
+        ->assertDontSee(route('pme.invoices.edit', $invoice), escape: false);
 });
 
 test('la carte client affiche le délai moyen et la date de la dernière facture', function () {
@@ -638,10 +638,8 @@ test('la page n\'affiche plus les boutons d\'action dupliqués dans le header', 
         ->assertOk()
         ->getContent();
 
-    // "Modifier la facture" vit dans la sidebar Actions rapides, plus dans le header.
-    expect(substr_count($html, 'Modifier la facture'))->toBe(1);
-    // "Envoyer au client" ne doit apparaître qu'une fois (sidebar).
-    expect(substr_count($html, 'Envoyer au client'))->toBe(1);
+    // Le lien d'édition vit dans le menu Actions, plus dans le header.
+    expect(substr_count($html, route('pme.invoices.edit', $invoice)))->toBe(1);
 });
 
 test('le bandeau de statut est informatif (aucun bouton d\'action)', function () {
@@ -656,8 +654,8 @@ test('le bandeau de statut est informatif (aucun bouton d\'action)', function ()
         ->assertOk()
         ->getContent();
 
-    // "Relancer le client" n'apparaît qu'une seule fois (sidebar), plus dans le bandeau.
-    expect(substr_count($html, 'Relancer le client'))->toBe(1);
+    // Le bouton "Relancer" (action principale) apparaît une seule fois dans la sidebar.
+    expect(substr_count($html, 'data-action="primary-remind"'))->toBe(1);
 });
 
 test('la timeline combine création, échéance, relance et paiement dans l\'ordre chronologique', function () {
@@ -849,9 +847,9 @@ test('confirmSend sur une facture Draft la passe automatiquement en Sent + toast
     expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
 });
 
-// ─── Layout des actions rapides : 3 primaires + dropdown "Plus d'actions" ───
+// ─── Matrice d'actions : action principale + menu Actions ────────────────────
 
-test('Actions rapides facture Sent : 3 primaires visibles + dropdown Plus d\'actions', function () {
+test('Actions facture Sent : Enregistrer un paiement en principal + menu Actions', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
     $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Sent->value]);
@@ -860,12 +858,13 @@ test('Actions rapides facture Sent : 3 primaires visibles + dropdown Plus d\'act
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk()
         ->assertSeeText('Enregistrer un paiement')
-        ->assertSeeText('Relancer le client')
-        ->assertSeeText('Télécharger le PDF')
-        ->assertSeeText("Plus d'actions");
+        ->assertSeeText('Renvoyer')
+        ->assertSeeText('Relancer manuellement')
+        ->assertSeeText('Aperçu PDF')
+        ->assertSeeText('Télécharger PDF');
 });
 
-test("Le dropdown Plus d'actions contient: Renvoyer/Modifier/Marquer payée/Voir client/Dupliquer/Supprimer", function () {
+test('Menu Actions facture Sent contient: Renvoyer/Modifier/Dupliquer/Annuler', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $client = Client::factory()->create(['company_id' => $company->id]);
     $invoice = makeShowPageInvoice($company, ['client_id' => $client->id, 'status' => InvoiceStatus::Sent->value]);
@@ -873,15 +872,15 @@ test("Le dropdown Plus d'actions contient: Renvoyer/Modifier/Marquer payée/Voir
     $this->actingAs($user)
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk()
-        ->assertSeeText('Renvoyer au client')
-        ->assertSeeText('Modifier la facture')
-        ->assertSeeText('Marquer comme payée')
+        ->assertSeeText('Renvoyer')
+        ->assertSeeText('Modifier')
         ->assertSeeText('Voir le client')
         ->assertSeeText('Dupliquer')
-        ->assertSeeText('Supprimer la facture');
+        ->assertSeeText('Annuler')
+        ->assertDontSeeText('Créer un avoir');
 });
 
-test("facture Draft : pas de paiement/relance comme primaire, mais 'Envoyer au client' dans Plus d'actions", function () {
+test('facture Draft : Émettre la facture en principal, pas de paiement/relance', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Draft->value]);
 
@@ -889,19 +888,15 @@ test("facture Draft : pas de paiement/relance comme primaire, mais 'Envoyer au c
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk();
 
-    // Pas de paiement / relance en primaire (Draft : pas applicable)
     $response->assertDontSeeText('Enregistrer un paiement')
-        ->assertDontSeeText('Relancer le client');
+        ->assertDontSeeText('Relancer');
 
-    // Mais Télécharger le PDF + Plus d'actions toujours visibles
-    $response->assertSeeText('Télécharger le PDF')
-        ->assertSeeText("Plus d'actions")
-        // L'envoi initial est dans le dropdown sur Draft
-        ->assertSeeText('Envoyer au client')
-        ->assertSeeText('Modifier la facture');
+    $response->assertSeeText('Émettre la facture')
+        ->assertSeeText('Modifier')
+        ->assertSeeText('Supprimer');
 });
 
-test('facture Paid : seul Télécharger le PDF en primaire, dropdown limité (Voir client + Dupliquer)', function () {
+test('facture Paid : Télécharger le reçu en principal', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $client = Client::factory()->create(['company_id' => $company->id]);
     $invoice = makeShowPageInvoice($company, [
@@ -915,32 +910,25 @@ test('facture Paid : seul Télécharger le PDF en primaire, dropdown limité (Vo
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk();
 
-    // Aucun primaire payable / relance
     $response->assertDontSeeText('Enregistrer un paiement')
-        ->assertDontSeeText('Relancer le client');
+        ->assertDontSeeText('Renvoyer');
 
-    // PDF + Plus d'actions
-    $response->assertSeeText('Télécharger le PDF')
-        ->assertSeeText("Plus d'actions");
-
-    // Sur Paid : pas de "Renvoyer au client", pas de "Modifier", pas de "Marquer payée"
-    $response->assertDontSeeText('Renvoyer au client')
-        ->assertDontSeeText('Modifier la facture')
-        ->assertDontSeeText('Marquer comme payée');
+    $response->assertSeeText('Télécharger le reçu')
+        ->assertSeeText('Dupliquer');
 });
 
-test('facture PartiallyPaid : Enregistrer paiement reste visible si remaining > 0', function () {
+test('facture PartiallyPaid : Enregistrer un paiement reste visible si remaining > 0', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, [
         'status' => InvoiceStatus::PartiallyPaid->value,
-        'amount_paid' => 50_000, // remaining = 68 000
+        'amount_paid' => 50_000,
     ]);
 
     $this->actingAs($user)
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk()
         ->assertSeeText('Enregistrer un paiement')
-        ->assertSeeText('Relancer le client');
+        ->assertSeeText('Voir les paiements');
 });
 
 test('confirmSend sur une facture déjà Sent ne ré-affiche pas le toast de bascule', function () {

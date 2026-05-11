@@ -31,9 +31,9 @@ test('Status::editable lists Draft and Sent', function () {
         ->toBe([ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent]);
 });
 
-test('Status::isAllowedFor restricts Accepted to quotes', function () {
+test('Status::isAllowedFor allows Accepted for both types', function () {
     expect(ProposalDocumentStatus::Accepted->isAllowedFor(ProposalDocumentType::Quote))->toBeTrue()
-        ->and(ProposalDocumentStatus::Accepted->isAllowedFor(ProposalDocumentType::Proforma))->toBeFalse();
+        ->and(ProposalDocumentStatus::Accepted->isAllowedFor(ProposalDocumentType::Proforma))->toBeTrue();
 });
 
 test('Status::isAllowedFor restricts PoReceived and Converted to proformas', function () {
@@ -44,7 +44,7 @@ test('Status::isAllowedFor restricts PoReceived and Converted to proformas', fun
 });
 
 test('Status::isAllowedFor allows shared states for both types', function () {
-    foreach ([ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent, ProposalDocumentStatus::Declined, ProposalDocumentStatus::Expired] as $status) {
+    foreach ([ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent, ProposalDocumentStatus::Declined, ProposalDocumentStatus::Expired, ProposalDocumentStatus::Cancelled] as $status) {
         expect($status->isAllowedFor(ProposalDocumentType::Quote))->toBeTrue()
             ->and($status->isAllowedFor(ProposalDocumentType::Proforma))->toBeTrue();
     }

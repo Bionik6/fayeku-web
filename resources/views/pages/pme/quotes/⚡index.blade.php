@@ -226,7 +226,9 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
             return;
         }
 
-        $base = ProposalDocument::query()->where('company_id', $this->company->id);
+        $base = ProposalDocument::query()
+            ->where('company_id', $this->company->id)
+            ->whereNull('archived_at');
 
         $this->totalQuotes = (clone $base)->ofType(ProposalDocumentType::Quote)->count();
         $this->totalProformas = (clone $base)->ofType(ProposalDocumentType::Proforma)->count();
@@ -316,6 +318,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
 
         return $this->allRowsCache = ProposalDocument::query()
             ->where('company_id', $this->company->id)
+            ->whereNull('archived_at')
             ->with(['client', 'invoice'])
             ->orderByDesc('issued_at')
             ->get()
@@ -535,7 +538,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
                     {{ __('Validés') }}
                 </span>
             </div>
-            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Acceptés / BC reçus') }}</p>
+            <p class="mt-4 text-sm font-medium text-slate-500">{{ __('Acceptés / Bon de Commande reçus') }}</p>
             <p class="mt-1 text-4xl font-semibold tracking-tight text-emerald-500">{{ $validatedDocuments }}</p>
         </article>
 
@@ -570,7 +573,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
                     'draft'       => ['label' => 'Brouillon', 'dot' => 'bg-slate-400',   'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
                     'sent'        => ['label' => 'Envoyé',    'dot' => 'bg-blue-500',    'activeClass' => 'bg-blue-500 text-white',    'badgeInactive' => 'bg-blue-100 text-blue-700'],
                     'accepted'    => ['label' => 'Accepté',   'dot' => 'bg-accent',      'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
-                    'po_received' => ['label' => 'BC reçu',   'dot' => 'bg-emerald-500', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
+                    'po_received' => ['label' => 'Bon de Commande reçu',   'dot' => 'bg-emerald-500', 'activeClass' => 'bg-emerald-600 text-white', 'badgeInactive' => 'bg-emerald-100 text-emerald-700'],
                     'converted'   => ['label' => 'Facturée',  'dot' => 'bg-teal-500',    'activeClass' => 'bg-teal-600 text-white',    'badgeInactive' => 'bg-teal-100 text-teal-700'],
                     'declined'    => ['label' => 'Refusé',    'dot' => 'bg-rose-500',    'activeClass' => 'bg-rose-500 text-white',    'badgeInactive' => 'bg-rose-100 text-rose-700'],
                     'expired'     => ['label' => 'Expiré',    'dot' => 'bg-slate-400',   'activeClass' => 'bg-slate-500 text-white',   'badgeInactive' => 'bg-slate-100 text-slate-600'],
@@ -651,7 +654,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
                                 $borderClass = $isProforma ? 'border-l-4 border-blue-400' : 'border-l-4 border-amber-300';
                                 $statusConfig = match ($row['status_value']) {
                                     'accepted'    => ['label' => 'Accepté',   'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
-                                    'po_received' => ['label' => 'BC reçu',   'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
+                                    'po_received' => ['label' => 'Bon de Commande reçu',   'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
                                     'converted'   => ['label' => 'Facturée',  'class' => 'bg-teal-50 text-teal-700 ring-teal-600/20'],
                                     'sent'        => ['label' => $isProforma ? 'Envoyée' : 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-blue-600/20'],
                                     'draft'       => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-slate-600/20'],
@@ -810,7 +813,7 @@ new #[Title('Devis & Proformas')] #[Layout('layouts::pme')] class extends Compon
                                             @if ($isProforma)
                                                 <x-ui.dropdown-item wire:click="markAsPoReceived('{{ $row['id'] }}')">
                                                     <x-slot:icon>{!! $iconCheck !!}</x-slot:icon>
-                                                    {{ __('Marquer BC reçu') }}
+                                                    {{ __('Marquer Bon de Commande reçu') }}
                                                 </x-ui.dropdown-item>
                                             @else
                                                 <x-ui.dropdown-item wire:click="markAsAccepted('{{ $row['id'] }}')">

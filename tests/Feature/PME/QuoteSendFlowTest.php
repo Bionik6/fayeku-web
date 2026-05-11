@@ -156,13 +156,14 @@ test('le bouton Envoyer du devis rend un mailto en data-send-url pour Email', fu
         ->assertSeeHtml('data-can-send="1"');
 });
 
-test('le bouton Convertir en facture est visible sur un devis Brouillon', function () {
+test('un devis Brouillon affiche Envoyer comme action principale (pas Convertir)', function () {
     ['user' => $user, 'company' => $company] = createSmeForQuoteSend();
     $quote = makeQuoteForSend($company, ['status' => ProposalDocumentStatus::Draft->value]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.quotes.show', ['quote' => $quote])
-        ->assertSeeText('Convertir en facture');
+        ->assertSeeText('Envoyer le devis')
+        ->assertDontSeeText('Convertir en facture');
 });
 
 test('convertToInvoice depuis un devis Brouillon crée la facture et bascule le devis en Accepted', function () {

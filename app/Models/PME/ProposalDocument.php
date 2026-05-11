@@ -32,9 +32,10 @@ class ProposalDocument extends Model
         'company_id', 'client_id', 'type', 'reference', 'currency', 'status',
         'issued_at', 'valid_until',
         'sent_at', 'accepted_at', 'declined_at', 'converted_at',
+        'cancelled_at', 'cancellation_reason', 'archived_at', 'validity_extended_at',
         'subtotal', 'tax_amount', 'total', 'discount', 'discount_type', 'notes',
         'dossier_reference', 'payment_terms', 'delivery_terms',
-        'po_reference', 'po_received_at', 'po_notes',
+        'po_reference', 'po_received_at', 'po_notes', 'po_file_path', 'has_no_formal_po',
     ];
 
     protected $casts = [
@@ -44,7 +45,11 @@ class ProposalDocument extends Model
         'accepted_at' => 'datetime',
         'declined_at' => 'datetime',
         'converted_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'validity_extended_at' => 'datetime',
         'po_received_at' => 'date',
+        'has_no_formal_po' => 'boolean',
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
         'total' => 'integer',
@@ -86,6 +91,21 @@ class ProposalDocument extends Model
     public function scopeOfType(Builder $query, ProposalDocumentType $type): Builder
     {
         return $query->where('type', $type);
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
     }
 
     public function isQuote(): bool
@@ -169,6 +189,33 @@ class ProposalDocument extends Model
                 'at' => $this->declined_at,
                 'type' => 'declined',
                 'label' => $isProforma ? 'Proforma refusée' : 'Devis refusé',
+                'meta' => [],
+            ]);
+        }
+
+        if ($this->cancelled_at) {
+            $events->push([
+                'at' => $this->cancelled_at,
+                'type' => 'cancelled',
+                'label' => $isProforma ? 'Proforma annulée' : 'Devis annulé',
+                'meta' => ['reason' => $this->cancellation_reason],
+            ]);
+        }
+
+        if ($this->validity_extended_at) {
+            $events->push([
+                'at' => $this->validity_extended_at,
+                'type' => 'validity_extended',
+                'label' => 'Validité prolongée',
+                'meta' => ['valid_until' => $this->valid_until],
+            ]);
+        }
+
+        if ($this->archived_at) {
+            $events->push([
+                'at' => $this->archived_at,
+                'type' => 'archived',
+                'label' => $isProforma ? 'Proforma archivée' : 'Devis archivé',
                 'meta' => [],
             ]);
         }

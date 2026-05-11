@@ -6,6 +6,7 @@ use App\Models\PME\ProposalDocument;
 use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
+use Carbon\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -28,6 +29,18 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     public string $poReceivedAt = '';
 
     public string $poNotes = '';
+
+    public bool $poNoFormal = false;
+
+    // Modal "Annuler la proforma"
+    public bool $showCancelModal = false;
+
+    public string $cancelReason = '';
+
+    // Modal "Prolonger la validité"
+    public bool $showExtendValidityModal = false;
+
+    public ?string $newValidUntil = null;
 
     // Modal "Envoyer la proforma"
     public bool $showSendModal = false;
@@ -77,12 +90,15 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             || ($this->proforma->valid_until && $this->proforma->valid_until->isPast() && $this->proforma->status === ProposalDocumentStatus::Sent);
 
         return match (true) {
-            $isExpired => ['label' => 'Expirée', 'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-500/20'],
-            $this->proforma->status === ProposalDocumentStatus::PoReceived => ['label' => 'BC reçu', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+            $this->proforma->invoice !== null,
             $this->proforma->status === ProposalDocumentStatus::Converted => ['label' => 'Facturée', 'class' => 'bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-600/20'],
+            $isExpired => ['label' => 'Expirée', 'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-500/20'],
+            $this->proforma->status === ProposalDocumentStatus::Accepted => ['label' => 'Acceptée', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::PoReceived => ['label' => 'Bon de Commande reçu', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
             $this->proforma->status === ProposalDocumentStatus::Sent => ['label' => 'Envoyée', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
             $this->proforma->status === ProposalDocumentStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
             $this->proforma->status === ProposalDocumentStatus::Declined => ['label' => 'Refusée', 'class' => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20'],
+            $this->proforma->status === ProposalDocumentStatus::Cancelled => ['label' => 'Annulée', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
             default => ['label' => ucfirst($this->proforma->status->value), 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
         };
     }
@@ -133,13 +149,15 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
 
     public function openPoModal(): void
     {
-        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
+        // Le BC peut être renseigné sur une proforma Envoyée ou Acceptée.
+        if (! in_array($this->proforma->status, [ProposalDocumentStatus::Sent, ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived], true)) {
             return;
         }
         $this->resetErrorBag();
         $this->poReference = $this->proforma->po_reference ?? '';
         $this->poReceivedAt = $this->proforma->po_received_at?->format('Y-m-d') ?? now()->format('Y-m-d');
         $this->poNotes = $this->proforma->po_notes ?? '';
+        $this->poNoFormal = (bool) $this->proforma->has_no_formal_po;
         $this->showPoModal = true;
     }
 
@@ -151,30 +169,44 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
 
     public function recordPurchaseOrder(): void
     {
-        $this->validate([
-            'poReference' => ['required', 'string', 'max:100'],
-            'poReceivedAt' => ['required', 'date'],
-            'poNotes' => ['nullable', 'string', 'max:1000'],
-        ], [
+        $rules = $this->poNoFormal
+            ? ['poNotes' => ['nullable', 'string', 'max:1000']]
+            : [
+                'poReference' => ['required', 'string', 'max:100'],
+                'poReceivedAt' => ['required', 'date'],
+                'poNotes' => ['nullable', 'string', 'max:1000'],
+            ];
+
+        $this->validate($rules, [
             'poReference.required' => __('La référence du bon de commande est requise.'),
             'poReceivedAt.required' => __('La date du bon de commande est requise.'),
         ]);
 
-        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
+        if (! in_array($this->proforma->status, [ProposalDocumentStatus::Sent, ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived], true)) {
             $this->showPoModal = false;
 
             return;
         }
 
-        app(ProposalDocumentService::class)->markAsPoReceived($this->proforma, [
-            'reference' => trim($this->poReference),
-            'received_at' => $this->poReceivedAt,
-            'notes' => trim($this->poNotes),
-        ]);
+        $update = [
+            'has_no_formal_po' => $this->poNoFormal,
+        ];
+        if ($this->poNoFormal) {
+            $update['reference'] = null;
+            $update['received_at'] = null;
+            $update['notes'] = trim($this->poNotes) ?: null;
+        } else {
+            $update['reference'] = trim($this->poReference);
+            $update['received_at'] = $this->poReceivedAt;
+            $update['notes'] = trim($this->poNotes) ?: null;
+        }
+
+        $this->proforma->update(['has_no_formal_po' => $this->poNoFormal]);
+        app(ProposalDocumentService::class)->markAsPoReceived($this->proforma, $update);
         $this->proforma->refresh();
         $this->showPoModal = false;
         unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
-        $this->dispatch('toast', type: 'success', title: __('Bon de commande enregistré. La proforma peut être convertie en facture.'));
+        $this->dispatch('toast', type: 'success', title: __('Bon de commande enregistré.'));
     }
 
     /**
@@ -387,6 +419,105 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         session()->flash('success', __('La proforma a été supprimée.'));
         $this->redirect(route('pme.quotes.index'), navigate: true);
     }
+
+    public function markAsAccepted(): void
+    {
+        if ($this->proforma->status !== ProposalDocumentStatus::Sent) {
+            return;
+        }
+        app(ProposalDocumentService::class)->markAsAccepted($this->proforma);
+        $this->proforma->refresh();
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('La proforma a été marquée comme acceptée.'));
+    }
+
+    // ─── Annulation ──────────────────────────────────────────────────────────
+
+    public function openCancelModal(): void
+    {
+        $this->cancelReason = '';
+        $this->resetErrorBag();
+        $this->showCancelModal = true;
+    }
+
+    public function closeCancelModal(): void
+    {
+        $this->showCancelModal = false;
+        $this->resetErrorBag();
+    }
+
+    public function confirmCancel(): void
+    {
+        $this->validate(['cancelReason' => ['required', 'string', 'min:3']]);
+
+        try {
+            app(ProposalDocumentService::class)->markAsCancelled($this->proforma, $this->cancelReason);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        $this->proforma->refresh();
+        $this->showCancelModal = false;
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('La proforma a été annulée.'));
+    }
+
+    // ─── Prolongation de validité ────────────────────────────────────────────
+
+    public function openExtendValidityModal(): void
+    {
+        $this->newValidUntil = ($this->proforma->valid_until ?? now())
+            ->copy()->addDays(30)->toDateString();
+        $this->resetErrorBag();
+        $this->showExtendValidityModal = true;
+    }
+
+    public function closeExtendValidityModal(): void
+    {
+        $this->showExtendValidityModal = false;
+        $this->resetErrorBag();
+    }
+
+    public function confirmExtendValidity(): void
+    {
+        $this->validate(['newValidUntil' => ['required', 'date', 'after:today']]);
+
+        try {
+            app(ProposalDocumentService::class)->extendValidity($this->proforma, Carbon::parse($this->newValidUntil));
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        $this->proforma->refresh();
+        $this->showExtendValidityModal = false;
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('Validité prolongée.'));
+    }
+
+    public function duplicate(): void
+    {
+        abort_unless($this->company, 403);
+        $copy = app(ProposalDocumentService::class)->duplicate($this->proforma, $this->company);
+        $this->redirect(route('pme.proformas.edit', $copy), navigate: true);
+    }
+
+    public function archive(): void
+    {
+        try {
+            app(ProposalDocumentService::class)->archive($this->proforma);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('success', __('La proforma a été archivée.'));
+        $this->redirect(route('pme.quotes.index'), navigate: true);
+    }
 }; ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-6">
@@ -464,7 +595,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                         {{ __('Reçu le') }} {{ $p->po_received_at ? format_date($p->po_received_at) : '—' }}
                     </p>
                 @else
-                    <p class="mt-2 text-2xl font-semibold tracking-tight text-emerald-600">{{ __('BC reçu') }}</p>
+                    <p class="mt-2 text-2xl font-semibold tracking-tight text-emerald-600">{{ __('Bon de Commande reçu') }}</p>
                     <p class="mt-1 text-sm text-slate-500">{{ __('Prête à convertir en facture') }}</p>
                 @endif
             @elseif ($p->status === ProposalDocumentStatus::Sent)
@@ -574,6 +705,51 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                 @endif
             </article>
 
+            {{-- Bon de commande (visible dès qu'un BC a été enregistré, formel ou non) --}}
+            @if ($p->po_reference || $p->has_no_formal_po || $p->po_received_at || $p->po_notes)
+                <article class="app-shell-panel p-6">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <h3 class="text-lg font-semibold text-ink">{{ __('Bon de commande') }}</h3>
+                            <p class="mt-1 text-sm text-slate-500">{{ __('Détails du BC associé à cette proforma.') }}</p>
+                        </div>
+                        @if (in_array($p->status, [ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived], true))
+                            <button type="button" wire:click="openPoModal" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                                <flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier') }}
+                            </button>
+                        @endif
+                    </div>
+
+                    <dl class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        @if ($p->has_no_formal_po)
+                            <div class="sm:col-span-2">
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Type d\'accord') }}</dt>
+                                <dd class="mt-1 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                                    <flux:icon name="chat-bubble-left-right" class="size-4" />
+                                    {{ __('Pas de BC formel (accord verbal, WhatsApp, etc.)') }}
+                                </dd>
+                            </div>
+                        @else
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Référence du BC') }}</dt>
+                                <dd class="mt-1 text-sm font-semibold text-ink">{{ $p->po_reference ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Date de réception') }}</dt>
+                                <dd class="mt-1 text-sm font-semibold text-ink">{{ $p->po_received_at ? format_date($p->po_received_at) : '—' }}</dd>
+                            </div>
+                        @endif
+
+                        @if ($p->po_notes)
+                            <div class="sm:col-span-2">
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Notes') }}</dt>
+                                <dd class="mt-1 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">{{ $p->po_notes }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+                </article>
+            @endif
+
             {{-- Activité --}}
             <article class="app-shell-panel p-6">
                 <h3 class="text-lg font-semibold text-ink">{{ __('Activité') }}</h3>
@@ -589,56 +765,123 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             {{-- Carte client --}}
             <x-client-card :client="$p->client" no-client-message="Aucun client renseigné sur cette proforma." />
 
-            {{-- Actions rapides --}}
-            <article class="app-shell-panel p-6 lg:sticky lg:top-6">
-                <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
+            {{-- Actions : principale + menu --}}
+            @php
+                $isExpired = ! $p->invoice
+                    && ($p->status === ProposalDocumentStatus::Expired
+                        || ($p->status === ProposalDocumentStatus::Sent && $p->valid_until && $p->valid_until->isPast()));
+            @endphp
+            <article class="app-shell-panel p-6 lg:sticky lg:top-6" x-data="{ menuOpen: false }" @click.outside="menuOpen = false">
+                <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions') }}</h3>
 
                 <div class="mt-4 space-y-2">
-                    @if (! $p->invoice && in_array($p->status, [ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent, ProposalDocumentStatus::PoReceived], true))
-                        <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
-                            <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
-                        </button>
-                    @endif
-
-                    @if ($p->status === ProposalDocumentStatus::Sent)
-                        <button type="button" wire:click="openPoModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                            <flux:icon name="document-check" class="size-4" /> {{ __('Enregistrer un bon de commande') }}
-                        </button>
-                        <button type="button" wire:click="markAsDeclined" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="x-circle" class="size-4" /> {{ __('Marquer comme refusée') }}
-                        </button>
-                    @endif
-
-                    @if ($p->status !== ProposalDocumentStatus::Converted)
-                        <button type="button" wire:click="openSendModal" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                    @if ($p->invoice)
+                        <a href="{{ route('pme.invoices.show', $p->invoice) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="view-invoice">
+                            <flux:icon name="arrow-right" class="size-4" /> {{ __('Voir la facture liée') }}
+                        </a>
+                    @elseif ($p->status === ProposalDocumentStatus::Draft)
+                        <button type="button" wire:click="openSendModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-send">
                             <flux:icon name="paper-airplane" class="size-4" /> {{ __('Envoyer la proforma') }}
                         </button>
+                    @elseif ($isExpired)
+                        <button type="button" wire:click="openExtendValidityModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-extend">
+                            <flux:icon name="calendar-days" class="size-4" /> {{ __('Prolonger la validité') }}
+                        </button>
+                    @elseif ($p->status === ProposalDocumentStatus::Sent)
+                        {{-- Raccourci direct : un clic = markAsAccepted + convertToInvoice côté service (2 traces) --}}
+                        <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-shortcut-convert">
+                            <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
+                        </button>
+                        <button type="button" wire:click="markAsAccepted" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="primary-accept">
+                            <flux:icon name="check-circle" class="size-4" /> {{ __('Marquer comme acceptée') }}
+                        </button>
+                        <button type="button" wire:click="markAsDeclined" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="primary-decline">
+                            <flux:icon name="x-circle" class="size-4" /> {{ __('Marquer comme refusée') }}
+                        </button>
+                    @elseif (in_array($p->status, [ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived], true))
+                        @php $hasBc = $p->po_reference || $p->has_no_formal_po; @endphp
+                        @if (! $hasBc)
+                            <button type="button" wire:click="openPoModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-add-po">
+                                <flux:icon name="document-check" class="size-4" /> {{ __('Ajouter un Bon de Commande') }}
+                            </button>
+                            <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="primary-convert">
+                                <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
+                            </button>
+                        @else
+                            <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-convert">
+                                <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
+                            </button>
+                        @endif
                     @endif
 
-                    @if ($this->isEditable)
-                        <a href="{{ route('pme.proformas.edit', $p) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier la proforma') }}
-                        </a>
-                    @endif
+                    {{-- Menu Actions --}}
+                    <div class="relative">
+                        <button type="button" @click="menuOpen = !menuOpen" class="relative flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="menu-toggle">
+                            <flux:icon name="ellipsis-horizontal" class="size-4" />
+                            <span>{{ __('Autres actions') }}</span>
+                            <flux:icon name="chevron-down" class="absolute right-4 size-4" />
+                        </button>
+                        <div x-show="menuOpen" x-cloak x-transition class="absolute right-0 left-0 z-30 mt-2 origin-top overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                            <a href="{{ route('pme.proformas.pdf', $p) }}" target="_blank" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <flux:icon name="eye" class="size-4 text-slate-400" /> {{ __('Aperçu PDF') }}
+                            </a>
+                            <a href="{{ route('pme.proformas.pdf', $p) }}" download target="_blank" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <flux:icon name="arrow-down-tray" class="size-4 text-slate-400" /> {{ __('Télécharger PDF') }}
+                            </a>
 
-                    <a href="{{ route('pme.proformas.pdf', $p) }}" target="_blank" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                        <flux:icon name="arrow-down-tray" class="size-4" /> {{ __('Télécharger le PDF') }}
-                    </a>
+                            @if ($this->isEditable)
+                                <a href="{{ route('pme.proformas.edit', $p) }}" wire:navigate class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="edit">
+                                    <flux:icon name="pencil-square" class="size-4 text-slate-400" /> {{ __('Modifier') }}
+                                </a>
+                            @endif
+
+                            @if ($p->status === ProposalDocumentStatus::Sent && ! $isExpired)
+                                <button type="button" wire:click="openSendModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="resend">
+                                    <flux:icon name="paper-airplane" class="size-4 text-slate-400" /> {{ __('Renvoyer') }}
+                                </button>
+                                <button type="button" wire:click="openExtendValidityModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="extend">
+                                    <flux:icon name="calendar-days" class="size-4 text-slate-400" /> {{ __('Prolonger la validité') }}
+                                </button>
+                            @endif
+
+                            @if (in_array($p->status, [ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived], true) && ($p->po_reference || $p->has_no_formal_po))
+                                <button type="button" wire:click="openPoModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="po-edit">
+                                    <flux:icon name="document-check" class="size-4 text-slate-400" /> {{ __('Modifier le Bon de Commande') }}
+                                </button>
+                            @endif
+
+                            <button type="button" wire:click="duplicate" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="duplicate">
+                                <flux:icon name="document-duplicate" class="size-4 text-slate-400" /> {{ __('Dupliquer') }}
+                            </button>
+
+                            @if ($p->status === ProposalDocumentStatus::Sent && ! $isExpired)
+                                <button type="button" wire:click="openCancelModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50" data-action="cancel">
+                                    <flux:icon name="no-symbol" class="size-4" /> {{ __('Annuler') }}
+                                </button>
+                            @endif
+
+                            @if (in_array($p->status, [ProposalDocumentStatus::Declined, ProposalDocumentStatus::Cancelled], true) || $isExpired)
+                                <button type="button" wire:click="archive" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="archive">
+                                    <flux:icon name="archive-box" class="size-4 text-slate-400" /> {{ __('Archiver') }}
+                                </button>
+                            @endif
+
+                            @if ($p->status === ProposalDocumentStatus::Draft)
+                                <button type="button" wire:click="requestDelete" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50" data-action="delete">
+                                    <flux:icon name="trash" class="size-4" /> {{ __('Supprimer') }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mt-5 space-y-2 border-t border-slate-100 pt-4">
-                    @if ($p->client_id)
+                @if ($p->client_id)
+                    <div class="mt-5 border-t border-slate-100 pt-4">
                         <a href="{{ route('pme.clients.show', $p->client_id) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
                             <flux:icon name="user" class="size-4" /> {{ __('Voir le client') }}
                         </a>
-                    @endif
-
-                    @if ($p->status === ProposalDocumentStatus::Draft)
-                        <button type="button" wire:click="requestDelete" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50">
-                            <flux:icon name="trash" class="size-4" /> {{ __('Supprimer la proforma') }}
-                        </button>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </article>
         </div>
     </section>
@@ -672,7 +915,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                     <div class="flex items-start justify-between border-b border-slate-100 px-7 py-5">
                         <div>
                             <h2 class="text-lg font-semibold text-ink">{{ __('Enregistrer un bon de commande') }}</h2>
-                            <p class="mt-1 text-sm text-slate-500">{{ __('Renseignez la référence et la date du BC émis par le client. La proforma passera au statut « BC reçu ».') }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ __('Renseignez la référence et la date du Bon de Commande émis par le client. La proforma passera au statut « Bon de Commande reçu ».') }}</p>
                         </div>
                         <button type="button" wire:click="closePoModal" class="ml-4 shrink-0 rounded-full border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
                             <flux:icon name="x-mark" class="size-5" />
@@ -681,17 +924,25 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
 
                     <div class="grid gap-4 px-7 py-6 md:grid-cols-2">
                         <div class="md:col-span-2">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Référence du BC') }} <span class="text-rose-500">*</span></label>
-                            <input wire:model="poReference" type="text" placeholder="{{ __('Ex : BC-2026/0142') }}"
-                                   class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                            @error('poReference') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                <input wire:model.live="poNoFormal" type="checkbox" class="size-4 rounded border-slate-300 text-primary focus:ring-primary">
+                                {{ __('Pas de BC formel (accord verbal, WhatsApp, etc.)') }}
+                            </label>
                         </div>
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Date du BC') }} <span class="text-rose-500">*</span></label>
-                            <input wire:model="poReceivedAt" type="date"
-                                   class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
-                            @error('poReceivedAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
-                        </div>
+                        @if (! $poNoFormal)
+                            <div class="md:col-span-2">
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Référence du BC') }} <span class="text-rose-500">*</span></label>
+                                <input wire:model="poReference" type="text" placeholder="{{ __('Ex : BC-2026/0142') }}"
+                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                @error('poReference') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Date du BC') }} <span class="text-rose-500">*</span></label>
+                                <input wire:model="poReceivedAt" type="date"
+                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                                @error('poReceivedAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
                         <div class="md:col-span-2">
                             <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Notes (optionnel)') }}</label>
                             <textarea wire:model="poNotes" rows="3" placeholder="{{ __('Détails internes sur ce bon de commande…') }}"
@@ -717,5 +968,15 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         :send-country="$sendCountry"
         :send-phone-countries="$sendPhoneCountries"
         :send-open-url="$this->sendOpenUrl"
+    />
+
+    <x-ui.cancel-with-reason-modal
+        :show="$showCancelModal"
+        :title="__('Annuler la proforma')"
+    />
+
+    <x-proposals.extend-validity-modal
+        :show="$showExtendValidityModal"
+        :min-date="now()->addDay()->toDateString()"
     />
 </div>

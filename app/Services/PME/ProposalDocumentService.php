@@ -5,11 +5,13 @@ namespace App\Services\PME;
 use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\ProposalDocumentStatus;
 use App\Enums\PME\ProposalDocumentType;
+use App\Events\PME\ProposalDocumentAccepted;
 use App\Events\PME\ProposalDocumentConverted;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
 use App\Models\PME\ProposalDocument;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -186,6 +188,8 @@ class ProposalDocumentService
             'accepted_at' => $document->accepted_at ?? now(),
         ]);
 
+        ProposalDocumentAccepted::dispatch($document);
+
         return $document;
     }
 
@@ -229,6 +233,125 @@ class ProposalDocumentService
         ]);
 
         return $document;
+    }
+
+    /**
+     * Annule un devis ou une proforma avec un motif obligatoire. Refuse si le
+     * document est déjà converti — l'annulation passe alors par la facture.
+     */
+    public function markAsCancelled(ProposalDocument $document, string $reason): ProposalDocument
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new DomainException('Le motif d\'annulation est requis.');
+        }
+
+        if (in_array($document->status, [
+            ProposalDocumentStatus::Converted,
+            ProposalDocumentStatus::Cancelled,
+        ], true)) {
+            throw new DomainException(
+                $document->isProforma()
+                    ? 'Cette proforma ne peut plus être annulée.'
+                    : 'Ce devis ne peut plus être annulé.'
+            );
+        }
+
+        $document->update([
+            'status' => ProposalDocumentStatus::Cancelled,
+            'cancelled_at' => $document->cancelled_at ?? now(),
+            'cancellation_reason' => $reason,
+        ]);
+
+        return $document;
+    }
+
+    /**
+     * Prolonge la date de validité d'un devis/proforma. Si le document était
+     * expiré (statut Expired ou Sent avec date dépassée), revient en Sent.
+     */
+    public function extendValidity(ProposalDocument $document, CarbonInterface $newValidUntil): ProposalDocument
+    {
+        if ($document->valid_until && $newValidUntil->lte($document->valid_until)) {
+            throw new DomainException('La nouvelle date doit être postérieure à l\'actuelle.');
+        }
+
+        $update = [
+            'valid_until' => $newValidUntil->toDateString(),
+            'validity_extended_at' => now(),
+        ];
+
+        $wasExpired = $document->status === ProposalDocumentStatus::Expired
+            || ($document->status === ProposalDocumentStatus::Sent
+                && $document->valid_until
+                && $document->valid_until->isPast());
+
+        if ($wasExpired) {
+            $update['status'] = ProposalDocumentStatus::Sent;
+        }
+
+        $document->update($update);
+
+        return $document;
+    }
+
+    /**
+     * Archive un document terminal (Refusé, Expiré, Annulé).
+     */
+    public function archive(ProposalDocument $document): ProposalDocument
+    {
+        if (! in_array($document->status, ProposalDocumentStatus::archivable(), true)) {
+            throw new DomainException('Seuls les documents refusés, expirés ou annulés peuvent être archivés.');
+        }
+
+        $document->update(['archived_at' => $document->archived_at ?? now()]);
+
+        return $document;
+    }
+
+    /**
+     * Duplique un document en nouveau brouillon avec une nouvelle référence et
+     * des dates d'émission/validité rafraîchies. Les lignes et les notes sont
+     * copiées, mais l'historique (sent_at, accepted_at, etc.) est remis à zéro.
+     */
+    public function duplicate(ProposalDocument $document, Company $company): ProposalDocument
+    {
+        $defaultValidityDays = (int) config('fayeku.proposal_default_validity_days', 30);
+
+        return DB::transaction(function () use ($document, $company, $defaultValidityDays) {
+            $copy = ProposalDocument::query()->create([
+                'company_id' => $company->id,
+                'client_id' => $document->client_id,
+                'type' => $document->type,
+                'reference' => $this->generateReference($company, $document->type),
+                'currency' => $document->currency,
+                'status' => ProposalDocumentStatus::Draft,
+                'issued_at' => now()->toDateString(),
+                'valid_until' => now()->addDays($defaultValidityDays)->toDateString(),
+                'subtotal' => $document->subtotal,
+                'tax_amount' => $document->tax_amount,
+                'total' => $document->total,
+                'discount' => $document->discount,
+                'discount_type' => $document->discount_type,
+                'notes' => $document->notes,
+                'dossier_reference' => $document->dossier_reference,
+                'payment_terms' => $document->payment_terms,
+                'delivery_terms' => $document->delivery_terms,
+            ]);
+
+            foreach ($document->lines as $line) {
+                $copy->lines()->create([
+                    'description' => $line->description,
+                    'quantity' => $line->quantity,
+                    'unit_price' => $line->unit_price,
+                    'tax_rate' => $line->tax_rate,
+                    'discount' => $line->discount,
+                    'total' => $line->total,
+                ]);
+            }
+
+            return $copy->refresh();
+        });
     }
 
     public function canEdit(ProposalDocument $document): bool
@@ -283,18 +406,32 @@ class ProposalDocumentService
                 ]);
             }
 
-            // Quote: convertir vaut acceptation explicite par le client. On bascule
-            // toutes les sources non-Accepted (Draft, Sent) vers Accepted pour que
-            // le cycle de vie reste cohérent.
-            if ($document->isQuote() && $document->status !== ProposalDocumentStatus::Accepted) {
+            // Convertir vaut acceptation explicite. Pour les deux types, si le
+            // document est en Brouillon ou Envoyé, on enregistre d'abord
+            // l'acceptation (timestamp + event distinct), puis la conversion.
+            // Cela garantit la double trace en historique même quand
+            // l'utilisateur passe par le raccourci direct "Convertir".
+            $needsAcceptance = $document->status !== ProposalDocumentStatus::Accepted
+                && $document->status !== ProposalDocumentStatus::PoReceived
+                && $document->status !== ProposalDocumentStatus::Converted;
+
+            $now = now();
+            $acceptedAt = $document->accepted_at ?? $now;
+
+            if ($needsAcceptance) {
                 $document->update([
                     'status' => ProposalDocumentStatus::Accepted,
-                    'accepted_at' => $document->accepted_at ?? now(),
+                    'accepted_at' => $acceptedAt,
                 ]);
-            } elseif ($document->isProforma()) {
+                ProposalDocumentAccepted::dispatch($document->refresh());
+            }
+
+            if ($document->isQuote()) {
+                $document->refresh();
+            } else {
                 $document->update([
                     'status' => ProposalDocumentStatus::Converted,
-                    'converted_at' => $document->converted_at ?? now(),
+                    'converted_at' => $document->converted_at ?? $acceptedAt->copy()->addSecond(),
                 ]);
             }
 

@@ -6,6 +6,7 @@ use App\Models\PME\ProposalDocument;
 use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
+use Carbon\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -19,6 +20,16 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
     public ?string $confirmConvert = null;
 
     public ?string $confirmDelete = null;
+
+    // Modal "Annuler le devis"
+    public bool $showCancelModal = false;
+
+    public string $cancelReason = '';
+
+    // Modal "Prolonger la validité"
+    public bool $showExtendValidityModal = false;
+
+    public ?string $newValidUntil = null;
 
     // Modal "Envoyer le devis"
     public bool $showSendModal = false;
@@ -68,11 +79,13 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             || ($this->quote->valid_until && $this->quote->valid_until->isPast() && $this->quote->status === ProposalDocumentStatus::Sent);
 
         return match (true) {
+            $this->quote->invoice !== null => ['label' => 'Facturé', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
             $isExpired => ['label' => 'Expiré', 'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-500/20'],
             $this->quote->status === ProposalDocumentStatus::Accepted => ['label' => 'Accepté', 'class' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'],
             $this->quote->status === ProposalDocumentStatus::Sent => ['label' => 'Envoyé', 'class' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'],
             $this->quote->status === ProposalDocumentStatus::Draft => ['label' => 'Brouillon', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
             $this->quote->status === ProposalDocumentStatus::Declined => ['label' => 'Refusé', 'class' => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20'],
+            $this->quote->status === ProposalDocumentStatus::Cancelled => ['label' => 'Annulé', 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
             default => ['label' => ucfirst($this->quote->status->value), 'class' => 'bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-600/20'],
         };
     }
@@ -185,6 +198,104 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         }
         $this->quote->delete();
         session()->flash('success', __('Le devis a été supprimé.'));
+        $this->redirect(route('pme.quotes.index'), navigate: true);
+    }
+
+    // ─── Annulation ──────────────────────────────────────────────────────────
+
+    public function openCancelModal(): void
+    {
+        $this->cancelReason = '';
+        $this->resetErrorBag();
+        $this->showCancelModal = true;
+    }
+
+    public function closeCancelModal(): void
+    {
+        $this->showCancelModal = false;
+        $this->resetErrorBag();
+    }
+
+    public function confirmCancel(): void
+    {
+        $this->validate(['cancelReason' => ['required', 'string', 'min:3']], [
+            'cancelReason.required' => __('Le motif est requis.'),
+            'cancelReason.min' => __('Le motif doit faire au moins 3 caractères.'),
+        ]);
+
+        try {
+            app(ProposalDocumentService::class)->markAsCancelled($this->quote, $this->cancelReason);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        $this->quote->refresh();
+        $this->showCancelModal = false;
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('Le devis a été annulé.'));
+    }
+
+    // ─── Prolongation de validité ────────────────────────────────────────────
+
+    public function openExtendValidityModal(): void
+    {
+        $this->newValidUntil = ($this->quote->valid_until ?? now())
+            ->copy()->addDays(30)->toDateString();
+        $this->resetErrorBag();
+        $this->showExtendValidityModal = true;
+    }
+
+    public function closeExtendValidityModal(): void
+    {
+        $this->showExtendValidityModal = false;
+        $this->resetErrorBag();
+    }
+
+    public function confirmExtendValidity(): void
+    {
+        $this->validate(['newValidUntil' => ['required', 'date', 'after:today']], [
+            'newValidUntil.required' => __('Renseignez une date.'),
+            'newValidUntil.after' => __('La date doit être dans le futur.'),
+        ]);
+
+        try {
+            app(ProposalDocumentService::class)->extendValidity($this->quote, Carbon::parse($this->newValidUntil));
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        $this->quote->refresh();
+        $this->showExtendValidityModal = false;
+        unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
+        $this->dispatch('toast', type: 'success', title: __('Validité prolongée.'));
+    }
+
+    // ─── Duplication & Archivage ─────────────────────────────────────────────
+
+    public function duplicate(): void
+    {
+        abort_unless($this->company, 403);
+
+        $copy = app(ProposalDocumentService::class)->duplicate($this->quote, $this->company);
+
+        $this->redirect(route('pme.quotes.edit', $copy), navigate: true);
+    }
+
+    public function archive(): void
+    {
+        try {
+            app(ProposalDocumentService::class)->archive($this->quote);
+        } catch (\DomainException $e) {
+            $this->dispatch('toast', type: 'error', title: $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('success', __('Le devis a été archivé.'));
         $this->redirect(route('pme.quotes.index'), navigate: true);
     }
 
@@ -484,54 +595,117 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
             {{-- Carte client --}}
             <x-client-card :client="$q->client" no-client-message="Aucun client renseigné sur ce devis." />
 
-            {{-- Actions rapides --}}
-            <article class="app-shell-panel p-6 lg:sticky lg:top-6">
-                <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions rapides') }}</h3>
+            {{-- Actions rapides : action principale + menu Actions --}}
+            @php
+                $isExpired = ! $q->invoice
+                    && ($q->status === ProposalDocumentStatus::Expired
+                        || ($q->status === ProposalDocumentStatus::Sent && $q->valid_until && $q->valid_until->isPast()));
+            @endphp
+            <article class="app-shell-panel p-6 lg:sticky lg:top-6" x-data="{ menuOpen: false }" @click.outside="menuOpen = false">
+                <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ __('Actions') }}</h3>
 
                 <div class="mt-4 space-y-2">
-                    @if (! $q->invoice && in_array($q->status, [ProposalDocumentStatus::Draft, ProposalDocumentStatus::Sent, ProposalDocumentStatus::Accepted], true))
-                        <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong">
+                    {{-- Action principale par statut --}}
+                    @if ($q->invoice)
+                        <a href="{{ route('pme.invoices.show', $q->invoice) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="view-invoice">
+                            <flux:icon name="arrow-right" class="size-4" /> {{ __('Voir la facture liée') }}
+                        </a>
+                    @elseif ($q->status === ProposalDocumentStatus::Draft)
+                        <button type="button" wire:click="openSendModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-send">
+                            <flux:icon name="paper-airplane" class="size-4" /> {{ __('Envoyer le devis') }}
+                        </button>
+                    @elseif ($isExpired)
+                        <button type="button" wire:click="openExtendValidityModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-extend">
+                            <flux:icon name="calendar-days" class="size-4" /> {{ __('Prolonger la validité') }}
+                        </button>
+                    @elseif ($q->status === ProposalDocumentStatus::Sent)
+                        <button type="button" wire:click="markAsAccepted" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-accept">
+                            <flux:icon name="check-circle" class="size-4" /> {{ __('Marquer comme accepté') }}
+                        </button>
+                        <button type="button" wire:click="markAsDeclined" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="primary-decline">
+                            <flux:icon name="x-circle" class="size-4" /> {{ __('Marquer comme refusé') }}
+                        </button>
+                    @elseif ($q->status === ProposalDocumentStatus::Accepted)
+                        <button type="button" wire:click="requestConvert" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-convert">
                             <flux:icon name="document-arrow-up" class="size-4" /> {{ __('Convertir en facture') }}
                         </button>
                     @endif
 
-                    @if ($this->isEditable)
-                        <a href="{{ route('pme.quotes.edit', $q) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier le devis') }}
-                        </a>
-                    @endif
-
-                    @if ($q->status === ProposalDocumentStatus::Sent)
-                        <button type="button" wire:click="markAsAccepted" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="check-circle" class="size-4" /> {{ __('Marquer comme accepté') }}
+                    {{-- Menu Actions --}}
+                    <div class="relative">
+                        <button type="button" @click="menuOpen = !menuOpen" class="relative flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="menu-toggle">
+                            <flux:icon name="ellipsis-horizontal" class="size-4" />
+                            <span>{{ __('Autres actions') }}</span>
+                            <flux:icon name="chevron-down" class="absolute right-4 size-4" />
                         </button>
-                        <button type="button" wire:click="markAsDeclined" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                            <flux:icon name="x-circle" class="size-4" /> {{ __('Marquer comme refusé') }}
-                        </button>
-                    @endif
+                        <div x-show="menuOpen" x-cloak x-transition class="absolute right-0 left-0 z-30 mt-2 origin-top overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                            {{-- Toujours présents --}}
+                            <a href="{{ route('pme.quotes.pdf', $q) }}" target="_blank" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <flux:icon name="eye" class="size-4 text-slate-400" /> {{ __('Aperçu PDF') }}
+                            </a>
+                            <a href="{{ route('pme.quotes.pdf', $q) }}" download target="_blank" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <flux:icon name="arrow-down-tray" class="size-4 text-slate-400" /> {{ __('Télécharger PDF') }}
+                            </a>
 
-                    <button type="button" wire:click="openSendModal" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                        <flux:icon name="paper-airplane" class="size-4" /> {{ __('Envoyer le devis') }}
-                    </button>
+                            {{-- Brouillon : Modifier --}}
+                            @if ($this->isEditable)
+                                <a href="{{ route('pme.quotes.edit', $q) }}" wire:navigate class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="edit">
+                                    <flux:icon name="pencil-square" class="size-4 text-slate-400" /> {{ __('Modifier') }}
+                                </a>
+                            @endif
 
-                    <a href="{{ route('pme.quotes.pdf', $q) }}" target="_blank" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
-                        <flux:icon name="arrow-down-tray" class="size-4" /> {{ __('Télécharger le PDF') }}
-                    </a>
+                            {{-- Envoyé : Renvoyer + Prolonger + Annuler --}}
+                            @if ($q->status === ProposalDocumentStatus::Sent && ! $isExpired)
+                                <button type="button" wire:click="openSendModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="resend">
+                                    <flux:icon name="paper-airplane" class="size-4 text-slate-400" /> {{ __('Renvoyer') }}
+                                </button>
+                                <button type="button" wire:click="openExtendValidityModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="extend">
+                                    <flux:icon name="calendar-days" class="size-4 text-slate-400" /> {{ __('Prolonger la validité') }}
+                                </button>
+                            @endif
+
+                            {{-- Dupliquer (presque tous les statuts) --}}
+                            @if ($q->status !== ProposalDocumentStatus::Cancelled || $q->isArchived())
+                                <button type="button" wire:click="duplicate" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="duplicate">
+                                    <flux:icon name="document-duplicate" class="size-4 text-slate-400" /> {{ __('Dupliquer') }}
+                                </button>
+                            @else
+                                <button type="button" wire:click="duplicate" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="duplicate">
+                                    <flux:icon name="document-duplicate" class="size-4 text-slate-400" /> {{ __('Dupliquer') }}
+                                </button>
+                            @endif
+
+                            {{-- Annuler (Envoyé uniquement, hors expiré) --}}
+                            @if ($q->status === ProposalDocumentStatus::Sent && ! $isExpired)
+                                <button type="button" wire:click="openCancelModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50" data-action="cancel">
+                                    <flux:icon name="no-symbol" class="size-4" /> {{ __('Annuler') }}
+                                </button>
+                            @endif
+
+                            {{-- Archiver (terminal non-actif) --}}
+                            @if (in_array($q->status, [ProposalDocumentStatus::Declined, ProposalDocumentStatus::Cancelled], true) || $isExpired)
+                                <button type="button" wire:click="archive" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="archive">
+                                    <flux:icon name="archive-box" class="size-4 text-slate-400" /> {{ __('Archiver') }}
+                                </button>
+                            @endif
+
+                            {{-- Supprimer (Draft uniquement) --}}
+                            @if ($q->status === ProposalDocumentStatus::Draft)
+                                <button type="button" wire:click="requestDelete" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50" data-action="delete">
+                                    <flux:icon name="trash" class="size-4" /> {{ __('Supprimer') }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mt-5 space-y-2 border-t border-slate-100 pt-4">
-                    @if ($q->client_id)
+                @if ($q->client_id)
+                    <div class="mt-5 border-t border-slate-100 pt-4">
                         <a href="{{ route('pme.clients.show', $q->client_id) }}" wire:navigate class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
                             <flux:icon name="user" class="size-4" /> {{ __('Voir le client') }}
                         </a>
-                    @endif
-
-                    @if ($q->status === ProposalDocumentStatus::Draft)
-                        <button type="button" wire:click="requestDelete" class="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50">
-                            <flux:icon name="trash" class="size-4" /> {{ __('Supprimer le devis') }}
-                        </button>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </article>
         </div>
     </section>
@@ -565,5 +739,15 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         :send-country="$sendCountry"
         :send-phone-countries="$sendPhoneCountries"
         :send-open-url="$this->sendOpenUrl"
+    />
+
+    <x-ui.cancel-with-reason-modal
+        :show="$showCancelModal"
+        :title="__('Annuler le devis')"
+    />
+
+    <x-proposals.extend-validity-modal
+        :show="$showExtendValidityModal"
+        :min-date="now()->addDay()->toDateString()"
     />
 </div>

@@ -223,11 +223,15 @@ test('markAsAccepted is allowed for quotes', function () {
         ->and($fresh->accepted_at)->not->toBeNull();
 });
 
-test('markAsAccepted throws DomainException for proformas', function () {
+test('markAsAccepted is also allowed for proformas', function () {
     $document = ProposalDocument::factory()->proforma()->sent()->create();
 
     (new ProposalDocumentService)->markAsAccepted($document);
-})->throws(DomainException::class);
+
+    $fresh = $document->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted)
+        ->and($fresh->accepted_at)->not->toBeNull();
+});
 
 test('markAsPoReceived is allowed for proformas and stores PO data', function () {
     $document = ProposalDocument::factory()->proforma()->sent()->create();
