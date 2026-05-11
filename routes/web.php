@@ -31,6 +31,7 @@ Route::get('/accountant/join', [MarketingPageController::class, 'accountantsJoin
 Route::post('/accountant/join', [MarketingPageController::class, 'accountantsJoinStore'])->name('marketing.accountants.join.store');
 Route::get('/conformite', [MarketingPageController::class, 'compliance'])->name('marketing.compliance');
 Route::get('/contact', [MarketingPageController::class, 'contact'])->name('marketing.contact');
+Route::post('/contact', [MarketingPageController::class, 'contactStore'])->name('marketing.contact.store');
 Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defaults('page', 'mentions-legales')->name('marketing.legal');
 Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defaults('page', 'confidentialite')->name('marketing.privacy');
 

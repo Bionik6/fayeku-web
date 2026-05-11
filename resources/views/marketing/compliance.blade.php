@@ -1,92 +1,90 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
-<section class="relative overflow-hidden">
-      <div class="absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.18),transparent_48%),linear-gradient(180deg,#EAF7F2_0%,rgba(234,247,242,0)_100%)]"></div>
-      <div class="mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:pb-24 lg:pt-24">
-        <div class="space-y-8">
-          <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Conformité</p>
-            <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl lg:text-[52px] lg:leading-[60px]">Conformité fiscale: Fayeku vous prépare à l’avance.</h1>
-            <p class="max-w-2xl text-pretty text-lg leading-8 text-slate-600">Les administrations évoluent vers la facturation électronique. Fayeku est conçu pour intégrer ces exigences sans complexité côté PME.</p>
-          </div>
 
-          <div class="flex flex-col gap-3 sm:flex-row">
-                
-                      <a
-                        href="/contact/"
-                        class="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 bg-primary text-accent"
-                      >
-                        Parler à l’équipe
-                      </a>
-                    
-                      <a
-                        href="/pricing/"
-                        class="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 border border-primary/10 bg-white text-primary"
-                      >
-                        Voir les tarifs
-                      </a>
-                    
-              </div>
-        </div>
-
-        <div>
-        <div class="rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Positionnement</p>
-          <p class="mt-4 text-3xl font-semibold text-ink">Conçu pour les réalités sénégalaises.</p>
-          <p class="mt-4 text-base leading-7 text-slate-600">Le socle produit part du besoin PME local : facturer proprement, suivre les impayés et se préparer à la conformité officielle dès publication des modalités techniques par la DGID.</p>
-        </div>
-      </div>
-      </div>
-    </section>
-  
-
-    <section class="pb-20">
-      <div class="mx-auto grid w-full max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Sénégal</p>
-          <h2 class="mt-4 text-2xl font-semibold text-ink">DGID: conformité dès disponibilité officielle</h2>
-          <p class="mt-4 text-base leading-7 text-slate-600">Dès publication officielle des modalités, Fayeku intégrera la conformité DGID dans les plans Essentiel et Entreprise. Objectif: permettre à nos clients d’être conformes automatiquement, avant leurs concurrents.</p>
-        </article>
-        <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Focus produit</p>
-          <h2 class="mt-4 text-2xl font-semibold text-ink">Le Sénégal est la priorité absolue.</h2>
-          <p class="mt-4 text-base leading-7 text-slate-600">Fayeku est conçu d’abord pour les réalités sénégalaises : usages PME, relation cabinet, relances WhatsApp et conformité DGID.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Approche</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Une conformité pensée pour rester simple côté PME.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Le produit avance par priorités locales claires: usage quotidien d’abord, conformité DGID dès disponibilité officielle.</p>
-      </div>
+<section class="hero-bg relative overflow-hidden">
+    <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-16 pb-16 lg:pt-24 lg:pb-20 relative">
+        <p class="eyebrow mb-4">Conformité &amp; sécurité</p>
+        <h1 class="h1 mb-6 max-w-4xl">Préparé pour la <span style="color: var(--color-teal-fayeku);">DGID.</span> Sécurisé pour vos données.</h1>
+        <p class="text-lg max-w-2xl mb-2 leading-relaxed" style="color: var(--color-marketing-slate);">Fayeku intégrera la conformité DGID dans les plans Essentiel et Entreprise dès publication officielle des modalités techniques. En attendant, vos factures restent juridiquement valables et déjà structurées pour la transition.</p>
     </div>
-  
-        <div class="grid gap-6 lg:grid-cols-3">
-          
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Étape 1</p>
-                  <h3 class="mt-4 text-2xl font-semibold text-ink">Facturation moderne</h3>
-                  <p class="mt-4 text-base leading-7 text-slate-600">Créer, envoyer, suivre et relancer proprement dans un cadre pensé pour les PME sénégalaises.</p>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Étape 2</p>
-                  <h3 class="mt-4 text-2xl font-semibold text-ink">Collaboration cabinet</h3>
-                  <p class="mt-4 text-base leading-7 text-slate-600">Structurer la relation PME ↔ cabinet avec visibilité temps réel, exports et collecte de pièces.</p>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Étape 3</p>
-                  <h3 class="mt-4 text-2xl font-semibold text-ink">Conformité DGID</h3>
-                  <p class="mt-4 text-base leading-7 text-slate-600">Intégrer nativement les exigences officielles dès leur disponibilité, sans complexifier l’usage côté client.</p>
-                </article>
-              
+</section>
+
+<section class="pb-16">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="border rounded-3xl px-6 sm:px-8 lg:px-10 py-8 flex flex-col lg:flex-row items-start lg:items-center gap-6" style="background: var(--color-mint-50); border-color: var(--color-mint-200);">
+            <div class="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center" style="background: var(--color-teal-fayeku);">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div class="flex-1">
+                <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: var(--color-vivid);">Conformité DGID : Fayeku vous prépare pour demain.</p>
+                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Fayeku intégrera la conformité DGID dans les plans Essentiel et Entreprise. Lorsque les modalités officielles seront publiées, vos factures seront prêtes à être conformes, sans reparamétrage complexe.</p>
+            </div>
         </div>
-        <a href="/contact/" class="inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent">Parler à l’équipe</a>
-      </div>
-    </section>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-24">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12">
+            <p class="eyebrow mb-3">Notre engagement</p>
+            <h2 class="h2 mb-5">Ce que Fayeku prépare pour la conformité.</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+            @foreach ([
+                ['title' => 'Mentions légales complètes', 'desc' => "NINEA, RCCM, TVA 18%, numérotation continue, mentions obligatoires : tout est intégré dès aujourd'hui.", 'svg' => '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'],
+                ['title' => 'Archivage 10 ans', 'desc' => 'Toutes vos factures, devis et pièces conservés de manière inaltérable, accessibles à tout moment.', 'svg' => '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'],
+                ['title' => 'Transmission vers la DGID', 'desc' => 'Architecture prête à intégrer le format et le canal officiels dès leur publication par la DGID.', 'svg' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'],
+                ['title' => 'Transition sans reparamétrage', 'desc' => 'Le jour J, vos factures basculent côté plateforme. Aucune action complexe à mener côté entreprise.', 'svg' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
+            ] as $card)
+                <article class="card p-7">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $card['svg'] !!}</svg>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">{{ $card['title'] }}</h3>
+                    <p class="text-sm" style="color: var(--color-marketing-slate);">{{ $card['desc'] }}</p>
+                </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-24">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12">
+            <p class="eyebrow mb-3">Sécurité &amp; hébergement</p>
+            <h2 class="h2 mb-5">Vos données, protégées.</h2>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach ([
+                ['title' => 'Chiffrement TLS 1.3', 'desc' => 'Toutes les communications sont chiffrées en transit et au repos (AES-256).', 'svg' => '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'],
+                ['title' => 'Hébergement Europe', 'desc' => 'Serveurs Hetzner, Helsinki. Sauvegardes quotidiennes redondantes.', 'svg' => '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/>'],
+                ['title' => 'Authentification renforcée', 'desc' => "Mots de passe hashés (Argon2), 2FA optionnelle, journal d'audit complet.", 'svg' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'],
+                ['title' => 'Disponibilité 99,9%', 'desc' => "Architecture multi-zones avec bascule automatique en cas d'incident.", 'svg' => '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'],
+                ['title' => 'Export libre des données', 'desc' => 'Vos factures, clients, paiements téléchargeables en CSV/PDF à tout moment.', 'svg' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'],
+                ['title' => 'Conformité RGPD', 'desc' => "Vous restez propriétaire de vos données. Droit d'accès, rectification, suppression respectés.", 'svg' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'],
+            ] as $card)
+                <article class="card p-6">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $card['svg'] !!}</svg>
+                    </div>
+                    <h3 class="font-semibold mb-1">{{ $card['title'] }}</h3>
+                    <p class="text-sm" style="color: var(--color-marketing-slate);">{{ $card['desc'] }}</p>
+                </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<section class="px-5 lg:px-8 pb-20 lg:pb-28">
+    <div class="max-w-7xl mx-auto rounded-3xl py-14 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
+        <div class="relative">
+            <h2 class="h2 mb-4 max-w-2xl mx-auto">Une question sur la conformité ?</h2>
+            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Notre équipe répond en moins de 24h ouvrées.</p>
+            <a href="{{ route('marketing.contact') }}" class="btn-primary">Nous contacter
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
 </x-layouts.marketing>

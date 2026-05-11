@@ -1,533 +1,534 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
-<section class="relative overflow-hidden" data-home-persona="{&quot;entreprise&quot;:{&quot;badge&quot;:&quot;&quot;,&quot;eyebrow&quot;:&quot;Plateforme PME ↔ cabinet comptable&quot;,&quot;subtitle&quot;:&quot;Fayeku connecte votre entreprise et votre comptable autour d’une seule plateforme : factures conformes, relances WhatsApp automatiques, et trésorerie visible à 90 jours.&quot;,&quot;proof&quot;:&quot;30 jours d’essai inclus sur chaque plan. Sans engagement. Résiliable à tout moment.&quot;,&quot;primaryCta&quot;:{&quot;label&quot;:&quot;Essayer 30 jours&quot;,&quot;href&quot;:&quot;/contact/&quot;},&quot;secondaryCta&quot;:{&quot;label&quot;:&quot;Voir les tarifs&quot;,&quot;href&quot;:&quot;/pricing/&quot;},&quot;statTitle&quot;:&quot;Mise en route&quot;,&quot;statText&quot;:&quot;Onboarding guidé, sans configuration lourde, avec accès Fayeku Compta activable en quelques clics.&quot;,&quot;image&quot;:&quot;/screenshots/hero-pme-dashboard.png&quot;},&quot;expert&quot;:{&quot;badge&quot;:&quot;Fayeku Compta est gratuit&quot;,&quot;eyebrow&quot;:&quot;Cockpit multi-clients pour cabinets&quot;,&quot;subtitle&quot;:&quot;Centralisez les factures de vos PME clientes, collectez les pièces, exportez vers vos outils comptables et activez un programme partenaire récurrent.&quot;,&quot;proof&quot;:&quot;Cabinet gratuit. PMEs invitées via votre lien : 30 jours Essentiel offerts.&quot;,&quot;primaryCta&quot;:{&quot;label&quot;:&quot;Découvrir Fayeku Compta&quot;,&quot;href&quot;:&quot;/accountants/&quot;},&quot;secondaryCta&quot;:{&quot;label&quot;:&quot;Voir le programme partenaire&quot;,&quot;href&quot;:&quot;/accountants/#partenaires&quot;},&quot;statTitle&quot;:&quot;Gain de temps immédiat&quot;,&quot;statText&quot;:&quot;Accédez aux factures de vos clients en temps réel, exportez en un clic, sans ressaisie manuelle.&quot;,&quot;image&quot;:&quot;/screenshots/hero-compta-dashboard.png&quot;}}">
-      <div class="absolute inset-x-0 top-0 -z-10 h-[42rem] bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.22),transparent_48%),linear-gradient(180deg,#EAF7F2_0%,rgba(234,247,242,0)_100%)]"></div>
-      <div class="absolute inset-0 -z-10 bg-grid bg-[size:22px_22px] opacity-40"></div>
 
-      <div class="mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:pb-24 lg:pt-24">
-        <div class="space-y-8">
-          
-    <div class="inline-flex rounded-full border border-primary/10 bg-white/85 p-1 shadow-soft backdrop-blur" role="tablist" aria-label="Choisir votre profil">
-      
-            <button
-              type="button"
-              role="tab"
-              aria-selected="true"
-              data-persona-value="entreprise"
-              class="rounded-full px-4 py-2 text-sm font-medium transition-colors sm:px-5 bg-primary text-accent"
-            >
-              Je suis une entreprise
-            </button>
-          
-            <button
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-persona-value="expert"
-              class="rounded-full px-4 py-2 text-sm font-medium transition-colors sm:px-5 text-slate-600 hover:text-primary"
-            >
-              Je suis expert-comptable
-            </button>
-          
-    </div>
-  
-
-          <div class="space-y-5">
-            <div data-persona-badge-wrapper class="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/90 px-4 py-2 text-sm font-medium text-primary shadow-soft hidden">
-              <span aria-hidden>⭐</span>
-              <span data-persona-field="badge"></span>
+<section class="hero-bg relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-28 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+        <div class="lg:col-span-6">
+            <div class="pill-toggle mb-7" role="tablist" aria-label="Type d'audience">
+                <a href="{{ route('home') }}" class="active">Je suis une entreprise</a>
+                <a href="{{ route('marketing.accountants') }}">Je suis expert-comptable</a>
             </div>
-            <div class="space-y-4">
-              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal" data-persona-field="eyebrow">Plateforme PME ↔ cabinet comptable</p>
-              <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl lg:text-[52px] lg:leading-[60px]">Facturez proprement. Contrôlez votre trésorerie.</h1>
-              <p class="max-w-2xl text-pretty text-lg leading-8 text-slate-600" data-persona-field="subtitle">Fayeku connecte votre entreprise et votre comptable autour d’une seule plateforme : factures conformes, relances WhatsApp automatiques, et trésorerie visible à 90 jours.</p>
-            </div>
-          </div>
 
-          <div class="flex flex-col gap-3 sm:flex-row">
-            <a href="/contact/" data-persona-link="primary" class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent transition-transform hover:-translate-y-0.5">Essayer 30 jours</a>
-            <a href="/pricing/" data-persona-link="secondary" class="inline-flex items-center justify-center rounded-full border border-primary/10 bg-white px-6 py-3 text-sm font-semibold text-primary">Voir les tarifs</a>
-          </div>
+            <p class="eyebrow mb-4">Plateforme PME · Cabinet comptable · Trésorerie</p>
+            <h1 class="h1 mb-6">
+                Facturez proprement.<br/>
+                <span style="color: var(--color-teal-fayeku);">Récupérez votre argent plus vite.</span>
+            </h1>
+            <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
+                Fayeku aide les PME sénégalaises à créer leurs factures, suivre leurs impayés et relancer automatiquement leurs clients sur WhatsApp. Reprenez le contrôle de votre trésorerie.
+            </p>
 
-          <div class="flex flex-col gap-4 rounded-4xl border border-primary/10 bg-white/85 p-5 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm font-medium text-slate-600" data-persona-field="proof">✅ 30 jours d’essai inclus sur chaque plan. Sans engagement. Résiliable à tout moment.</p>
-            <div class="rounded-3xl bg-mist px-4 py-3 text-sm text-primary">
-              <span class="block font-semibold" data-persona-field="stat-title">Mise en route</span>
-              <span data-persona-field="stat-text">Onboarding guidé, sans configuration lourde, avec accès Fayeku Compta activable en quelques clics.</span>
+            <div class="flex flex-wrap gap-3 mb-8">
+                <a href="{{ route('register') }}" class="btn-primary">Essayer 30 jours
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+                <a href="{{ route('marketing.pricing') }}" class="btn-secondary">Voir les tarifs</a>
             </div>
-          </div>
+
+            <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30 jours d'essai</span>
+                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sans carte bancaire</span>
+                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Pensé à Dakar</span>
+            </div>
         </div>
 
+        <div class="lg:col-span-6 relative">
+            <div class="absolute -top-10 -right-8 w-72 h-72 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
+            <div class="absolute -bottom-10 -left-8 w-56 h-56 rounded-full blur-3xl -z-0" style="background: rgba(15, 184, 92, 0.15);"></div>
+
+            <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
+            <div class="relative browser">
+                <div class="browser-bar">
+                    <span class="browser-dot bg-rose-300"></span>
+                    <span class="browser-dot bg-amber-300"></span>
+                    <span class="browser-dot bg-emerald-300"></span>
+                    <div class="ml-3 text-[11px] font-mono truncate" style="color: var(--color-marketing-slate);">demo.fayeku.sn — Tableau de bord</div>
+                </div>
+
+                <div class="p-5 lg:p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <div class="text-[11px] uppercase tracking-widest font-semibold" style="color: var(--color-marketing-slate);">Bienvenue</div>
+                            <div class="text-lg font-semibold tracking-tight" style="color: var(--color-marketing-ink);">Atelier Numérique SARL</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            </div>
+                            <div class="w-8 h-8 rounded-lg text-white flex items-center justify-center text-xs font-semibold" style="background: var(--color-teal-fayeku);">AN</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 mb-5">
+                        <div class="rounded-xl p-3" style="background: var(--color-mint-50);">
+                            <div class="text-[10px] uppercase tracking-wider font-semibold mb-1" style="color: var(--color-marketing-slate);">CA facturé</div>
+                            <div class="font-mono text-[15px] font-bold leading-none" style="color: var(--color-marketing-ink);">12.8M</div>
+                            <div class="text-[10px] text-emerald-600 mt-1 flex items-center gap-0.5">▲ +14%</div>
+                        </div>
+                        <div class="rounded-xl p-3" style="background: var(--color-mint-50);">
+                            <div class="text-[10px] uppercase tracking-wider font-semibold mb-1" style="color: var(--color-marketing-slate);">Encaissé</div>
+                            <div class="font-mono text-[15px] font-bold leading-none" style="color: var(--color-marketing-ink);">8.4M</div>
+                            <div class="text-[10px] text-emerald-600 mt-1">▲ +18%</div>
+                        </div>
+                        <div class="text-white rounded-xl p-3 relative overflow-hidden" style="background: var(--color-teal-fayeku);">
+                            <div class="text-[10px] uppercase tracking-wider font-semibold mb-1" style="color: var(--color-mint-200);">À encaisser 90j</div>
+                            <div class="font-mono text-[15px] font-bold leading-none" style="color: var(--color-vivid);">14.7M</div>
+                            <div class="text-[10px] mt-1" style="color: var(--color-mint-200);">▲ +12%</div>
+                        </div>
+                        <div class="bg-rose-50 rounded-xl p-3">
+                            <div class="text-[10px] uppercase tracking-wider font-semibold mb-1" style="color: var(--color-marketing-slate);">En retard</div>
+                            <div class="font-mono text-[15px] font-bold text-rose-600 leading-none">2.1M</div>
+                            <div class="text-[10px] text-rose-600 mt-1">4 factures</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-3 p-2.5 rounded-lg">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 font-mono font-bold text-xs flex items-center justify-center">SO</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[12px] font-semibold truncate" style="color: var(--color-marketing-ink);">Sonatel Business</div>
+                                <div class="text-[10px] font-mono" style="color: var(--color-marketing-slate);">FAC-2026-0145 · Éch. 12 mai</div>
+                            </div>
+                            <div class="font-mono text-[12px] font-semibold">1 250 000</div>
+                            <span class="text-[9px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">Payée</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-2.5 rounded-lg">
+                            <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-700 font-mono font-bold text-xs flex items-center justify-center">DL</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[12px] font-semibold truncate" style="color: var(--color-marketing-ink);">Dakar Logistique</div>
+                                <div class="text-[10px] font-mono" style="color: var(--color-marketing-slate);">FAC-2026-0144 · J+7</div>
+                            </div>
+                            <div class="font-mono text-[12px] font-semibold">680 000</div>
+                            <span class="text-[9px] font-semibold tracking-wider uppercase bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Envoyée</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-2.5 rounded-lg">
+                            <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 font-mono font-bold text-xs flex items-center justify-center">MS</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[12px] font-semibold truncate" style="color: var(--color-marketing-ink);">Médina Stores SARL</div>
+                                <div class="text-[10px] font-mono" style="color: var(--color-marketing-slate);">FAC-2026-0142 · J-12</div>
+                            </div>
+                            <div class="font-mono text-[12px] font-semibold">320 000</div>
+                            <span class="text-[9px] font-semibold tracking-wider uppercase bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">En retard</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex absolute -top-4 -left-4 lg:-left-8 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[220px]" style="box-shadow: var(--shadow-float);">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-[11px] font-medium" style="color: var(--color-marketing-slate);">Paiement reçu</div>
+                    <div class="font-mono text-[15px] font-bold" style="color: var(--color-marketing-ink);">+1 250 000 FCFA</div>
+                    <div class="text-[10px]" style="color: var(--color-marketing-slate);">Sonatel · Wave</div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-6 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+                <div class="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0" style="background: var(--color-teal-fayeku);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-[11px] font-medium" style="color: var(--color-marketing-slate);">Relance programmée</div>
+                    <div class="text-[12px] font-semibold" style="color: var(--color-marketing-ink);">Médina Stores · J+15</div>
+                    <div class="text-[10px] font-semibold" style="color: var(--color-vivid);">Demain · 9h00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12">
+            <p class="eyebrow mb-3">Le problème</p>
+            <h2 class="h2 mb-5">Les impayés et Excel ne devraient pas piloter votre entreprise.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">
+                Aujourd'hui, beaucoup de PME facturent encore sur Word ou Excel, relancent à la main sur WhatsApp, et envoient leurs pièces comptables en vrac en fin de mois. Résultat : paiements en retard, trésorerie floue, stress fiscal, perte de temps.
+            </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 lg:gap-5">
+            @foreach ([
+                ['title' => 'Factures encore créées sur Word ou Excel', 'desc' => "Numérotation manuelle, mises en forme cassées, calculs faux. Pas d'historique exploitable."],
+                ['title' => 'Relances manuelles sur WhatsApp ou par téléphone', 'desc' => "On oublie, on n'ose pas, on insiste trop tard. La relation client s'use, le cash n'arrive pas."],
+                ['title' => 'Pièces comptables envoyées en vrac en fin de mois', 'desc' => "Le cabinet court après les justificatifs. La saisie devient un puzzle. La clôture déborde."],
+                ['title' => 'Trésorerie floue et retards de paiement difficiles à anticiper', 'desc' => "On découvre les trous trop tard. Les décisions se prennent dans le doute, pas dans les chiffres."],
+            ] as $pain)
+                <div class="card p-6 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold mb-1">{{ $pain['title'] }}</h3>
+                        <p class="text-sm" style="color: var(--color-marketing-slate);">{{ $pain['desc'] }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-28">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12 text-center mx-auto">
+            <p class="eyebrow mb-3">Pourquoi Fayeku</p>
+            <h2 class="h2 mb-5">Une plateforme pensée pour les réalités du Sénégal.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">
+                Conçu à Dakar pour les PME sénégalaises : facturation claire, relances utiles, collaboration comptable plus fluide.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+            <article class="card p-7">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Se faire payer plus vite</h3>
+                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Relances WhatsApp automatisées, suivi des impayés en temps réel, messages prêts à envoyer.</p>
+            </article>
+            <article class="card p-7">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Contrôler le cash</h3>
+                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Délai moyen de paiement, prévision de trésorerie à 90 jours, vision claire de l'argent à encaisser.</p>
+            </article>
+            <article class="card p-7">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Travailler mieux avec son comptable</h3>
+                <p class="leading-relaxed" style="color: var(--color-marketing-slate);">Accès cabinet, exports Sage, coffre-fort documents. Moins de WhatsApp, plus de structure.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-28">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
+        <div class="order-2 lg:order-1">
+            <p class="eyebrow mb-3">Facturation pro</p>
+            <h2 class="h2 mb-5">Une facture qui inspire confiance, en 30 secondes.</h2>
+            <p class="text-lg leading-relaxed mb-6" style="color: var(--color-marketing-slate);">
+                Templates avec votre logo, NINEA, TVA et numérotation continue. Vos factures partent par WhatsApp ou email en un clic, et leur statut est suivi automatiquement.
+            </p>
+            <ul class="space-y-3" style="color: var(--color-marketing-ink);">
+                <li class="flex items-start gap-3"><span class="check"></span>Modèle PDF aux normes sénégalaises (NINEA, TVA 18%, mentions légales)</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Envoi WhatsApp natif, lecture suivie automatiquement</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Devis et factures récurrentes inclus dès le plan Essentiel</li>
+            </ul>
+        </div>
+        <div class="order-1 lg:order-2 relative">
+            <img src="/mockup-invoice.png" alt="Exemple de facture Sayar Distribution éditée dans Fayeku, montant 1 475 000 FCFA, envoyée via WhatsApp" class="w-full max-w-[620px] mx-auto" />
+        </div>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-28">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
         <div class="relative">
-          <div class="absolute -left-4 top-10 hidden h-20 w-20 rounded-full bg-accent/20 blur-2xl sm:block"></div>
-          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
-            <img src="/screenshots/hero-pme-dashboard.png" alt="Aperçu de l’interface Fayeku" width="1440" height="1050" class="h-auto w-full rounded-[1.6rem]" data-persona-field="image" />
-          </div>
-        </div>
-      </div>
-    </section>
-  
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-16 px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft lg:grid-cols-[0.9fr_1.1fr] lg:p-12">
-          
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Le problème</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Les impayés et Excel ne devraient pas piloter votre entreprise.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Aujourd’hui, beaucoup de PME facturent encore sur Word ou Excel, relancent à la main sur WhatsApp, et envoient leurs pièces comptables en vrac en fin de mois. Résultat: paiements en retard, trésorerie floue, stress fiscal, perte de temps.</p>
-      </div>
-    </div>
-  
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">️⚠️ Factures encore créées sur Word ou Excel</div><div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">⚠️ Relances manuelles sur WhatsApp ou par téléphone</div><div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">⚠️ Pièces comptables envoyées en vrac en fin de mois</div><div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">⚠️ Trésorerie floue et retards de paiement difficiles à anticiper</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4 mx-auto max-w-3xl text-center">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Pourquoi Fayeku</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Une plateforme pensée pour les réalités du Sénégal.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Conçu à Dakar pour les PME sénégalaises: facturation claire, relances utiles et collaboration comptable plus fluide.</p>
-      </div>
-    </div>
-  
-        <div class="grid gap-6 lg:grid-cols-3">
-          
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-5">
-                  <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-emerald-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-2xl font-semibold text-ink">Se faire payer plus vite</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Relances WhatsApp automatisées, suivi des impayés en temps réel, et messages prêts à envoyer.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-5">
-                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-2xl font-semibold text-ink">Contrôler le cash</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Délai moyen de paiement, prévision de trésorerie à 90 jours, et vision claire de l’argent à encaisser.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-5">
-                  <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-violet-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-2xl font-semibold text-ink">Travailler mieux avec son comptable</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Accès cabinet, exports, coffre-fort documents. Moins de WhatsApp, plus de structure.</p>
-                  </div>
-                </article>
-              
-        </div>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="rounded-[2rem] bg-[#024D4D] p-8 text-white shadow-soft lg:p-12">
-          
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Comment ça marche</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-white sm:text-4xl">Simple. En 4 étapes.</h2>
-        <p class="text-pretty text-base leading-7 text-white/80 sm:text-lg">Le parcours est pensé pour le quotidien d’une PME et reste lisible pour le cabinet.</p>
-      </div>
-    </div>
-  
-          <div class="mt-10 grid gap-4 lg:grid-cols-4">
-            
-                  <div class="rounded-4xl border border-white/10 bg-white/5 p-6">
-                    <p class="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Étape 1</p>
-                    <p class="mt-4 text-lg font-medium leading-7 text-white/90">Créez une facture en 30 secondes</p>
-                  </div>
-                
-                  <div class="rounded-4xl border border-white/10 bg-white/5 p-6">
-                    <p class="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Étape 2</p>
-                    <p class="mt-4 text-lg font-medium leading-7 text-white/90">Envoyez-la par WhatsApp ou email</p>
-                  </div>
-                
-                  <div class="rounded-4xl border border-white/10 bg-white/5 p-6">
-                    <p class="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Étape 3</p>
-                    <p class="mt-4 text-lg font-medium leading-7 text-white/90">Suivez les paiements et les retards</p>
-                  </div>
-                
-                  <div class="rounded-4xl border border-white/10 bg-white/5 p-6">
-                    <p class="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Étape 4</p>
-                    <p class="mt-4 text-lg font-medium leading-7 text-white/90">Fayeku relance vos clients au bon moment, automatiquement</p>
-                  </div>
-                
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Fonctionnalités</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Tout ce qu’il faut pour facturer, relancer, et piloter.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Tout est là dès le premier jour. Activez ce dont vous avez besoin.</p>
-      </div>
-    </div>
-  
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-emerald-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Facturation professionnelle</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Templates logo + NINEA + TVA</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Suivi impayés</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Vue en temps réel des factures en retard</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-emerald-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Relances WhatsApp automatiques</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Scénarios J+7, J+15 et manuels</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Relance intelligente IA</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Quand relancer et quel message envoyer</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Score fiabilité client</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Priorisez les comptes les plus risqués</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Prévision trésorerie 90 jours</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Encaissements attendus et alertes</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-cyan-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-cyan-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Factures récurrentes &amp; devis</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Signature devis et conversion instantanée</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-violet-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Coffre-fort documents</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Collecte de pièces simple pour le cabinet</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft flex flex-col gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-    <svg class="w-4 h-4 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-ink">Conformité DGID</h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Intégration dès disponibilité officielle</p>
-                  </div>
-                </article>
-              
-        </div>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 rounded-[2rem] border border-primary/10 bg-[#024D4D] p-8 text-white shadow-soft lg:grid-cols-[1fr_0.8fr] lg:p-12">
-          <div class="space-y-5">
-            <div class="inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">Fayeku Compta</div>
-            <h2 class="text-balance text-3xl font-semibold sm:text-4xl">Fayeku Compta: gratuit et complet</h2>
-            <p class="max-w-2xl text-base leading-7 text-white/80">Centralisez vos PME clientes, suivez leurs factures en temps réel, collectez les pièces et exportez en un clic. Fayeku Compta est gratuit et conçu pour vous faire gagner du temps.</p>
-            <a href="/accountants/" class="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-accent">Découvrir Fayeku Compta</a>
-          </div>
-          <div class="grid gap-3">
-            
-                  <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                      <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-                      </svg>
+            <div class="absolute -top-6 -left-6 w-48 h-48 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
+            <div class="browser relative max-w-[520px] mx-auto">
+                <div class="browser-bar">
+                    <span class="browser-dot bg-rose-300"></span>
+                    <span class="browser-dot bg-amber-300"></span>
+                    <span class="browser-dot bg-emerald-300"></span>
+                    <div class="ml-3 text-[11px] font-mono truncate" style="color: var(--color-marketing-slate);">demo.fayeku.sn — Relance automatique</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="text-[10px] uppercase tracking-widest font-semibold" style="color: var(--color-marketing-slate);">Scénario actif</div>
+                            <div class="font-semibold" style="color: var(--color-marketing-ink);">Relance standard PME</div>
+                        </div>
+                        <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-1 rounded-full inline-flex items-center gap-1.5" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);"><span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background: var(--color-vivid);"></span>En route</span>
                     </div>
-                    <span class="text-sm font-medium text-white/90">Dashboard multi-clients</span>
-                  </div>
-                
-                  <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                      <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      </svg>
-                    </div>
-                    <span class="text-sm font-medium text-white/90">Vue factures en temps réel</span>
-                  </div>
-                
-                  <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                      <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                    </div>
-                    <span class="text-sm font-medium text-white/90">Exports Sage 100 / EBP / Excel</span>
-                  </div>
-                
-                  <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                      <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3" />
-                      </svg>
-                    </div>
-                    <span class="text-sm font-medium text-white/90">Collecte de pièces</span>
-                  </div>
-                
-                  <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                      <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
-                      </svg>
-                    </div>
-                    <span class="text-sm font-medium text-white/90">Rapport mensuel automatique</span>
-                  </div>
-                
-                  <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                      <svg class="w-4 h-4 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-                      </svg>
-                    </div>
-                    <span class="text-sm font-medium text-white/90">Commission récurrente partenaire</span>
-                  </div>
-                
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section class="pb-20">
-      <div class="mx-auto grid w-full max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Sénégal</p>
-          <h3 class="mt-4 text-2xl font-semibold text-ink">Conformité DGID</h3>
-          <p class="mt-4 text-base leading-7 text-slate-600">Intégration dès disponibilité officielle (Essentiel &amp; Entreprise) pour vous préparer sans changer vos habitudes de travail.</p>
-        </article>
-        <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Déploiement</p>
-          <h3 class="mt-4 text-2xl font-semibold text-ink">Pensé pour les PME sénégalaises</h3>
-          <p class="mt-4 text-base leading-7 text-slate-600">Fayeku est conçu à Dakar pour les usages locaux: facturation structurée, visibilité sur la trésorerie et échanges plus simples avec le cabinet.</p>
-        </article>
-        <div class="lg:col-span-2">
-          <a href="/conformite/" class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent">Comprendre la conformité DGID</a>
-        </div>
-      </div>
-    </section>
+                    <div class="relative pl-4 mb-5">
+                        <div class="absolute left-[7px] top-2 bottom-2 w-px bg-gray-200"></div>
+                        <ol class="space-y-3">
+                            <li class="flex items-center gap-3 relative">
+                                <span class="absolute -left-4 w-3.5 h-3.5 rounded-full border-2 border-white ring-2 ring-[color:var(--color-vivid)]/20" style="background: var(--color-vivid);"></span>
+                                <span class="font-mono text-[11px] font-bold w-12" style="color: var(--color-teal-fayeku);">J+3</span>
+                                <span class="flex-1 text-[12px]" style="color: var(--color-marketing-ink);">Rappel amical · WhatsApp</span>
+                                <span class="text-[10px] font-semibold" style="color: var(--color-vivid);">Envoyé</span>
+                            </li>
+                            <li class="flex items-center gap-3 relative">
+                                <span class="absolute -left-4 w-3.5 h-3.5 rounded-full border-2 border-white ring-2 ring-[color:var(--color-vivid)]/20" style="background: var(--color-vivid);"></span>
+                                <span class="font-mono text-[11px] font-bold w-12" style="color: var(--color-teal-fayeku);">J+7</span>
+                                <span class="flex-1 text-[12px]" style="color: var(--color-marketing-ink);">Relance ferme · WhatsApp + PDF</span>
+                                <span class="text-[10px] font-semibold" style="color: var(--color-vivid);">Envoyé</span>
+                            </li>
+                            <li class="flex items-center gap-3 relative">
+                                <span class="absolute -left-4 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-white ring-2 ring-amber-200"></span>
+                                <span class="font-mono text-[11px] font-bold w-12" style="color: var(--color-teal-fayeku);">J+15</span>
+                                <span class="flex-1 text-[12px]" style="color: var(--color-marketing-ink);">Relance directe · WhatsApp + Email</span>
+                                <span class="text-[10px] text-amber-600 font-semibold">Demain 9h</span>
+                            </li>
+                            <li class="flex items-center gap-3 relative">
+                                <span class="absolute -left-4 w-3.5 h-3.5 rounded-full bg-gray-200 border-2 border-white"></span>
+                                <span class="font-mono text-[11px] font-bold w-12" style="color: var(--color-marketing-slate);">J+30</span>
+                                <span class="flex-1 text-[12px]" style="color: var(--color-marketing-slate);">Mise en demeure assistée</span>
+                                <span class="text-[10px]" style="color: var(--color-marketing-slate);">En attente</span>
+                            </li>
+                        </ol>
+                    </div>
 
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Repères</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Ce que Fayeku change concrètement</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Des éléments tangibles pour évaluer rapidement la promesse produit.</p>
-      </div>
+                    <div class="rounded-xl border border-gray-100 p-3" style="background: var(--color-mint-50);">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-6 h-6 rounded-md text-white text-[10px] font-bold flex items-center justify-center" style="background: var(--color-teal-fayeku);">F</div>
+                            <div class="text-[11px] font-semibold" style="color: var(--color-marketing-ink);">Aperçu du message · J+15</div>
+                        </div>
+                        <p class="text-[12px] leading-relaxed" style="color: var(--color-marketing-ink);">
+                            Bonjour M. Diop 👋 Petit rappel pour la facture <span class="font-mono font-semibold">FAC-2026-0142</span> de <span class="font-mono font-semibold">320 000 FCFA</span>, échue depuis 12 jours. Vous pouvez régler via Wave au 77 123 45 67.
+                        </p>
+                        <div class="flex items-center gap-2 mt-2 text-[10px]" style="color: var(--color-marketing-slate);">
+                            <span class="inline-flex items-center gap-1 bg-white border border-gray-200 px-1.5 py-0.5 rounded"><svg width="10" height="10" viewBox="0 0 24 24" fill="#DC2626" stroke="none"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>PDF joint</span>
+                            <span>·</span>
+                            <span>Programmé · 27 mai · 09:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex absolute -bottom-4 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[230px]" style="box-shadow: var(--shadow-float);">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-[11px] font-medium" style="color: var(--color-marketing-slate);">Délai moyen réduit</div>
+                    <div class="font-mono text-[15px] font-bold" style="color: var(--color-marketing-ink);">−9 jours</div>
+                    <div class="text-[10px] font-semibold" style="color: var(--color-vivid);">vs. relances manuelles</div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <p class="eyebrow mb-3">Relance automatique</p>
+            <h2 class="h2 mb-5">Vos clients vous paient avant même que vous ayez à insister.</h2>
+            <p class="text-lg leading-relaxed mb-6" style="color: var(--color-marketing-slate);">
+                Fayeku envoie les relances WhatsApp à votre place, au bon moment, avec le bon ton. La facture PDF est jointe automatiquement. Le paiement est rapproché dès qu'il arrive.
+            </p>
+            <ul class="space-y-3" style="color: var(--color-marketing-ink);">
+                <li class="flex items-start gap-3"><span class="check"></span>Scénarios prêts : J+3 amical, J+7 ferme, J+15 et J+30</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Messages personnalisables par client et par secteur</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Marquez « payé » via Wave, Orange Money, virement ou cash</li>
+            </ul>
+        </div>
     </div>
-  
-        <div class="grid gap-6 lg:grid-cols-3">
-          
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-                  <p class="text-3xl font-semibold text-ink">30 sec</p>
-                  <h3 class="mt-4 text-xl font-semibold text-ink">pour créer une facture</h3>
-                  <p class="mt-4 text-base leading-7 text-slate-600">Un flux simple pour passer de l&#39;émission à l&#39;envoi sans tableur.</p>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-                  <p class="text-3xl font-semibold text-ink">90 jours</p>
-                  <h3 class="mt-4 text-xl font-semibold text-ink">de visibilité cash</h3>
-                  <p class="mt-4 text-base leading-7 text-slate-600">Une prévision de trésorerie lisible pour anticiper les échéances.</p>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
-                  <p class="text-3xl font-semibold text-ink">0 FCFA</p>
-                  <h3 class="mt-4 text-xl font-semibold text-ink">pour Fayeku Compta</h3>
-                  <p class="mt-4 text-base leading-7 text-slate-600">Votre cabinet peut accéder à l&#39;espace dédié sans coût supplémentaire.</p>
-                </article>
-              
-        </div>
-      </div>
-    </section>
+</section>
 
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">FAQ</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Les questions qui reviennent le plus avant de se lancer.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Des réponses courtes, directes, et orientées usage réel.</p>
-      </div>
-    </div>
-  
-        
-    <div class="space-y-4" data-accordion>
-      
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="true">
-                <span class="text-base font-semibold text-ink sm:text-lg">Puis-je utiliser Fayeku sans intégrer Wave/Orange Money ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>−</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel >
-                Oui. Les paiements se font hors application. Vous pouvez marquer une facture comme payée via Wave, Orange Money, virement ou cash, puis Fayeku gère le suivi et les relances WhatsApp.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Fayeku remplace-t-il mon comptable ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Non. Fayeku structure vos données, fluidifie les échanges avec le cabinet et réduit la collecte chaotique. Le cabinet reste au centre du conseil et de la production comptable.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Est-ce compatible avec Sage/EBP ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Oui. Les exports Sage 100, EBP et Excel sont disponibles sur tous les plans payants, avec accès Fayeku Compta gratuit pour votre cabinet.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Puis-je tester Fayeku avant de m’engager ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Oui. Chaque plan Fayeku inclut 30 jours d’essai pour vous laisser le temps de tester la facturation, les relances et la collaboration cabinet.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Comment marche le programme partenaire comptable ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Le cabinet touche 15% récurrent à vie sur les plans actifs, reçoit un bonus de +1 mois de MRR sur la première signature et offre 30 jours Essentiel aux PME invitées via son lien.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Le paiement annuel est-il obligatoire ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Non. Le mensuel reste disponible. L’annuel est optionnel avec l’avantage “Payez 10 mois, utilisez 12”.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Quid de la conformité DGID ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Fayeku intégrera la conformité DGID dès que le cadre officiel sera disponible. Les plans Essentiel et Entreprise sont préparés pour cette évolution, sans changement d’usage pour vos équipes.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Où est hébergée la plateforme ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Sur une infrastructure cloud sécurisée à haute disponibilité, avec des accès contrôlés pour votre équipe et votre cabinet. Vos données sont exclusivement accessibles aux utilisateurs que vous autorisez.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Dois-je former mon comptable pour qu&#39;il accède à mes données ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Non. Fayeku Compta est gratuit, indépendant, et votre comptable peut y accéder sans configuration complexe. Vous l’invitez en quelques clics.
-              </p>
-            </div>
-          
-            <div data-accordion-item class="rounded-3xl border border-primary/10 bg-white p-6 shadow-soft">
-              <button type="button" class="flex w-full items-center justify-between gap-4 text-left" data-accordion-button aria-expanded="false">
-                <span class="text-base font-semibold text-ink sm:text-lg">Qu&#39;arrive-t-il à mes données si j&#39;arrête Fayeku ?</span>
-                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 text-primary" data-accordion-icon aria-hidden>+</span>
-              </button>
-              <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base" data-accordion-panel hidden>
-                Vos données vous appartiennent. Vous pouvez exporter vos factures et vos informations clés à tout moment avant une résiliation.
-              </p>
-            </div>
-          
-    </div>
-  
-      </div>
-    </section>
-
-    <section class="pb-24">
-      <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="rounded-[2rem] border border-primary/10 bg-mist px-6 py-12 text-center shadow-soft sm:px-10">
-          <h2 class="mt-4 text-balance text-3xl font-semibold text-ink sm:text-4xl">Prêt à reprendre le contrôle de votre trésorerie ?</h2>
-          <p class="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600">Démarrez en 2 minutes. Aucun engagement. Vous pouvez arrêter quand vous voulez.</p>
-          <a href="/contact/" class="mt-8 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-accent">Essayer 30 jours</a>
+<section class="py-20 lg:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: var(--color-vivid);">Comment ça marche</p>
+            <h2 class="h2 mb-4">Simple. En 4 étapes.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Un parcours pensé pour le quotidien d'une PME et lisible pour le cabinet.</p>
         </div>
-      </div>
-    </section>
+
+        <ol class="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 lg:gap-y-0 lg:gap-x-2">
+            @foreach ([
+                ['n' => 1, 'title' => 'Créez et envoyez vos factures', 'desc' => 'Générez vos factures en quelques clics et envoyez-les par WhatsApp ou email.', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>'],
+                ['n' => 2, 'title' => 'Relancez automatiquement', 'desc' => 'Fayeku relance vos clients par WhatsApp et email, au bon moment.', 'svg' => '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'],
+                ['n' => 3, 'title' => 'Suivez vos encaissements', 'desc' => 'Visualisez votre cash en temps réel et anticipez sur 90 jours.', 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
+                ['n' => 4, 'title' => 'Collaborez avec votre comptable', 'desc' => 'Partagez documents, exports et accédez à votre cabinet.', 'svg' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/><path d="M19 8l3 3-3 3"/>'],
+            ] as $step)
+                <li class="relative flex flex-col items-center text-center px-4">
+                    <div class="relative mb-6">
+                        <div class="w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center bg-white" style="border-color: var(--color-mint-200);">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#024D4E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $step['svg'] !!}</svg>
+                        </div>
+                        <span class="absolute -top-2 -left-2 w-9 h-9 rounded-full text-white font-bold text-sm flex items-center justify-center shadow-md ring-4 ring-white" style="background: var(--color-vivid);">{{ $step['n'] }}</span>
+                        @if ($step['n'] < 4)
+                            <span class="hidden lg:block absolute top-1/2 left-full w-[calc(100%+1rem)] border-t-2 border-dashed" style="border-color: var(--color-mint-200);" aria-hidden="true"></span>
+                        @endif
+                    </div>
+                    <h3 class="font-semibold text-lg leading-snug mb-2" style="color: var(--color-marketing-ink);">{{ $step['title'] }}</h3>
+                    <p class="text-sm leading-relaxed max-w-[230px]" style="color: var(--color-marketing-slate);">{{ $step['desc'] }}</p>
+                </li>
+            @endforeach
+        </ol>
+    </div>
+</section>
+
+<section class="py-20 lg:py-28">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12">
+            <p class="eyebrow mb-3">Fonctionnalités</p>
+            <h2 class="h2 mb-5">Tout ce qu'il faut pour facturer, relancer, et piloter.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Tout est là dès le premier jour. Activez ce dont vous avez besoin.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach ([
+                ['title' => 'Facturation professionnelle', 'desc' => 'Templates logo + NINEA + TVA, numérotation automatique.', 'bg' => 'var(--color-mint-100)', 'color' => 'var(--color-teal-fayeku)', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>'],
+                ['title' => 'Suivi des impayés', 'desc' => 'Vue en temps réel des factures en retard et de leur ancienneté.', 'bg' => 'rgb(255 241 242)', 'color' => '#f43f5e', 'svg' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
+                ['title' => 'Relances WhatsApp automatiques', 'desc' => 'Scénarios J+7, J+15 et manuels, avec PDF joint.', 'bg' => 'rgb(236 253 245)', 'color' => '#059669', 'svg' => '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'],
+                ['title' => 'Relance intelligente IA', 'desc' => 'Quand relancer et quel message envoyer selon le client.', 'bg' => 'rgb(245 243 255)', 'color' => '#7c3aed', 'svg' => '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'],
+                ['title' => 'Score fiabilité client', 'desc' => 'Priorisez les comptes les plus risqués, anticipez les retards.', 'bg' => 'rgb(255 251 235)', 'color' => '#d97706', 'svg' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'],
+                ['title' => 'Prévision trésorerie 90 jours', 'desc' => 'Encaissements attendus, alertes de creux à venir.', 'bg' => 'rgb(240 249 255)', 'color' => '#0284c7', 'svg' => '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'],
+                ['title' => 'Factures récurrentes &amp; devis', 'desc' => 'Signature devis et conversion en facture en un clic.', 'bg' => 'rgb(238 242 255)', 'color' => '#4f46e5', 'svg' => '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'],
+                ['title' => 'Coffre-fort documents', 'desc' => 'Collecte de pièces simple pour le cabinet, fini les PDF sur WhatsApp.', 'bg' => 'rgb(240 253 250)', 'color' => 'var(--color-teal-fayeku)', 'svg' => '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'],
+            ] as $feature)
+                <article class="card p-6">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: {{ $feature['bg'] }}; color: {{ $feature['color'] }};">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $feature['svg'] !!}</svg>
+                    </div>
+                    <h3 class="font-semibold mb-1">{!! $feature['title'] !!}</h3>
+                    <p class="text-sm" style="color: var(--color-marketing-slate);">{{ $feature['desc'] }}</p>
+                </article>
+            @endforeach
+            <article class="card p-6 relative">
+                <div class="absolute top-5 right-5 text-[10px] font-semibold tracking-wider uppercase px-2 py-1 rounded-full" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">En préparation</div>
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3 class="font-semibold mb-1">Conformité DGID</h3>
+                <p class="text-sm" style="color: var(--color-marketing-slate);">Intégration dès disponibilité officielle des modalités techniques.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="relative overflow-hidden" style="background: var(--color-teal-fayeku);">
+    <div class="grain absolute inset-0 opacity-40"></div>
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
+        <div>
+            <p class="eyebrow-mint mb-3">Fayeku Compta</p>
+            <h2 class="h2 text-white mb-5">Fayeku Compta : gratuit et complet</h2>
+            <p class="text-lg leading-relaxed mb-8" style="color: rgba(212, 240, 224, 0.9);">
+                Centralisez vos PME clientes, suivez leurs factures en temps réel, collectez les pièces et exportez en un clic. Fayeku Compta est gratuit et conçu pour vous faire gagner du temps.
+            </p>
+            <a href="{{ route('marketing.accountants') }}" class="btn-white">Découvrir Fayeku Compta
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+        </div>
+        <ul class="space-y-3">
+            @foreach ([
+                ['label' => 'Dashboard multi-clients', 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
+                ['label' => 'Vue factures en temps réel', 'svg' => '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'],
+                ['label' => 'Exports Sage 100 / EBP / Excel', 'svg' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'],
+                ['label' => 'Collecte de pièces', 'svg' => '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'],
+                ['label' => 'Rapport mensuel automatique', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/>'],
+                ['label' => 'Commission récurrente partenaire', 'svg' => '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'],
+            ] as $bullet)
+                <li class="flex items-center gap-4 border border-white/10 rounded-xl px-5 py-4 text-white" style="background: rgba(255, 255, 255, 0.06);">
+                    <span class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(15, 184, 92, 0.12);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $bullet['svg'] !!}</svg>
+                    </span>
+                    {{ $bullet['label'] }}
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</section>
+
+<section class="py-16 lg:py-20">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="border rounded-3xl px-6 sm:px-8 lg:px-10 py-8 lg:py-7 flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8" style="background: var(--color-mint-50); border-color: var(--color-mint-200);">
+            <div class="shrink-0 w-16 h-16 lg:w-[72px] lg:h-[72px] rounded-2xl flex items-center justify-center" style="background: var(--color-teal-fayeku);">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs sm:text-sm font-semibold tracking-widest uppercase mb-2" style="color: var(--color-vivid);">
+                    Conformité DGID : Fayeku vous prépare pour demain.
+                </p>
+                <p class="leading-relaxed max-w-3xl" style="color: var(--color-marketing-slate);">
+                    Fayeku intégrera la conformité DGID dans les plans Essentiel et Entreprise. Lorsque les modalités officielles seront publiées, vos factures seront prêtes à être conformes, sans reparamétrage complexe.
+                </p>
+            </div>
+            <div class="shrink-0">
+                <a href="{{ route('marketing.compliance') }}" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 transition-colors border rounded-full px-5 py-3 text-sm font-medium whitespace-nowrap shadow-sm" style="border-color: var(--color-mint-200); color: var(--color-marketing-ink);">
+                    En savoir plus sur la conformité
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-28">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12">
+            <p class="eyebrow mb-3">Repères</p>
+            <h2 class="h2 mb-5">Ce que Fayeku change concrètement.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Des éléments tangibles pour évaluer rapidement la promesse produit.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-5">
+            <article class="card p-7">
+                <div class="font-mono text-5xl font-bold tracking-tight mb-2" style="color: var(--color-teal-fayeku);">30<span class="text-2xl ml-1 align-top">sec</span></div>
+                <div class="font-semibold mb-2">pour créer une facture</div>
+                <p class="text-sm leading-relaxed" style="color: var(--color-marketing-slate);">Un flux simple pour passer de l'émission à l'envoi sans tableur.</p>
+            </article>
+            <article class="card p-7">
+                <div class="font-mono text-5xl font-bold tracking-tight mb-2" style="color: var(--color-teal-fayeku);">90<span class="text-2xl ml-1 align-top">jours</span></div>
+                <div class="font-semibold mb-2">de visibilité cash</div>
+                <p class="text-sm leading-relaxed" style="color: var(--color-marketing-slate);">Une prévision de trésorerie lisible pour anticiper les échéances.</p>
+            </article>
+            <article class="card p-7">
+                <div class="font-mono text-5xl font-bold tracking-tight mb-2" style="color: var(--color-teal-fayeku);">0<span class="text-2xl ml-1 align-top">FCFA</span></div>
+                <div class="font-semibold mb-2">pour Fayeku Compta</div>
+                <p class="text-sm leading-relaxed" style="color: var(--color-marketing-slate);">Votre cabinet accède à l'espace dédié sans coût supplémentaire.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+@php
+    $homeFaq = [
+        ['q' => 'Puis-je utiliser Fayeku sans intégrer Wave / Orange Money ?', 'a' => 'Oui. Les paiements se font hors application. Marquez une facture comme payée via Wave, Orange Money, virement ou cash, puis Fayeku gère le suivi et les relances WhatsApp.'],
+        ['q' => 'Fayeku remplace-t-il mon comptable ?', 'a' => 'Non. Fayeku structure le flux pour votre comptable et lui donne accès à un espace dédié (Fayeku Compta) gratuit.'],
+        ['q' => 'Est-ce compatible avec Sage / EBP ?', 'a' => 'Oui. Fayeku Compta génère des exports Sage 100, EBP et Excel directement utilisables par votre cabinet.'],
+        ['q' => "Puis-je tester Fayeku avant de m'engager ?", 'a' => "Oui, 30 jours d'essai sont inclus sur tous les plans, sans engagement et sans carte bancaire."],
+        ['q' => 'Comment marche le programme partenaire comptable ?', 'a' => "Vous recommandez Fayeku à vos clients PME et touchez 15% de commission récurrente tant qu'ils restent abonnés."],
+        ['q' => 'Le paiement annuel est-il obligatoire ?', 'a' => "Non. Vous pouvez payer au mois ou bénéficier de 2 mois offerts en payant à l'année."],
+        ['q' => 'Quid de la conformité DGID ?', 'a' => 'Fayeku intègrera la conformité officielle dès publication des modalités techniques par la DGID, sur les plans Essentiel et Entreprise.'],
+        ['q' => 'Où est hébergée la plateforme ?', 'a' => 'Sur des serveurs sécurisés en Europe (Hetzner, Helsinki), avec sauvegardes quotidiennes.'],
+        ['q' => "Qu'arrive-t-il à mes données si j'arrête Fayeku ?", 'a' => "Vous pouvez exporter l'ensemble de vos données (factures, clients, paiements) au format CSV ou PDF à tout moment."],
+    ];
+@endphp
+
+<section class="pb-20 lg:pb-28" x-data="{ open: null }">
+    <div class="max-w-4xl mx-auto px-5 lg:px-8">
+        <div class="mb-12 text-center">
+            <p class="eyebrow mb-3">FAQ</p>
+            <h2 class="h2 mb-5">Les questions qui reviennent le plus avant de se lancer.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Des réponses courtes, directes, orientées usage réel.</p>
+        </div>
+
+        <div class="card divide-y divide-gray-100">
+            @foreach ($homeFaq as $i => $item)
+                <div>
+                    <button
+                        @click="open === {{ $i }} ? open = null : open = {{ $i }}"
+                        class="w-full flex items-center justify-between gap-4 text-left py-5 px-6 hover:bg-[color:var(--color-mint-50)] transition ringfx rounded-2xl"
+                        :aria-expanded="open === {{ $i }}"
+                        type="button">
+                        <span class="font-medium" style="color: var(--color-marketing-ink);">{{ $item['q'] }}</span>
+                        <svg :class="open === {{ $i }} ? 'rotate-45' : ''" :style="open === {{ $i }} ? 'color: var(--color-vivid);' : 'color: var(--color-marketing-slate);'" class="w-5 h-5 transition-transform shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                    <div x-show="open === {{ $i }}" x-collapse x-cloak class="px-6 pb-5 -mt-1 leading-relaxed" style="color: var(--color-marketing-slate);">{{ $item['a'] }}</div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<section class="px-5 lg:px-8 pb-20 lg:pb-28">
+    <div class="max-w-7xl mx-auto rounded-3xl py-16 lg:py-20 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
+        <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(15, 184, 92, 0.10);"></div>
+        <div class="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(2, 77, 78, 0.10);"></div>
+        <div class="relative">
+            <h2 class="h2 mb-4 max-w-2xl mx-auto">Prêt à reprendre le contrôle de votre trésorerie ?</h2>
+            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Démarrez en 2 minutes. Aucun engagement. Pas de carte bancaire.</p>
+            <a href="{{ route('register') }}" class="btn-primary">Essayer 30 jours
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
 </x-layouts.marketing>

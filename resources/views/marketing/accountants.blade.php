@@ -1,434 +1,511 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
-<section class="relative overflow-hidden">
-      <div class="absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.18),transparent_48%),linear-gradient(180deg,#EAF7F2_0%,rgba(234,247,242,0)_100%)]"></div>
-      <div class="mx-auto grid max-w-7xl gap-12 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:pb-24 lg:pt-24">
-        <div class="space-y-8">
-          <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Experts-comptables</p>
-            <h1 class="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl lg:text-[52px] lg:leading-[60px]">Fayeku Compta: le cockpit de vos PME clientes</h1>
-            <p class="max-w-2xl text-pretty text-lg leading-8 text-slate-600">Centralisez les factures, collectez les pièces, exportez en 1 clic. Fayeku Compta est gratuit.</p>
-          </div>
 
-          <div class="flex flex-col gap-3 sm:flex-row">
-                
-                      <a
-                        href="/accountant/join/"
-                        class="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 bg-primary text-accent"
-                      >
-                        Devenir partenaire
-                      </a>
-                    
-              </div>
-        </div>
-
-        <div>
-          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
-            <img src="/screenshots/hero-compta-dashboard.png" alt="Cockpit Fayeku Compta — portefeuille clients, alertes et commissions" width="1440" height="1200" class="h-auto w-full rounded-[1.6rem]" loading="eager" />
-          </div>
-        </div>
-      </div>
-    </section>
-  
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 rounded-[2rem] border border-primary/10 bg-white p-8 shadow-soft lg:grid-cols-[0.95fr_1.05fr] lg:p-12">
-          
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Problèmes actuels</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">La comptabilité ne devrait pas être un puzzle.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Aujourd’hui, une grande partie du temps d’un cabinet est consommée par des tâches à faible valeur: demander des pièces, trier des fichiers, recoller l’historique… Fayeku réduit cette friction pour vous permettre de vous concentrer sur l’essentiel: la qualité et le conseil.</p>
-      </div>
-    </div>
-  
-          <div class="grid gap-4">
-            <div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">WhatsApp, email et papier créent des trous dans la collecte</div><div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">Fin de mois chaotique et peu prédictible</div><div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">Historique client difficile à reconstituer</div><div class="rounded-3xl bg-mist p-5 text-sm font-medium text-primary">Relances comptables mélangées aux relances commerciales</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Ce que Fayeku change</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Des gains immédiats pour vos équipes et vos clients.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Une couche opérationnelle claire entre la PME et le cabinet.</p>
-      </div>
-    </div>
-  
-        <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-xl font-semibold text-ink">Dashboard multi-clients</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Une vue consolidée de tous vos clients PME : statuts, retards et activité récente.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-emerald-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-xl font-semibold text-ink">Vue factures en temps réel</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Accédez aux factures de chaque client dès leur création, sans attendre la fin du mois.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-violet-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-xl font-semibold text-ink">Exports Sage 100 / EBP / Excel</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Exportez les écritures en un clic vers votre logiciel comptable, sans ressaisie.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-xl font-semibold text-ink">Collecte de pièces</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Vos clients déposent leurs pièces directement dans Fayeku. Fini les PDFs sur WhatsApp.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-cyan-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-xl font-semibold text-ink">Rapport mensuel automatique</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Un récapitulatif mensuel par client généré automatiquement, prêt à archiver.</p>
-                  </div>
-                </article>
-              
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft flex flex-col gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-    <svg class="w-5 h-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg>
-  </div>
-                  <div>
-                    <h3 class="text-xl font-semibold text-ink">Commission récurrente partenaire</h3>
-                    <p class="mt-3 text-base leading-7 text-slate-600">Percevez 15% récurrent à vie sur chaque client PME que vous recommandez.</p>
-                  </div>
-                </article>
-              
-        </div>
-      </div>
-    </section>
-
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-16 px-4 sm:px-6 lg:px-8">
-
-        <div class="space-y-4 mx-auto max-w-3xl text-center">
-          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Voir en action</p>
-          <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Un cockpit pensé pour votre quotidien.</h2>
-        </div>
-
-        <div class="grid items-center gap-10 lg:grid-cols-2">
-          <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Portefeuille</p>
-            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Tous vos clients PME en un coup d'œil</h3>
-            <p class="text-base leading-7 text-slate-600">Visualisez le statut de chaque client, le nombre de factures impayées et les alertes critiques. Filtrez par état et accédez au détail en un clic.</p>
-          </div>
-          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
-            <img src="/screenshots/screen-compta-clients.png" alt="Liste clients Fayeku Compta avec indicateurs de statut" width="1440" height="900" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
-          </div>
-        </div>
-
-        <div class="grid items-center gap-10 lg:grid-cols-2">
-          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft lg:order-first">
-            <img src="/screenshots/screen-compta-commissions.png" alt="Programme partenaire Fayeku Compta — tiers et commissions" width="1440" height="1000" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
-          </div>
-          <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Commissions</p>
-            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Suivez vos revenus partenaire</h3>
-            <p class="text-base leading-7 text-slate-600">Progression de tiers Partner → Gold → Platinum, commission du mois et nombre de PME actives référées. Tout est transparent.</p>
-          </div>
-        </div>
-
-        <div class="grid items-center gap-10 lg:grid-cols-2">
-          <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Alertes</p>
-            <h3 class="text-2xl font-semibold text-ink sm:text-3xl">Restez informé sans effort</h3>
-            <p class="text-base leading-7 text-slate-600">Impayés critiques, retards anormaux, clients inactifs — Fayeku Compta vous alerte en temps réel pour que vous puissiez intervenir au bon moment.</p>
-          </div>
-          <div class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white p-3 shadow-soft">
-            <img src="/screenshots/screen-compta-alerts.png" alt="Alertes Fayeku Compta — impayés critiques et suivi client" width="1440" height="900" class="h-auto w-full rounded-[1.6rem]" loading="lazy" />
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <section id="partenaires" class="pb-20">
-      <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="rounded-[2rem] border border-primary/10 bg-[#024D4D] p-8 text-white shadow-soft lg:p-12">
-          <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-            
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-accent">Experts-comptables</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-white sm:text-4xl">Programme Partenaire Experts-Comptables</h2>
-        <p class="text-pretty text-base leading-7 text-white/80 sm:text-lg">Recommandez Fayeku à vos clients et gagnez une commission récurrente, tant que vos clients restent actifs.</p>
-      </div>
-    </div>
-  
-            <div class="space-y-6">
-              <div class="grid gap-3">
-                <div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">15% de commission mensuelle récurrente, à vie</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Bonus première signature : +1 mois de MRR</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Les PME invitées via votre lien reçoivent 30 jours Essentiel offerts</div><div class="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-medium text-white/90">Versement : Wave le 5 du mois</div>
-              </div>
-              <div class="overflow-hidden rounded-4xl border border-white/10 bg-white/5">
-                <table class="w-full border-collapse text-sm">
-                  <tbody>
-                    
-                          <tr class="border-b border-white/10 last:border-b-0">
-                            <th class="px-5 py-4 text-left font-semibold text-white">Commission mensuelle récurrente</th>
-                            <td class="px-5 py-4 text-white/80">15% sur tous les plans, pour toujours</td>
-                          </tr>
-                        
-                          <tr class="border-b border-white/10 last:border-b-0">
-                            <th class="px-5 py-4 text-left font-semibold text-white">Bonus première signature</th>
-                            <td class="px-5 py-4 text-white/80">+1 mois MRR</td>
-                          </tr>
-                        
-                          <tr class="border-b border-white/10 last:border-b-0">
-                            <th class="px-5 py-4 text-left font-semibold text-white">Trial PMEs invitées via lien comptable</th>
-                            <td class="px-5 py-4 text-white/80">30 jours Essentiel offerts</td>
-                          </tr>
-                        
-                          <tr class="border-b border-white/10 last:border-b-0">
-                            <th class="px-5 py-4 text-left font-semibold text-white">Versement</th>
-                            <td class="px-5 py-4 text-white/80">Wave le 5 du mois</td>
-                          </tr>
-                        
-                  </tbody>
-                </table>
-              </div>
-              <a href="/accountant/join/" class="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-accent">Devenir partenaire</a>
+<section class="hero-bg relative overflow-hidden">
+    <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-20 lg:pt-20 lg:pb-24 grid lg:grid-cols-12 gap-10 items-center relative">
+        <div class="lg:col-span-6">
+            <p class="eyebrow mb-4">Pour les experts-comptables</p>
+            <h1 class="h1 mb-6">Fayeku Compta. <span style="color: var(--color-teal-fayeku);">Gratuit. Complet.</span></h1>
+            <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">Un espace cabinet dédié pour suivre toutes vos PME clientes, collecter les pièces, exporter vers Sage 100 / EBP et faire grandir votre cabinet grâce au programme partenaire.</p>
+            <div class="flex flex-wrap gap-3 mb-6">
+                <a href="{{ route('marketing.accountants.join') }}" class="btn-primary">Activer mon espace cabinet<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+                <a href="#programme" class="btn-secondary">Voir le programme</a>
             </div>
-          </div>
+            <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0 FCFA · à vie</span>
+                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>15% commission récurrente</span>
+            </div>
         </div>
-      </div>
-    </section>
+        <div class="lg:col-span-6 relative">
+            <div class="absolute -top-10 -right-8 w-72 h-72 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
+            <div class="absolute -bottom-10 -left-8 w-56 h-56 rounded-full blur-3xl -z-0" style="background: rgba(15, 184, 92, 0.15);"></div>
+            <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
+            <div class="relative border border-gray-100 rounded-2xl overflow-hidden" style="background: var(--color-offwhite); box-shadow: var(--shadow-float);">
+                <div class="flex items-center justify-between px-5 py-3 bg-white border-b border-gray-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md border flex items-center justify-center" style="background: var(--color-mint-100); border-color: var(--color-mint-200);">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#024D4E" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="18" rx="1"/></svg>
+                        </div>
+                        <div class="text-[10px]" style="color: var(--color-marketing-slate);">Tableau de bord <span class="text-gray-300">/</span> <span class="font-semibold" style="color: var(--color-marketing-ink);">Dashboard</span></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">ON</div>
+                        <div class="leading-tight text-right">
+                            <div class="text-[11px] font-semibold" style="color: var(--color-marketing-ink);">Ousmane Ndiaye</div>
+                            <div class="text-[9px]" style="color: var(--color-marketing-slate);">Cabinet Ndiaye Conseil</div>
+                        </div>
+                    </div>
+                </div>
 
-    <section class="pb-20">
-      <div class="mx-auto w-full max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
-        
-    <div class="space-y-4">
-      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Statuts partenaires</p>
-      <div class="space-y-3">
-        <h2 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Partner, Gold ou Platinum selon votre portefeuille actif.</h2>
-        <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Le programme monte en puissance avec votre nombre de clients actifs Fayeku.</p>
-      </div>
+                <div class="p-5">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <div class="text-[9px] font-bold tracking-widest uppercase mb-1" style="color: var(--color-vivid);">Vue principale</div>
+                            <div class="text-[15px] font-bold leading-tight" style="color: var(--color-marketing-ink);">Bonjour, Cabinet Ndiaye Conseil</div>
+                            <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">Mai 2026 · 5 impayés critiques · Versement le 05 Jun</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[9px] font-bold tracking-wider text-white px-2 py-1 rounded-full inline-flex items-center gap-1" style="background: var(--color-teal-deep);">Platinum <span style="color: var(--color-vivid);">★</span></span>
+                            <div class="text-[9px] mt-1" style="color: var(--color-marketing-slate);">25 clients actifs</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 mb-4">
+                        @foreach ([
+                            ['icon_bg' => 'var(--color-mint-100)', 'icon_color' => 'var(--color-teal-fayeku)', 'pill' => 'Portef.', 'pill_bg' => 'bg-gray-100', 'pill_text' => 'var(--color-marketing-slate)', 'label' => 'Clients suivis', 'value' => '25', 'value_color' => 'var(--color-marketing-ink)'],
+                            ['icon_bg' => 'var(--color-mint-100)', 'icon_color' => 'var(--color-vivid)', 'pill' => 'À jour', 'pill_bg' => 'bg-[color:var(--color-mint-100)]', 'pill_text' => 'var(--color-vivid)', 'label' => 'Clients à jour', 'value' => '17', 'value_color' => 'var(--color-vivid)'],
+                            ['icon_bg' => 'rgb(254 243 199)', 'icon_color' => '#b45309', 'pill' => 'Surveiller', 'pill_bg' => 'bg-amber-100', 'pill_text' => '#b45309', 'label' => 'À relancer', 'value' => '3', 'value_color' => '#b45309'],
+                            ['icon_bg' => 'rgb(254 226 226)', 'icon_color' => '#dc2626', 'pill' => '> 60j', 'pill_bg' => 'bg-rose-50', 'pill_text' => '#dc2626', 'label' => 'Impayés critiques', 'value' => '5', 'value_color' => '#dc2626'],
+                        ] as $stat)
+                            <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background: {{ $stat['icon_bg'] }}; color: {{ $stat['icon_color'] }};">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                                    </div>
+                                    <span class="text-[8px] {{ $stat['pill_bg'] }} px-1.5 py-0.5 rounded-full font-semibold" style="color: {{ $stat['pill_text'] }};">{{ $stat['pill'] }}</span>
+                                </div>
+                                <div class="text-[8px] font-semibold leading-tight" style="color: var(--color-marketing-slate);">{{ $stat['label'] }}</div>
+                                <div class="font-mono text-[18px] font-bold leading-none mt-1" style="color: {{ $stat['value_color'] }};">{{ $stat['value'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-100 p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-[11px] font-bold" style="color: var(--color-marketing-ink);">Aperçu du portefeuille</div>
+                            <span class="text-[9px] font-semibold" style="color: var(--color-teal-fayeku);">Voir tout →</span>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            @foreach ([
+                                ['init' => 'SH', 'name' => 'Saatys Home & Design', 'plan' => 'Essentiel', 'amt' => '9 213 400F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                ['init' => 'SB', 'name' => 'Sow BTP SARL', 'plan' => 'Essentiel', 'amt' => '9 853 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                                ['init' => 'CT', 'name' => 'Coury Textile SARL', 'plan' => 'Basique', 'amt' => '420 000F', 'status' => 'Attente', 'color' => '#b45309'],
+                                ['init' => 'NA', 'name' => 'Ndioum Agro SA', 'plan' => 'Essentiel', 'amt' => '—', 'status' => 'À jour', 'color' => 'var(--color-vivid)'],
+                            ] as $row)
+                                <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div>
+                                        <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
+                                    </div>
+                                    <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['plan'] }}</span>
+                                    <span class="font-mono text-[10px] font-bold text-right" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</span>
+                                    <span class="text-[8px] font-semibold" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex absolute -top-4 -left-4 lg:-left-8 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-[10px] font-medium" style="color: var(--color-marketing-slate);">Commission mai 2026</div>
+                    <div class="font-mono text-[14px] font-bold" style="color: var(--color-marketing-ink);">64 500 FCFA</div>
+                    <div class="text-[10px] font-semibold" style="color: var(--color-vivid);">Versée le 05 Jun · Wave</div>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-teal-deep); color: var(--color-vivid);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9 17 14 19 22 12 18 5 22 7 14 2 9 9 9"/></svg>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-[10px] font-medium" style="color: var(--color-marketing-slate);">Niveau partenaire</div>
+                    <div class="text-[13px] font-bold" style="color: var(--color-marketing-ink);">Platinum atteint</div>
+                    <div class="text-[10px] font-semibold" style="color: var(--color-vivid);">25 PME actives · 15% à vie</div>
+                </div>
+            </div>
+        </div>
     </div>
-  
-        
-    <div class="overflow-x-auto rounded-[2rem] border border-primary/10 bg-white shadow-soft">
-      <table class="min-w-[920px] w-full border-collapse">
-        <thead>
-          <tr class="border-b border-primary/10">
-            <th class="sticky left-0 z-10 bg-white px-6 py-5 text-left text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Fonctionnalité</th>
-            
-                  <th class="px-6 py-5 text-center text-base font-semibold text-ink">
-                    Partner
-                  </th>
-                
-                  <th class="px-6 py-5 text-center text-base font-semibold text-ink">
-                    Gold
-                  </th>
-                
-                  <th class="px-6 py-5 text-center text-base font-semibold bg-[#024D4D] text-accent">
-                    Platinum
-                  </th>
-                
-          </tr>
-        </thead>
-        <tbody>
-          
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Clients actifs Fayeku</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-700">
-                          1 – 4
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-700">
-                          5 – 14
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] text-slate-700">
-                          15+
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Commission 15% récurrente</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Accès Compta complet</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Badge partenaire officiel</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Visibilité sur fayeku.sn</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Leads PME entrants de Fayeku</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Groupe WhatsApp Partners</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Account manager dédié</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Co-marketing &amp; événements</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-                <tr class="border-b border-primary/10 last:border-b-0">
-                  <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">Bonus trimestriel top prescripteur</th>
-                  
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-white text-slate-400">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg></span>
-                        </td>
-                      
-                        <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base bg-primary/[0.04] font-semibold text-primary">
-                          <span class="inline-flex items-center justify-center gap-2"><svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
-                        </td>
-                      
-                </tr>
-              
-        </tbody>
-      </table>
+</section>
+
+<section class="py-20 lg:py-24">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-12">
+            <p class="eyebrow mb-3">Espace cabinet</p>
+            <h2 class="h2 mb-5">Tout votre portefeuille, dans un seul écran.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Vous accédez à un tableau de bord multi-clients pour suivre, structurer et exporter.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach ([
+                ['title' => 'Dashboard multi-clients', 'desc' => 'Une seule vue pour toutes vos PME : statuts, retards, factures, pièces.', 'svg' => '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>'],
+                ['title' => 'Exports Sage 100 / EBP / Excel', 'desc' => 'Génération directe au format de votre logiciel, fini la ressaisie.', 'svg' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'],
+                ['title' => 'Coffre-fort de pièces', 'desc' => 'Vos clients déposent les justificatifs ; vous récupérez tout, classé.', 'svg' => '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'],
+                ['title' => 'Suivi factures temps réel', 'desc' => "Vous voyez ce qui se passe sans attendre la fin de mois.", 'svg' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
+                ['title' => 'Rapports mensuels automatiques', 'desc' => 'Récapitulatifs envoyés au client et au cabinet, prêts à commenter.', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
+                ['title' => 'Accès collaborateurs', 'desc' => 'Plusieurs comptes pour votre équipe, droits ajustables par dossier.', 'svg' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'],
+            ] as $card)
+                <article class="card p-6">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $card['svg'] !!}</svg>
+                    </div>
+                    <h3 class="font-semibold mb-1">{{ $card['title'] }}</h3>
+                    <p class="text-sm" style="color: var(--color-marketing-slate);">{{ $card['desc'] }}</p>
+                </article>
+            @endforeach
+        </div>
     </div>
-  
-      </div>
-    </section>
+</section>
+
+<section class="pb-20 lg:pb-24" style="background: rgba(241, 250, 244, 0.4);">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-24">
+        <h2 class="h2 text-center mb-16">Un cockpit pensé pour votre quotidien.</h2>
+
+        {{-- Row 1 — Portefeuille (text left, mockup right) --}}
+        <div class="grid lg:grid-cols-2 gap-10 items-center mb-24">
+            <div>
+                <p class="eyebrow mb-3">Portefeuille</p>
+                <h3 class="text-3xl font-bold mb-5 leading-tight">Tous vos clients PME en un coup d'œil</h3>
+                <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Visualisez le statut de chaque client, le nombre de factures impayées et les alertes critiques. Filtrez par état et accédez au détail en un clic.</p>
+            </div>
+            <div class="relative">
+                <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
+                <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
+                    <div class="flex items-start justify-between mb-1">
+                        <div>
+                            <div class="text-[10px] font-bold tracking-widest uppercase" style="color: var(--color-vivid);">Portefeuille</div>
+                            <div class="text-[16px] font-bold mt-0.5" style="color: var(--color-marketing-ink);">Clients</div>
+                            <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">25 clients suivis · 3 critiques · 3 à surveiller</div>
+                        </div>
+                        <button type="button" class="text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1" style="background: var(--color-teal-fayeku); color: var(--color-vivid);"><span>+</span> Inviter une PME</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-4 mb-4">
+                        <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="w-5 h-5 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>
+                                <span class="text-[7px] bg-gray-100 px-1.5 py-0.5 rounded-full font-semibold" style="color: var(--color-marketing-slate);">Portef.</span>
+                            </div>
+                            <div class="text-[8px] font-semibold" style="color: var(--color-marketing-slate);">Total en attente</div>
+                            <div class="font-mono text-[12px] font-bold leading-none mt-1" style="color: var(--color-marketing-ink);">13 520 000F</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="w-5 h-5 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0"/></svg></div>
+                                <span class="text-[7px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">Critiques</span>
+                            </div>
+                            <div class="text-[8px] font-semibold" style="color: var(--color-marketing-slate);">Clients critiques</div>
+                            <div class="font-mono text-[16px] font-bold text-amber-700 leading-none mt-1">3</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-2.5">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="w-5 h-5 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-vivid);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                                <span class="text-[7px] bg-gray-100 px-1.5 py-0.5 rounded-full font-semibold" style="color: var(--color-marketing-slate);">Mai 2026</span>
+                            </div>
+                            <div class="text-[8px] font-semibold" style="color: var(--color-marketing-slate);">Taux recouvrement</div>
+                            <div class="font-mono text-[16px] font-bold leading-none mt-1" style="color: var(--color-vivid);">86%</div>
+                        </div>
+                    </div>
+                    <div class="text-[8px] font-bold tracking-widest uppercase mb-2" style="color: var(--color-marketing-slate);">Filtrer les clients</div>
+                    <div class="flex gap-1.5 mb-2 text-[9px]">
+                        <span class="text-white px-2 py-0.5 rounded-full font-semibold" style="background: var(--color-teal-deep);">Tous 25</span>
+                        <span class="px-2 py-0.5 rounded-full" style="color: var(--color-vivid);">● À jour 19</span>
+                        <span class="text-amber-700 px-2 py-0.5 rounded-full">● Surveiller 3</span>
+                        <span class="text-rose-600 px-2 py-0.5 rounded-full">● Critiques 3</span>
+                    </div>
+                    <div class="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                        <div>Client</div><div>Offre</div><div>Impayés</div><div class="text-right">En attente</div><div>Statut</div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @foreach ([
+                            ['init' => 'HN', 'name' => 'Horizon Negoces SARL', 'plan' => 'Essentiel', 'inv' => '8 factures', 'amt' => '4 720 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                            ['init' => 'AC', 'name' => 'Atlas Chantier SA', 'plan' => 'Essentiel', 'inv' => '6 factures', 'amt' => '5 040 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                            ['init' => 'NC', 'name' => 'Nova Chimie SARL', 'plan' => 'Basique', 'inv' => '1 facture', 'amt' => '420 000F', 'status' => 'Surveiller', 'color' => '#b45309'],
+                        ] as $row)
+                            <div class="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-center px-1 py-1.5">
+                                <div class="flex items-center gap-2 min-w-0"><div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div><div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div></div>
+                                <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['plan'] }}</span>
+                                <span class="font-mono text-[9px] font-bold" style="color: {{ $row['color'] }};">{{ $row['inv'] }}</span>
+                                <span class="font-mono text-[10px] font-bold text-right" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</span>
+                                <span class="text-[8px] font-semibold" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Row 2 — Commissions (mockup left, text right) --}}
+        <div class="grid lg:grid-cols-2 gap-10 items-stretch mb-24">
+            <div class="order-2 lg:order-1 relative">
+                <div class="absolute inset-0 rounded-3xl -z-0 transform -rotate-1" style="background: var(--color-mint-100);"></div>
+                <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
+                    <div class="flex items-start justify-between mb-1">
+                        <div>
+                            <div class="text-[10px] font-bold tracking-widest uppercase" style="color: var(--color-vivid);">Programme partenaire</div>
+                            <div class="text-[16px] font-bold mt-0.5" style="color: var(--color-marketing-ink);">Commissions &amp; partenariat</div>
+                            <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">25 PME actives référées · Niveau Platinum · Mai 2026</div>
+                        </div>
+                        <span class="text-[9px] px-2 py-1 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-teal-deep); color: var(--color-mint-200);">★ Platinum</span>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-4 mb-4">
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-vivid);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-vivid);">Mai 26</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Commission du mois</div>
+                            <div class="font-mono text-[15px] font-bold leading-none mt-1.5 whitespace-nowrap" style="color: var(--color-vivid);">64 500F</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">Cumul</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Cumul 2026</div>
+                            <div class="font-mono text-[15px] font-bold leading-none mt-1.5 whitespace-nowrap" style="color: var(--color-marketing-ink);">287 200F</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg></div>
+                                <span class="text-[9px] bg-gray-100 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style="color: var(--color-marketing-slate);">Portefeuille</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">PME actives référées</div>
+                            <div class="font-mono text-[18px] font-bold leading-none mt-1.5" style="color: var(--color-marketing-ink);">25</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-700 flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div>
+                                <span class="text-[9px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">Wave</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Prochaine paye</div>
+                            <div class="font-mono text-[15px] font-bold leading-none mt-1.5 whitespace-nowrap" style="color: var(--color-marketing-ink);">05 Jun</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="text-[10px] font-bold" style="color: var(--color-marketing-ink);">Progression de niveau</div>
+                        <span class="text-[8px] font-semibold" style="color: var(--color-vivid);">Niveau Platinum atteint ✓</span>
+                    </div>
+                    <div class="relative h-1.5 bg-gray-100 rounded-full overflow-hidden mb-1"><div class="absolute inset-y-0 left-0 w-full" style="background: linear-gradient(to right, var(--color-mint-200), var(--color-vivid), var(--color-teal-deep));"></div></div>
+                    <div class="grid grid-cols-3 text-[8px] mb-3" style="color: var(--color-marketing-slate);"><div>Partner 1–4</div><div class="text-center">Gold 5–14</div><div class="text-right text-blue-700 font-bold">Platinum 15+</div></div>
+                    <div class="text-[9px] font-bold tracking-widest uppercase mb-1.5" style="color: var(--color-marketing-slate);">Dernières commissions</div>
+                    <div class="divide-y divide-gray-100 -mx-1">
+                        @foreach ([
+                            ['init' => 'SH', 'bg' => 'mint', 'name' => 'Saatys Home & Design', 'meta' => 'Pro · récurrent · J+18', 'tag' => '15 % MRR', 'tag_class' => 'mint', 'amount' => '+5 250F'],
+                            ['init' => 'DN', 'bg' => 'mint', 'name' => 'Dakar Negoces SARL', 'meta' => 'Essentiel · 1ʳᵉ signature', 'tag' => 'Bonus +1 mois', 'tag_class' => 'amber', 'amount' => '+12 500F'],
+                            ['init' => 'TS', 'bg' => 'violet', 'name' => 'Teranga Services', 'meta' => 'Essentiel · récurrent', 'tag' => '15 % MRR', 'tag_class' => 'mint', 'amount' => '+2 250F'],
+                        ] as $row)
+                            <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center px-1 py-1.5">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    @if ($row['bg'] === 'mint')
+                                        <div class="w-5 h-5 rounded-md font-bold text-[8px] flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['init'] }}</div>
+                                    @else
+                                        <div class="w-5 h-5 rounded-md bg-violet-100 text-violet-700 font-bold text-[8px] flex items-center justify-center shrink-0">{{ $row['init'] }}</div>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
+                                        <div class="text-[8px]" style="color: var(--color-marketing-slate);">{{ $row['meta'] }}</div>
+                                    </div>
+                                </div>
+                                @if ($row['tag_class'] === 'mint')
+                                    <span class="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">{{ $row['tag'] }}</span>
+                                @else
+                                    <span class="text-[8px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">{{ $row['tag'] }}</span>
+                                @endif
+                                <span class="font-mono text-[10px] font-bold whitespace-nowrap" style="color: var(--color-vivid);">{{ $row['amount'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="order-1 lg:order-2">
+                <p class="eyebrow mb-3">Commissions</p>
+                <h3 class="text-3xl font-bold mb-5 leading-tight">Suivez vos revenus partenaire</h3>
+                <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Progression de tiers Partner → Gold → Platinum, commission du mois et nombre de PME actives référées. Tout est transparent.</p>
+            </div>
+        </div>
+
+        {{-- Row 3 — Alertes (text left, mockup right) --}}
+        <div class="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+                <p class="eyebrow mb-3">Alertes</p>
+                <h3 class="text-3xl font-bold mb-5 leading-tight">Restez informé sans effort</h3>
+                <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Impayés critiques, retards anormaux, clients inactifs — Fayeku Compta vous alerte en temps réel pour que vous puissiez intervenir au bon moment.</p>
+            </div>
+            <div class="relative">
+                <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
+                <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
+                    <div class="flex items-start justify-between mb-1">
+                        <div>
+                            <div class="text-[10px] font-bold tracking-widest uppercase" style="color: var(--color-vivid);">Surveillance</div>
+                            <div class="text-[16px] font-bold mt-0.5" style="color: var(--color-marketing-ink);">Alertes</div>
+                            <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">11 alertes actives · 3 critiques à traiter · Avril 2026</div>
+                        </div>
+                        <span class="text-[9px] bg-rose-50 text-rose-600 px-2 py-1 rounded-full font-semibold whitespace-nowrap">3 critiques</span>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-4 mb-4">
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0"/></svg></div>
+                                <span class="text-[9px] bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">&gt; 60 jours</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Critiques</div>
+                            <div class="font-mono text-[18px] font-bold text-rose-600 leading-none mt-1.5">3</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                                <span class="text-[9px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">30–60 jours</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">À surveiller</div>
+                            <div class="font-mono text-[18px] font-bold text-amber-700 leading-none mt-1.5">5</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-vivid);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></div>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap" style="background: var(--color-mint-100); color: var(--color-vivid);">&lt; 30 jours</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Inactivité</div>
+                            <div class="font-mono text-[18px] font-bold leading-none mt-1.5" style="color: var(--color-marketing-ink);">3</div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-100 p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-700 flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+                                <span class="text-[9px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">Mai 26</span>
+                            </div>
+                            <div class="text-[10px] font-semibold" style="color: var(--color-marketing-slate);">Relances envoyées</div>
+                            <div class="font-mono text-[18px] font-bold leading-none mt-1.5" style="color: var(--color-marketing-ink);">12</div>
+                        </div>
+                    </div>
+                    <div class="text-[8px] font-bold tracking-widest uppercase mb-1.5" style="color: var(--color-marketing-slate);">Filtrer les alertes</div>
+                    <div class="flex gap-1.5 mb-2 text-[9px]">
+                        <span class="text-white px-2 py-0.5 rounded-full font-semibold" style="background: var(--color-teal-deep);">Toutes 11</span>
+                        <span class="text-rose-600 px-2 py-0.5 rounded-full">● Critiques 3</span>
+                        <span class="text-amber-700 px-2 py-0.5 rounded-full">● Surveiller 5</span>
+                        <span class="px-2 py-0.5 rounded-full" style="color: var(--color-marketing-slate);">● Inactivité 3</span>
+                    </div>
+                    <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-1 pb-1 border-b border-gray-100 text-[8px] uppercase font-bold tracking-wider" style="color: var(--color-marketing-slate);">
+                        <div>Client</div><div>Factures</div><div class="text-right">Montant</div><div>Statut</div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @foreach ([
+                            ['icon' => '!', 'icon_bg' => 'bg-rose-50 text-rose-600', 'name' => 'Atlas Chantier SA', 'sub' => 'Impayé critique · J74 max', 'inv' => '6', 'amt' => '5 040 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                            ['icon' => '!', 'icon_bg' => 'bg-rose-50 text-rose-600', 'name' => 'Horizon Negoces SARL', 'sub' => 'Impayé critique · J70 max', 'inv' => '8', 'amt' => '4 720 000F', 'status' => 'Critique', 'color' => '#dc2626'],
+                            ['icon' => '~', 'icon_bg' => 'bg-amber-50 text-amber-700', 'name' => 'Nova Chimie SARL', 'sub' => 'Retard anormal · J45', 'inv' => '3', 'amt' => '1 350 000F', 'status' => 'Surveiller', 'color' => '#b45309'],
+                            ['icon' => '·', 'icon_bg' => 'bg-gray-100', 'name' => 'Teranga Services', 'sub' => 'Inactif depuis 84 jours', 'inv' => '—', 'amt' => '—', 'status' => 'Inactif', 'color' => 'var(--color-marketing-slate)'],
+                        ] as $row)
+                            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center px-1 py-1.5">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-5 h-5 rounded-md {{ $row['icon_bg'] }} font-bold text-[10px] flex items-center justify-center shrink-0" @if ($row['icon_bg'] === 'bg-gray-100') style="color: var(--color-marketing-slate);" @endif>{{ $row['icon'] }}</div>
+                                    <div class="min-w-0">
+                                        <div class="text-[10px] font-semibold truncate" style="color: var(--color-marketing-ink);">{{ $row['name'] }}</div>
+                                        <div class="text-[8px] truncate" style="color: var(--color-marketing-slate);">{{ $row['sub'] }}</div>
+                                    </div>
+                                </div>
+                                <span class="font-mono text-[9px] font-bold" style="color: {{ $row['color'] }};">{{ $row['inv'] }}</span>
+                                <span class="font-mono text-[10px] font-bold text-right whitespace-nowrap" style="color: {{ $row['color'] }};">{{ $row['amt'] }}</span>
+                                <span class="text-[8px] font-semibold" style="color: {{ $row['color'] }};">● {{ $row['status'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pb-20 lg:pb-24">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
+        <div>
+            <p class="eyebrow mb-3">Pièces &amp; exports</p>
+            <h2 class="h2 mb-5">Fini les WhatsApp en fin de mois.</h2>
+            <p class="text-lg leading-relaxed mb-6" style="color: var(--color-marketing-slate);">Vos clients déposent leurs justificatifs directement dans Fayeku. Vous récupérez tout, classé par dossier et par mois, prêt à exporter vers Sage 100, EBP ou Excel.</p>
+            <ul class="space-y-3" style="color: var(--color-marketing-ink);">
+                <li class="flex items-start gap-3"><span class="check"></span>Coffre-fort partagé client / cabinet, classé par nature</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Relances automatiques pour les pièces manquantes</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Exports prêts à importer : Sage 100, EBP, CSV libre</li>
+                <li class="flex items-start gap-3"><span class="check"></span>Journal d'audit pour traçabilité complète</li>
+            </ul>
+        </div>
+        <div class="relative">
+            <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
+            <div class="relative bg-white rounded-2xl border border-gray-100 p-6" style="box-shadow: var(--shadow-float);">
+                <div class="flex items-start justify-between mb-1">
+                    <div>
+                        <div class="text-[10px] font-bold tracking-widest uppercase" style="color: var(--color-vivid);">Comptabilité</div>
+                        <div class="text-[16px] font-bold mt-0.5" style="color: var(--color-marketing-ink);">Export groupé</div>
+                        <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">Paramètres de l'export comptable</div>
+                    </div>
+                </div>
+                <div class="text-[11px] font-semibold mt-5 mb-1.5" style="color: var(--color-marketing-ink);">Format</div>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <label class="flex items-center gap-1.5 rounded-lg px-2.5 py-2 cursor-pointer" style="border: 2px solid var(--color-teal-fayeku); background: var(--color-mint-50);">
+                        <span class="w-3.5 h-3.5 rounded-full bg-white" style="border: 3px solid var(--color-teal-fayeku);"></span>
+                        <span class="text-[11px] font-semibold" style="color: var(--color-marketing-ink);">Excel</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 border border-gray-200 rounded-lg px-2.5 py-2 cursor-pointer">
+                        <span class="w-3.5 h-3.5 rounded-full border border-gray-300"></span>
+                        <span class="text-[11px]" style="color: var(--color-marketing-slate);">Sage 100</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 border border-gray-200 rounded-lg px-2.5 py-2 cursor-pointer">
+                        <span class="w-3.5 h-3.5 rounded-full border border-gray-300"></span>
+                        <span class="text-[11px]" style="color: var(--color-marketing-slate);">EBP</span>
+                    </label>
+                </div>
+                <div class="border rounded-lg px-3 py-2.5 mb-4" style="background: var(--color-mint-50); border-color: var(--color-mint-100);">
+                    <div class="text-[11px] font-semibold" style="color: var(--color-teal-fayeku);">32 factures · Mai 2026 · Excel · 25 clients</div>
+                    <div class="text-[10px] mt-0.5" style="color: var(--color-marketing-slate);">Inclut écritures de vente, encaissements et grand-livre auxiliaire.</div>
+                </div>
+                <button type="button" class="w-full text-[12px] font-semibold py-3 rounded-lg flex items-center justify-center gap-2" style="background: var(--color-teal-fayeku); color: var(--color-vivid);">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Générer et télécharger
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="programme" class="relative overflow-hidden" style="background: var(--color-teal-fayeku);">
+    <div class="grain absolute inset-0 opacity-40"></div>
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-20 lg:py-24 relative grid lg:grid-cols-2 gap-12 items-start">
+        <div>
+            <p class="eyebrow-mint mb-5">Experts-comptables</p>
+            <h2 class="h2 text-white mb-6 leading-[1.05]">Programme Partenaire<br/>Experts-Comptables</h2>
+            <p class="text-lg leading-relaxed max-w-md" style="color: rgba(212, 240, 224, 0.8);">Recommandez Fayeku à vos clients et gagnez une commission récurrente, tant que vos clients restent actifs.</p>
+        </div>
+        <div class="space-y-3">
+            @foreach ([
+                '15% de commission mensuelle récurrente, à vie',
+                'Bonus première signature : +1 mois de MRR',
+                'Les PME invitées via votre lien reçoivent 30 jours Essentiel offerts',
+                'Versement : Wave le 5 du mois',
+            ] as $bullet)
+                <div class="border border-white/15 rounded-full px-6 py-4 text-white text-base">{{ $bullet }}</div>
+            @endforeach
+
+            <div class="border border-white/15 rounded-3xl divide-y divide-white/10 mt-6">
+                @foreach ([
+                    ['Commission mensuelle récurrente', '15% sur tous les plans, pour toujours'],
+                    ['Bonus première signature', '+1 mois MRR'],
+                    ['Trial PMEs invitées via lien comptable', '30 jours Essentiel offerts'],
+                    ['Versement', 'Wave le 5 du mois'],
+                ] as $row)
+                    <div class="grid grid-cols-[1.4fr_1fr] gap-6 px-6 py-5">
+                        <div class="text-white font-bold text-base">{{ $row[0] }}</div>
+                        <div class="text-base" style="color: rgba(212, 240, 224, 0.85);">{{ $row[1] }}</div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="pt-6 flex justify-center">
+                <a href="{{ route('marketing.accountants.join') }}" class="bg-white font-bold text-base px-10 py-4 rounded-full transition hover:bg-[color:var(--color-mint-50)]" style="color: var(--color-teal-fayeku);">Devenir partenaire</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="px-5 lg:px-8 py-20 lg:py-24">
+    <div class="max-w-7xl mx-auto rounded-3xl py-16 px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
+        <div class="relative">
+            <h2 class="h2 mb-4 max-w-2xl mx-auto">Activez votre espace cabinet en 5 minutes.</h2>
+            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Fayeku Compta est gratuit et le restera. Aucun engagement, aucune carte bancaire.</p>
+            <a href="{{ route('marketing.accountants.join') }}" class="btn-primary">Demander un accès cabinet
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
 </x-layouts.marketing>

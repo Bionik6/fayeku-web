@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Enums\Compta\LeadSource;
 use App\Http\Requests\StoreAccountantJoinRequest;
+use App\Http\Requests\StoreContactRequest;
 use App\Mail\Compta\AccountantLeadReceivedMail;
 use App\Mail\Compta\NewAccountantLeadAlertMail;
+use App\Mail\Marketing\ContactReceivedMail;
+use App\Mail\Marketing\NewContactAlertMail;
 use App\Models\Compta\AccountantLead;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -83,6 +86,20 @@ class MarketingPageController extends Controller
             'title' => 'Contact Fayeku | Demander une démo ou démarrer 30 jours d’essai',
             'description' => 'Contactez Fayeku pour lancer un essai, organiser une démo ou discuter de vos besoins de facturation et conformité.',
         ]);
+    }
+
+    public function contactStore(StoreContactRequest $request): RedirectResponse
+    {
+        $payload = $request->validated();
+
+        foreach (config('fayeku.admin_emails', []) as $adminEmail) {
+            Mail::to($adminEmail)->send(new NewContactAlertMail($payload));
+        }
+
+        Mail::to($payload['email'])->send(new ContactReceivedMail($payload));
+
+        return redirect()->route('marketing.contact')
+            ->with('success', 'Votre message a bien été reçu. L’équipe Fayeku vous recontacte sous 24h ouvrées.');
     }
 
     public function legal(string $page): View

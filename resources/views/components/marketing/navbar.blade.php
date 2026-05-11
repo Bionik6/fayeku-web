@@ -1,20 +1,28 @@
 @props(['navigation'])
 
-<header class="sticky top-0 z-50 border-b border-primary/10 bg-white/85 backdrop-blur-xl">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <a href="{{ route('home') }}" class="flex items-center gap-3" aria-label="Accueil Fayeku">
-            <img src="/logo-mark.svg" alt="" width="36" height="36" />
-            <div>
-                <p class="text-lg font-semibold text-primary">Fayeku</p>
-                <p class="text-xs text-slate-500">Facturation & trésorerie</p>
+@php
+    $currentPath = '/' . ltrim(request()->path(), '/');
+@endphp
+
+<header
+    x-data="{ scrolled: false, open: false }"
+    x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 80)"
+    :class="scrolled ? 'bg-white/80 backdrop-blur-md border-b border-gray-100' : 'bg-transparent'"
+    class="fixed top-0 inset-x-0 z-50 transition-all"
+>
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 h-[68px] flex items-center justify-between">
+        <a href="{{ route('home') }}" class="flex items-center gap-3 ringfx rounded-lg" aria-label="Accueil Fayeku">
+            <img src="/logo.png" alt="Fayeku" class="w-10 h-10 rounded-lg" width="40" height="40" />
+            <div class="leading-tight hidden sm:block">
+                <div class="font-bold text-[1.05rem] tracking-tight" style="color: var(--color-marketing-ink);">Fayeku</div>
+                <div class="text-[0.72rem] -mt-0.5" style="color: var(--color-marketing-slate);">Facturation &amp; trésorerie</div>
             </div>
         </a>
 
-        <nav class="hidden items-center gap-8 lg:flex" aria-label="Navigation principale">
+        <nav class="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2" aria-label="Navigation principale">
             @foreach ($navigation as $item)
                 @php
                     $activePath = rtrim($item['active'] ?? $item['href'], '/');
-                    $currentPath = '/' . ltrim(request()->path(), '/');
                     $isActive = $activePath !== '' && (
                         $currentPath === $activePath ||
                         str_starts_with($currentPath, $activePath . '/')
@@ -22,7 +30,7 @@
                 @endphp
                 <a
                     href="{{ $item['href'] }}"
-                    class="text-sm transition {{ $isActive ? 'font-bold text-primary' : 'font-medium text-slate-600 hover:text-primary' }}"
+                    class="nav-link {{ $isActive ? 'nav-link-active' : '' }}"
                     @if ($isActive) aria-current="page" @endif
                 >
                     {{ $item['label'] }}
@@ -30,47 +38,40 @@
             @endforeach
         </nav>
 
-        <div class="hidden items-center gap-4 lg:flex">
-            <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 transition hover:text-primary">Se connecter</a>
-            <a href="{{ route('register') }}" class="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-accent">Essayer 30 jours</a>
+        <div class="hidden lg:flex items-center gap-2">
+            <a href="{{ route('login') }}" class="nav-link">Se connecter</a>
+            <a href="{{ route('register') }}" class="btn-primary text-sm py-2.5 px-5">Essayer 30 jours</a>
         </div>
 
-        <button
-            type="button"
-            data-nav-toggle
-            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/10 text-primary lg:hidden"
-            aria-expanded="false"
-            aria-controls="mobile-menu"
-            aria-label="Ouvrir le menu"
-        >
-            ☰
+        <button @click="open = true" class="lg:hidden p-2 rounded-lg hover:bg-mint-100 ringfx" aria-label="Ouvrir le menu" type="button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
     </div>
 
-    <div id="mobile-menu" data-nav-menu class="max-h-0 overflow-hidden border-t border-primary/10 transition-all lg:hidden">
-        <nav class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6" aria-label="Navigation mobile">
-            @foreach ($navigation as $item)
-                @php
-                    $activePath = rtrim($item['active'] ?? $item['href'], '/');
-                    $currentPath = '/' . ltrim(request()->path(), '/');
-                    $isActive = $activePath !== '' && (
-                        $currentPath === $activePath ||
-                        str_starts_with($currentPath, $activePath . '/')
-                    );
-                @endphp
-                <a
-                    href="{{ $item['href'] }}"
-                    class="rounded-2xl px-3 py-3 text-sm transition {{ $isActive ? 'bg-primary/5 font-bold text-primary' : 'font-medium text-slate-700 hover:bg-mist' }}"
-                    @if ($isActive) aria-current="page" @endif
-                >
-                    {{ $item['label'] }}
+    <div
+        x-show="open"
+        x-cloak
+        @keydown.escape.window="open=false"
+        class="fixed inset-0 z-50 lg:hidden"
+    >
+        <div class="absolute inset-0" style="background: rgba(10, 31, 26, 0.4);" @click="open=false"></div>
+        <div class="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white p-6 flex flex-col">
+            <div class="flex items-center justify-between mb-8">
+                <a href="{{ route('home') }}" class="flex items-center gap-3">
+                    <img src="/logo.png" alt="Fayeku" class="w-10 h-10 rounded-lg" width="40" height="40" />
+                    <span class="font-bold">Fayeku</span>
                 </a>
-            @endforeach
-
-            <div class="mt-2 grid gap-2">
-                <a href="{{ route('login') }}" class="rounded-full border border-primary/20 px-4 py-3 text-center text-sm font-medium text-primary">Se connecter</a>
-                <a href="{{ route('register') }}" class="rounded-full bg-primary px-4 py-3 text-center text-sm font-semibold text-accent">Essayer 30 jours</a>
+                <button @click="open=false" class="p-2 rounded-lg hover:bg-mint-100" aria-label="Fermer le menu" type="button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
-        </nav>
+            <nav class="flex flex-col gap-1 text-lg" aria-label="Navigation mobile">
+                @foreach ($navigation as $item)
+                    <a href="{{ $item['href'] }}" class="py-3 border-b border-gray-100">{{ $item['label'] }}</a>
+                @endforeach
+                <a href="{{ route('login') }}" class="py-3 border-b border-gray-100">Se connecter</a>
+            </nav>
+            <a href="{{ route('register') }}" class="btn-primary justify-center mt-auto">Essayer 30 jours</a>
+        </div>
     </div>
 </header>

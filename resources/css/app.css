@@ -14,6 +14,8 @@
 
 @theme {
     --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-marketing: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -27,25 +29,41 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-primary: #024d4d;
-    --color-primary-strong: #013c3c;
-    --color-accent: #10b75c;
-    --color-accent-content: #10b75c;
-    --color-accent-foreground: #024d4d;
+    --color-primary: #024D4E;
+    --color-primary-strong: #013838;
+    --color-accent: #0FB85C;
+    --color-accent-content: #0FB85C;
+    --color-accent-foreground: #024D4E;
     --color-page: #f8fcfa;
     --color-sand: #f8fcfa;
     --color-ink: #0f172a;
     --color-mist: #eaf7f2;
-    --color-teal: #10b75c;
+    --color-teal: #0FB85C;
+
+    /* Fayeku V2 marketing palette */
+    --color-teal-fayeku: #024D4E;
+    --color-teal-deep: #013838;
+    --color-vivid: #0FB85C;
+    --color-mint-50: #F1FAF4;
+    --color-mint-100: #E8F5EF;
+    --color-mint-200: #D4F0E0;
+    --color-offwhite: #F8FAFB;
+    --color-marketing-ink: #0A1F1A;
+    --color-marketing-slate: #5A6B66;
+
     --shadow-soft: 0 20px 45px rgba(2, 77, 77, 0.08);
+    --shadow-card: 0 1px 2px rgba(10, 31, 26, 0.04), 0 8px 24px -12px rgba(10, 31, 26, 0.08);
+    --shadow-float: 0 12px 40px -16px rgba(2, 77, 78, 0.25);
+
     --background-image-grid: radial-gradient(circle at 1px 1px, rgba(2, 77, 77, 0.08) 1px, transparent 0);
+    --background-image-hero: radial-gradient(900px 500px at 80% -10%, rgba(15, 184, 92, 0.10), transparent 60%), linear-gradient(180deg, #E8F5EF 0%, #F8FAFB 70%);
 }
 
 @layer theme {
     .dark {
-        --color-accent: #10b75c;
-        --color-accent-content: #10b75c;
-        --color-accent-foreground: #024d4d;
+        --color-accent: #0FB85C;
+        --color-accent-content: #0FB85C;
+        --color-accent-foreground: #024D4E;
     }
 }
 
@@ -64,11 +82,17 @@
         line-height: 1.6;
     }
 
-    .marketing-site .text-xs,
-    .marketing-site .text-sm,
-    .marketing-site .text-base {
-        font-size: 1rem !important;
-        line-height: 1.6 !important;
+    /* Marketing site (V2) uses Inter + native Tailwind text sizes. */
+    .marketing-site {
+        font-family: var(--font-marketing);
+        background: var(--color-offwhite);
+        color: var(--color-marketing-ink);
+        -webkit-font-smoothing: antialiased;
+        font-size: 16px;
+    }
+
+    .marketing-site .font-mono {
+        font-family: var(--font-mono);
     }
 
     *,
@@ -121,6 +145,214 @@ select:focus[data-flux-control] {
 }
 
 @layer components {
+    /* === Fayeku V2 marketing components === */
+    .marketing-site .eyebrow {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--color-teal-fayeku);
+    }
+
+    .marketing-site .eyebrow-mint {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--color-mint-200);
+    }
+
+    .marketing-site .btn-primary {
+        background: var(--color-teal-fayeku);
+        color: var(--color-vivid);
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .marketing-site .btn-primary:hover {
+        background: var(--color-teal-deep);
+        color: var(--color-vivid);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 24px -8px rgba(2, 77, 78, 0.4);
+    }
+
+    .marketing-site .btn-primary:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--color-offwhite), 0 0 0 4px var(--color-vivid);
+    }
+
+    .marketing-site .btn-secondary {
+        background: white;
+        color: var(--color-teal-fayeku);
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        border: 1px solid #E5E7EB;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .marketing-site .btn-secondary:hover {
+        background: #F9FAFB;
+        border-color: var(--color-teal-fayeku);
+    }
+
+    .marketing-site .btn-secondary:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--color-offwhite), 0 0 0 4px var(--color-vivid);
+    }
+
+    .marketing-site .btn-white {
+        background: white;
+        color: var(--color-teal-fayeku);
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .marketing-site .btn-white:hover {
+        background: var(--color-mint-100);
+    }
+
+    .marketing-site .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #F3F4F6;
+        box-shadow: var(--shadow-card);
+    }
+
+    .marketing-site .h1 {
+        font-size: clamp(2.25rem, 5vw, 4.25rem);
+        line-height: 1.04;
+        letter-spacing: -0.025em;
+        font-weight: 700;
+    }
+
+    .marketing-site .h2 {
+        font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+    }
+
+    .marketing-site .hero-bg {
+        background: var(--background-image-hero);
+    }
+
+    .marketing-site .nav-link {
+        color: var(--color-marketing-ink);
+        font-size: 0.92rem;
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        transition: color 0.15s;
+    }
+
+    .marketing-site .nav-link:hover {
+        color: var(--color-teal-fayeku);
+        background: rgba(232, 245, 239, 0.6);
+    }
+
+    .marketing-site .nav-link-active {
+        color: var(--color-teal-fayeku);
+        background: rgba(232, 245, 239, 0.6);
+    }
+
+    .marketing-site .check::before {
+        content: "";
+        display: inline-block;
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.5rem;
+        vertical-align: -0.25rem;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230FB85C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .marketing-site .pill-toggle {
+        background: white;
+        border: 1px solid #E5E7EB;
+        padding: 4px;
+        border-radius: 9999px;
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .marketing-site .pill-toggle a,
+    .marketing-site .pill-toggle button {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-marketing-slate);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .marketing-site .pill-toggle .active {
+        background: var(--color-teal-fayeku);
+        color: white;
+    }
+
+    .marketing-site .pill-toggle a:not(.active):hover,
+    .marketing-site .pill-toggle button:not(.active):hover {
+        color: var(--color-teal-fayeku);
+        background: var(--color-mint-50);
+    }
+
+    .marketing-site .ringfx:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-vivid);
+    }
+
+    .marketing-site .grain::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0);
+        background-size: 22px 22px;
+    }
+
+    .marketing-site .browser {
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px -30px rgba(2, 77, 78, 0.25), 0 8px 20px -10px rgba(10, 31, 26, 0.10);
+    }
+
+    .marketing-site .browser-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 14px;
+        border-bottom: 1px solid #F3F4F6;
+        background: #FAFBFC;
+    }
+
+    .marketing-site .browser-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 9999px;
+    }
+
+    .marketing-site [x-cloak] {
+        display: none !important;
+    }
+
     [data-flux-modal] > dialog[data-modal='confirm-logout'] {
         --tw-ring-color: transparent !important;
         --tw-ring-shadow: 0 0 #0000 !important;
@@ -350,12 +582,12 @@ select:focus[data-flux-control] {
     .auth-button {
         @apply inline-flex w-full cursor-pointer items-center justify-center px-5 py-4 text-base font-semibold transition;
         border-radius: 0.75rem;
-        background: #024d4d;
-        color: #10b75c;
+        background: #024D4E;
+        color: #0FB85C;
     }
 
     .auth-button:hover {
-        background: #013c3c;
+        background: #013838;
     }
 
     .auth-button:disabled {

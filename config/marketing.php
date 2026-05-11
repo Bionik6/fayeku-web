@@ -36,14 +36,15 @@ return [
         ],
     ],
     'navigation' => [
-        ['href' => '/entreprises/', 'label' => 'Entreprises'],
-        ['href' => '/accountants/', 'label' => 'Experts-comptables'],
-        ['href' => '/pricing/', 'label' => 'Tarifs'],
-        ['href' => '/conformite/', 'label' => 'Conformité'],
+        ['href' => '/entreprises', 'label' => 'Entreprises'],
+        ['href' => '/accountants', 'label' => 'Experts-comptables'],
+        ['href' => '/pricing', 'label' => 'Tarifs'],
+        ['href' => '/conformite', 'label' => 'Conformité'],
+        ['href' => '/contact', 'label' => 'Contact'],
     ],
     'legal_links' => [
-        ['href' => '/mentions-legales/', 'label' => 'Mentions légales'],
-        ['href' => '/confidentialite/', 'label' => 'Confidentialité'],
+        ['href' => '/mentions-legales', 'label' => 'Mentions légales'],
+        ['href' => '/confidentialite', 'label' => 'Confidentialité'],
     ],
     'home_personas' => [
         'entreprise' => [

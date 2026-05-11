@@ -16,22 +16,19 @@
         <meta name="twitter:description" content="{{ $metaDescription ?? config('marketing.site.description') }}" />
         <meta name="twitter:image" content="{{ config('marketing.site.url') }}/og-image.svg" />
         <link rel="canonical" href="{{ $canonicalUrl ?? config('marketing.site.url') }}" />
-        <link rel="stylesheet" href="/marketing-static.css" data-navigate-track>
     </head>
     <body class="marketing-site">
-        <div class="flex min-h-screen flex-col">
-            <x-marketing.navbar :navigation="$navigation ?? config('marketing.navigation')" />
+        <x-marketing.navbar :navigation="$navigation ?? config('marketing.navigation')" />
 
-            <main class="flex-1">
-                {{ $slot }}
-            </main>
+        <main class="pt-[68px]">
+            {{ $slot }}
+        </main>
 
-            <x-marketing.footer
-                :navigation="$navigation ?? config('marketing.navigation')"
-                :legal-links="$legalLinks ?? config('marketing.legal_links')"
-                :site="$site ?? config('marketing.site')"
-            />
-        </div>
+        <x-marketing.footer
+            :navigation="$navigation ?? config('marketing.navigation')"
+            :legal-links="$legalLinks ?? config('marketing.legal_links')"
+            :site="$site ?? config('marketing.site')"
+        />
 
         @livewireScripts
         @fluxScripts

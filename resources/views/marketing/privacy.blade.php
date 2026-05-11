@@ -4,7 +4,7 @@
 
             {{-- En-tête --}}
             <div class="space-y-4">
-                <p class="text-sm font-semibold uppercase tracking-[0.24em] text-teal">Légal</p>
+                <p class="text-sm font-semibold uppercase tracking-[0.24em] text-[color:var(--color-teal-fayeku)]">Légal</p>
                 <div class="space-y-3">
                     <h1 class="text-balance text-3xl font-semibold text-ink sm:text-4xl">Politique de confidentialité</h1>
                     <p class="text-pretty text-base leading-7 text-slate-600 sm:text-lg">Comment Fayeku collecte, utilise et protège vos données personnelles — dernière mise à jour&nbsp;: {{ now()->format('d/m/Y') }}.</p>
@@ -12,7 +12,7 @@
             </div>
 
             {{-- Introduction --}}
-            <div class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+            <div class="card p-8">
                 <div class="space-y-4 text-base leading-7 text-slate-600">
                     <p>Fayeku accorde une importance particulière à la protection des données personnelles et veille au respect de la réglementation applicable, notamment la <strong class="text-ink">Loi n°&nbsp;2008-12 du 25&nbsp;janvier&nbsp;2008 sur la protection des données à caractère personnel</strong> au Sénégal, ainsi que les textes régionaux de la CEDEAO relatifs aux transactions électroniques et à la protection des données.</p>
                     <p>Les utilisateurs sont invités à lire attentivement la présente politique, qui contient des informations importantes sur la façon dont leurs données personnelles sont collectées, utilisées et partagées.</p>
@@ -23,7 +23,7 @@
             <div class="space-y-6">
 
                 {{-- Définitions --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Définitions</h2>
                     <dl class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <div>
@@ -58,7 +58,7 @@
                 </article>
 
                 {{-- Article 1 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 1 — Informations sur l'entreprise</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">1.1</strong> Fayeku est un service édité par <strong class="text-ink">{{ $site['legal']['company'] }}</strong>, entreprise de droit sénégalais, dont le siège social est situé à {{ $site['contact']['address'] }}, immatriculée sous le NINEA <strong class="text-ink">{{ $site['legal']['ninea'] }}</strong> et le RCCM <strong class="text-ink">{{ $site['legal']['rccm'] }}</strong>.</p>
@@ -67,7 +67,7 @@
                 </article>
 
                 {{-- Article 2 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 2 — Champ d'application</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">2.1 Objet.</strong> La présente politique informe les utilisateurs de la solution Fayeku, les bénéficiaires des services, ainsi que les visiteurs du site fayeku.sn, sur la manière dont Fayeku utilise et protège leurs données personnelles. Elle s'applique aux PME clientes, cabinets d'expertise comptable partenaires, prospects, fournisseurs et à toute personne entrant en contact avec Fayeku.</p>
@@ -76,7 +76,7 @@
                 </article>
 
                 {{-- Article 3 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 3 — Rôles de Fayeku dans le traitement des données</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p>Au regard de la Loi n°&nbsp;2008-12, Fayeku peut intervenir en deux qualités distinctes&nbsp;:</p>
@@ -87,7 +87,7 @@
                 </article>
 
                 {{-- Article 4 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 4 — Modalités de collecte des données</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">4.1 Collecte directe</strong>, notamment lors de&nbsp;:</p>
@@ -103,7 +103,7 @@
                 </article>
 
                 {{-- Article 5 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 5 — Données personnelles collectées</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">5.1</strong> Le détail des données traitées figure à l'Annexe 1 de la présente politique.</p>
@@ -113,7 +113,7 @@
                 </article>
 
                 {{-- Article 6 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 6 — Finalités et bases légales du traitement</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">6.1 Bases légales.</strong> Fayeku ne traite les données personnelles que sur l'une des bases suivantes&nbsp;:</p>
@@ -128,7 +128,7 @@
                 </article>
 
                 {{-- Article 7 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 7 — Cookies et traceurs</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p>Fayeku utilise des technologies de traceurs sur son site pour mesurer l'audience, améliorer la navigation et analyser l'utilisation des fonctionnalités. Ces traceurs peuvent avoir des finalités analytiques ou publicitaires, sous réserve du consentement exprimé via l'outil de gestion des cookies.</p>
@@ -138,7 +138,7 @@
                 </article>
 
                 {{-- Article 8 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 8 — Durées de conservation</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">8.1</strong> Les données personnelles sont conservées pendant la durée nécessaire à la réalisation des finalités décrites à l'Annexe&nbsp;1. À l'issue de ces durées, elles peuvent être conservées pour&nbsp;:</p>
@@ -151,7 +151,7 @@
                 </article>
 
                 {{-- Article 9 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 9 — Mesures de sécurité</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">9.1</strong> Les données personnelles sont protégées par des mesures techniques et organisationnelles garantissant leur sécurité, leur intégrité et leur confidentialité : chiffrement des données en transit (TLS) et au repos, contrôle d'accès basé sur les rôles, journalisation des accès, authentification à deux facteurs, surveillance continue de l'infrastructure.</p>
@@ -163,7 +163,7 @@
                 </article>
 
                 {{-- Article 10 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 10 — Droits des personnes concernées</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">10.1 Vos droits.</strong> Conformément à la Loi n°&nbsp;2008-12, vous disposez des droits suivants&nbsp;:</p>
@@ -186,7 +186,7 @@
                 </article>
 
                 {{-- Article 11 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 11 — Partage et transfert des données</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">11.1 Usage interne.</strong> Les données personnelles sont traitées par les collaborateurs de Fayeku dans le cadre strict de leurs fonctions et uniquement pour atteindre les finalités déclarées. Tous les collaborateurs sont tenus à une obligation de confidentialité stricte.</p>
@@ -198,7 +198,7 @@
                 </article>
 
                 {{-- Article 12 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 12 — Gestion des réclamations</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">12.1</strong> Fayeku s'engage à traiter toute réclamation légitime relative à la vie privée. Chaque réclamation relative à une violation potentielle ou effective de la présente politique ou de la législation applicable est examinée, et des mesures raisonnables sont prises pour en limiter les effets.</p>
@@ -207,7 +207,7 @@
                 </article>
 
                 {{-- Article 13 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 13 — Application et modification de la politique</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
                         <p><strong class="text-ink">13.1</strong> Fayeku peut modifier, compléter ou mettre à jour la présente politique pour tenir compte d'évolutions légales, réglementaires, jurisprudentielles ou techniques. Pour toute modification substantielle (portant sur les bases légales, les finalités de traitement ou l'exercice des droits), Fayeku notifiera les utilisateurs par écrit au moins 30&nbsp;jours avant son entrée en vigueur. L'utilisation de la solution après cette échéance vaut acceptation des nouvelles conditions. La version en ligne est la seule version authentique.</p>
@@ -216,7 +216,7 @@
                 </article>
 
                 {{-- Annexe 1 --}}
-                <article class="rounded-4xl border border-primary/10 bg-white p-8 shadow-soft">
+                <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Annexe 1 — Tableau des traitements</h2>
                     <p class="mt-2 text-sm text-slate-500">Finalités, données traitées, bases légales et durées de conservation.</p>
 

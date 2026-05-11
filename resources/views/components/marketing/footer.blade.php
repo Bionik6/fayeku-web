@@ -4,53 +4,65 @@
     'site',
 ])
 
-<footer class="border-t border-primary/10 bg-white">
-    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_0.9fr_0.9fr_1.1fr] lg:px-8">
-        <div class="space-y-4">
-            <div>
-                <p class="text-xl font-semibold text-primary">{{ $site['name'] }}</p>
-                <p class="mt-2 max-w-sm text-sm leading-6 text-slate-600">{{ $site['description'] }}</p>
-            </div>
-            <p class="text-sm text-slate-500">Conçu à Dakar, pour le contexte sénégalais.</p>
-        </div>
-
+<footer class="border-t border-gray-100 bg-white">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-14 grid md:grid-cols-2 lg:grid-cols-4 gap-10">
         <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Navigation</p>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-                @foreach ($navigation as $item)
-                    <li><a href="{{ $item['href'] }}" class="hover:text-primary">{{ $item['label'] }}</a></li>
-                @endforeach
-            </ul>
-        </div>
-
-        <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Légal</p>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-                @foreach ($legalLinks as $item)
-                    <li><a href="{{ $item['href'] }}" class="hover:text-primary">{{ $item['label'] }}</a></li>
-                @endforeach
-            </ul>
-        </div>
-
-        <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal">Contact</p>
-            <div class="mt-4 space-y-3 text-sm text-slate-600">
-                <p>{{ $site['contact']['address'] }}</p>
-                <p><a href="mailto:{{ $site['contact']['email'] }}" class="hover:text-primary">{{ $site['contact']['email'] }}</a></p>
-                @if (! empty($site['contact']['phone']))
-                    <p><a href="tel:{{ preg_replace('/\s+/', '', $site['contact']['phone']) }}" class="hover:text-primary">{{ $site['contact']['phone'] }}</a></p>
-                @endif
-                <div class="flex gap-4 pt-2">
-                    <a href="{{ $site['social']['linkedin'] }}" class="hover:text-primary">LinkedIn</a>
-                    <a href="{{ $site['social']['whatsapp'] }}" class="hover:text-primary">WhatsApp</a>
-                    <a href="{{ $site['social']['x'] }}" class="hover:text-primary">X</a>
+            <div class="flex items-center gap-3 mb-4">
+                <img src="/logo.png" alt="Fayeku" class="w-10 h-10 rounded-lg" width="40" height="40" />
+                <div>
+                    <div class="font-bold">{{ $site['name'] }}</div>
+                    <div class="text-xs -mt-0.5" style="color: var(--color-marketing-slate);">Facturation &amp; trésorerie</div>
                 </div>
+            </div>
+            <p class="text-sm leading-relaxed mb-4" style="color: var(--color-marketing-slate);">
+                {{ $site['description'] }}
+            </p>
+            <p class="text-sm italic" style="color: var(--color-marketing-slate);">Conçu à Dakar, pour le contexte sénégalais.</p>
+        </div>
+
+        <div>
+            <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase" style="color: var(--color-marketing-ink);">Navigation</h4>
+            <ul class="space-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                @foreach ($navigation as $item)
+                    <li><a href="{{ $item['href'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">{{ $item['label'] }}</a></li>
+                @endforeach
+            </ul>
+        </div>
+
+        <div>
+            <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase" style="color: var(--color-marketing-ink);">Légal</h4>
+            <ul class="space-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                @foreach ($legalLinks as $item)
+                    <li><a href="{{ $item['href'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">{{ $item['label'] }}</a></li>
+                @endforeach
+            </ul>
+        </div>
+
+        <div>
+            <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase" style="color: var(--color-marketing-ink);">Contact</h4>
+            <ul class="space-y-2 text-sm" style="color: var(--color-marketing-slate);">
+                <li>{!! nl2br(e($site['contact']['address'])) !!}</li>
+                <li><a href="mailto:{{ $site['contact']['email'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">{{ $site['contact']['email'] }}</a></li>
+                @if (! empty($site['contact']['phone']))
+                    <li><a href="tel:{{ preg_replace('/\s+/', '', $site['contact']['phone']) }}" class="hover:text-[color:var(--color-teal-fayeku)]">{{ $site['contact']['phone'] }}</a></li>
+                @endif
+            </ul>
+            <div class="flex gap-3 mt-4 text-sm" style="color: var(--color-marketing-slate);">
+                @if (! empty($site['social']['linkedin']))
+                    <a href="{{ $site['social']['linkedin'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">LinkedIn</a>
+                @endif
+                @if (! empty($site['social']['whatsapp']))
+                    <a href="{{ $site['social']['whatsapp'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">WhatsApp</a>
+                @endif
+                @if (! empty($site['social']['x']))
+                    <a href="{{ $site['social']['x'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">X</a>
+                @endif
             </div>
         </div>
     </div>
-
-    <div class="border-t border-primary/10 px-4 py-5 text-center text-xs leading-6 text-slate-500 sm:px-6 lg:px-8">
-        <p>&copy; {{ now()->year }} {{ $site['name'] }} — Édité par {{ $site['legal']['editor'] }} ({{ $site['legal']['company'] }}).</p>
-        <p>NINEA : {{ $site['legal']['ninea'] }} — RCCM : {{ $site['legal']['rccm'] }}.</p>
+    <div class="border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-5 lg:px-8 py-6 text-center text-xs" style="color: var(--color-marketing-slate);">
+            &copy; {{ now()->year }} {{ $site['name'] }} — Édité par {{ $site['legal']['editor'] }} ({{ $site['legal']['company'] }}). NINEA : {{ $site['legal']['ninea'] }} — RCCM : {{ $site['legal']['rccm'] }}.
+        </div>
     </div>
 </footer>
