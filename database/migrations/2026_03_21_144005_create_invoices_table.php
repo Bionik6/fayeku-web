@@ -29,6 +29,8 @@ return new class extends Migration
             $table->date('due_at')->nullable();
             $table->datetime('paid_at')->nullable();
             $table->datetime('cancelled_at')->nullable();
+            $table->text('cancellation_reason')->nullable();
+            $table->datetime('archived_at')->nullable();
             $table->integer('subtotal')->default(0);
             $table->integer('tax_amount')->default(0);
             $table->integer('total')->default(0);

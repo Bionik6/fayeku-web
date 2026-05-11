@@ -23,6 +23,10 @@ return new class extends Migration
             $table->datetime('accepted_at')->nullable();
             $table->datetime('declined_at')->nullable();
             $table->datetime('converted_at')->nullable();
+            $table->datetime('cancelled_at')->nullable();
+            $table->text('cancellation_reason')->nullable();
+            $table->datetime('archived_at')->nullable();
+            $table->datetime('validity_extended_at')->nullable();
             $table->integer('subtotal')->default(0);
             $table->integer('tax_amount')->default(0);
             $table->integer('total')->default(0);
@@ -36,6 +40,8 @@ return new class extends Migration
             $table->string('po_reference')->nullable();
             $table->date('po_received_at')->nullable();
             $table->text('po_notes')->nullable();
+            $table->string('po_file_path')->nullable();
+            $table->boolean('has_no_formal_po')->default(false);
             $table->timestamps();
             $table->softDeletes();
 
