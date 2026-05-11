@@ -196,7 +196,7 @@ class ProposalDocumentService
     /**
      * Mark a proforma as having received the purchase order (BC).
      *
-     * @param  array{reference?: string|null, received_at?: string|Carbon|null, notes?: string|null}  $purchaseOrderData
+     * @param  array{reference?: string|null, received_at?: string|Carbon|null, notes?: string|null, file_path?: string|null}  $purchaseOrderData
      */
     public function markAsPoReceived(ProposalDocument $document, array $purchaseOrderData = []): ProposalDocument
     {
@@ -218,6 +218,10 @@ class ProposalDocumentService
             $update['po_notes'] = $purchaseOrderData['notes'] !== ''
                 ? $purchaseOrderData['notes']
                 : null;
+        }
+
+        if (array_key_exists('file_path', $purchaseOrderData)) {
+            $update['po_file_path'] = $purchaseOrderData['file_path'] ?: null;
         }
 
         $document->update($update);

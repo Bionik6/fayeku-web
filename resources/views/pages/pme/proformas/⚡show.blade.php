@@ -7,12 +7,16 @@ use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\ProposalDocumentService;
 use App\Support\PhoneNumber;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
+    use WithFileUploads;
+
     public ProposalDocument $proforma;
 
     public ?Company $company = null;
@@ -31,6 +35,11 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     public string $poNotes = '';
 
     public bool $poNoFormal = false;
+
+    /** Upload optionnel d'un PDF de bon de commande. */
+    public $poFile = null;
+
+    public bool $removePoFile = false;
 
     // Modal "Annuler la proforma"
     public bool $showCancelModal = false;
@@ -158,6 +167,8 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         $this->poReceivedAt = $this->proforma->po_received_at?->format('Y-m-d') ?? now()->format('Y-m-d');
         $this->poNotes = $this->proforma->po_notes ?? '';
         $this->poNoFormal = (bool) $this->proforma->has_no_formal_po;
+        $this->poFile = null;
+        $this->removePoFile = false;
         $this->showPoModal = true;
     }
 
@@ -170,16 +181,22 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
     public function recordPurchaseOrder(): void
     {
         $rules = $this->poNoFormal
-            ? ['poNotes' => ['nullable', 'string', 'max:1000']]
+            ? [
+                'poNotes' => ['nullable', 'string', 'max:1000'],
+                'poFile' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            ]
             : [
                 'poReference' => ['required', 'string', 'max:100'],
                 'poReceivedAt' => ['required', 'date'],
                 'poNotes' => ['nullable', 'string', 'max:1000'],
+                'poFile' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
             ];
 
         $this->validate($rules, [
             'poReference.required' => __('La référence du bon de commande est requise.'),
             'poReceivedAt.required' => __('La date du bon de commande est requise.'),
+            'poFile.mimes' => __('Le fichier doit être un PDF.'),
+            'poFile.max' => __('Le fichier ne doit pas dépasser 5 Mo.'),
         ]);
 
         if (! in_array($this->proforma->status, [ProposalDocumentStatus::Sent, ProposalDocumentStatus::Accepted, ProposalDocumentStatus::PoReceived], true)) {
@@ -188,8 +205,11 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             return;
         }
 
+        $filePath = $this->resolvePoFilePath();
+
         $update = [
             'has_no_formal_po' => $this->poNoFormal,
+            'file_path' => $filePath,
         ];
         if ($this->poNoFormal) {
             $update['reference'] = null;
@@ -204,9 +224,53 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         $this->proforma->update(['has_no_formal_po' => $this->poNoFormal]);
         app(ProposalDocumentService::class)->markAsPoReceived($this->proforma, $update);
         $this->proforma->refresh();
+        $this->poFile = null;
+        $this->removePoFile = false;
         $this->showPoModal = false;
         unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Bon de commande enregistré.'));
+    }
+
+    /**
+     * Stocke un nouveau PDF, supprime l'ancien si remplacé/supprimé, ou
+     * conserve le path actuel si aucune action sur le fichier.
+     */
+    private function resolvePoFilePath(): ?string
+    {
+        $current = $this->proforma->po_file_path;
+
+        if ($this->poFile) {
+            if ($current && Storage::exists($current)) {
+                Storage::delete($current);
+            }
+
+            $ext = strtolower($this->poFile->getClientOriginalExtension() ?: 'pdf');
+            $filename = 'bc-'.now()->format('YmdHis').'.'.$ext;
+            $path = "pme/proformas/{$this->proforma->id}/bc/{$filename}";
+            Storage::put($path, file_get_contents($this->poFile->getRealPath()));
+
+            return $path;
+        }
+
+        if ($this->removePoFile && $current) {
+            if (Storage::exists($current)) {
+                Storage::delete($current);
+            }
+
+            return null;
+        }
+
+        return $current;
+    }
+
+    public function downloadPoFile()
+    {
+        abort_unless($this->proforma->po_file_path && Storage::exists($this->proforma->po_file_path), 404);
+
+        $ext = pathinfo($this->proforma->po_file_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $name = ($this->proforma->po_reference ?: 'bon-de-commande').'.'.$ext;
+
+        return Storage::download($this->proforma->po_file_path, $name);
     }
 
     /**
@@ -706,7 +770,7 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
             </article>
 
             {{-- Bon de commande (visible dès qu'un BC a été enregistré, formel ou non) --}}
-            @if ($p->po_reference || $p->has_no_formal_po || $p->po_received_at || $p->po_notes)
+            @if ($p->po_reference || $p->has_no_formal_po || $p->po_received_at || $p->po_notes || $p->po_file_path)
                 <article class="app-shell-panel p-6">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -737,6 +801,19 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                             <div>
                                 <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Date de réception') }}</dt>
                                 <dd class="mt-1 text-sm font-semibold text-ink">{{ $p->po_received_at ? format_date($p->po_received_at) : '—' }}</dd>
+                            </div>
+                        @endif
+
+                        @if ($p->po_file_path)
+                            <div class="sm:col-span-2">
+                                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Fichier joint') }}</dt>
+                                <dd class="mt-1">
+                                    <button type="button" wire:click="downloadPoFile" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                                        <flux:icon name="document" class="size-4 text-slate-400" />
+                                        {{ basename($p->po_file_path) }}
+                                        <flux:icon name="arrow-down-tray" class="size-4 text-slate-400" />
+                                    </button>
+                                </dd>
                             </div>
                         @endif
 
@@ -948,6 +1025,40 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
                             <textarea wire:model="poNotes" rows="3" placeholder="{{ __('Détails internes sur ce bon de commande…') }}"
                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"></textarea>
                             @error('poNotes') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Fichier PDF du BC (optionnel)') }}</label>
+
+                            @if ($proforma->po_file_path && ! $poFile && ! $removePoFile)
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm">
+                                    <span class="inline-flex items-center gap-2 text-slate-700">
+                                        <flux:icon name="document" class="size-4 text-slate-400" />
+                                        {{ basename($proforma->po_file_path) }}
+                                    </span>
+                                    <button type="button" wire:click="$set('removePoFile', true)" class="text-xs font-semibold text-rose-600 hover:text-rose-500">
+                                        {{ __('Supprimer') }}
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">{{ __('Choisissez un nouveau fichier ci-dessous pour le remplacer.') }}</p>
+                            @elseif ($removePoFile)
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-sm text-rose-700">
+                                    <span>{{ __('Fichier marqué pour suppression à l\'enregistrement.') }}</span>
+                                    <button type="button" wire:click="$set('removePoFile', false)" class="text-xs font-semibold text-rose-700 hover:text-rose-600 underline">
+                                        {{ __('Annuler') }}
+                                    </button>
+                                </div>
+                            @endif
+
+                            <input wire:model="poFile" type="file" accept="application/pdf"
+                                   class="mt-2 block w-full text-sm text-slate-700 file:mr-3 file:rounded-xl file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20" />
+                            <p class="mt-1 text-xs text-slate-500">{{ __('PDF uniquement, 5 Mo max.') }}</p>
+                            @error('poFile') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+
+                            <div wire:loading wire:target="poFile" class="mt-2 inline-flex items-center gap-2 text-xs text-slate-500">
+                                <flux:icon name="arrow-path" class="size-4 animate-spin" />
+                                {{ __('Téléversement…') }}
+                            </div>
                         </div>
                     </div>
 

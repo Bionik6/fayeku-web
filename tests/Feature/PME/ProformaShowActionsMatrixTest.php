@@ -7,6 +7,8 @@ use App\Models\PME\Invoice;
 use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -156,4 +158,70 @@ it('BC : enregistrement avec case "Pas de BC formel" coche has_no_formal_po', fu
     expect($fresh->has_no_formal_po)->toBeTrue();
     expect($fresh->po_notes)->toBe('Accord verbal sur WhatsApp');
     expect($fresh->status)->toBe(ProposalDocumentStatus::PoReceived);
+});
+
+it('BC : upload d\'un PDF stocke le fichier et persiste son path', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Accepted, [
+        'accepted_at' => now(),
+    ]);
+
+    $pdf = File::create('bon-de-commande.pdf', 50, 'application/pdf');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openPoModal')
+        ->set('poReference', 'BC-2026/0042')
+        ->set('poReceivedAt', now()->toDateString())
+        ->set('poFile', $pdf)
+        ->call('recordPurchaseOrder')
+        ->assertHasNoErrors();
+
+    $fresh = $proforma->fresh();
+    expect($fresh->po_file_path)->not->toBeNull();
+    expect($fresh->po_file_path)->toStartWith("pme/proformas/{$proforma->id}/bc/");
+    Storage::assertExists($fresh->po_file_path);
+});
+
+it('BC : rejette un upload non-PDF', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Accepted, [
+        'accepted_at' => now(),
+    ]);
+
+    $image = File::image('photo.png');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openPoModal')
+        ->set('poReference', 'BC-2026/0042')
+        ->set('poReceivedAt', now()->toDateString())
+        ->set('poFile', $image)
+        ->call('recordPurchaseOrder')
+        ->assertHasErrors(['poFile']);
+});
+
+it('BC : removePoFile supprime le fichier existant à l\'enregistrement', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::PoReceived, [
+        'accepted_at' => now(),
+        'po_reference' => 'BC-2026/0042',
+        'po_received_at' => now(),
+    ]);
+    $path = "pme/proformas/{$proforma->id}/bc/old.pdf";
+    Storage::put($path, 'fake');
+    $proforma->update(['po_file_path' => $path]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma->fresh()])
+        ->call('openPoModal')
+        ->set('removePoFile', true)
+        ->call('recordPurchaseOrder')
+        ->assertHasNoErrors();
+
+    expect($proforma->fresh()->po_file_path)->toBeNull();
+    Storage::assertMissing($path);
 });
