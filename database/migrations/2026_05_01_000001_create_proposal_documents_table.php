@@ -25,6 +25,8 @@ return new class extends Migration
             $table->datetime('converted_at')->nullable();
             $table->datetime('cancelled_at')->nullable();
             $table->text('cancellation_reason')->nullable();
+            $table->text('acceptance_note')->nullable();
+            $table->text('decline_reason')->nullable();
             $table->datetime('archived_at')->nullable();
             $table->datetime('validity_extended_at')->nullable();
             $table->integer('subtotal')->default(0);

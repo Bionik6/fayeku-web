@@ -26,6 +26,16 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
 
     public string $cancelReason = '';
 
+    // Modal "Marquer comme accepté"
+    public bool $showAcceptModal = false;
+
+    public string $acceptanceNote = '';
+
+    // Modal "Marquer comme refusé"
+    public bool $showDeclineModal = false;
+
+    public string $declineReason = '';
+
     // Modal "Prolonger la validité"
     public bool $showExtendValidityModal = false;
 
@@ -132,24 +142,60 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         return app(DocumentLifecycleService::class)->forQuote($this->quote);
     }
 
-    public function markAsAccepted(): void
+    public function openAcceptModal(): void
     {
         if ($this->quote->status !== ProposalDocumentStatus::Sent) {
             return;
         }
-        app(ProposalDocumentService::class)->markAsAccepted($this->quote);
+        $this->acceptanceNote = '';
+        $this->resetErrorBag();
+        $this->showAcceptModal = true;
+    }
+
+    public function closeAcceptModal(): void
+    {
+        $this->showAcceptModal = false;
+    }
+
+    public function confirmAccept(): void
+    {
+        if ($this->quote->status !== ProposalDocumentStatus::Sent) {
+            $this->showAcceptModal = false;
+
+            return;
+        }
+        app(ProposalDocumentService::class)->markAsAccepted($this->quote, $this->acceptanceNote);
         $this->quote->refresh();
+        $this->showAcceptModal = false;
         unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme accepté.'));
     }
 
-    public function markAsDeclined(): void
+    public function openDeclineModal(): void
     {
         if ($this->quote->status !== ProposalDocumentStatus::Sent) {
             return;
         }
-        app(ProposalDocumentService::class)->markAsDeclined($this->quote);
+        $this->declineReason = '';
+        $this->resetErrorBag();
+        $this->showDeclineModal = true;
+    }
+
+    public function closeDeclineModal(): void
+    {
+        $this->showDeclineModal = false;
+    }
+
+    public function confirmDecline(): void
+    {
+        if ($this->quote->status !== ProposalDocumentStatus::Sent) {
+            $this->showDeclineModal = false;
+
+            return;
+        }
+        app(ProposalDocumentService::class)->markAsDeclined($this->quote, $this->declineReason);
         $this->quote->refresh();
+        $this->showDeclineModal = false;
         unset($this->statusDisplay, $this->validityLabel, $this->isEditable, $this->lifecycleState);
         $this->dispatch('toast', type: 'success', title: __('Le devis a été marqué comme refusé.'));
     }
@@ -619,10 +665,10 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
                             <flux:icon name="calendar-days" class="size-4" /> {{ __('Prolonger la validité') }}
                         </button>
                     @elseif ($q->status === ProposalDocumentStatus::Sent)
-                        <button type="button" wire:click="markAsAccepted" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-accept">
+                        <button type="button" wire:click="openAcceptModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-accept">
                             <flux:icon name="check-circle" class="size-4" /> {{ __('Marquer comme accepté') }}
                         </button>
-                        <button type="button" wire:click="markAsDeclined" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="primary-decline">
+                        <button type="button" wire:click="openDeclineModal" class="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary" data-action="primary-decline">
                             <flux:icon name="x-circle" class="size-4" /> {{ __('Marquer comme refusé') }}
                         </button>
                     @elseif ($q->status === ProposalDocumentStatus::Accepted)
@@ -750,4 +796,107 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         :show="$showExtendValidityModal"
         :min-date="now()->addDay()->toDateString()"
     />
+
+    {{-- Modal "Marquer comme accepté" --}}
+    @if ($showAcceptModal)
+        <div class="relative z-50" role="dialog" aria-modal="true" x-data @keydown.escape.window="$wire.closeAcceptModal()">
+            <div class="fixed inset-0 bg-slate-500/75" aria-hidden="true"></div>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 sm:items-center">
+                    <div class="relative overflow-hidden rounded-2xl bg-white text-left shadow-xl sm:w-full sm:max-w-lg">
+                        <button type="button" wire:click="closeAcceptModal" class="absolute top-4 right-4 z-10 rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="{{ __('Fermer') }}">
+                            <flux:icon name="x-mark" class="size-5" />
+                        </button>
+                        <form wire:submit="confirmAccept">
+                            <div class="bg-white px-6 pt-5 pb-4">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                                        <flux:icon name="check-circle" class="size-7 text-emerald-700" />
+                                    </div>
+                                    <div class="flex-1 pr-8">
+                                        <h3 class="text-xl font-semibold text-slate-900">{{ __('Marquer le devis comme accepté') }}</h3>
+                                        <p class="mt-1 text-base text-slate-500">
+                                            {{ $q->reference }} · {{ $q->client?->name ?? '—' }} · {{ format_money($q->total, $q->currency) }}
+                                        </p>
+
+                                        <div class="mt-4">
+                                            <label for="acceptance-note" class="block text-sm font-medium text-slate-700">
+                                                {{ __('Note (optionnelle)') }}
+                                            </label>
+                                            <textarea
+                                                id="acceptance-note"
+                                                wire:model="acceptanceNote"
+                                                rows="3"
+                                                placeholder="{{ __('Verbal, email, WhatsApp ou tout autre détail utile…') }}"
+                                                class="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                            ></textarea>
+                                        </div>
+
+                                        <div class="mt-4 flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
+                                            <flux:icon name="information-circle" class="size-4 shrink-0 text-emerald-600" />
+                                            <span>{{ __("Une fois accepté, vous pourrez convertir ce devis en facture.") }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-3">
+                                <button type="button" wire:click="closeAcceptModal" class="rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">{{ __('Annuler') }}</button>
+                                <button type="submit" class="rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500">{{ __('Confirmer l\'acceptation') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal "Marquer comme refusé" --}}
+    @if ($showDeclineModal)
+        <div class="relative z-50" role="dialog" aria-modal="true" x-data @keydown.escape.window="$wire.closeDeclineModal()">
+            <div class="fixed inset-0 bg-slate-500/75" aria-hidden="true"></div>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 sm:items-center">
+                    <div class="relative overflow-hidden rounded-2xl bg-white text-left shadow-xl sm:w-full sm:max-w-lg">
+                        <button type="button" wire:click="closeDeclineModal" class="absolute top-4 right-4 z-10 rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="{{ __('Fermer') }}">
+                            <flux:icon name="x-mark" class="size-5" />
+                        </button>
+                        <form wire:submit="confirmDecline">
+                            <div class="bg-white px-6 pt-5 pb-4">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-rose-100">
+                                        <flux:icon name="x-circle" class="size-7 text-rose-600" />
+                                    </div>
+                                    <div class="flex-1 pr-8">
+                                        <h3 class="text-xl font-semibold text-slate-900">{{ __('Marquer le devis comme refusé') }}</h3>
+                                        <p class="mt-1 text-base text-slate-500">
+                                            {{ $q->reference }} · {{ $q->client?->name ?? '—' }} · {{ format_money($q->total, $q->currency) }}
+                                        </p>
+
+                                        <div class="mt-4">
+                                            <label for="decline-reason" class="block text-sm font-medium text-slate-700">
+                                                {{ __('Motif (optionnel)') }}
+                                            </label>
+                                            <textarea
+                                                id="decline-reason"
+                                                wire:model="declineReason"
+                                                rows="3"
+                                                placeholder="{{ __('Ex. : trop cher, délai trop long…') }}"
+                                                class="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-3">
+                                <button type="button" wire:click="closeDeclineModal" class="rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">{{ __('Annuler') }}</button>
+                                <button type="submit" class="rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-500">{{ __('Confirmer le refus') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

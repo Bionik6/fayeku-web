@@ -180,13 +180,21 @@ class ProposalDocumentService
         return $document;
     }
 
-    public function markAsAccepted(ProposalDocument $document): ProposalDocument
+    public function markAsAccepted(ProposalDocument $document, ?string $note = null): ProposalDocument
     {
         $this->assertTypeAllows($document, ProposalDocumentStatus::Accepted);
-        $document->update([
+
+        $update = [
             'status' => ProposalDocumentStatus::Accepted,
             'accepted_at' => $document->accepted_at ?? now(),
-        ]);
+        ];
+
+        if ($note !== null) {
+            $note = trim($note);
+            $update['acceptance_note'] = $note !== '' ? $note : null;
+        }
+
+        $document->update($update);
 
         ProposalDocumentAccepted::dispatch($document);
 
@@ -229,12 +237,19 @@ class ProposalDocumentService
         return $document;
     }
 
-    public function markAsDeclined(ProposalDocument $document): ProposalDocument
+    public function markAsDeclined(ProposalDocument $document, ?string $reason = null): ProposalDocument
     {
-        $document->update([
+        $update = [
             'status' => ProposalDocumentStatus::Declined,
             'declined_at' => $document->declined_at ?? now(),
-        ]);
+        ];
+
+        if ($reason !== null) {
+            $reason = trim($reason);
+            $update['decline_reason'] = $reason !== '' ? $reason : null;
+        }
+
+        $document->update($update);
 
         return $document;
     }

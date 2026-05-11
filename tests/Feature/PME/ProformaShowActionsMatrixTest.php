@@ -1,9 +1,7 @@
 <?php
 
-use App\Enums\PME\InvoiceStatus;
 use App\Enums\PME\ProposalDocumentStatus;
 use App\Models\Auth\Company;
-use App\Models\PME\Invoice;
 use App\Models\PME\ProposalDocument;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,7 +39,7 @@ it('Draft : Envoyer la proforma en principal', function () {
         ->assertSeeText('Envoyer la proforma');
 });
 
-it('Sent : raccourci direct Convertir + alternative Marquer acceptée/refusée', function () {
+it('Sent : Marquer acceptée (primaire) + Marquer refusée, sans raccourci Convertir', function () {
     ['user' => $user, 'company' => $company] = setupProformaMatrix();
     $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Sent, [
         'valid_until' => now()->addDays(15)->toDateString(),
@@ -49,10 +47,11 @@ it('Sent : raccourci direct Convertir + alternative Marquer acceptée/refusée',
 
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.show', ['proforma' => $proforma])
-        ->assertSeeHtml('data-action="primary-shortcut-convert"')
         ->assertSeeHtml('data-action="primary-accept"')
         ->assertSeeHtml('data-action="primary-decline"')
-        ->assertSeeHtml('data-action="cancel"');
+        ->assertSeeHtml('data-action="cancel"')
+        ->assertDontSeeHtml('data-action="primary-shortcut-convert"')
+        ->assertDontSeeText('Convertir en facture');
 });
 
 it('Accepted sans BC : Ajouter un BC en principal, Convertir en secondaire primaire', function () {
@@ -121,43 +120,144 @@ it('Cancelled : menu = Dupliquer/Archiver', function () {
         ->assertSeeHtml('data-action="archive"');
 });
 
-it('raccourci direct : clic Convertir depuis Envoyée crée la facture + accepted_at + converted_at', function () {
+it('openAcceptModal informel : Accepted + has_no_formal_po=true + acceptance_note', function () {
     ['user' => $user, 'company' => $company] = setupProformaMatrix();
     $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Sent);
 
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.show', ['proforma' => $proforma])
-        ->call('convertToInvoice');
+        ->call('openAcceptModal')
+        ->assertSet('showAcceptModal', true)
+        ->assertSet('acceptMode', 'informal')
+        ->set('acceptanceNote', 'Accord WhatsApp du 11/05')
+        ->call('confirmAccept')
+        ->assertSet('showAcceptModal', false);
 
     $fresh = $proforma->fresh();
-    expect($fresh->status)->toBe(ProposalDocumentStatus::Converted);
-    expect($fresh->accepted_at)->not->toBeNull();
-    expect($fresh->converted_at)->not->toBeNull();
-    expect($fresh->accepted_at->lessThan($fresh->converted_at))->toBeTrue();
-
-    $invoice = Invoice::query()->where('proposal_document_id', $proforma->id)->first();
-    expect($invoice)->not->toBeNull();
-    expect($invoice->status)->toBe(InvoiceStatus::Draft);
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted);
+    expect($fresh->has_no_formal_po)->toBeTrue();
+    expect($fresh->acceptance_note)->toBe('Accord WhatsApp du 11/05');
 });
 
-it('BC : enregistrement avec case "Pas de BC formel" coche has_no_formal_po', function () {
+it('openAcceptModal po sans référence : validation error', function () {
     ['user' => $user, 'company' => $company] = setupProformaMatrix();
-    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Accepted, [
-        'accepted_at' => now(),
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Sent);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openAcceptModal')
+        ->set('acceptMode', 'po')
+        ->set('poReference', '')
+        ->call('confirmAccept')
+        ->assertHasErrors(['poReference']);
+
+    expect($proforma->fresh()->status)->toBe(ProposalDocumentStatus::Sent);
+});
+
+it('openAcceptModal po avec ref + date : passe PoReceived avec le BC enregistré', function () {
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Sent);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openAcceptModal')
+        ->set('acceptMode', 'po')
+        ->set('poReference', 'BC-2026/0042')
+        ->set('poReceivedAt', now()->toDateString())
+        ->call('confirmAccept')
+        ->assertHasNoErrors();
+
+    $fresh = $proforma->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::PoReceived);
+    expect($fresh->has_no_formal_po)->toBeFalse();
+    expect($fresh->po_reference)->toBe('BC-2026/0042');
+    expect($fresh->po_received_at)->not->toBeNull();
+    expect($fresh->accepted_at)->not->toBeNull();
+});
+
+it('openAcceptModal po + upload PDF : stocke le fichier', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Sent);
+
+    $pdf = File::create('bc.pdf', 50, 'application/pdf');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openAcceptModal')
+        ->set('acceptMode', 'po')
+        ->set('poReference', 'BC-2026/0099')
+        ->set('poReceivedAt', now()->toDateString())
+        ->set('poFile', $pdf)
+        ->call('confirmAccept')
+        ->assertHasNoErrors();
+
+    $fresh = $proforma->fresh();
+    expect($fresh->po_file_path)->not->toBeNull();
+    Storage::assertExists($fresh->po_file_path);
+});
+
+it('openDeclineModal proforma : Declined + decline_reason', function () {
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Sent);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openDeclineModal')
+        ->set('declineReason', 'Client a annulé son projet')
+        ->call('confirmDecline')
+        ->assertSet('showDeclineModal', false);
+
+    $fresh = $proforma->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Declined);
+    expect($fresh->decline_reason)->toBe('Client a annulé son projet');
+});
+
+it('BC edit : passer en mode informel revient à Accepted avec acceptance_note', function () {
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::PoReceived, [
+        'accepted_at' => now()->subDay(),
+        'po_reference' => 'BC-2026/0099',
+        'po_received_at' => now()->subDay(),
     ]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.show', ['proforma' => $proforma])
         ->call('openPoModal')
-        ->set('poNoFormal', true)
-        ->set('poNotes', 'Accord verbal sur WhatsApp')
+        ->set('acceptMode', 'informal')
+        ->set('acceptanceNote', 'Accord verbal sur WhatsApp')
         ->call('recordPurchaseOrder')
         ->assertHasNoErrors();
 
     $fresh = $proforma->fresh();
     expect($fresh->has_no_formal_po)->toBeTrue();
-    expect($fresh->po_notes)->toBe('Accord verbal sur WhatsApp');
+    expect($fresh->po_reference)->toBeNull();
+    expect($fresh->po_received_at)->toBeNull();
+    expect($fresh->acceptance_note)->toBe('Accord verbal sur WhatsApp');
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted);
+});
+
+it('BC edit : modifier le BC depuis le mode po met à jour les champs et garde PoReceived', function () {
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::PoReceived, [
+        'accepted_at' => now()->subDay(),
+        'po_reference' => 'BC-2026/0001',
+        'po_received_at' => now()->subDay(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openPoModal')
+        ->assertSet('acceptMode', 'po')
+        ->set('poReference', 'BC-2026/UPDATED')
+        ->set('poNotes', 'BC corrigé')
+        ->call('recordPurchaseOrder')
+        ->assertHasNoErrors();
+
+    $fresh = $proforma->fresh();
     expect($fresh->status)->toBe(ProposalDocumentStatus::PoReceived);
+    expect($fresh->po_reference)->toBe('BC-2026/UPDATED');
+    expect($fresh->po_notes)->toBe('BC corrigé');
 });
 
 it('BC : upload d\'un PDF stocke le fichier et persiste son path', function () {
@@ -184,14 +284,14 @@ it('BC : upload d\'un PDF stocke le fichier et persiste son path', function () {
     Storage::assertExists($fresh->po_file_path);
 });
 
-it('BC : rejette un upload non-PDF', function () {
+it('BC : accepte un upload image (JPG/PNG) en plus du PDF', function () {
     Storage::fake();
     ['user' => $user, 'company' => $company] = setupProformaMatrix();
     $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Accepted, [
         'accepted_at' => now(),
     ]);
 
-    $image = File::image('photo.png');
+    $image = File::image('bc-scan.png');
 
     Livewire::actingAs($user)
         ->test('pages::pme.proformas.show', ['proforma' => $proforma])
@@ -199,6 +299,27 @@ it('BC : rejette un upload non-PDF', function () {
         ->set('poReference', 'BC-2026/0042')
         ->set('poReceivedAt', now()->toDateString())
         ->set('poFile', $image)
+        ->call('recordPurchaseOrder')
+        ->assertHasNoErrors();
+
+    expect($proforma->fresh()->po_file_path)->not->toBeNull();
+});
+
+it('BC : rejette un fichier non supporté (ex. GIF)', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = setupProformaMatrix();
+    $proforma = makeProformaForMatrix($company, ProposalDocumentStatus::Accepted, [
+        'accepted_at' => now(),
+    ]);
+
+    $gif = File::image('animated.gif');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.proformas.show', ['proforma' => $proforma])
+        ->call('openPoModal')
+        ->set('poReference', 'BC-2026/0042')
+        ->set('poReceivedAt', now()->toDateString())
+        ->set('poFile', $gif)
         ->call('recordPurchaseOrder')
         ->assertHasErrors(['poFile']);
 });

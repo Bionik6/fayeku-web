@@ -146,6 +146,54 @@ it('confirmCancel rejette un motif vide et passe avec un motif valide', function
     expect($quote->fresh()->status)->toBe(ProposalDocumentStatus::Cancelled);
 });
 
+it('openAcceptModal + confirmAccept sur un Sent persiste le statut et la note', function () {
+    ['user' => $user, 'company' => $company] = setupQuoteMatrix();
+    $quote = makeQuoteForMatrix($company, ProposalDocumentStatus::Sent);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.show', ['quote' => $quote])
+        ->call('openAcceptModal')
+        ->assertSet('showAcceptModal', true)
+        ->set('acceptanceNote', 'Accord par email du 12/05')
+        ->call('confirmAccept')
+        ->assertSet('showAcceptModal', false);
+
+    $fresh = $quote->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted);
+    expect($fresh->acceptance_note)->toBe('Accord par email du 12/05');
+});
+
+it('openAcceptModal sans note persiste le statut Accepted avec acceptance_note null', function () {
+    ['user' => $user, 'company' => $company] = setupQuoteMatrix();
+    $quote = makeQuoteForMatrix($company, ProposalDocumentStatus::Sent);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.show', ['quote' => $quote])
+        ->call('openAcceptModal')
+        ->call('confirmAccept');
+
+    $fresh = $quote->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Accepted);
+    expect($fresh->acceptance_note)->toBeNull();
+});
+
+it('openDeclineModal + confirmDecline persiste le statut et le motif', function () {
+    ['user' => $user, 'company' => $company] = setupQuoteMatrix();
+    $quote = makeQuoteForMatrix($company, ProposalDocumentStatus::Sent);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.quotes.show', ['quote' => $quote])
+        ->call('openDeclineModal')
+        ->assertSet('showDeclineModal', true)
+        ->set('declineReason', 'Budget non retenu')
+        ->call('confirmDecline')
+        ->assertSet('showDeclineModal', false);
+
+    $fresh = $quote->fresh();
+    expect($fresh->status)->toBe(ProposalDocumentStatus::Declined);
+    expect($fresh->decline_reason)->toBe('Budget non retenu');
+});
+
 it('confirmExtendValidity prolonge un Expired et le repasse en Sent', function () {
     ['user' => $user, 'company' => $company] = setupQuoteMatrix();
     $quote = makeQuoteForMatrix($company, ProposalDocumentStatus::Expired, [
