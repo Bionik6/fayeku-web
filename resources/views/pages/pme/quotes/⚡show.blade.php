@@ -401,12 +401,12 @@ new #[Title('Devis')] #[Layout('layouts::pme')] class extends Component {
         return <<<MSG
             Bonjour,
 
-            Suite à votre demande, veuillez trouver notre devis n° {$reference}, d'un montant de {$total}.
+            Suite à votre demande, veuillez trouver notre devis n° *{$reference}*, d'un montant de *{$total}*.
 
             Consulter le devis :
             {$link}
 
-            Ce devis est valable jusqu'au {$validUntil}. Nous restons disponibles pour toute question ou modification.
+            Ce devis est valable jusqu'au *{$validUntil}*. Nous restons disponibles pour toute question ou modification.
 
             {$signature}
             MSG;

@@ -12,10 +12,12 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('invoice_id');
             $table->integer('amount');
+            $table->boolean('is_deposit')->default(false);
             $table->datetime('paid_at');
             $table->string('method');
             $table->string('reference')->nullable();
             $table->text('notes')->nullable();
+            $table->string('proof_file_path')->nullable();
             $table->string('recorded_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -24,6 +26,7 @@ return new class extends Migration
             $table->foreign('recorded_by')->references('id')->on('users')->nullOnDelete();
 
             $table->index('invoice_id');
+            $table->index('is_deposit');
         });
     }
 

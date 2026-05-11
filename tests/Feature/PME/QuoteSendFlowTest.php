@@ -110,10 +110,10 @@ test('le message d\'envoi du devis utilise le nouveau template avec lien public 
     expect($message)
         ->toStartWith('Bonjour,')
         ->not->toContain('Air Sénégal SA')
-        ->toContain('Suite à votre demande, veuillez trouver notre devis n° FYK-DEV-MSG001')
+        ->toContain('Suite à votre demande, veuillez trouver notre devis n° *FYK-DEV-MSG001*')
         ->toContain('Consulter le devis :')
         ->toContain(route('pme.quotes.pdf', $quote->public_code))
-        ->toContain('Ce devis est valable jusqu\'au')
+        ->toContain('Ce devis est valable jusqu\'au *')
         ->toContain('Nous restons disponibles pour toute question ou modification.')
         ->not->toContain('Suite à votre demande, je vous transmets');
 });

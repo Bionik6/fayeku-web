@@ -110,10 +110,10 @@ test('le message d\'envoi de la proforma utilise le nouveau template avec lien p
     expect($message)
         ->toStartWith('Bonjour,')
         ->not->toContain('Orange Sénégal SA')
-        ->toContain('Suite à nos échanges, veuillez trouver notre facture proforma n° FYK-PRO-MSG001')
+        ->toContain('Suite à nos échanges, veuillez trouver notre facture proforma n° *FYK-PRO-MSG001*')
         ->toContain('Consulter la proforma :')
         ->toContain(route('pme.proformas.pdf', $proforma->public_code))
-        ->toContain('Cette proforma est valable jusqu\'au')
+        ->toContain('Cette proforma est valable jusqu\'au *')
         ->toContain('peut servir à la validation de votre commande.')
         ->not->toContain('Conformément à notre échange');
 });

@@ -368,12 +368,12 @@ new #[Title('Proforma')] #[Layout('layouts::pme')] class extends Component {
         return <<<MSG
             Bonjour,
 
-            Suite à nos échanges, veuillez trouver notre facture proforma n° {$reference}, d'un montant de {$total}.
+            Suite à nos échanges, veuillez trouver notre facture proforma n° *{$reference}*, d'un montant de *{$total}*.
 
             Consulter la proforma :
             {$link}
 
-            Cette proforma est valable jusqu'au {$validUntil} et peut servir à la validation de votre commande.
+            Cette proforma est valable jusqu'au *{$validUntil}* et peut servir à la validation de votre commande.
 
             {$signature}
             MSG;

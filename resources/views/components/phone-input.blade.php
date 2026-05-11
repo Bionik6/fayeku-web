@@ -7,6 +7,7 @@
     'countries' => null,
     'countryModel' => null,
     'phoneModel' => null,
+    'phoneModelLive' => false,
     'required' => false,
     'requiredWhen' => null,
     'autocomplete' => 'tel',
@@ -122,7 +123,7 @@
                     <div class="flex items-center rounded-l-2xl {{ $paddingClass }} {{ $textSize }} font-medium text-slate-500">
                         <span x-text="selected?.label ?? @js($selectedCountryData['label'])"></span>
                     </div>
-                    <input type="hidden" name="{{ $countryName }}" :value="country" />
+                    <input type="hidden" name="{{ $countryName }}" :value="country" :data-prefix="selected?.prefix" />
                 @else
                     {{-- Multi-country: searchable dropdown --}}
                     <div class="relative shrink-0">
@@ -198,6 +199,7 @@
                             name="{{ $countryName }}"
                             x-ref="countryInput"
                             :value="country"
+                            :data-prefix="selected?.prefix"
                         />
                     </div>
                 @endif
@@ -210,7 +212,7 @@
                     inputmode="numeric"
                     :value="phone"
                     :placeholder="placeholder"
-                    @if (filled($phoneModel)) wire:model="{{ $phoneModel }}" @endif
+                    @if (filled($phoneModel)) wire:model{{ $phoneModelLive ? '.live.debounce.250ms' : '' }}="{{ $phoneModel }}" @endif
                     @if ($requiredWhen) x-bind:required="{{ $requiredWhen }}" @elseif ($required) required @endif
                     @if ($autofocus) autofocus @endif
                     autocomplete="{{ $autocomplete }}"

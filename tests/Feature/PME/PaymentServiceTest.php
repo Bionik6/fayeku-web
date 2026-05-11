@@ -8,6 +8,7 @@ use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
 use App\Services\PME\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -150,4 +151,35 @@ test('record() persiste la méthode, la référence et l\'auteur', function () {
     expect($payment->method)->toBe(PaymentMethod::MobileMoney);
     expect($payment->reference)->toBe('WAVE-42');
     expect($payment->notes)->toBe('Reçu via Wave');
+});
+
+test('record() persiste le chemin de la preuve de paiement', function () {
+    $invoice = makePaymentServiceInvoice();
+
+    $payment = app(PaymentService::class)->record($invoice, [
+        'amount' => 25_000,
+        'paid_at' => now()->toDateString(),
+        'method' => PaymentMethod::Transfer->value,
+        'proof_file_path' => "pme/invoices/{$invoice->id}/payments/proof-123.pdf",
+    ]);
+
+    expect($payment->proof_file_path)->toBe("pme/invoices/{$invoice->id}/payments/proof-123.pdf");
+});
+
+test('delete() supprime aussi la preuve du stockage', function () {
+    Storage::fake();
+    $invoice = makePaymentServiceInvoice();
+    $path = "pme/invoices/{$invoice->id}/payments/proof-x.pdf";
+    Storage::put($path, 'fake');
+
+    $payment = app(PaymentService::class)->record($invoice, [
+        'amount' => 25_000,
+        'paid_at' => now()->toDateString(),
+        'method' => PaymentMethod::Transfer->value,
+        'proof_file_path' => $path,
+    ]);
+
+    app(PaymentService::class)->delete($payment);
+
+    Storage::assertMissing($path);
 });

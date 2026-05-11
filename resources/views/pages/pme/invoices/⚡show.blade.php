@@ -7,16 +7,21 @@ use App\Enums\PME\ReminderMode;
 use App\Models\Auth\Company;
 use App\Models\PME\Invoice;
 use App\Models\PME\Payment;
+use App\Services\PME\CurrencyService;
 use App\Services\PME\DocumentLifecycleService;
 use App\Services\PME\InvoiceService;
 use App\Services\PME\PaymentService;
 use App\Services\PME\ReminderService;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
+    use WithFileUploads;
+
     public Invoice $invoice;
 
     public ?Company $company = null;
@@ -35,14 +40,25 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
     public string $paymentNotes = '';
 
+    /** Preuve de paiement (PDF/JPG/PNG) optionnelle. */
+    public $paymentProofFile = null;
+
+    /** Chemin de la preuve déjà existante (édition) — pour l'affichage. */
+    public ?string $paymentExistingProofPath = null;
+
+    public bool $removePaymentProof = false;
+
+    // Modale "Détails du paiement"
+    public ?string $paymentDetailsId = null;
+
+    /** @var array<string, mixed> Config currency JS pour le formateur de montant. */
+    public array $currencyJs = [];
+
     public ?string $confirmMarkPaid = null;
 
     public ?string $confirmDeletePaymentId = null;
 
     public ?string $confirmDeleteInvoice = null;
-
-    // Modal "Émettre la facture"
-    public bool $showIssueModal = false;
 
     // Modal "Annuler la facture"
     public bool $showCancelModal = false;
@@ -89,6 +105,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $invoice->load(['client', 'lines', 'reminders', 'payments']);
 
         $this->invoice = $invoice;
+        $this->currencyJs = CurrencyService::jsConfig($invoice->currency);
 
         // Liste des pays pour le sélecteur du composant phone-input.
         $this->sendPhoneCountries = collect(config('fayeku.phone_countries', []))
@@ -251,10 +268,16 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 $this->sendRecipient = '';
             }
         }
-        $this->sendMessage = $this->buildSendMessage();
+
+        $this->sendMessage = $this->sendChannel === 'email'
+            ? $this->buildEmailMessage()
+            : $this->buildWhatsAppMessage();
     }
 
-    private function buildSendMessage(): string
+    /**
+     * Message WhatsApp — gras via *...* (rendu en gras dans le client WhatsApp).
+     */
+    private function buildWhatsAppMessage(): string
     {
         $link = route('pme.invoices.pdf', $this->invoice->public_code);
         $total = format_money($this->invoice->total, $this->invoice->currency);
@@ -274,15 +297,15 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             return <<<MSG
                 Bonjour,
 
-                Veuillez trouver notre facture n° {$reference}, d'un montant total de {$total} TTC.
+                Veuillez trouver notre facture n° *{$reference}*, d'un montant total de *{$total}* TTC.
 
-                Acompte déjà versé : {$deposit}.
-                Reste à payer : {$remaining}.
+                Acompte déjà versé : *{$deposit}*.
+                Reste à payer : *{$remaining}*.
 
                 Consulter la facture :
                 {$link}
 
-                Échéance de paiement : {$dueAt}.
+                Échéance de paiement : *{$dueAt}*.
                 Moyens de paiement acceptés : {$paymentMethods}.
 
                 {$signature}
@@ -292,13 +315,68 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         return <<<MSG
             Bonjour,
 
-            Veuillez trouver notre facture n° {$reference}, d'un montant de {$total}.
+            Veuillez trouver notre facture n° *{$reference}*, d'un montant de *{$total}*.
 
             Consulter la facture :
             {$link}
 
-            Échéance de paiement : {$dueAt}.
+            Échéance de paiement : *{$dueAt}*.
             Moyens de paiement acceptés : {$paymentMethods}.
+
+            {$signature}
+            MSG;
+    }
+
+    /**
+     * Message email — plain text, ton plus narratif que la version WhatsApp.
+     * Pas d'astérisques (qui apparaîtraient comme des marqueurs littéraux dans
+     * la plupart des clients mail).
+     */
+    private function buildEmailMessage(): string
+    {
+        $link = route('pme.invoices.pdf', $this->invoice->public_code);
+        $total = format_money($this->invoice->total, $this->invoice->currency);
+        $dueAt = $this->invoice->due_at ? format_date($this->invoice->due_at) : '—';
+        $reference = $this->invoice->reference;
+        $paymentMethods = $this->paymentMethodsLabel();
+        $signature = $this->buildSignature();
+
+        $depositResolved = (int) $this->invoice->deposit_amount > 0
+            ? min((int) $this->invoice->deposit_amount, (int) $this->invoice->total)
+            : 0;
+
+        if ($depositResolved > 0) {
+            $deposit = format_money($depositResolved, $this->invoice->currency);
+            $remaining = format_money(max(0, (int) $this->invoice->total - $depositResolved), $this->invoice->currency);
+
+            return <<<MSG
+                Bonjour,
+
+                Vous trouverez la facture {$reference} d'un montant total de {$total} TTC, à régler avant le {$dueAt}.
+                Un acompte de {$deposit} a déjà été versé, reste à payer {$remaining}.
+
+                Consulter la facture en ligne :
+                {$link}
+
+                Moyens de paiement acceptés : {$paymentMethods}.
+
+                Pour toute question, n'hésitez pas à répondre directement à cet email.
+
+                {$signature}
+                MSG;
+        }
+
+        return <<<MSG
+            Bonjour,
+
+            Vous trouverez la facture {$reference} d'un montant de {$total}, à régler avant le {$dueAt}.
+
+            Consulter la facture en ligne :
+            {$link}
+
+            Moyens de paiement acceptés : {$paymentMethods}.
+
+            Pour toute question, n'hésitez pas à répondre directement à cet email.
 
             {$signature}
             MSG;
@@ -332,6 +410,17 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     }
 
     #[Computed]
+    public function sendEmailSubject(): string
+    {
+        $reference = $this->invoice->reference;
+        $companyName = trim((string) ($this->company?->name ?? ''));
+
+        return $companyName !== ''
+            ? "Facture {$reference} — {$companyName}"
+            : "Facture {$reference}";
+    }
+
+    #[Computed]
     public function sendOpenUrl(): string
     {
         if ($this->sendChannel === 'whatsapp') {
@@ -340,7 +429,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             return 'https://wa.me/'.$digits.'?text='.rawurlencode($this->sendMessage);
         }
 
-        $subject = rawurlencode((string) __('Facture :ref', ['ref' => $this->invoice->reference]));
+        $subject = rawurlencode($this->sendEmailSubject);
 
         return 'mailto:'.$this->sendRecipient.'?subject='.$subject.'&body='.rawurlencode($this->sendMessage);
     }
@@ -424,6 +513,91 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $this->paymentMethod = PaymentMethod::Transfer->value;
         $this->paymentReference = '';
         $this->paymentNotes = '';
+        $this->paymentProofFile = null;
+        $this->paymentExistingProofPath = null;
+        $this->removePaymentProof = false;
+        $this->resetValidation();
+        $this->showPaymentModal = true;
+    }
+
+    public function openPaymentDetails(string $paymentId): void
+    {
+        abort_unless($this->company, 403);
+
+        $exists = Payment::query()
+            ->whereKey($paymentId)
+            ->whereHas('invoice', fn ($q) => $q->where('company_id', $this->company->id))
+            ->exists();
+
+        if (! $exists) {
+            $this->dispatch('toast', type: 'error', title: __('Paiement introuvable.'));
+
+            return;
+        }
+
+        $this->paymentDetailsId = $paymentId;
+    }
+
+    public function closePaymentDetails(): void
+    {
+        $this->paymentDetailsId = null;
+    }
+
+    #[Computed]
+    public function selectedPaymentDetails(): ?Payment
+    {
+        if (! $this->paymentDetailsId || ! $this->company) {
+            return null;
+        }
+
+        return Payment::query()
+            ->whereKey($this->paymentDetailsId)
+            ->whereHas('invoice', fn ($q) => $q->where('company_id', $this->company->id))
+            ->first();
+    }
+
+    public function editFromDetails(): void
+    {
+        $id = $this->paymentDetailsId;
+        $this->paymentDetailsId = null;
+        if ($id) {
+            $this->openEditPaymentModal($id);
+        }
+    }
+
+    public function deleteFromDetails(): void
+    {
+        $id = $this->paymentDetailsId;
+        $this->paymentDetailsId = null;
+        if ($id) {
+            $this->requestDeletePayment($id);
+        }
+    }
+
+    public function openEditPaymentModal(string $paymentId): void
+    {
+        abort_unless($this->company, 403);
+
+        $payment = Payment::query()
+            ->whereKey($paymentId)
+            ->whereHas('invoice', fn ($q) => $q->where('company_id', $this->company->id))
+            ->first();
+
+        if (! $payment) {
+            $this->dispatch('toast', type: 'error', title: __('Paiement introuvable.'));
+
+            return;
+        }
+
+        $this->editingPaymentId = $payment->id;
+        $this->paymentAmount = (string) $payment->amount;
+        $this->paymentPaidAt = $payment->paid_at->format('Y-m-d');
+        $this->paymentMethod = $payment->method->value;
+        $this->paymentReference = $payment->reference ?? '';
+        $this->paymentNotes = $payment->notes ?? '';
+        $this->paymentProofFile = null;
+        $this->paymentExistingProofPath = $payment->proof_file_path;
+        $this->removePaymentProof = false;
         $this->resetValidation();
         $this->showPaymentModal = true;
     }
@@ -437,7 +611,9 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
     {
         abort_unless($this->company, 403);
 
-        if (! $this->invoice->canReceivePayment()) {
+        $isEdit = $this->editingPaymentId !== null;
+
+        if (! $isEdit && ! $this->invoice->canReceivePayment()) {
             $this->showPaymentModal = false;
             $this->dispatch('toast', type: 'warning', title: __('Cette facture ne peut pas recevoir de paiement.'));
 
@@ -450,30 +626,59 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             'paymentMethod' => ['required', new \Illuminate\Validation\Rules\Enum(PaymentMethod::class)],
             'paymentReference' => ['nullable', 'string', 'max:255'],
             'paymentNotes' => ['nullable', 'string', 'max:1000'],
+            'paymentProofFile' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ], [
             'paymentAmount.required' => __('Le montant est requis.'),
             'paymentAmount.min' => __('Le montant doit être supérieur à 0.'),
             'paymentPaidAt.required' => __('La date de paiement est requise.'),
+            'paymentProofFile.mimes' => __('La preuve doit être un PDF ou une image (JPG/PNG).'),
+            'paymentProofFile.max' => __('Le fichier ne doit pas dépasser 5 Mo.'),
         ]);
 
         // Conserve la date choisie par l'utilisateur mais ajoute l'heure actuelle,
         // pour que la timeline reste correctement ordonnée contre les autres événements du jour.
         $paidAt = \Carbon\Carbon::parse($validated['paymentPaidAt'])->setTimeFrom(now());
 
-        $payment = app(PaymentService::class)->record($this->invoice, [
-            'amount' => (int) $validated['paymentAmount'],
-            'paid_at' => $paidAt,
-            'method' => $validated['paymentMethod'],
-            'reference' => $validated['paymentReference'] ?: null,
-            'notes' => $validated['paymentNotes'] ?: null,
-            'recorded_by' => auth()->id(),
-        ]);
+        // Résolution du chemin de la preuve : nouveau fichier > suppression > existant > null.
+        $proofPath = $this->resolvePaymentProofPath();
+
+        if ($isEdit) {
+            $payment = Payment::query()
+                ->whereKey($this->editingPaymentId)
+                ->whereHas('invoice', fn ($q) => $q->where('company_id', $this->company->id))
+                ->firstOrFail();
+
+            $payment = app(PaymentService::class)->update($payment, [
+                'amount' => (int) $validated['paymentAmount'],
+                'paid_at' => $paidAt,
+                'method' => $validated['paymentMethod'],
+                'reference' => $validated['paymentReference'] ?: null,
+                'notes' => $validated['paymentNotes'] ?: null,
+                'proof_file_path' => $proofPath,
+            ]);
+            $toastTitle = __('Paiement mis à jour.');
+        } else {
+            $payment = app(PaymentService::class)->record($this->invoice, [
+                'amount' => (int) $validated['paymentAmount'],
+                'paid_at' => $paidAt,
+                'method' => $validated['paymentMethod'],
+                'reference' => $validated['paymentReference'] ?: null,
+                'notes' => $validated['paymentNotes'] ?: null,
+                'proof_file_path' => $proofPath,
+                'recorded_by' => auth()->id(),
+            ]);
+            $toastTitle = __('Paiement enregistré.');
+        }
 
         $this->invoice = $this->invoice->fresh(['client', 'lines', 'reminders', 'payments']);
         $this->showPaymentModal = false;
+        $this->editingPaymentId = null;
+        $this->paymentProofFile = null;
+        $this->paymentExistingProofPath = null;
+        $this->removePaymentProof = false;
         unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents, $this->lifecycleState);
 
-        if ($this->company) {
+        if (! $isEdit && $this->company) {
             $notifier = app(\App\Services\PME\WhatsAppNotificationService::class);
             if ((int) $this->invoice->amount_paid >= (int) $this->invoice->total) {
                 $notifier->sendInvoicePaidFull($this->invoice, $payment, $this->company);
@@ -482,7 +687,29 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
             }
         }
 
-        $this->dispatch('toast', type: 'success', title: __('Paiement enregistré.'));
+        $this->dispatch('toast', type: 'success', title: $toastTitle);
+    }
+
+    /**
+     * Stocke la nouvelle preuve si présente, et résout le chemin final selon
+     * l'état du formulaire (nouveau fichier / suppression / conservation).
+     */
+    private function resolvePaymentProofPath(): ?string
+    {
+        if ($this->paymentProofFile) {
+            $ext = strtolower($this->paymentProofFile->getClientOriginalExtension() ?: 'bin');
+            $filename = 'proof-'.now()->format('YmdHis').'.'.$ext;
+            $path = "pme/invoices/{$this->invoice->id}/payments/{$filename}";
+            Storage::put($path, file_get_contents($this->paymentProofFile->getRealPath()));
+
+            return $path;
+        }
+
+        if ($this->removePaymentProof) {
+            return null;
+        }
+
+        return $this->paymentExistingProofPath;
     }
 
     public function requestDeletePayment(string $paymentId): void
@@ -524,6 +751,23 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         unset($this->statusDisplay, $this->remainingAmount, $this->timelineEvents, $this->lifecycleState);
 
         $this->dispatch('toast', type: 'success', title: __('Paiement supprimé.'));
+    }
+
+    public function downloadPaymentProof(string $paymentId)
+    {
+        abort_unless($this->company, 403);
+
+        $payment = Payment::query()
+            ->whereKey($paymentId)
+            ->whereHas('invoice', fn ($q) => $q->where('company_id', $this->company->id))
+            ->firstOrFail();
+
+        abort_unless($payment->proof_file_path && Storage::exists($payment->proof_file_path), 404);
+
+        $ext = pathinfo($payment->proof_file_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $name = 'preuve-paiement-'.$payment->id.'.'.$ext;
+
+        return Storage::download($payment->proof_file_path, $name);
     }
 
     public function openReminderPreview(): void
@@ -620,36 +864,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         $copy = app(InvoiceService::class)->duplicate($this->invoice, $this->company);
 
         $this->redirect(route('pme.invoices.edit', $copy), navigate: true);
-    }
-
-    // ─── Émission ────────────────────────────────────────────────────────────
-
-    public function openIssueModal(): void
-    {
-        if ($this->invoice->status !== InvoiceStatus::Draft) {
-            return;
-        }
-        $this->showIssueModal = true;
-    }
-
-    public function closeIssueModal(): void
-    {
-        $this->showIssueModal = false;
-    }
-
-    public function confirmIssue(): void
-    {
-        if ($this->invoice->status !== InvoiceStatus::Draft) {
-            $this->showIssueModal = false;
-
-            return;
-        }
-
-        app(InvoiceService::class)->markAsSent($this->invoice);
-        $this->invoice->refresh();
-        $this->showIssueModal = false;
-        unset($this->statusDisplay, $this->remainingAmount, $this->dueLabel, $this->lifecycleState);
-        $this->dispatch('toast', type: 'success', title: __('La facture a été émise.'));
     }
 
     // ─── Annulation ──────────────────────────────────────────────────────────
@@ -865,109 +1079,53 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 </div>
             </article>
 
-            {{-- Acompte versé à la création (visible dès qu'un acompte > 0, même en brouillon) --}}
+            {{-- Paiements enregistrés (acomptes + paiements manuels dans un seul bloc, badge "Type" pour distinguer) --}}
             @php
+                $allPayments = $inv->payments->sortByDesc('paid_at');
                 $depositPayments = $inv->payments->where('is_deposit', true);
-                $manualPayments = $inv->payments->where('is_deposit', false);
             @endphp
-            @if ($depositPayments->isNotEmpty())
+            @if ($inv->status !== InvoiceStatus::Draft || $depositPayments->isNotEmpty())
             <article class="app-shell-panel p-6">
                 <div>
-                    <h3 class="text-lg font-semibold text-ink">{{ __('Avance / acompte déjà payé') }}</h3>
-                    <p class="mt-1 text-sm text-slate-500">{{ __('Acompte versé à la création de la facture — déduit du reste à payer.') }}</p>
+                    <h3 class="text-lg font-semibold text-ink">{{ __('Paiements enregistrés') }}</h3>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {{ __('Cumulé') }} : {{ format_money($inv->amount_paid, $inv->currency) }} / {{ format_money($inv->total, $inv->currency) }}
+                        @if ($depositPayments->isNotEmpty())
+                            · {{ __('dont acompte :') }} {{ format_money((int) $depositPayments->sum('amount'), $inv->currency) }}
+                        @endif
+                    </p>
                 </div>
 
-                {{-- Mobile: cartes empilées --}}
-                <div class="mt-5 space-y-3 sm:hidden">
-                    @foreach ($depositPayments->sortByDesc('paid_at') as $payment)
-                        <div wire:key="deposit-card-{{ $payment->id }}" class="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                            <div class="flex items-baseline justify-between gap-3">
-                                <span class="text-xs uppercase tracking-wide text-slate-500">{{ format_date($payment->paid_at) }}</span>
-                                <span class="font-semibold text-ink tabular-nums whitespace-nowrap">{{ format_money($payment->amount, $inv->currency) }}</span>
-                            </div>
-                            <p class="mt-1 text-sm text-slate-600">{{ __($payment->method->label()) }}</p>
-                        </div>
-                    @endforeach
-                </div>
-
-                {{-- Desktop: tableau --}}
-                <div class="mt-5 hidden overflow-x-auto sm:block">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-slate-100 text-left">
-                                <th class="pb-2 pr-4 text-sm font-semibold text-slate-500">{{ __('Date') }}</th>
-                                <th class="pb-2 px-4 text-sm font-semibold text-slate-500">{{ __('Méthode') }}</th>
-                                <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500">{{ __('Montant') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            @foreach ($depositPayments->sortByDesc('paid_at') as $payment)
-                                <tr wire:key="deposit-{{ $payment->id }}">
-                                    <td class="py-3 pr-4 text-slate-600 whitespace-nowrap">{{ format_date($payment->paid_at) }}</td>
-                                    <td class="py-3 px-4 text-slate-600">{{ __($payment->method->label()) }}</td>
-                                    <td class="py-3 px-4 text-right font-semibold text-ink whitespace-nowrap">
-                                        {{ format_money($payment->amount, $inv->currency) }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-            @endif
-
-            {{-- Paiements liés (pas de paiement sur brouillons) --}}
-            @if ($inv->status !== InvoiceStatus::Draft)
-            <article class="app-shell-panel p-6">
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-semibold text-ink">{{ __('Paiements enregistrés') }}</h3>
-                        <p class="mt-1 text-sm text-slate-500">
-                            {{ __('Cumulé') }} : {{ format_money($inv->amount_paid, $inv->currency) }} / {{ format_money($inv->total, $inv->currency) }}
-                            @if ($depositPayments->isNotEmpty())
-                                · {{ __('dont acompte :') }} {{ format_money((int) $depositPayments->sum('amount'), $inv->currency) }}
-                            @endif
-                        </p>
-                    </div>
-                    @if ($inv->canReceivePayment())
-                        <button
-                            type="button"
-                            wire:click="openPaymentModal"
-                            class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-strong"
-                        >
-                            <flux:icon name="plus" class="size-4" />
-                            {{ __('Enregistrer un paiement') }}
-                        </button>
-                    @endif
-                </div>
-
-                @if ($manualPayments->isNotEmpty())
-                    {{-- Mobile: cartes empilées --}}
+                @if ($allPayments->isNotEmpty())
+                    {{-- Mobile: cartes empilées, chaque carte ouvre les détails --}}
                     <div class="mt-5 space-y-3 sm:hidden">
-                        @foreach ($manualPayments->sortByDesc('paid_at') as $payment)
-                            <div wire:key="payment-card-{{ $payment->id }}" class="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                        @foreach ($allPayments as $payment)
+                            <button
+                                type="button"
+                                wire:key="payment-card-{{ $payment->id }}"
+                                wire:click="openPaymentDetails('{{ $payment->id }}')"
+                                class="block w-full rounded-xl border border-slate-100 bg-slate-50/60 p-4 text-left transition hover:border-primary/30 hover:bg-slate-50"
+                            >
                                 <div class="flex items-baseline justify-between gap-3">
                                     <span class="text-xs uppercase tracking-wide text-slate-500">{{ format_date($payment->paid_at) }}</span>
                                     <span class="font-semibold text-ink tabular-nums whitespace-nowrap">{{ format_money($payment->amount, $inv->currency) }}</span>
                                 </div>
                                 <p class="mt-1 text-sm text-slate-600">{{ __($payment->method->label()) }}</p>
-                                @if ($payment->reference)
-                                    <p class="mt-0.5 text-xs text-slate-500">{{ __('Réf.') }} : {{ $payment->reference }}</p>
-                                @endif
-                                <button
-                                    type="button"
-                                    wire:click="requestDeletePayment('{{ $payment->id }}')"
-                                    class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-rose-500 hover:text-rose-600"
-                                    aria-label="{{ __('Supprimer le paiement') }}"
-                                >
-                                    <flux:icon name="trash" class="size-3.5" />
-                                    {{ __('Supprimer') }}
-                                </button>
-                            </div>
+                                <div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                                    @if ($payment->is_deposit)
+                                        <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-700 ring-1 ring-inset ring-amber-200">{{ __('Acompte') }}</span>
+                                    @else
+                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">{{ __('Paiement') }}</span>
+                                    @endif
+                                    @if ($payment->reference)
+                                        <span>{{ __('Réf.') }} : {{ $payment->reference }}</span>
+                                    @endif
+                                </div>
+                            </button>
                         @endforeach
                     </div>
 
-                    {{-- Desktop: tableau --}}
+                    {{-- Desktop: tableau, chaque ligne ouvre les détails --}}
                     <div class="mt-5 hidden overflow-x-auto sm:block">
                         <table class="w-full text-sm">
                             <thead>
@@ -975,28 +1133,29 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                     <th class="pb-2 pr-4 text-sm font-semibold text-slate-500">{{ __('Date') }}</th>
                                     <th class="pb-2 px-4 text-sm font-semibold text-slate-500">{{ __('Méthode') }}</th>
                                     <th class="pb-2 px-4 text-sm font-semibold text-slate-500">{{ __('Référence') }}</th>
-                                    <th class="pb-2 px-4 text-right text-sm font-semibold text-slate-500">{{ __('Montant') }}</th>
-                                    <th class="pb-2"></th>
+                                    <th class="pb-2 px-4 text-sm font-semibold text-slate-500">{{ __('Type') }}</th>
+                                    <th class="pb-2 pl-4 text-right text-sm font-semibold text-slate-500">{{ __('Montant') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
-                                @foreach ($manualPayments->sortByDesc('paid_at') as $payment)
-                                    <tr wire:key="payment-{{ $payment->id }}">
+                                @foreach ($allPayments as $payment)
+                                    <tr
+                                        wire:key="payment-{{ $payment->id }}"
+                                        wire:click="openPaymentDetails('{{ $payment->id }}')"
+                                        class="cursor-pointer transition hover:bg-slate-50"
+                                    >
                                         <td class="py-3 pr-4 text-slate-600 whitespace-nowrap">{{ format_date($payment->paid_at) }}</td>
                                         <td class="py-3 px-4 text-slate-600">{{ __($payment->method->label()) }}</td>
                                         <td class="py-3 px-4 text-slate-500">{{ $payment->reference ?? '—' }}</td>
-                                        <td class="py-3 px-4 text-right font-semibold text-ink whitespace-nowrap">
-                                            {{ format_money($payment->amount, $inv->currency) }}
+                                        <td class="py-3 px-4">
+                                            @if ($payment->is_deposit)
+                                                <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">{{ __('Acompte') }}</span>
+                                            @else
+                                                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">{{ __('Paiement') }}</span>
+                                            @endif
                                         </td>
-                                        <td class="py-3 pl-4 text-right">
-                                            <button
-                                                type="button"
-                                                wire:click="requestDeletePayment('{{ $payment->id }}')"
-                                                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-                                                aria-label="{{ __('Supprimer le paiement') }}"
-                                            >
-                                                <flux:icon name="trash" class="size-4" />
-                                            </button>
+                                        <td class="py-3 pl-4 text-right font-semibold text-ink whitespace-nowrap">
+                                            {{ format_money($payment->amount, $inv->currency) }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -1062,8 +1221,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <div class="mt-4 space-y-2">
                     {{-- Action principale par statut --}}
                     @if ($isDraft)
-                        <button type="button" wire:click="openIssueModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-issue">
-                            <flux:icon name="paper-airplane" class="size-4" /> {{ __('Émettre la facture') }}
+                        <button type="button" wire:click="openSendModal" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong" data-action="primary-send">
+                            <flux:icon name="paper-airplane" class="size-4" /> {{ __('Envoyer la facture') }}
                         </button>
                     @elseif ($isOverdue)
                         <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:opacity-50" data-action="primary-remind">
@@ -1106,20 +1265,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 </button>
                                 <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50" data-action="remind">
                                     <flux:icon name="bell-alert" class="size-4 text-slate-400" /> {{ __('Relancer manuellement') }}
-                                </button>
-                            @endif
-
-                            @if ($isOverdue || $isSent || $isPartial)
-                                @if ($isOverdue || $isPartial)
-                                    <button type="button" wire:click="openPaymentModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="record-payment">
-                                        <flux:icon name="banknotes" class="size-4 text-slate-400" /> {{ __('Enregistrer un paiement') }}
-                                    </button>
-                                @endif
-                            @endif
-
-                            @if ($isPaid || $isPartial)
-                                <button type="button" wire:click="openPaymentModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="view-payments">
-                                    <flux:icon name="banknotes" class="size-4 text-slate-400" /> {{ __('Voir les paiements') }}
                                 </button>
                             @endif
 
@@ -1175,7 +1320,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                 <form wire:submit="recordPayment">
                     <div class="flex items-start justify-between border-b border-slate-100 px-7 py-5">
                         <div>
-                            <h2 class="text-lg font-semibold text-ink">{{ __('Enregistrer un paiement') }}</h2>
+                            <h2 class="text-lg font-semibold text-ink">{{ $editingPaymentId ? __('Modifier le paiement') : __('Enregistrer un paiement') }}</h2>
                             <p class="mt-1 text-sm text-slate-500">
                                 {{ __('Reste dû') }} : {{ format_money($remaining, $inv->currency) }}
                             </p>
@@ -1190,38 +1335,96 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                     </div>
 
                     <div class="grid gap-4 px-7 py-6 md:grid-cols-2">
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">
-                                {{ __('Montant') }} <span class="text-rose-500">*</span>
+                        {{-- Montant — formatteur identique à la saisie des lignes de facture --}}
+                        <div
+                            x-data="{
+                                raw: {{ (int) (is_numeric($paymentAmount) ? $paymentAmount : 0) }},
+                                formatted: '',
+                                get noDecimals() { return $wire.currencyJs.decimals === 0; },
+                                get maxRaw() { return $wire.currencyJs.maxAmount; },
+                                formatNoDecimal(v) {
+                                    return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, $wire.currencyJs.thousandsSep);
+                                },
+                                clamp(v) { return Math.min(Math.max(v, 0), this.maxRaw); },
+                                onInput(e) {
+                                    if (this.noDecimals) {
+                                        this.raw = this.clamp(parseInt(e.target.value.replace(/\D/g, '')) || 0);
+                                        this.formatted = this.formatNoDecimal(this.raw);
+                                        e.target.value = this.formatted;
+                                    } else {
+                                        let v = e.target.value.replace(/[^\d.]/g, '');
+                                        this.raw = this.clamp(Math.round(parseFloat(v || '0') * Math.pow(10, $wire.currencyJs.decimals)));
+                                    }
+                                    $wire.set('paymentAmount', this.raw.toString());
+                                },
+                                init() {
+                                    if (this.noDecimals) {
+                                        this.formatted = this.raw > 0 ? this.formatNoDecimal(this.raw) : '';
+                                    } else {
+                                        this.formatted = this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '';
+                                    }
+                                    this.$watch('$wire.paymentAmount', (val) => {
+                                        let n = parseInt(val) || 0;
+                                        if (n !== this.raw) {
+                                            this.raw = this.clamp(n);
+                                            this.formatted = this.noDecimals
+                                                ? (this.raw > 0 ? this.formatNoDecimal(this.raw) : '')
+                                                : (this.raw > 0 ? (this.raw / Math.pow(10, $wire.currencyJs.decimals)).toFixed($wire.currencyJs.decimals) : '');
+                                        }
+                                    });
+                                }
+                            }"
+                        >
+                            <label for="payment-amount" class="mb-1.5 block text-sm font-medium text-slate-700">
+                                {{ __('Montant') }} (<span x-text="$wire.currencyJs.label"></span>) <span class="text-rose-500">*</span>
                             </label>
                             <input
-                                wire:model="paymentAmount"
-                                type="number"
-                                min="1"
-                                step="1"
+                                id="payment-amount"
+                                type="text"
+                                :inputmode="noDecimals ? 'numeric' : 'decimal'"
+                                :value="formatted"
+                                @input="onInput($event)"
+                                placeholder="0"
                                 required
-                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base text-ink tabular-nums focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                             />
                             @error('paymentAmount') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
+                        {{-- Date — flatpickr, comme sur la page nouvelle facture --}}
                         <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label for="payment-date" class="mb-1.5 block text-sm font-medium text-slate-700">
                                 {{ __('Date') }} <span class="text-rose-500">*</span>
                             </label>
-                            <input
-                                wire:model="paymentPaidAt"
-                                type="date"
-                                required
-                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-                            />
+                            <div
+                                wire:ignore
+                                x-data="{
+                                    picker: null,
+                                    init() {
+                                        this.picker = flatpickr(this.$refs.input, {
+                                            dateFormat: 'Y-m-d',
+                                            altInput: true,
+                                            altFormat: 'd/m/Y',
+                                            defaultDate: $wire.paymentPaidAt,
+                                            onChange: (dates, dateStr) => $wire.set('paymentPaidAt', dateStr),
+                                        });
+                                        this.$watch('$wire.paymentPaidAt', (val) => {
+                                            if (this.picker && val) this.picker.setDate(val, false);
+                                        });
+                                    },
+                                    destroy() { if (this.picker) this.picker.destroy(); }
+                                }"
+                            >
+                                <input id="payment-date" x-ref="input" type="text" readonly required
+                                       class="w-full cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
+                            </div>
                             @error('paymentPaidAt') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Méthode') }}</label>
                             <x-select-native>
-                                <select wire:model="paymentMethod" class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-sm text-slate-700 focus:border-primary/50 focus:outline-none">
+                                <select wire:model="paymentMethod" class="col-start-1 row-start-1 appearance-none rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pr-8 text-base text-slate-700 focus:border-primary/50 focus:outline-none">
                                     @foreach (PaymentMethod::cases() as $method)
                                         <option value="{{ $method->value }}">{{ __($method->label()) }}</option>
                                     @endforeach
@@ -1235,7 +1438,7 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 wire:model="paymentReference"
                                 type="text"
                                 placeholder="{{ __('N° de transaction, chèque, etc.') }}"
-                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                             />
                         </div>
 
@@ -1244,8 +1447,54 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             <textarea
                                 wire:model="paymentNotes"
                                 rows="3"
-                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base text-ink placeholder:text-slate-500 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
                             ></textarea>
+                        </div>
+
+                        {{-- Preuve de paiement (PDF/JPG/PNG, optionnelle) --}}
+                        <div class="md:col-span-2">
+                            <p class="mb-1.5 block text-sm font-medium text-slate-700">
+                                {{ __('Preuve de paiement') }}
+                                <span class="font-normal text-slate-400">{{ __('(optionnel · PDF ou image, 5 Mo max)') }}</span>
+                            </p>
+
+                            @if ($paymentExistingProofPath && ! $paymentProofFile && ! $removePaymentProof)
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-base">
+                                    <span class="inline-flex items-center gap-2 text-slate-700">
+                                        <flux:icon name="document" class="size-4 text-slate-400" />
+                                        {{ basename($paymentExistingProofPath) }}
+                                    </span>
+                                    <button type="button" wire:click="$set('removePaymentProof', true)" class="text-sm font-semibold text-rose-600 hover:text-rose-500">{{ __('Supprimer') }}</button>
+                                </div>
+                                <p class="mt-1 text-sm text-slate-500">{{ __('Choisissez un nouveau fichier ci-dessous pour le remplacer.') }}</p>
+                            @elseif ($removePaymentProof)
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-base text-rose-700">
+                                    <span>{{ __('Fichier marqué pour suppression à l\'enregistrement.') }}</span>
+                                    <button type="button" wire:click="$set('removePaymentProof', false)" class="text-sm font-semibold text-rose-700 hover:text-rose-600 underline">{{ __('Annuler') }}</button>
+                                </div>
+                            @endif
+
+                            <label for="payment-proof-file" class="mt-1 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/80 px-4 py-5 text-center transition hover:border-primary/60">
+                                @if ($paymentProofFile)
+                                    <flux:icon name="document-check" class="size-6 text-emerald-600" />
+                                    <div class="text-base font-medium text-slate-700">{{ $paymentProofFile->getClientOriginalName() }}</div>
+                                    <button type="button" wire:click="$set('paymentProofFile', null)" class="text-sm font-semibold text-rose-600 underline hover:text-rose-500">{{ __('Retirer') }}</button>
+                                @else
+                                    <flux:icon name="cloud-arrow-up" class="size-6 text-slate-400" />
+                                    <div class="text-base text-slate-600">
+                                        {{ __('Glisser un fichier ici, ou') }}
+                                        <span class="font-semibold text-primary underline">{{ __('parcourir') }}</span>
+                                    </div>
+                                    <div class="text-sm text-slate-500">{{ __('PDF, JPG, PNG — 5 Mo max') }}</div>
+                                @endif
+                                <input id="payment-proof-file" wire:model="paymentProofFile" type="file" accept=".pdf,.jpg,.jpeg,.png" class="sr-only" />
+                            </label>
+                            @error('paymentProofFile') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+
+                            <div wire:loading wire:target="paymentProofFile" class="mt-1 inline-flex items-center gap-2 text-sm text-slate-500">
+                                <flux:icon name="arrow-path" class="size-4 animate-spin" />
+                                {{ __('Téléversement…') }}
+                            </div>
                         </div>
                     </div>
 
@@ -1261,10 +1510,103 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                             type="submit"
                             class="inline-flex items-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-strong"
                         >
-                            {{ __('Enregistrer') }}
+                            {{ $editingPaymentId ? __('Mettre à jour') : __('Enregistrer') }}
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modale "Détails du paiement" : ouverte au clic sur une ligne de la liste --}}
+    @if ($this->selectedPaymentDetails)
+        @php $pd = $this->selectedPaymentDetails; @endphp
+        <div class="relative z-50" role="dialog" aria-modal="true" x-data @keydown.escape.window="$wire.closePaymentDetails()">
+            <div class="fixed inset-0 bg-slate-500/75" aria-hidden="true"></div>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 sm:items-center">
+                    <div class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white text-left shadow-xl">
+                        <button type="button" wire:click="closePaymentDetails" class="absolute top-4 right-4 z-10 rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="{{ __('Fermer') }}">
+                            <flux:icon name="x-mark" class="size-5" />
+                        </button>
+
+                        {{-- Header --}}
+                        <div class="flex items-start gap-4 px-6 pt-5 pb-5">
+                            <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                                <flux:icon name="banknotes" class="size-7 text-emerald-700" />
+                            </div>
+                            <div class="flex-1 pr-12">
+                                <h3 class="text-xl font-semibold text-slate-900">{{ __('Détails du paiement') }}</h3>
+                                <p class="mt-1 text-base text-slate-500">
+                                    {{ format_money($pd->amount, $inv->currency) }} · {{ format_date($pd->paid_at) }}
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Body --}}
+                        <div class="border-t border-slate-100 px-6 py-5">
+                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Type') }}</dt>
+                                    <dd class="mt-1">
+                                        @if ($pd->is_deposit)
+                                            <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-sm font-medium text-amber-700 ring-1 ring-inset ring-amber-200">{{ __('Acompte') }}</span>
+                                        @else
+                                            <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">{{ __('Paiement') }}</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Méthode') }}</dt>
+                                    <dd class="mt-1 text-base text-slate-800">{{ __($pd->method->label()) }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Montant') }}</dt>
+                                    <dd class="mt-1 text-base font-semibold text-ink tabular-nums">{{ format_money($pd->amount, $inv->currency) }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Date') }}</dt>
+                                    <dd class="mt-1 text-base text-slate-800">{{ format_date($pd->paid_at) }}</dd>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Référence') }}</dt>
+                                    <dd class="mt-1 text-base text-slate-800">{{ $pd->reference ?: '—' }}</dd>
+                                </div>
+                                @if ($pd->notes)
+                                    <div class="sm:col-span-2">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Notes') }}</dt>
+                                        <dd class="mt-1 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-base text-slate-700">{{ $pd->notes }}</dd>
+                                    </div>
+                                @endif
+                                @if ($pd->proof_file_path)
+                                    <div class="sm:col-span-2">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Preuve de paiement') }}</dt>
+                                        <dd class="mt-1">
+                                            <button type="button" wire:click="downloadPaymentProof('{{ $pd->id }}')" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/30 hover:text-primary">
+                                                <flux:icon name="document" class="size-4 text-slate-400" />
+                                                {{ basename($pd->proof_file_path) }}
+                                                <flux:icon name="arrow-down-tray" class="size-4 text-slate-400" />
+                                            </button>
+                                        </dd>
+                                    </div>
+                                @endif
+                            </dl>
+                        </div>
+
+                        {{-- Footer --}}
+                        <div class="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-6 py-3">
+                            <button type="button" wire:click="deleteFromDetails" class="rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-rose-600 ring-1 ring-inset ring-rose-200 hover:bg-rose-50">
+                                <span class="inline-flex items-center gap-2"><flux:icon name="trash" class="size-4" /> {{ __('Supprimer') }}</span>
+                            </button>
+                            <div class="flex items-center gap-3">
+                                <button type="button" wire:click="closePaymentDetails" class="rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">{{ __('Fermer') }}</button>
+                                <button type="button" wire:click="editFromDetails" class="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-strong">
+                                    <span class="inline-flex items-center gap-2"><flux:icon name="pencil-square" class="size-4" /> {{ __('Modifier') }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     @endif
@@ -1318,9 +1660,8 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
         :send-country="$sendCountry"
         :send-phone-countries="$sendPhoneCountries"
         :send-open-url="$this->sendOpenUrl"
+        :send-email-subject="$this->sendEmailSubject"
     />
-
-    <x-invoicing.issue-modal :show="$showIssueModal" />
 
     <x-ui.cancel-with-reason-modal
         :show="$showCancelModal"

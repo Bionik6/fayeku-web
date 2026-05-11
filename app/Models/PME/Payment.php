@@ -23,7 +23,7 @@ class Payment extends Model
 
     protected $fillable = [
         'invoice_id', 'amount', 'is_deposit', 'paid_at', 'method',
-        'reference', 'notes', 'recorded_by',
+        'reference', 'notes', 'proof_file_path', 'recorded_by',
     ];
 
     protected $casts = [

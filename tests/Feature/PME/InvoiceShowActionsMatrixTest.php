@@ -2,6 +2,7 @@
 
 use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\Company;
+use App\Models\PME\Client;
 use App\Models\PME\Invoice;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,16 +27,16 @@ function makeInvoiceForMatrix(Company $company, InvoiceStatus $status, array $ov
         ->create(array_merge(['status' => $status], $overrides));
 }
 
-it('Draft : Émettre la facture en principal + Modifier/Supprimer dans le menu', function () {
+it('Draft : Envoyer la facture en principal + Modifier/Supprimer dans le menu', function () {
     ['user' => $user, 'company' => $company] = setupInvoiceMatrix();
     $invoice = makeInvoiceForMatrix($company, InvoiceStatus::Draft);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
-        ->assertSeeHtml('data-action="primary-issue"')
+        ->assertSeeHtml('data-action="primary-send"')
         ->assertSeeHtml('data-action="edit"')
         ->assertSeeHtml('data-action="delete-draft"')
-        ->assertSeeText('Émettre la facture');
+        ->assertSeeText('Envoyer la facture');
 });
 
 it('Sent : Enregistrer un paiement en principal + Renvoyer/Annuler dans le menu', function () {
@@ -62,11 +63,11 @@ it('Overdue : Relancer en principal', function () {
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
         ->assertSeeHtml('data-action="primary-remind"')
-        ->assertSeeHtml('data-action="record-payment"')
-        ->assertSeeHtml('data-action="cancel"');
+        ->assertSeeHtml('data-action="cancel"')
+        ->assertDontSeeHtml('data-action="record-payment"');
 });
 
-it('PartiallyPaid : Enregistrer un paiement en principal + Voir les paiements', function () {
+it('PartiallyPaid : Enregistrer un paiement en principal', function () {
     ['user' => $user, 'company' => $company] = setupInvoiceMatrix();
     $invoice = makeInvoiceForMatrix($company, InvoiceStatus::PartiallyPaid, [
         'amount_paid' => 50_000,
@@ -76,7 +77,7 @@ it('PartiallyPaid : Enregistrer un paiement en principal + Voir les paiements', 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
         ->assertSeeHtml('data-action="primary-record-payment"')
-        ->assertSeeHtml('data-action="view-payments"');
+        ->assertDontSeeHtml('data-action="view-payments"');
 });
 
 it('Paid : Télécharger le reçu en principal + Dupliquer', function () {
@@ -109,16 +110,17 @@ it('Cancelled : pas d\'action principale, Archiver dans le menu', function () {
         ->assertDontSeeHtml('data-action="primary-record-payment"');
 });
 
-it('openIssueModal puis confirmIssue bascule un Draft en Sent', function () {
+it('openSendModal puis confirmSend bascule un Draft en Sent', function () {
     ['user' => $user, 'company' => $company] = setupInvoiceMatrix();
-    $invoice = makeInvoiceForMatrix($company, InvoiceStatus::Draft);
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeInvoiceForMatrix($company, InvoiceStatus::Draft, ['client_id' => $client->id]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
-        ->call('openIssueModal')
-        ->assertSet('showIssueModal', true)
-        ->call('confirmIssue')
-        ->assertSet('showIssueModal', false);
+        ->call('openSendModal')
+        ->assertSet('showSendModal', true)
+        ->call('confirmSend')
+        ->assertSet('showSendModal', false);
 
     expect($invoice->fresh()->status)->toBe(InvoiceStatus::Sent);
 });

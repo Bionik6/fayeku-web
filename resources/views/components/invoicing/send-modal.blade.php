@@ -6,6 +6,7 @@
     'sendCountry',
     'sendPhoneCountries',
     'sendOpenUrl',
+    'sendEmailSubject' => null,
 ])
 
 {{-- Modale d'envoi partagée entre les show pages factures / devis / proformas.
@@ -51,6 +52,7 @@
                                 phone-name="sendRecipient"
                                 :phone-value="$sendRecipient"
                                 phone-model="sendRecipient"
+                                :phone-model-live="true"
                                 :countries="$sendPhoneCountries"
                                 container-class="flex items-stretch rounded-2xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary/40 has-[:focus]:ring-2 has-[:focus]:ring-primary/10"
                                 text-size="text-sm"
@@ -64,7 +66,7 @@
                             <label class="mb-1.5 block text-sm font-medium text-slate-700">
                                 {{ __('Adresse email du client') }} <span class="text-rose-500">*</span>
                             </label>
-                            <input wire:model.live.debounce.300ms="sendRecipient" type="email"
+                            <input wire:model.live.debounce.300ms="sendRecipient" name="sendRecipient" type="email"
                                    placeholder="contact@client.sn"
                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-ink focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10" />
                             @error('sendRecipient') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
@@ -108,13 +110,39 @@
                 <button type="button" wire:click="closeSendModal" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-primary/30">{{ __('Annuler') }}</button>
                 {{-- Le clic ouvre le canal externe (WhatsApp / mailto) SYNCHRONEMENT depuis
                      le user-gesture afin que le navigateur ne bloque pas le popup, puis
-                     appelle confirmSend() qui valide + transitionne le statut côté serveur. --}}
+                     appelle confirmSend() qui valide + transitionne le statut côté serveur.
+                     L'URL est reconstruite côté client à partir des valeurs actuelles
+                     des champs DOM pour éviter toute désync avec la valeur Livewire
+                     (cf. wire:model debounce + clic rapide). --}}
                 <button type="button"
                         data-send-url="{{ $sendOpenUrl }}"
+                        data-send-fallback-url="{{ $sendOpenUrl }}"
+                        data-send-channel="{{ $sendChannel }}"
+                        data-send-subject="{{ rawurlencode($sendEmailSubject ?? $title) }}"
                         data-can-send="{{ filled($sendRecipient) ? '1' : '0' }}"
                         x-on:click="
+                            const channel = $el.dataset.sendChannel;
+                            const message = $wire.sendMessage || '';
+                            const recipientInput = document.querySelector(channel === 'email' ? 'input[type=&quot;email&quot;][name=&quot;sendRecipient&quot;]' : 'input[type=&quot;tel&quot;][name=&quot;sendRecipient&quot;]');
+                            // Fallback sur la valeur Livewire si le selector DOM échoue (eg. attribut name absent).
+                            const recipient = ((recipientInput?.value ?? $wire.sendRecipient) || '').trim();
+                            $el.dataset.canSend = recipient ? '1' : '0';
+
                             if ($el.dataset.canSend === '1') {
-                                window.open($el.dataset.sendUrl, '_blank', 'noopener,noreferrer');
+                                if (channel === 'whatsapp') {
+                                    const countryInput = document.querySelector('input[type=&quot;hidden&quot;][name=&quot;sendCountry&quot;]');
+                                    const prefix = countryInput?.dataset.prefix || '';
+                                    const digits = (prefix + recipient).replace(/\D+/g, '');
+                                    const url = 'https://wa.me/' + digits + '?text=' + encodeURIComponent(message);
+                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                } else if (channel === 'email') {
+                                    const url = 'mailto:' + recipient + '?subject=' + $el.dataset.sendSubject + '&body=' + encodeURIComponent(message);
+                                    // mailto: doit invoquer le handler de protocole du système (Mail.app / Gmail / Outlook).
+                                    // window.open(mailto, _blank) crée un onglet fantôme dans Chrome qui se ferme aussitôt
+                                    // sans déclencher le client mail. Affecter window.location.href laisse le navigateur
+                                    // intercepter le scheme mailto: et ouvrir le client natif sans naviguer hors de la page.
+                                    window.location.href = url;
+                                }
                             }
                             $wire.confirmSend();
                         "

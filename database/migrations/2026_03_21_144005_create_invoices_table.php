@@ -37,6 +37,7 @@ return new class extends Migration
             $table->integer('discount')->default(0);
             $table->string('discount_type', 10)->default('percent');
             $table->integer('amount_paid')->default(0);
+            $table->integer('deposit_amount')->default(0);
             $table->text('notes')->nullable();
             $table->text('payment_terms')->nullable();
             $table->text('payment_instructions')->nullable();

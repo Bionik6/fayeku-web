@@ -10,6 +10,8 @@ use App\Models\PME\Payment;
 use App\Models\PME\Reminder;
 use App\Models\Shared\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -404,6 +406,170 @@ test('recordPayment crée un paiement et bascule en partiellement payée', funct
     expect($fresh->payments)->toHaveCount(1);
 });
 
+test('recordPayment avec preuve PDF stocke le fichier et persiste son chemin', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Sent->value,
+        'total' => 100_000,
+    ]);
+
+    $pdf = File::create('preuve.pdf', 30, 'application/pdf');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openPaymentModal')
+        ->set('paymentAmount', '50000')
+        ->set('paymentPaidAt', now()->toDateString())
+        ->set('paymentMethod', PaymentMethod::Transfer->value)
+        ->set('paymentProofFile', $pdf)
+        ->call('recordPayment')
+        ->assertHasNoErrors();
+
+    $payment = $invoice->fresh()->payments->first();
+    expect($payment->proof_file_path)->not->toBeNull();
+    expect($payment->proof_file_path)->toStartWith("pme/invoices/{$invoice->id}/payments/");
+    Storage::assertExists($payment->proof_file_path);
+});
+
+test('openEditPaymentModal pré-remplit le formulaire depuis un paiement existant', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'total' => 100_000,
+        'amount_paid' => 40_000,
+    ]);
+    $payment = $invoice->payments()->create([
+        'amount' => 40_000,
+        'paid_at' => now()->subDay(),
+        'method' => PaymentMethod::Transfer,
+        'reference' => 'TX-001',
+        'notes' => 'Acompte client',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openEditPaymentModal', $payment->id)
+        ->assertSet('editingPaymentId', $payment->id)
+        ->assertSet('paymentAmount', '40000')
+        ->assertSet('paymentMethod', PaymentMethod::Transfer->value)
+        ->assertSet('paymentReference', 'TX-001')
+        ->assertSet('paymentNotes', 'Acompte client')
+        ->assertSet('showPaymentModal', true);
+});
+
+test('recordPayment en mode édition met à jour le paiement existant et recalcule le statut', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'total' => 100_000,
+        'amount_paid' => 40_000,
+    ]);
+    $payment = $invoice->payments()->create([
+        'amount' => 40_000,
+        'paid_at' => now()->subDay(),
+        'method' => PaymentMethod::Transfer,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openEditPaymentModal', $payment->id)
+        ->set('paymentAmount', '100000')
+        ->call('recordPayment')
+        ->assertHasNoErrors()
+        ->assertSet('editingPaymentId', null);
+
+    $fresh = $invoice->fresh();
+    expect($payment->fresh()->amount)->toBe(100_000);
+    expect($fresh->amount_paid)->toBe(100_000);
+    expect($fresh->status)->toBe(InvoiceStatus::Paid);
+});
+
+test('recordPayment en mode édition remplace la preuve et supprime l\'ancienne', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'total' => 100_000,
+        'amount_paid' => 40_000,
+    ]);
+    $oldPath = "pme/invoices/{$invoice->id}/payments/old.pdf";
+    Storage::put($oldPath, 'fake-old');
+
+    $payment = $invoice->payments()->create([
+        'amount' => 40_000,
+        'paid_at' => now()->subDay(),
+        'method' => PaymentMethod::Transfer,
+        'proof_file_path' => $oldPath,
+    ]);
+
+    $newPdf = File::create('nouveau.pdf', 30, 'application/pdf');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openEditPaymentModal', $payment->id)
+        ->set('paymentProofFile', $newPdf)
+        ->call('recordPayment')
+        ->assertHasNoErrors();
+
+    $fresh = $payment->fresh();
+    expect($fresh->proof_file_path)->not->toBe($oldPath);
+    Storage::assertMissing($oldPath);
+    Storage::assertExists($fresh->proof_file_path);
+});
+
+test('recordPayment en mode édition retire la preuve si removePaymentProof', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'total' => 100_000,
+        'amount_paid' => 40_000,
+    ]);
+    $path = "pme/invoices/{$invoice->id}/payments/proof.pdf";
+    Storage::put($path, 'fake');
+
+    $payment = $invoice->payments()->create([
+        'amount' => 40_000,
+        'paid_at' => now()->subDay(),
+        'method' => PaymentMethod::Transfer,
+        'proof_file_path' => $path,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openEditPaymentModal', $payment->id)
+        ->set('removePaymentProof', true)
+        ->call('recordPayment')
+        ->assertHasNoErrors();
+
+    expect($payment->fresh()->proof_file_path)->toBeNull();
+    Storage::assertMissing($path);
+});
+
+test('recordPayment rejette une preuve non supportée', function () {
+    Storage::fake();
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::Sent->value,
+        'total' => 100_000,
+    ]);
+
+    $gif = File::image('animated.gif');
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openPaymentModal')
+        ->set('paymentAmount', '50000')
+        ->set('paymentPaidAt', now()->toDateString())
+        ->set('paymentMethod', PaymentMethod::Transfer->value)
+        ->set('paymentProofFile', $gif)
+        ->call('recordPayment')
+        ->assertHasErrors(['paymentProofFile']);
+
+    expect($invoice->fresh()->payments)->toHaveCount(0);
+});
+
 test('recordPayment qui solde le total bascule la facture en Payée', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, [
@@ -754,10 +920,10 @@ test('le template facture suit le format demandé (Bonjour, prestation, échéan
 
     expect($message)
         ->toStartWith('Bonjour,')
-        ->toContain('Veuillez trouver notre facture n° '.$invoice->reference)
+        ->toContain('Veuillez trouver notre facture n° *'.$invoice->reference.'*')
         ->toContain('Consulter la facture :')
         ->toContain(route('pme.invoices.pdf', $invoice->public_code))
-        ->toContain('Échéance de paiement :')
+        ->toContain('Échéance de paiement : *')
         ->toContain('Moyens de paiement acceptés : Wave, Orange Money, virement bancaire.')
         ->toEndWith("Cordialement,\nMoussa Diop\nRassoul Electronique Services");
 });
@@ -826,7 +992,7 @@ test('le bouton Envoyer appelle wire:click confirmSend via Alpine click handler'
 
     // Le click handler Alpine exécute window.open puis $wire.confirmSend()
     $component->assertSeeHtml('$wire.confirmSend()')
-        ->assertSeeHtml('window.open($el.dataset.sendUrl');
+        ->assertSeeHtml('window.open(url');
 });
 
 test('confirmSend sur une facture Draft la passe automatiquement en Sent + toast', function () {
@@ -891,7 +1057,7 @@ test('facture Draft : Émettre la facture en principal, pas de paiement/relance'
     $response->assertDontSeeText('Enregistrer un paiement')
         ->assertDontSeeText('Relancer');
 
-    $response->assertSeeText('Émettre la facture')
+    $response->assertSeeText('Envoyer la facture')
         ->assertSeeText('Modifier')
         ->assertSeeText('Supprimer');
 });
@@ -928,7 +1094,7 @@ test('facture PartiallyPaid : Enregistrer un paiement reste visible si remaining
         ->get(route('pme.invoices.show', $invoice))
         ->assertOk()
         ->assertSeeText('Enregistrer un paiement')
-        ->assertSeeText('Voir les paiements');
+        ->assertDontSeeText('Voir les paiements');
 });
 
 test('confirmSend sur une facture déjà Sent ne ré-affiche pas le toast de bascule', function () {
@@ -1030,9 +1196,9 @@ test('openSendModal n\'ouvre pas si la facture est Paid ou Cancelled', function 
     }
 });
 
-// ─── Acompte section ────────────────────────────────────────────────────────
+// ─── Bloc unifié Paiements enregistrés (acomptes + paiements) ───────────────
 
-test('la section Acompte s\'affiche quand un acompte a été versé même en brouillon', function () {
+test('le bloc Paiements enregistrés s\'affiche quand un acompte a été versé même en brouillon', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, [
         'status' => InvoiceStatus::Draft->value,
@@ -1051,20 +1217,21 @@ test('la section Acompte s\'affiche quand un acompte a été versé même en bro
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
-        ->assertSee('Avance / acompte déjà payé', escape: false)
-        ->assertSee('Acompte versé à la création de la facture', escape: false);
+        ->assertSee('Paiements enregistrés', escape: false)
+        ->assertSee('Acompte', escape: false)
+        ->assertSee('dont acompte', escape: false);
 });
 
-test('la section Acompte n\'apparaît pas en l\'absence d\'acompte', function () {
+test('le bloc Paiements enregistrés ne s\'affiche pas sur un brouillon sans acompte', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
-    $invoice = makeShowPageInvoice($company);
+    $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Draft->value]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice])
-        ->assertDontSee('Acompte versé à la création');
+        ->assertDontSee('Paiements enregistrés');
 });
 
-test('le tableau Paiements enregistrés exclut le Payment is_deposit', function () {
+test('le tableau Paiements enregistrés inclut acomptes ET paiements manuels avec badge Type', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, [
         'status' => InvoiceStatus::PartiallyPaid->value,
@@ -1079,7 +1246,6 @@ test('le tableau Paiements enregistrés exclut le Payment is_deposit', function 
         'paid_at' => now()->subDays(2),
         'method' => PaymentMethod::Cash,
         'reference' => 'DEPOSIT-REF',
-        'notes' => 'Acompte',
     ]);
 
     Payment::query()->create([
@@ -1094,10 +1260,53 @@ test('le tableau Paiements enregistrés exclut le Payment is_deposit', function 
     $component = Livewire::actingAs($user)
         ->test('pages::pme.invoices.show', ['invoice' => $invoice]);
 
-    // Manual payment reference appears in the Paiements table
+    // Les deux références apparaissent désormais dans le bloc unifié
     $component->assertSee('MANUAL-REF');
-    // Deposit reference must NOT appear in the Paiements table
-    $component->assertDontSee('DEPOSIT-REF');
+    $component->assertSee('DEPOSIT-REF');
+    // Et les deux badges Type aussi
+    $component->assertSee('Acompte');
+    $component->assertSee('Paiement');
+});
+
+test('openPaymentDetails ouvre la modale détails sur un paiement', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'amount_paid' => 40_000,
+    ]);
+    $payment = $invoice->payments()->create([
+        'amount' => 40_000,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Transfer,
+        'reference' => 'TX-DETAILS',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openPaymentDetails', $payment->id)
+        ->assertSet('paymentDetailsId', $payment->id)
+        ->assertSee('Détails du paiement');
+});
+
+test('editFromDetails ferme les détails et ouvre la modale d\'édition', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $invoice = makeShowPageInvoice($company, [
+        'status' => InvoiceStatus::PartiallyPaid->value,
+        'amount_paid' => 40_000,
+    ]);
+    $payment = $invoice->payments()->create([
+        'amount' => 40_000,
+        'paid_at' => now(),
+        'method' => PaymentMethod::Transfer,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openPaymentDetails', $payment->id)
+        ->call('editFromDetails')
+        ->assertSet('paymentDetailsId', null)
+        ->assertSet('editingPaymentId', $payment->id)
+        ->assertSet('showPaymentModal', true);
 });
 
 test('l\'aperçu de la facture affiche Acompte versé et Reste à payer quand un acompte est présent', function () {
@@ -1152,13 +1361,13 @@ test('le message d\'envoi mentionne l\'acompte et le reste à payer quand un aco
         ->get('sendMessage');
 
     expect($message)
-        ->toContain('Veuillez trouver notre facture n°')
-        ->toContain("d'un montant total de")
+        ->toContain('Veuillez trouver notre facture n° *'.$invoice->reference.'*')
+        ->toContain("d'un montant total de *")
         ->toContain('TTC')
-        ->toContain('Acompte déjà versé : 250 000')
-        ->toContain('Reste à payer : 750 000')
+        ->toContain('Acompte déjà versé : *250 000')
+        ->toContain('Reste à payer : *750 000')
         ->toContain('Consulter la facture :')
-        ->toContain('Échéance de paiement :')
+        ->toContain('Échéance de paiement : *')
         ->toContain('Moyens de paiement acceptés :');
 });
 
