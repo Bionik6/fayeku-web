@@ -61,8 +61,8 @@
                 <article class="card p-8">
                     <h2 class="text-xl font-semibold text-ink">Article 1 — Informations sur l'entreprise</h2>
                     <div class="mt-4 space-y-4 text-base leading-7 text-slate-600">
-                        <p><strong class="text-ink">1.1</strong> Fayeku est un service édité par <strong class="text-ink">{{ $site['legal']['company'] }}</strong>, entreprise de droit sénégalais, dont le siège social est situé à {{ $site['contact']['address'] }}, immatriculée sous le NINEA <strong class="text-ink">{{ $site['legal']['ninea'] }}</strong> et le RCCM <strong class="text-ink">{{ $site['legal']['rccm'] }}</strong>.</p>
-                        <p><strong class="text-ink">1.2</strong> Pour toute question relative à la protection de vos données personnelles, vous pouvez contacter le responsable de traitement à l'adresse suivante&nbsp;: <a href="mailto:{{ $site['contact']['email'] }}" class="text-primary hover:underline">{{ $site['contact']['email'] }}</a> ou par courrier à l'adresse du siège social.</p>
+                        <p><strong class="text-ink">1.1</strong> Fayeku est un service édité par <strong class="text-ink">{{ $site['legal']['company'] }}</strong>, entreprise de droit sénégalais basée à Dakar.</p>
+                        <p><strong class="text-ink">1.2</strong> Pour toute question relative à la protection de vos données personnelles, vous pouvez contacter le responsable de traitement à l'adresse suivante&nbsp;: <a href="mailto:{{ $site['contact']['email'] }}" class="text-primary hover:underline">{{ $site['contact']['email'] }}</a>.</p>
                     </div>
                 </article>
 
@@ -180,7 +180,7 @@
                         <p>Vous disposez également du droit d'introduire une réclamation auprès de la <strong class="text-ink">Commission de Protection des Données Personnelles (CDP)</strong>, autorité de contrôle compétente au Sénégal, dont le site est accessible à <a href="https://www.cdp.sn" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">www.cdp.sn</a>.</p>
 
                         <p><strong class="text-ink">10.2 Exercice de vos droits.</strong></p>
-                        <p>Pour toute donnée pour laquelle Fayeku agit en qualité de responsable de traitement, adressez votre demande à&nbsp;: <a href="mailto:{{ $site['contact']['email'] }}" class="text-primary hover:underline">{{ $site['contact']['email'] }}</a>, ou par courrier à {{ $site['contact']['address'] }}. Votre demande doit préciser clairement l'objet (accès, rectification, effacement, etc.) et peut nécessiter la fourniture d'une pièce d'identité à des fins de vérification.</p>
+                        <p>Pour toute donnée pour laquelle Fayeku agit en qualité de responsable de traitement, adressez votre demande à&nbsp;: <a href="mailto:{{ $site['contact']['email'] }}" class="text-primary hover:underline">{{ $site['contact']['email'] }}</a>. Votre demande doit préciser clairement l'objet (accès, rectification, effacement, etc.) et peut nécessiter la fourniture d'une pièce d'identité à des fins de vérification.</p>
                         <p>Pour toute donnée pour laquelle Fayeku agit en qualité de sous-traitant (données saisies dans la solution par votre cabinet ou votre PME), adressez votre demande directement au responsable de traitement concerné (votre cabinet ou PME partenaire). Fayeku peut apporter son assistance mais ne peut pas répondre directement en pareil cas.</p>
                     </div>
                 </article>

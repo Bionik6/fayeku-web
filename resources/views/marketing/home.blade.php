@@ -500,7 +500,6 @@
                 ['title' => 'Score fiabilité client', 'desc' => 'Priorisez les comptes les plus risqués, anticipez les retards.', 'bg' => 'rgb(255 251 235)', 'color' => '#d97706', 'svg' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'],
                 ['title' => 'Prévision trésorerie 90 jours', 'desc' => 'Encaissements attendus, alertes de creux à venir.', 'bg' => 'rgb(240 249 255)', 'color' => '#0284c7', 'svg' => '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'],
                 ['title' => 'Factures récurrentes &amp; devis', 'desc' => 'Signature devis et conversion en facture en un clic.', 'bg' => 'rgb(238 242 255)', 'color' => '#4f46e5', 'svg' => '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'],
-                ['title' => 'Coffre-fort documents', 'desc' => 'Collecte de pièces simple pour le cabinet, fini les PDF sur WhatsApp.', 'bg' => 'rgb(240 253 250)', 'color' => 'var(--color-teal-fayeku)', 'svg' => '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'],
             ] as $feature)
                 <article class="card p-6">
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: {{ $feature['bg'] }}; color: {{ $feature['color'] }};">

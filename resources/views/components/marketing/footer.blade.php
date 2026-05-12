@@ -41,7 +41,6 @@
         <div>
             <h4 class="font-semibold mb-4 text-sm tracking-wide uppercase" style="color: var(--color-marketing-ink);">Contact</h4>
             <ul class="space-y-2 text-sm" style="color: var(--color-marketing-slate);">
-                <li>{!! nl2br(e($site['contact']['address'])) !!}</li>
                 <li><a href="mailto:{{ $site['contact']['email'] }}" class="hover:text-[color:var(--color-teal-fayeku)]">{{ $site['contact']['email'] }}</a></li>
                 @if (! empty($site['contact']['phone']))
                     <li><a href="tel:{{ preg_replace('/\s+/', '', $site['contact']['phone']) }}" class="hover:text-[color:var(--color-teal-fayeku)]">{{ $site['contact']['phone'] }}</a></li>
@@ -62,7 +61,7 @@
     </div>
     <div class="border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-5 lg:px-8 py-6 text-center text-xs" style="color: var(--color-marketing-slate);">
-            &copy; {{ now()->year }} {{ $site['name'] }} — Édité par {{ $site['legal']['editor'] }} ({{ $site['legal']['company'] }}). NINEA : {{ $site['legal']['ninea'] }} — RCCM : {{ $site['legal']['rccm'] }}.
+            &copy; {{ now()->year }} {{ $site['name'] }}. Tous droits réservés.
         </div>
     </div>
 </footer>

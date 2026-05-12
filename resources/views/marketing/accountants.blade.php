@@ -498,7 +498,6 @@
             <h2 class="h2 mb-5">Fini les WhatsApp en fin de mois.</h2>
             <p class="text-lg leading-relaxed mb-6" style="color: var(--color-marketing-slate);">Vos clients déposent leurs justificatifs directement dans Fayeku. Vous récupérez tout, classé par dossier et par mois, prêt à exporter vers Sage 100, EBP ou Excel.</p>
             <ul class="space-y-3" style="color: var(--color-marketing-ink);">
-                <li class="flex items-start gap-3"><span class="check"></span>Coffre-fort partagé client / cabinet, classé par nature</li>
                 <li class="flex items-start gap-3"><span class="check"></span>Relances automatiques pour les pièces manquantes</li>
                 <li class="flex items-start gap-3"><span class="check"></span>Exports prêts à importer : Sage 100, EBP, CSV libre</li>
                 <li class="flex items-start gap-3"><span class="check"></span>Journal d'audit pour traçabilité complète</li>

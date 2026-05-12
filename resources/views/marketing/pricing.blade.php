@@ -3,11 +3,35 @@
 @php
     $plans = [
         [
+            'slug' => 'gratuit',
+            'name' => 'Gratuit',
+            'eyebrow' => 'Démarrez en douceur',
+            'tagline' => 'Pour démarrer sans engagement.',
+            'price' => '0',
+            'unit' => 'FCFA · à vie',
+            'note' => 'Jusqu\'à 3 factures / mois',
+            'cta_label' => 'Démarrer gratuitement',
+            'cta_href' => route('register'),
+            'cta_variant' => 'secondary',
+            'popular' => false,
+            'features' => [
+                '3 factures par mois',
+                'Watermark Fayeku discret sur les factures',
+                'Templates de base',
+                'Suivi des paiements manuels',
+                'Sans engagement, sans paiement préalable',
+                'Bascule automatique à la fin de l\'essai 30 jours',
+            ],
+        ],
+        [
             'slug' => 'basique',
             'name' => 'Basique',
+            'eyebrow' => 'Facturez proprement',
             'tagline' => 'Pour facturer proprement et démarrer.',
             'price' => '10 000',
+            'price_yearly' => '100 000',
             'unit' => 'FCFA/mois HT',
+            'unit_yearly' => 'FCFA/an HT',
             'note' => 'Jusqu\'à 1 utilisateur',
             'cta_label' => 'Essayer 30 jours',
             'cta_href' => route('register'),
@@ -27,9 +51,12 @@
         [
             'slug' => 'essentiel',
             'name' => 'Essentiel',
+            'eyebrow' => 'Contrôlez votre trésorerie',
             'tagline' => 'Pour automatiser vos relances et piloter votre cash.',
             'price' => '20 000',
+            'price_yearly' => '200 000',
             'unit' => 'FCFA/mois HT',
+            'unit_yearly' => 'FCFA/an HT',
             'note' => 'Jusqu\'à 3 utilisateurs',
             'cta_label' => 'Essayer 30 jours',
             'cta_href' => route('register'),
@@ -51,9 +78,13 @@
         [
             'slug' => 'entreprise',
             'name' => 'Entreprise',
+            'eyebrow' => 'Gérez votre groupe',
             'tagline' => 'Pour les groupes et structures établies.',
-            'price' => 'À partir de 70 000',
+            'price_prefix' => 'À partir de',
+            'price' => '70 000',
+            'price_yearly' => '700 000',
             'unit' => 'FCFA/mois HT',
+            'unit_yearly' => 'FCFA/an HT',
             'note' => 'Utilisateurs illimités + rôles',
             'cta_label' => 'Nous contacter',
             'cta_href' => route('marketing.contact'),
@@ -61,11 +92,6 @@
             'popular' => false,
             'features' => [
                 'Tout Essentiel inclus',
-                'Multi-entités (plusieurs sociétés)',
-                'Workflows de validation interne',
-                'API publique (REST + webhooks)',
-                'SSO (Google Workspace, M365, SAML)',
-                'Audit log complet · reporting consolidé',
                 'Account manager dédié · SLA 99,9 %',
                 'Onboarding présentiel · 3 sessions de formation',
                 'Migration depuis ancien système',
@@ -84,7 +110,6 @@
                 ['Utilisateurs',                     '1',         '1',           '3',           'Illimités + rôles'],
                 ['Relances WhatsApp auto / mois',    '—',         '20',          'Illimitées',  'Illimitées'],
                 ['Historique clients',               '—',         '✓',           '✓',           '✓'],
-                ['Coffre-fort documents',            '—',         '1 Go',        '20 Go',       'Illimité'],
                 ['Branding Fayeku obligatoire',      '✓',         '—',           '—',           '—'],
                 ['Watermark PDF',                    '✓',         '—',           '—',           '—'],
                 ["Durée de l'essai gratuit",         'Illimitée', '30 jours',    '30 jours',    '30 jours'],
@@ -96,13 +121,10 @@
                 ['Création de factures',                    '✓', '✓', '✓', '✓'],
                 ['Templates personnalisables (logo, NINEA)','—', '✓', '✓', '✓'],
                 ['Devis & proformas basiques',              '—', '✓', '✓', '✓'],
-                ['Signature électronique sur devis',        '—', '—', '✓', '✓'],
                 ['Conversion devis → facture automatique',  '—', '—', '✓', '✓'],
                 ['Facturation récurrente automatique',      '—', '—', '✓', '✓'],
                 ['Multi-devises (FCFA, EUR, USD)',          '—', '—', '✓', '✓'],
                 ['Bons de commande',                        '—', '—', '✓', '✓'],
-                ['Multi-entités (plusieurs sociétés)',      '—', '—', '—', '✓'],
-                ['Workflows de validation interne',         '—', '—', '—', '✓'],
                 ['Conformité DGID (dès disponibilité)',     '—', '—', '✓', '✓'],
             ],
         ],
@@ -116,11 +138,8 @@
                 ["Rappel avant échéance J-3",                         '—', '—', '✓', '✓'],
                 ['Relances J+30 et J+60 personnalisables',            '—', '—', '✓', '✓'],
                 ['Calendrier complet J-3 → J+60 configurable',        '—', '—', '✓', '✓'],
-                ['Wave link automatique dans chaque relance',         '—', '—', '✓', '✓'],
-                ['Confirmations de paiement automatiques',            '—', '—', '✓', '✓'],
                 ['Score fiabilité client',                            '—', '—', '✓', '✓'],
                 ['Relance intelligente IA',                           '—', '—', '✓', '✓'],
-                ['Scénarios personnalisés par segment client',        '—', '—', '—', '✓'],
             ],
         ],
         [
@@ -128,15 +147,10 @@
             'rows' => [
                 ['Historique paiements clients',          '—', '✓', '✓', '✓'],
                 ['Délai moyen de paiement',               '—', '✓', '✓', '✓'],
-                ['Export Excel',                          '—', '✓', '✓', '✓'],
                 ['Rapports avancés (CA, top clients)',    '—', '—', '✓', '✓'],
                 ['Trésorerie prévisionnelle 90 jours',    '—', '—', '✓', '✓'],
                 ['Niveau de confiance par facture',       '—', '—', '✓', '✓'],
                 ['Exposition au risque par client',       '—', '—', '✓', '✓'],
-                ['Audit log complet',                     '—', '—', '—', '✓'],
-                ['Reporting consolidé groupe',            '—', '—', '—', '✓'],
-                ['API publique (REST + webhooks)',        '—', '—', '—', '✓'],
-                ['SSO (Google Workspace, M365, SAML)',    '—', '—', '—', '✓'],
             ],
         ],
         [
@@ -212,23 +226,59 @@
 </section>
 
 {{-- Plans --}}
-<section class="pb-12 sm:pb-16 lg:pb-24">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-3 gap-6">
+<section class="pb-12 sm:pb-16 lg:pb-24" x-data="{ annual: false }">
+    {{-- Billing toggle --}}
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 mb-10 flex justify-center">
+        <div class="inline-flex items-center gap-1 p-1 rounded-full border border-gray-200 bg-white shadow-sm" role="tablist" aria-label="Choisir la périodicité">
+            <button type="button" role="tab" :aria-selected="!annual" @click="annual = false"
+                class="px-5 py-2 rounded-full text-sm font-semibold transition"
+                :class="!annual ? 'shadow-sm' : 'hover:bg-gray-50'"
+                :style="!annual ? 'background: var(--color-teal-fayeku); color: #ffffff' : 'color: var(--color-marketing-slate)'">
+                Mensuel
+            </button>
+            <button type="button" role="tab" :aria-selected="annual" @click="annual = true"
+                class="px-5 py-2 rounded-full text-sm font-semibold transition inline-flex items-center gap-2"
+                :class="annual ? 'shadow-sm' : 'hover:bg-gray-50'"
+                :style="annual ? 'background: var(--color-teal-fayeku); color: #ffffff' : 'color: var(--color-marketing-slate)'">
+                Annuel
+                <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                    :style="annual ? 'background: rgba(255,255,255,0.18); color: #ffffff' : 'background: var(--color-mint-100); color: var(--color-vivid)'">
+                    −2 mois
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach ($plans as $plan)
             <article class="card p-7 flex flex-col relative {{ $plan['popular'] ? 'lg:-mt-4 lg:mb-0' : '' }}" @if ($plan['popular']) style="box-shadow: 0 0 0 2px var(--color-vivid), var(--shadow-card);" @endif>
                 @if ($plan['popular'])
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-[10px] font-semibold tracking-widest uppercase px-3 py-1 rounded-full whitespace-nowrap" style="background: var(--color-vivid);">Le plus populaire</div>
                 @endif
 
-                <div class="eyebrow mb-3">{{ $plan['name'] }}</div>
-                <h3 class="text-2xl font-bold mb-2">{{ $plan['name'] }}</h3>
+                <div class="eyebrow mb-3">{{ $plan['eyebrow'] ?? $plan['name'] }}</div>
+                <h3 class="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">{{ $plan['name'] }}</h3>
                 <p class="text-sm mb-6" style="color: var(--color-marketing-slate);">{{ $plan['tagline'] }}</p>
 
                 <div class="mb-6 pb-6 border-b border-gray-100">
+                    @if (! empty($plan['price_prefix']))
+                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color: var(--color-marketing-slate);">{{ $plan['price_prefix'] }}</div>
+                    @endif
                     <div class="flex items-baseline gap-1">
-                        <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);">{{ $plan['price'] }}</span>
+                        @if (! empty($plan['price_yearly']))
+                            <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);" x-text="annual ? '{{ $plan['price_yearly'] }}' : '{{ $plan['price'] }}'">{{ $plan['price'] }}</span>
+                        @else
+                            <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);">{{ $plan['price'] }}</span>
+                        @endif
                     </div>
-                    <div class="text-sm mt-1" style="color: var(--color-marketing-slate);">{{ $plan['unit'] }}</div>
+                    @if (! empty($plan['unit_yearly']))
+                        <div class="text-sm mt-1" style="color: var(--color-marketing-slate);" x-text="annual ? '{{ $plan['unit_yearly'] }}' : '{{ $plan['unit'] }}'">{{ $plan['unit'] }}</div>
+                    @else
+                        <div class="text-sm mt-1" style="color: var(--color-marketing-slate);">{{ $plan['unit'] }}</div>
+                    @endif
+                    @if (! empty($plan['price_yearly']))
+                        <div class="text-xs mt-1" style="color: var(--color-vivid); font-weight: 600;" x-show="annual" x-cloak>2 mois offerts vs mensuel</div>
+                    @endif
                     <div class="text-xs mt-2" style="color: var(--color-marketing-slate);">{!! $plan['note'] !!}</div>
                 </div>
 
@@ -248,24 +298,6 @@
     </p>
 </section>
 
-{{-- Plan Gratuit safety net --}}
-<section class="pb-12 sm:pb-16 lg:pb-24">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8">
-        <div class="card p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <div class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-            </div>
-            <div class="flex-1">
-                <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: var(--color-vivid);">Plan Gratuit · à vie</p>
-                <h3 class="text-xl font-bold mb-2" style="color: var(--color-marketing-ink);">Pas prêt à payer ? Démarrez gratuitement.</h3>
-                <p class="leading-relaxed text-sm" style="color: var(--color-marketing-slate);">
-                    3 factures par mois, sans engagement, sans paiement préalable. Vos factures portent un léger watermark Fayeku. Vous basculez automatiquement sur ce plan à la fin de votre essai 30 jours si vous ne choisissez pas de plan payant.
-                </p>
-            </div>
-            <a href="{{ route('register') }}" class="btn-secondary whitespace-nowrap">Démarrer gratuitement</a>
-        </div>
-    </div>
-</section>
 
 {{-- Cabinet promo --}}
 <section class="pb-12 sm:pb-16 lg:pb-24">
