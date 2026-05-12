@@ -200,7 +200,7 @@
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Tous vos clients PME en un coup d'œil</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Visualisez le statut de chaque client, le nombre de factures impayées et les alertes critiques. Filtrez par état et accédez au détail en un clic.</p>
             </div>
-            <div class="relative hidden lg:block">
+            <div class="relative">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-1">
@@ -286,7 +286,7 @@
 
         {{-- Row 2 — Commissions (mockup left, text right) --}}
         <div class="grid lg:grid-cols-2 gap-10 items-stretch mb-24">
-            <div class="order-2 lg:order-1 relative hidden lg:block">
+            <div class="order-2 lg:order-1 relative">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform -rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-1">
@@ -393,7 +393,7 @@
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Restez informé sans effort</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Impayés critiques, retards anormaux, clients inactifs — Fayeku Compta vous alerte en temps réel pour que vous puissiez intervenir au bon moment.</p>
             </div>
-            <div class="relative hidden lg:block">
+            <div class="relative">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-1">
