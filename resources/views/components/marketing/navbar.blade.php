@@ -50,14 +50,14 @@
         </button>
     </div>
 
+    <template x-teleport="body">
     <div
         x-show="open"
         x-cloak
         @keydown.escape.window="open=false"
         class="fixed inset-0 z-[100] lg:hidden"
     >
-        <div class="absolute inset-0 backdrop-blur-sm" style="background: rgba(10, 31, 26, 0.5);" @click="open=false"></div>
-        <div class="absolute inset-y-0 right-0 w-[85%] max-w-sm bg-white flex flex-col shadow-2xl overflow-y-auto">
+        <div class="absolute inset-y-0 right-0 w-full bg-white flex flex-col shadow-2xl overflow-y-auto">
             <div class="flex items-center justify-between gap-4 px-6 py-5 border-b border-gray-100">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
                     <img src="/logo.png" alt="Fayeku" class="w-10 h-10 rounded-lg" width="40" height="40" />
@@ -94,4 +94,5 @@
             </div>
         </div>
     </div>
+    </template>
 </header>
