@@ -189,8 +189,8 @@
 
     $pricingFaq = [
         ['q' => "Y a-t-il un engagement ?", 'a' => "Non. Vous pouvez résilier à tout moment depuis votre tableau de bord. Aucun engagement contractuel multi-mois."],
-        ['q' => "L'essai 30 jours nécessite-t-il une carte bancaire ?", 'a' => "Non. Vous démarrez sans aucune information de paiement. À la fin de l'essai, vous basculez automatiquement sur le plan Gratuit (3 factures/mois) si vous ne choisissez pas de plan payant."],
-        ['q' => "Le plan Gratuit est-il vraiment gratuit ?", 'a' => "Oui, à vie. 3 factures par mois, sans engagement, sans carte bancaire. Vos factures portent un léger watermark Fayeku."],
+        ['q' => "L'essai 30 jours nécessite-t-il un paiement préalable ?", 'a' => "Non. Vous démarrez sans aucune information de paiement. À la fin de l'essai, vous basculez automatiquement sur le plan Gratuit (3 factures/mois) si vous ne choisissez pas de plan payant."],
+        ['q' => "Le plan Gratuit est-il vraiment gratuit ?", 'a' => "Oui, à vie. 3 factures par mois, sans engagement, sans paiement préalable. Vos factures portent un léger watermark Fayeku."],
         ['q' => "Quelle est la différence entre Basique et Essentiel ?", 'a' => "Basique : facturation et 20 relances WhatsApp automatiques/mois. Essentiel : relances illimitées, IA, score fiabilité client, prévision trésorerie 90j, devis avec signature et conformité DGID."],
         ['q' => "Combien d'utilisateurs sont inclus ?", 'a' => "Basique : 1 utilisateur. Essentiel : 3 utilisateurs (utilisateur supplémentaire 3 000 FCFA/mois). Entreprise : utilisateurs illimités avec rôles."],
         ['q' => "Comment payer ?", 'a' => "Wave, Orange Money, virement bancaire. Paiement mensuel ou annuel (−2 mois offerts à l'année). Pas de frais de setup."],
@@ -206,7 +206,7 @@
         <p class="eyebrow mb-4">Tarifs</p>
         <h1 class="h1 mb-6 max-w-3xl mx-auto">Découvrez les offres <span style="color: var(--color-teal-fayeku);">Fayeku.</span></h1>
         <p class="text-lg max-w-2xl mx-auto leading-relaxed" style="color: var(--color-marketing-slate);">
-            Sans engagement, résiliable à tout moment. 30 jours d'essai sur tous les plans payants, sans carte bancaire.
+            Sans engagement, résiliable à tout moment. 30 jours d'essai sur tous les plans payants, sans paiement préalable.
         </p>
     </div>
 </section>
@@ -244,7 +244,7 @@
     </div>
 
     <p class="text-center text-sm mt-8" style="color: var(--color-marketing-slate);">
-        Chaque plan inclut <strong style="color: var(--color-marketing-ink);">30 jours d'essai</strong>, sans carte bancaire. Annuel : <strong style="color: var(--color-marketing-ink);">2 mois offerts</strong> (−16,7 %).
+        Chaque plan inclut <strong style="color: var(--color-marketing-ink);">30 jours d'essai</strong>, sans paiement préalable. Annuel : <strong style="color: var(--color-marketing-ink);">2 mois offerts</strong> (−16,7 %).
     </p>
 </section>
 
@@ -259,7 +259,7 @@
                 <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color: var(--color-vivid);">Plan Gratuit · à vie</p>
                 <h3 class="text-xl font-bold mb-2" style="color: var(--color-marketing-ink);">Pas prêt à payer ? Démarrez gratuitement.</h3>
                 <p class="leading-relaxed text-sm" style="color: var(--color-marketing-slate);">
-                    3 factures par mois, sans engagement, sans carte bancaire. Vos factures portent un léger watermark Fayeku. Vous basculez automatiquement sur ce plan à la fin de votre essai 30 jours si vous ne choisissez pas de plan payant.
+                    3 factures par mois, sans engagement, sans paiement préalable. Vos factures portent un léger watermark Fayeku. Vous basculez automatiquement sur ce plan à la fin de votre essai 30 jours si vous ne choisissez pas de plan payant.
                 </p>
             </div>
             <a href="{{ route('register') }}" class="btn-secondary whitespace-nowrap">Démarrer gratuitement</a>

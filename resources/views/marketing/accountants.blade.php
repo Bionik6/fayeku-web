@@ -557,10 +557,10 @@
                 'Les PME invitées via votre lien reçoivent 30 jours Essentiel offerts',
                 'Versement : Wave le 5 du mois',
             ] as $bullet)
-                <div class="border border-white/15 rounded-full px-6 py-4 text-white text-base">{{ $bullet }}</div>
+                <div class="bg-white/5 border border-white/15 rounded-full px-6 py-4 text-white text-base">{{ $bullet }}</div>
             @endforeach
 
-            <div class="border border-white/15 rounded-3xl divide-y divide-white/10 mt-6">
+            <div class="bg-white/5 border border-white/15 rounded-3xl divide-y divide-white/10 mt-6">
                 @foreach ([
                     ['Commission mensuelle récurrente', '15% sur tous les plans, pour toujours'],
                     ['Bonus première signature', '+1 mois MRR'],
@@ -605,53 +605,47 @@
             ];
         @endphp
 
-        <div class="card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm" style="table-layout: fixed;">
-                    <colgroup>
-                        <col style="width: 40%;">
-                        <col style="width: 20%;">
-                        <col style="width: 20%;">
-                        <col style="width: 20%;">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th class="text-left p-4 text-[11px] uppercase tracking-wider font-semibold" style="color: var(--color-marketing-slate);">Fonctionnalité</th>
-                            <th class="p-4 text-center font-semibold" style="color: var(--color-marketing-slate);">Partner</th>
-                            <th class="p-4 text-center font-semibold" style="color: var(--color-marketing-slate);">Gold</th>
-                            <th class="p-4 text-center font-bold rounded-t-2xl" style="background: var(--color-teal-fayeku); color: var(--color-vivid);">Platinum</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach ($tierRows as $row)
-                            @php $isLastRow = $loop->last; @endphp
-                            <tr>
-                                <td class="p-4 font-semibold" style="color: var(--color-marketing-ink);">{{ $row[0] }}</td>
-                                @foreach ([$row[1], $row[2], $row[3]] as $cIdx => $val)
-                                    @php
-                                        $isHighlight = $cIdx === 2;
-                                        $isCheck = $val === '✓';
-                                        $isCross = $val === '✗';
-                                    @endphp
-                                    <td class="p-4 text-center font-medium {{ $isHighlight ? 'bg-[color:var(--color-mint-50)]/40' : '' }} {{ $isHighlight && $isLastRow ? 'rounded-b-2xl' : '' }}">
-                                        @if ($isCheck)
-                                            <span class="inline-flex w-6 h-6 rounded-full items-center justify-center" style="color: var(--color-vivid);">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                            </span>
-                                        @elseif ($isCross)
-                                            <span class="inline-flex w-6 h-6 rounded-full items-center justify-center text-gray-300">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                            </span>
-                                        @else
-                                            <span style="color: var(--color-marketing-slate);">{{ $val }}</span>
-                                        @endif
+        <div class="overflow-x-auto rounded-[2rem] border border-primary/10 bg-white shadow-soft">
+            <table class="min-w-[920px] w-full border-collapse">
+                <thead>
+                    <tr class="border-b border-primary/10">
+                        <th class="sticky left-0 z-10 bg-white px-6 py-5 text-left text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Fonctionnalité</th>
+                        <th class="px-6 py-5 text-center text-base font-semibold text-ink">Partner</th>
+                        <th class="px-6 py-5 text-center text-base font-semibold text-ink">Gold</th>
+                        <th class="px-6 py-5 text-center text-base font-semibold" style="background: var(--color-primary); color: var(--color-accent);">Platinum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($tierRows as $row)
+                        <tr class="border-b border-primary/10 last:border-b-0">
+                            <th class="sticky left-0 z-[1] bg-white px-6 py-5 text-left text-sm font-semibold text-ink sm:text-base">{{ $row[0] }}</th>
+                            @foreach ([$row[1], $row[2], $row[3]] as $cIdx => $val)
+                                @php
+                                    $isHighlight = $cIdx === 2;
+                                    $isCheck = $val === '✓';
+                                    $isCross = $val === '✗';
+                                    $cellBg = $isHighlight ? 'bg-primary/[0.04]' : 'bg-white';
+                                @endphp
+                                @if ($isCheck)
+                                    <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base {{ $cellBg }} font-semibold text-primary">
+                                        <span class="inline-flex items-center justify-center gap-2">
+                                            <svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.5 10.5 8 14l7.5-8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                        </span>
                                     </td>
-                                @endforeach
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                @elseif ($isCross)
+                                    <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base {{ $cellBg }} text-slate-400">
+                                        <span class="inline-flex items-center justify-center gap-2">
+                                            <svg aria-hidden viewBox="0 0 20 20" class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l8 8M14 6l-8 8" stroke-linecap="round" /></svg>
+                                        </span>
+                                    </td>
+                                @else
+                                    <td class="px-6 py-5 text-center text-sm leading-6 sm:text-base {{ $cellBg }} text-slate-700">{{ $val }}</td>
+                                @endif
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
@@ -660,7 +654,7 @@
     <div class="max-w-7xl mx-auto rounded-3xl py-10 px-5 sm:py-14 sm:px-6 text-center relative overflow-hidden" style="background: var(--color-mint-100);">
         <div class="relative">
             <h2 class="h2 mb-4 max-w-2xl mx-auto">Activez votre espace cabinet en 5 minutes.</h2>
-            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Fayeku Compta est gratuit et le restera. Aucun engagement, aucune carte bancaire.</p>
+            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Fayeku Compta est gratuit et le restera. Aucun engagement, aucun paiement.</p>
             <a href="{{ route('marketing.accountants.join') }}" class="btn-primary">Demander un accès cabinet
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>

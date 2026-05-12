@@ -102,7 +102,7 @@
 
     <header class="space-y-1.5">
         <h2 class="text-3xl font-semibold leading-tight text-ink sm:text-[34px]">{{ __('Créer votre compte') }}</h2>
-        <p class="text-base text-slate-500">{{ __('30 jours gratuits. Sans carte bancaire.') }}</p>
+        <p class="text-base text-slate-500">{{ __('30 jours gratuits. Sans engagement.') }}</p>
     </header>
 
     @if ($isReferral)

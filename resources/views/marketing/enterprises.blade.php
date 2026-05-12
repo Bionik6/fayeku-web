@@ -13,7 +13,7 @@
             </div>
             <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
                 <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30 jours d'essai</span>
-                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sans carte bancaire</span>
+                <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Paiement Wave & Orange Money</span>
             </div>
         </div>
         <div class="lg:col-span-6 relative">
@@ -459,7 +459,7 @@
         <div class="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(2, 77, 78, 0.10);"></div>
         <div class="relative">
             <h2 class="h2 mb-4 max-w-2xl mx-auto">Démarrez votre essai gratuit.</h2>
-            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">30 jours offerts. Sans engagement. Sans carte bancaire.</p>
+            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">30 jours offerts. Sans engagement. Paiement Wave ou Orange Money.</p>
             <a href="{{ route('register') }}" class="btn-primary">Essayer 30 jours
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>

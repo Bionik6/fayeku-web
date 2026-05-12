@@ -5,7 +5,7 @@
     <head>
         @include('partials.head', ['title' => $title])
     </head>
-    <body class="marketing-site">
+    <body>
         <div class="min-h-screen overflow-x-hidden bg-[#024D4D]">
             <div class="grid min-h-screen lg:grid-cols-[0.94fr_1.06fr]">
 

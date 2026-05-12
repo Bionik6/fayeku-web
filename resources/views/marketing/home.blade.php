@@ -28,7 +28,7 @@
 
                 <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
                     <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>30 jours d'essai</span>
-                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sans carte bancaire</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Paiement Wave & Orange Money</span>
                     <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Pensé à Dakar</span>
                 </div>
             </div>
@@ -614,7 +614,7 @@
         ['q' => 'Puis-je utiliser Fayeku sans intégrer Wave / Orange Money ?', 'a' => 'Oui. Les paiements se font hors application. Marquez une facture comme payée via Wave, Orange Money, virement ou cash, puis Fayeku gère le suivi et les relances WhatsApp.'],
         ['q' => 'Fayeku remplace-t-il mon comptable ?', 'a' => 'Non. Fayeku structure le flux pour votre comptable et lui donne accès à un espace dédié (Fayeku Compta) gratuit.'],
         ['q' => 'Est-ce compatible avec Sage / EBP ?', 'a' => 'Oui. Fayeku Compta génère des exports Sage 100, EBP et Excel directement utilisables par votre cabinet.'],
-        ['q' => "Puis-je tester Fayeku avant de m'engager ?", 'a' => "Oui, 30 jours d'essai sont inclus sur tous les plans, sans engagement et sans carte bancaire."],
+        ['q' => "Puis-je tester Fayeku avant de m'engager ?", 'a' => "Oui, 30 jours d'essai sont inclus sur tous les plans, sans engagement et sans paiement préalable."],
         ['q' => 'Comment marche le programme partenaire comptable ?', 'a' => "Vous recommandez Fayeku à vos clients PME et touchez 15% de commission récurrente tant qu'ils restent abonnés."],
         ['q' => 'Le paiement annuel est-il obligatoire ?', 'a' => "Non. Vous pouvez payer au mois ou bénéficier de 2 mois offerts en payant à l'année."],
         ['q' => 'Quid de la conformité DGID ?', 'a' => 'Fayeku intègrera la conformité officielle dès publication des modalités techniques par la DGID, sur les plans Essentiel et Entreprise.'],
@@ -655,7 +655,7 @@
         <div class="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl" style="background: rgba(2, 77, 78, 0.10);"></div>
         <div class="relative">
             <h2 class="h2 mb-4 max-w-2xl mx-auto">Prêt à reprendre le contrôle de votre trésorerie ?</h2>
-            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Démarrez en 2 minutes. Aucun engagement. Pas de carte bancaire.</p>
+            <p class="text-lg mb-8 max-w-xl mx-auto" style="color: var(--color-marketing-slate);">Démarrez en 2 minutes. Aucun engagement. Paiement Wave ou Orange Money.</p>
             <a href="{{ route('register') }}" class="btn-primary">Essayer 30 jours
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>

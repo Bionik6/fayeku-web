@@ -3,7 +3,7 @@
     <head>
         @include('partials.head', ['title' => $title ?? null])
     </head>
-    <body class="marketing-site">
+    <body>
         <div class="min-h-screen overflow-x-hidden bg-[#024D4D]">
             {{ $slot }}
         </div>

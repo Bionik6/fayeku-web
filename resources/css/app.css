@@ -164,7 +164,7 @@ select:focus[data-flux-control] {
 
     .marketing-site .btn-primary {
         background: var(--color-teal-fayeku);
-        color: var(--color-vivid);
+        color: #ffffff;
         padding: 0.75rem 1.5rem;
         border-radius: 9999px;
         font-weight: 600;
@@ -176,7 +176,7 @@ select:focus[data-flux-control] {
 
     .marketing-site .btn-primary:hover {
         background: var(--color-teal-deep);
-        color: var(--color-vivid);
+        color: #ffffff;
         transform: translateY(-1px);
         box-shadow: 0 8px 24px -8px rgba(2, 77, 78, 0.4);
     }
@@ -596,7 +596,7 @@ select:focus[data-flux-control] {
         @apply inline-flex w-full cursor-pointer items-center justify-center px-5 py-4 text-base font-semibold transition;
         border-radius: 0.75rem;
         background: #024D4E;
-        color: #0FB85C;
+        color: #ffffff;
     }
 
     .auth-button:hover {
