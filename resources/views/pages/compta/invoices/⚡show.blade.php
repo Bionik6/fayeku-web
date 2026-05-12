@@ -3,6 +3,7 @@
 use App\Enums\PME\InvoiceStatus;
 use App\Models\Auth\AccountantCompany;
 use App\Models\PME\Invoice;
+use App\Services\PME\DocumentLifecycleService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -45,6 +46,12 @@ new #[Title('Facture')] class extends Component {
     public function sentRemindersCount(): int
     {
         return $this->invoice->reminders->count();
+    }
+
+    #[Computed]
+    public function lifecycleState(): array
+    {
+        return app(DocumentLifecycleService::class)->forInvoice($this->invoice);
     }
 
     #[Computed]
@@ -170,6 +177,8 @@ new #[Title('Facture')] class extends Component {
             @endif
         </article>
     </section>
+
+    <x-documents.lifecycle-card :lifecycle="$this->lifecycleState" />
 
     {{-- ─── Corps 2 colonnes ─────────────────────────────────────────────── --}}
     <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
