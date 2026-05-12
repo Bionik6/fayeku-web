@@ -57,7 +57,16 @@
         @keydown.escape.window="open=false"
         class="fixed inset-0 z-[100] lg:hidden"
     >
-        <div class="absolute inset-y-0 right-0 w-full bg-white flex flex-col shadow-2xl overflow-y-auto">
+        <div
+            x-show="open"
+            x-transition:enter="transition transform ease-out duration-300"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition transform ease-in duration-200"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+            class="absolute inset-y-0 right-0 w-full bg-white flex flex-col shadow-2xl overflow-y-auto"
+        >
             <div class="flex items-center justify-between gap-4 px-6 py-5 border-b border-gray-100">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
                     <img src="/logo.png" alt="Fayeku" class="w-10 h-10 rounded-lg" width="40" height="40" />
