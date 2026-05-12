@@ -1,9 +1,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>
-    {{ filled($title ?? null) ? $title.' - '.config('marketing.site.name', config('app.name', 'Fayeku')) : config('marketing.site.name', config('app.name', 'Fayeku')) }}
-</title>
+@php
+    $siteName = config('marketing.site.name', config('app.name', 'Fayeku'));
+    $pageTitle = filled($title ?? null) ? $title : $siteName;
+    if (filled($title ?? null) && ! str_contains($title, $siteName)) {
+        $pageTitle .= ' | '.$siteName;
+    }
+@endphp
+<title>{{ $pageTitle }}</title>
 
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 

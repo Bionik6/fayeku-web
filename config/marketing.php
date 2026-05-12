@@ -8,14 +8,14 @@ return [
         'url' => 'https://www.fayeku.sn',
         'locale' => 'fr_SN',
         'keywords' => [
-            'facturation Sénégal',
+            'logiciel de facturation Sénégal',
+            'logiciel cabinet comptable Sénégal',
+            'facturation électronique DGID',
             'relance facture WhatsApp',
-            'impayés PME',
-            'plateforme comptable',
-            'facture électronique',
-            'DGID',
-            'trésorerie PME Dakar',
-            'cabinet comptable Dakar',
+            'logiciel devis et facture Sénégal',
+            'logiciel facturation Dakar',
+            'expert-comptable Sénégal',
+            'recouvrement PME Sénégal',
         ],
         'social' => [
             'linkedin' => 'https://www.linkedin.com/company/fayeku',
@@ -35,11 +35,20 @@ return [
             'rccm' => 'SN DKR 2019 A 25527',
         ],
     ],
+    'verification' => [
+        'google' => env('SEO_GOOGLE_VERIFICATION'),
+        'bing' => env('SEO_BING_VERIFICATION'),
+    ],
+    'analytics' => [
+        'plausible_domain' => env('PLAUSIBLE_DOMAIN'),
+        'ga4_id' => env('GA4_MEASUREMENT_ID'),
+    ],
     'navigation' => [
         ['href' => '/entreprises', 'label' => 'Entreprises'],
         ['href' => '/accountants', 'label' => 'Experts-comptables'],
         ['href' => '/pricing', 'label' => 'Tarifs'],
         ['href' => '/conformite', 'label' => 'Conformité'],
+        ['href' => '/blog', 'label' => 'Blog'],
         ['href' => '/contact', 'label' => 'Contact', 'in_header' => false],
     ],
     'legal_links' => [

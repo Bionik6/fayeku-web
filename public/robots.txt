@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /accountant/join
+Disallow: /pme/
+Disallow: /compta/
+Disallow: /settings/
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://www.fayeku.sn/sitemap.xml

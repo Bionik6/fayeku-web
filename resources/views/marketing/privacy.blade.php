@@ -1,4 +1,4 @@
-<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
+<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl" :page-type="$pageType ?? null" :breadcrumbs="$breadcrumbs ?? []" :faq-items="$faqItems ?? []" :noindex="$noindex ?? false">
     <section class="py-20">
         <div class="mx-auto w-full max-w-4xl space-y-10 px-4 sm:px-6 lg:px-8">
 

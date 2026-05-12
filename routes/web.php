@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PME\ProposalDocumentType;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Compta\ExportDownloadController;
 use App\Http\Controllers\MarketingPageController;
 use App\Http\Controllers\PME\CompanyLogoController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\PME\InvoicePreviewController;
 use App\Http\Controllers\PME\ProposalDocumentPdfController;
 use App\Http\Controllers\PME\ProposalDocumentPreviewController;
 use App\Http\Controllers\PME\TreasuryExportController;
+use App\Http\Controllers\SitemapController;
 use App\Models\PME\ProposalDocument;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,8 @@ Route::bind('quotePublic', fn ($value) => ProposalDocument::query()
 Route::bind('proformaPublic', fn ($value) => ProposalDocument::query()
     ->where('public_code', $value)->ofType(ProposalDocumentType::Proforma)->firstOrFail());
 
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+
 Route::get('/', [MarketingPageController::class, 'home'])->name('home');
 Route::get('/pricing', [MarketingPageController::class, 'pricing'])->name('marketing.pricing');
 Route::get('/entreprises', [MarketingPageController::class, 'enterprises'])->name('marketing.enterprises');
@@ -32,6 +36,15 @@ Route::post('/accountant/join', [MarketingPageController::class, 'accountantsJoi
 Route::get('/conformite', [MarketingPageController::class, 'compliance'])->name('marketing.compliance');
 Route::get('/contact', [MarketingPageController::class, 'contact'])->name('marketing.contact');
 Route::post('/contact', [MarketingPageController::class, 'contactStore'])->name('marketing.contact.store');
+Route::get('/blog', [BlogController::class, 'index'])->name('marketing.blog.index');
+Route::get('/blog/{article:slug}', [BlogController::class, 'show'])->name('marketing.blog.show');
+
+foreach (array_keys((array) config('marketing-seo.landings', [])) as $seoSlug) {
+    Route::get('/'.$seoSlug, [MarketingPageController::class, 'seoLanding'])
+        ->defaults('slug', $seoSlug)
+        ->name('marketing.seo.'.$seoSlug);
+}
+
 Route::get('/mentions-legales', [MarketingPageController::class, 'legal'])->defaults('page', 'mentions-legales')->name('marketing.legal');
 Route::get('/confidentialite', [MarketingPageController::class, 'legal'])->defaults('page', 'confidentialite')->name('marketing.privacy');
 

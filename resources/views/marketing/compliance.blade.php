@@ -1,4 +1,4 @@
-<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
+<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl" :page-type="$pageType ?? null" :breadcrumbs="$breadcrumbs ?? []" :faq-items="$faqItems ?? []" :noindex="$noindex ?? false">
 
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>

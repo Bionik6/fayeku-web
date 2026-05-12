@@ -1,4 +1,4 @@
-<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
+<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl" :page-type="$pageType ?? null" :breadcrumbs="$breadcrumbs ?? []" :faq-items="$faqItems ?? []" :noindex="$noindex ?? false">
 
 @php
     $plans = [

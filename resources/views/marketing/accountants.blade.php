@@ -1,10 +1,10 @@
-<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
+<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl" :page-type="$pageType ?? null" :breadcrumbs="$breadcrumbs ?? []" :faq-items="$faqItems ?? []" :noindex="$noindex ?? false">
 
 <section class="hero-bg relative overflow-hidden">
     <div class="absolute -top-24 right-0 w-[480px] h-[480px] rounded-full blur-3xl opacity-50 -z-0" style="background: var(--color-mint-200);"></div>
     <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-24 grid lg:grid-cols-12 gap-10 items-center relative">
         <div class="lg:col-span-6">
-            <p class="eyebrow mb-4">Pour les experts-comptables</p>
+            <p class="eyebrow mb-4">Logiciel pour cabinet comptable au Sénégal</p>
             <h1 class="h1 mb-6">Fayeku Compta. <span style="color: var(--color-teal-fayeku);">Gratuit. Complet.</span></h1>
             <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">Un espace cabinet dédié pour suivre toutes vos PME clientes, collecter les pièces, exporter vers Sage 100 / EBP et faire grandir votre cabinet grâce au programme partenaire.</p>
             <div class="flex flex-wrap gap-3 mb-6">

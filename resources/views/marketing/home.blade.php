@@ -1,4 +1,4 @@
-<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
+<x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl" :page-type="$pageType ?? null" :breadcrumbs="$breadcrumbs ?? []" :faq-items="$faqItems ?? []" :noindex="$noindex ?? false">
 
 <section class="hero-bg relative overflow-hidden" x-data="{ persona: 'entreprise' }">
     <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-28 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
@@ -10,7 +10,7 @@
 
             {{-- Variante Entreprise --}}
             <div x-show="persona === 'entreprise'">
-                <p class="eyebrow mb-4">Plateforme PME · Cabinet comptable · Trésorerie</p>
+                <p class="eyebrow mb-4">Logiciel de facturation pour PME au Sénégal</p>
                 <h1 class="h1 mb-6">
                     Facturez proprement.<br/>
                     <span style="color: var(--color-teal-fayeku);">Récupérez votre argent plus vite.</span>
@@ -39,11 +39,11 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#0FB85C" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     <span class="text-sm font-semibold" style="color: var(--color-marketing-ink);">Fayeku Compta est gratuit</span>
                 </div>
-                <p class="eyebrow mb-4">Cockpit multi-clients pour cabinets</p>
-                <h1 class="h1 mb-6">
+                <p class="eyebrow mb-4">Logiciel pour cabinet comptable au Sénégal</p>
+                <h2 class="h1 mb-6">
                     Facturez proprement.<br/>
                     <span style="color: var(--color-teal-fayeku);">Contrôlez votre trésorerie.</span>
-                </h1>
+                </h2>
                 <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
                     Centralisez les factures de vos PME clientes, collectez les pièces, exportez vers vos outils comptables et activez un programme partenaire récurrent.
                 </p>
