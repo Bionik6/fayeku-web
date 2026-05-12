@@ -64,8 +64,12 @@
                 <span class="block text-sm font-medium mb-1.5" style="color: var(--color-marketing-ink);">Vous êtes</span>
                 <div class="grid sm:grid-cols-3 gap-2">
                     @foreach (['pme' => 'Une PME', 'expert' => 'Un expert-comptable', 'autre' => 'Autre'] as $value => $label)
-                        <label class="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5 text-sm cursor-pointer hover:border-[color:var(--color-teal-fayeku)] hover:bg-[color:var(--color-mint-50)]">
-                            <input type="radio" name="profile" value="{{ $value }}" class="accent-[color:var(--color-teal-fayeku)]" @checked(old('profile', 'pme') === $value) /> {{ $label }}
+                        <label class="relative flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 text-sm cursor-pointer transition hover:border-[color:var(--color-teal-fayeku)] hover:bg-[color:var(--color-mint-50)] has-[:checked]:border-[color:var(--color-teal-fayeku)] has-[:checked]:bg-[color:var(--color-mint-50)] has-[:checked]:ring-1 has-[:checked]:ring-[color:var(--color-teal-fayeku)]">
+                            <input type="radio" name="profile" value="{{ $value }}" class="peer sr-only" @checked(old('profile', 'pme') === $value) />
+                            <span aria-hidden="true" class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-gray-300 transition peer-checked:border-[color:var(--color-teal-fayeku)] peer-checked:[&>span]:opacity-100">
+                                <span class="h-2.5 w-2.5 rounded-full bg-[color:var(--color-teal-fayeku)] opacity-0 transition"></span>
+                            </span>
+                            <span style="color: var(--color-marketing-ink);">{{ $label }}</span>
                         </label>
                     @endforeach
                 </div>

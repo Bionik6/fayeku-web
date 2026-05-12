@@ -40,7 +40,7 @@ return [
         ['href' => '/accountants', 'label' => 'Experts-comptables'],
         ['href' => '/pricing', 'label' => 'Tarifs'],
         ['href' => '/conformite', 'label' => 'Conformité'],
-        ['href' => '/contact', 'label' => 'Contact'],
+        ['href' => '/contact', 'label' => 'Contact', 'in_header' => false],
     ],
     'legal_links' => [
         ['href' => '/mentions-legales', 'label' => 'Mentions légales'],

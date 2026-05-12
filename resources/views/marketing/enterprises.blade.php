@@ -83,7 +83,7 @@
         </div>
         <div class="grid md:grid-cols-3 gap-5">
             @foreach ([
-                ['big' => '−40', 'unit' => '%', 'title' => 'de délai de paiement', 'desc' => 'Les relances WhatsApp automatiques font la différence dès le premier mois.'],
+                ['big' => '−40', 'unit' => '%', 'title' => 'de délai de paiement', 'desc' => 'Les relances WhatsApp et email automatiques font la différence dès le premier mois.'],
                 ['big' => '+12', 'unit' => 'h', 'title' => 'économisées par mois', 'desc' => "Plus d'Excel, plus de WhatsApp manuel, plus de fichiers perdus."],
                 ['big' => '100', 'unit' => '%', 'title' => 'de visibilité trésorerie', 'desc' => 'Sachez à tout moment ce qui est facturé, encaissé et en retard.'],
             ] as $stat)

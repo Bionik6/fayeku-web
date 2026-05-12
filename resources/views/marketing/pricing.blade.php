@@ -6,46 +6,53 @@
             'slug' => 'gratuit',
             'name' => 'Gratuit',
             'eyebrow' => 'Démarrez en douceur',
-            'tagline' => 'Pour démarrer sans engagement.',
+            'tagline' => 'Pour tester Fayeku sans engagement.',
             'price' => '0',
             'unit' => 'FCFA · à vie',
-            'note' => 'Jusqu\'à 3 factures / mois',
+            'note' => 'Aucun engagement, aucun paiement',
             'cta_label' => 'Démarrer gratuitement',
             'cta_href' => route('register'),
             'cta_variant' => 'secondary',
             'popular' => false,
+            'limits' => [
+                ['label' => 'Documents', 'sublabel' => 'Devis · Proformas · Factures', 'value' => '10 / mois'],
+                ['label' => 'Clients', 'value' => '10'],
+                ['label' => 'Utilisateurs', 'value' => '1'],
+            ],
             'features' => [
-                '3 factures par mois',
-                'Watermark Fayeku discret sur les factures',
+                'Watermark Fayeku discret sur les documents',
                 'Templates de base',
                 'Suivi des paiements manuels',
                 'Sans engagement, sans paiement préalable',
-                'Bascule automatique à la fin de l\'essai 30 jours',
             ],
         ],
         [
             'slug' => 'basique',
             'name' => 'Basique',
             'eyebrow' => 'Facturez proprement',
-            'tagline' => 'Pour facturer proprement et démarrer.',
+            'tagline' => 'Pour structurer votre facturation et démarrer votre activité.',
             'price' => '10 000',
             'price_yearly' => '100 000',
             'unit' => 'FCFA/mois HT',
             'unit_yearly' => 'FCFA/an HT',
-            'note' => 'Jusqu\'à 1 utilisateur',
+            'note' => 'Tout ce qu\'il faut pour démarrer proprement',
             'cta_label' => 'Essayer 30 jours',
             'cta_href' => route('register'),
             'cta_variant' => 'secondary',
             'popular' => false,
+            'limits' => [
+                ['label' => 'Documents', 'sublabel' => 'Devis · Proformas · Factures', 'value' => '150 / mois'],
+                ['label' => 'Clients', 'value' => '50'],
+                ['label' => 'Utilisateurs', 'value' => '1'],
+            ],
             'features' => [
-                'Factures illimitées',
-                'Devis & factures récurrentes basiques',
+                'Devis, proformas et factures',
+                'Factures récurrentes',
                 'Suivi des impayés en temps réel',
-                '20 relances WhatsApp automatiques / mois',
-                'Historique clients · 100 max',
-                'Accès Fayeku Cabinet activable',
+                'Relances <strong>manuelles</strong> (WhatsApp, email)',
                 'Templates personnalisables (logo, NINEA)',
-                'Support email · 48h',
+                'Accès Fayeku Compta pour votre comptable',
+                'Support email · 24h ouvrées',
             ],
         ],
         [
@@ -57,44 +64,56 @@
             'price_yearly' => '200 000',
             'unit' => 'FCFA/mois HT',
             'unit_yearly' => 'FCFA/an HT',
-            'note' => 'Jusqu\'à 3 utilisateurs',
+            'note' => 'Utilisateur supplémentaire : 3 000 FCFA/mois',
             'cta_label' => 'Essayer 30 jours',
             'cta_href' => route('register'),
             'cta_variant' => 'primary',
             'popular' => true,
+            'highlight' => [
+                'title' => 'Sans limite de volume',
+                'subtitle' => 'Documents (devis, proformas, factures) et clients illimités',
+            ],
+            'lead' => 'Tout Basique inclus, plus :',
             'features' => [
-                'Tout Basique inclus',
-                'Relances WhatsApp automatiques illimitées',
-                'Relance intelligente IA · message pré-rédigé',
-                'Score fiabilité client',
+                '<strong>3 utilisateurs inclus</strong>',
+                'Relances WhatsApp automatiques · J-3 à J+60',
+                'Scoring de fiabilité client · délai moyen, retards',
                 'Prévision de trésorerie 90 jours',
-                'Devis signature électronique · conversion auto',
+                'Devis avec signature électronique <span class="opacity-70">(bientôt)</span>',
                 'Multi-devises (FCFA, EUR, USD)',
-                'Conformité DGID (dès disponibilité)',
-                'Accès Fayeku Cabinet inclus',
-                'Support WhatsApp · &lt; 4h',
+                'Conformité DGID dès disponibilité officielle',
+                'Accès Fayeku Compta inclus',
+                'Support WhatsApp prioritaire · 4h ouvrées',
             ],
         ],
         [
             'slug' => 'entreprise',
             'name' => 'Entreprise',
             'eyebrow' => 'Gérez votre groupe',
-            'tagline' => 'Pour les groupes et structures établies.',
+            'tagline' => 'Pour les sociétés qui doivent piloter plusieurs entités, intégrer leur SI et structurer leurs validations.',
             'price_prefix' => 'À partir de',
             'price' => '70 000',
             'price_yearly' => '700 000',
             'unit' => 'FCFA/mois HT',
             'unit_yearly' => 'FCFA/an HT',
-            'note' => 'Utilisateurs illimités + rôles',
+            'note' => 'Sur devis · Utilisateur supplémentaire : 2 000 FCFA/mois',
             'cta_label' => 'Nous contacter',
             'cta_href' => route('marketing.contact'),
             'cta_variant' => 'secondary',
             'popular' => false,
+            'highlight' => [
+                'title' => 'Sans limite de volume',
+                'subtitle' => 'Jusqu\'à 25 utilisateurs inclus',
+            ],
+            'lead' => 'Tout Essentiel inclus, plus :',
             'features' => [
-                'Tout Essentiel inclus',
-                'Account manager dédié · SLA 99,9 %',
-                'Onboarding présentiel · 3 sessions de formation',
-                'Migration depuis ancien système',
+                '<strong>Multi-entités</strong> · gérez plusieurs sociétés depuis un compte',
+                '<strong>Workflows de validation</strong> · circuits d\'approbation par seuil et par rôle',
+                'Rôles &amp; permissions avancés',
+                '<strong>API + Webhooks</strong> · intégrez Fayeku à votre SI',
+                '<strong>SSO</strong> · Azure AD, Google Workspace',
+                'Account Manager dédié · SLA 99,5 %',
+                'Migration depuis votre ancien système incluse',
             ],
         ],
     ];
@@ -103,16 +122,15 @@
 
     $compareSections = [
         [
-            'title' => "Limites d'usage",
+            'title' => "Limites mensuelles",
             'rows' => [
-                ['Factures / mois',                  '3',         'Illimitées',  'Illimitées',  'Illimitées'],
-                ['Clients',                          '3 max',     '100 max',     'Illimités',   'Illimités + rôles'],
-                ['Utilisateurs',                     '1',         '1',           '3',           'Illimités + rôles'],
-                ['Relances WhatsApp auto / mois',    '—',         '20',          'Illimitées',  'Illimitées'],
-                ['Historique clients',               '—',         '✓',           '✓',           '✓'],
-                ['Branding Fayeku obligatoire',      '✓',         '—',           '—',           '—'],
-                ['Watermark PDF',                    '✓',         '—',           '—',           '—'],
-                ["Durée de l'essai gratuit",         'Illimitée', '30 jours',    '30 jours',    '30 jours'],
+                ['Documents (devis, proformas, factures) / mois', '10',  '150',         'Illimités',   'Illimités'],
+                ['Clients',                                       '10',  '50',          'Illimités',   'Illimités'],
+                ['Utilisateurs',                                  '1',   '1',           '3 (+3k/util.)', '25 inclus (+2k/util.)'],
+                ['Historique clients',                    '—',         '✓',           '✓',           '✓'],
+                ['Branding Fayeku obligatoire',           '✓',         '—',           '—',           '—'],
+                ['Watermark PDF',                         '✓',         '—',           '—',           '—'],
+                ["Durée de l'essai gratuit",              'À vie',     '30 jours',    '30 jours',    '30 jours'],
             ],
         ],
         [
@@ -131,15 +149,12 @@
         [
             'title' => 'Recouvrement & paiement',
             'rows' => [
-                ['Wave link manuel dans messages',                    '✓', '✓', '✓', '✓'],
                 ['Marquer facture payée (Wave / OM / Cash)',          '✓', '✓', '✓', '✓'],
                 ['Dashboard impayés temps réel',                      '—', '✓', '✓', '✓'],
-                ['Relances WhatsApp J+7, J+15',                       '—', '✓ 20/mois', '✓ Illimitées', '✓ Illimitées'],
-                ["Rappel avant échéance J-3",                         '—', '—', '✓', '✓'],
-                ['Relances J+30 et J+60 personnalisables',            '—', '—', '✓', '✓'],
+                ['Relances manuelles (WhatsApp, email)',              '—', '✓', '✓', '✓'],
+                ['Relances WhatsApp automatiques · J-3 à J+60',       '—', '—', '✓', '✓'],
                 ['Calendrier complet J-3 → J+60 configurable',        '—', '—', '✓', '✓'],
-                ['Score fiabilité client',                            '—', '—', '✓', '✓'],
-                ['Relance intelligente IA',                           '—', '—', '✓', '✓'],
+                ['Scoring de fiabilité client',                       '—', '—', '✓', '✓'],
             ],
         ],
         [
@@ -156,7 +171,7 @@
         [
             'title' => 'Collaboration comptable',
             'rows' => [
-                ['Accès Fayeku Cabinet',                      '—', 'Activable', 'Inclus', 'Inclus'],
+                ['Accès Fayeku Compta',                       'Inclus', 'Inclus', 'Inclus', 'Inclus'],
                 ['Lecture factures temps réel',               '—', '✓', '✓', '✓'],
                 ['Collecte automatique des pièces',           '—', '—', '✓', '✓'],
                 ['Export Sage 100 / EBP / Excel',             '—', '✓', '✓', '✓'],
@@ -165,13 +180,22 @@
             ],
         ],
         [
+            'title' => 'Gouvernance & intégrations',
+            'rows' => [
+                ['Multi-entités (plusieurs sociétés)',           '—', '—', '—', '✓'],
+                ['Workflows de validation par seuil et rôle',    '—', '—', '—', '✓'],
+                ['Rôles & permissions avancés',                  '—', '—', '—', '✓'],
+                ['API + Webhooks',                               '—', '—', '—', '✓'],
+                ['SSO (Azure AD, Google Workspace)',             '—', '—', '—', '✓'],
+            ],
+        ],
+        [
             'title' => 'Support & accompagnement',
             'rows' => [
-                ['Support',                          '—', 'Email 48h', 'WhatsApp < 4h', 'Account manager dédié'],
-                ['Onboarding',                       '—', 'Guides',    'Guidé en ligne (1h visio)', 'Présentiel Dakar'],
-                ['Formation équipe incluse',         '—', '—',         '—',             '✓ (3 sessions)'],
+                ['Support',                          '—', 'Email 24h ouvrées', 'WhatsApp prioritaire · 4h ouvrées', 'Account manager dédié'],
+                ['Onboarding',                       '—', 'Guides',    'Guidé en ligne (1h visio)', 'Accompagnement dédié'],
                 ['Migration depuis ancien système',  '—', '—',         '—',             '✓'],
-                ['SLA garanti (uptime 99,9 %)',      '—', '—',         '—',             '✓'],
+                ['SLA garanti (uptime 99,5 %)',      '—', '—',         '—',             '✓'],
                 ['Support téléphonique direct',      '—', '—',         '—',             '✓'],
             ],
         ],
@@ -179,7 +203,7 @@
 
     $testimonials = [
         [
-            'quote' => "Nous avons réduit notre délai moyen de paiement de 38 à 21 jours en deux mois. Les relances WhatsApp font le travail à notre place — nos clients paient sans qu'on ait à insister.",
+            'quote' => "Nous avons réduit notre délai moyen de paiement de 38 à 21 jours en deux mois. Les relances WhatsApp et email font le travail à notre place — nos clients paient sans qu'on ait à insister.",
             'name' => 'Awa Diop',
             'role' => 'Dirigeante · Atelier Numérique SARL',
             'logo' => 'AN',
@@ -202,13 +226,13 @@
     ];
 
     $pricingFaq = [
+        ['q' => "Que se passe-t-il à la fin de mes 30 jours d'essai ?", 'a' => "Vous choisissez votre plan. Aucun prélèvement automatique tant que vous n'avez pas confirmé."],
+        ['q' => "Puis-je changer de plan à tout moment ?", 'a' => "Oui. Vous pouvez passer à un plan supérieur ou inférieur depuis vos paramètres. Le prorata est calculé automatiquement."],
+        ['q' => "Y a-t-il vraiment des limites cachées sur Essentiel et Entreprise ?", 'a' => "Non. Documents et clients sont sans limite. Un fair use s'applique pour prévenir les abus (mention en CGU), mais aucune PME en usage normal n'est concernée."],
         ['q' => "Y a-t-il un engagement ?", 'a' => "Non. Vous pouvez résilier à tout moment depuis votre tableau de bord. Aucun engagement contractuel multi-mois."],
-        ['q' => "L'essai 30 jours nécessite-t-il un paiement préalable ?", 'a' => "Non. Vous démarrez sans aucune information de paiement. À la fin de l'essai, vous basculez automatiquement sur le plan Gratuit (3 factures/mois) si vous ne choisissez pas de plan payant."],
-        ['q' => "Le plan Gratuit est-il vraiment gratuit ?", 'a' => "Oui, à vie. 3 factures par mois, sans engagement, sans paiement préalable. Vos factures portent un léger watermark Fayeku."],
-        ['q' => "Quelle est la différence entre Basique et Essentiel ?", 'a' => "Basique : facturation et 20 relances WhatsApp automatiques/mois. Essentiel : relances illimitées, IA, score fiabilité client, prévision trésorerie 90j, devis avec signature et conformité DGID."],
-        ['q' => "Combien d'utilisateurs sont inclus ?", 'a' => "Basique : 1 utilisateur. Essentiel : 3 utilisateurs (utilisateur supplémentaire 3 000 FCFA/mois). Entreprise : utilisateurs illimités avec rôles."],
-        ['q' => "Comment payer ?", 'a' => "Wave, Orange Money, virement bancaire. Paiement mensuel ou annuel (−2 mois offerts à l'année). Pas de frais de setup."],
-        ['q' => "Puis-je changer de plan ?", 'a' => "Oui, à tout moment. La facturation est ajustée au prorata du jour."],
+        ['q' => "Quelle est la différence entre Basique et Essentiel ?", 'a' => "Basique gère vos factures avec des relances <strong>manuelles</strong> (WhatsApp, email). Essentiel ajoute les relances WhatsApp <strong>automatiques</strong> (J-3 à J+60), le scoring de fiabilité client, la prévision de trésorerie 90 jours et le support prioritaire."],
+        ['q' => "Combien d'utilisateurs sont inclus ?", 'a' => "Gratuit et Basique : 1 utilisateur. Essentiel : 3 utilisateurs (supplémentaire 3 000 FCFA/mois). Entreprise : jusqu'à 25 utilisateurs inclus (supplémentaire 2 000 FCFA/mois)."],
+        ['q' => "Comment payer ?", 'a' => "Wave, Orange Money, virement bancaire. Paiement mensuel ou annuel (2 mois offerts à l'année). Pas de frais de setup."],
         ['q' => "Et la conformité DGID ?", 'a' => "Fayeku intégrera nativement la conformité DGID dans les plans Essentiel et Entreprise dès publication officielle, sans surcoût."],
     ];
 @endphp
@@ -227,6 +251,12 @@
 
 {{-- Plans --}}
 <section class="pb-12 sm:pb-16 lg:pb-24" x-data="{ annual: false }">
+    {{-- Intro framing --}}
+    <div class="max-w-3xl mx-auto px-5 lg:px-8 mb-8 text-center">
+        <p class="text-lg font-semibold" style="color: var(--color-marketing-ink);">Choisissez votre plan selon votre besoin, pas selon votre volume.</p>
+        <p class="text-sm mt-2" style="color: var(--color-marketing-slate);">Tous les plans donnent accès à Fayeku Compta pour votre comptable.</p>
+    </div>
+
     {{-- Billing toggle --}}
     <div class="max-w-7xl mx-auto px-5 lg:px-8 mb-10 flex justify-center">
         <div class="inline-flex items-center gap-1 p-1 rounded-full border border-gray-200 bg-white shadow-sm" role="tablist" aria-label="Choisir la périodicité">
@@ -243,7 +273,7 @@
                 Annuel
                 <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
                     :style="annual ? 'background: rgba(255,255,255,0.18); color: #ffffff' : 'background: var(--color-mint-100); color: var(--color-vivid)'">
-                    −2 mois
+                    2 mois offerts
                 </span>
             </button>
         </div>
@@ -282,9 +312,37 @@
                     <div class="text-xs mt-2" style="color: var(--color-marketing-slate);">{!! $plan['note'] !!}</div>
                 </div>
 
+                @if (! empty($plan['limits']))
+                    <div class="rounded-2xl p-4 mb-6" style="background: var(--color-mint-50);">
+                        <p class="text-[10px] font-semibold uppercase tracking-widest mb-3" style="color: var(--color-vivid);">Limites mensuelles</p>
+                        <ul class="space-y-3 text-sm">
+                            @foreach ($plan['limits'] as $limit)
+                                <li>
+                                    <div class="flex items-baseline justify-between gap-3">
+                                        <span style="color: var(--color-marketing-ink);">{!! $limit['label'] !!}</span>
+                                        <span class="font-semibold tabular-nums whitespace-nowrap" style="color: var(--color-marketing-ink);">{!! $limit['value'] !!}</span>
+                                    </div>
+                                    @if (! empty($limit['sublabel']))
+                                        <p class="text-[14px] mt-1" style="color: var(--color-marketing-slate);">{{ $limit['sublabel'] }}</p>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @elseif (! empty($plan['highlight']))
+                    <div class="rounded-2xl p-4 mb-6 text-center" style="background: var(--color-mint-100);">
+                        <p class="text-sm font-semibold leading-tight" style="color: var(--color-marketing-ink);">{{ $plan['highlight']['title'] }}</p>
+                        <p class="text-[14px] mt-1.5" style="color: var(--color-marketing-slate);">{{ $plan['highlight']['subtitle'] }}</p>
+                    </div>
+                @endif
+
+                @if (! empty($plan['lead']))
+                    <p class="text-sm font-semibold mb-4" style="color: var(--color-vivid);">{!! $plan['lead'] !!}</p>
+                @endif
+
                 <ul class="space-y-2.5 text-sm mb-8" style="color: var(--color-marketing-ink);">
                     @foreach ($plan['features'] as $feature)
-                        <li class="flex items-start gap-2"><span class="check"></span>{!! $feature !!}</li>
+                        <li class="flex items-start gap-2"><span class="check"></span><span>{!! $feature !!}</span></li>
                     @endforeach
                 </ul>
 
@@ -294,7 +352,7 @@
     </div>
 
     <p class="text-center text-sm mt-8" style="color: var(--color-marketing-slate);">
-        Chaque plan inclut <strong style="color: var(--color-marketing-ink);">30 jours d'essai</strong>, sans paiement préalable. Annuel : <strong style="color: var(--color-marketing-ink);">2 mois offerts</strong> (−16,7 %).
+        Chaque plan payant inclut <strong style="color: var(--color-marketing-ink);">30 jours d'essai</strong>, sans paiement préalable. Annuel : <strong style="color: var(--color-marketing-ink);">2 mois offerts</strong> (−16,7 %).
     </p>
 </section>
 

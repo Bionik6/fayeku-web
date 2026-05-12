@@ -2,6 +2,7 @@
 
 @php
     $currentPath = '/' . ltrim(request()->path(), '/');
+    $headerNavigation = array_values(array_filter($navigation, fn ($item) => ($item['in_header'] ?? true) !== false));
 @endphp
 
 <header
@@ -21,7 +22,7 @@
         </a>
 
         <nav class="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2" aria-label="Navigation principale">
-            @foreach ($navigation as $item)
+            @foreach ($headerNavigation as $item)
                 @php
                     $activePath = rtrim($item['active'] ?? $item['href'], '/');
                     $isActive = $activePath !== '' && (
@@ -70,7 +71,7 @@
                 </button>
             </div>
             <nav class="flex flex-col gap-1 px-4 pt-6" aria-label="Navigation mobile">
-                @foreach ($navigation as $item)
+                @foreach ($headerNavigation as $item)
                     @php
                         $activePath = rtrim($item['active'] ?? $item['href'], '/');
                         $isActive = $activePath !== '' && (

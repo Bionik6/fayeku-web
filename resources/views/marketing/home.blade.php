@@ -16,7 +16,7 @@
                     <span style="color: var(--color-teal-fayeku);">Récupérez votre argent plus vite.</span>
                 </h1>
                 <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
-                    Fayeku aide les PME sénégalaises à créer leurs factures, suivre leurs impayés et relancer automatiquement leurs clients sur WhatsApp. Reprenez le contrôle de votre trésorerie.
+                    Fayeku aide les PME sénégalaises à créer leurs factures, suivre leurs impayés et relancer automatiquement leurs clients par WhatsApp et email. Reprenez le contrôle de votre trésorerie.
                 </p>
 
                 <div class="flex flex-wrap gap-3 mb-8">
@@ -320,7 +320,7 @@
 
         <div class="grid md:grid-cols-3 gap-5">
             @foreach ([
-                ['title' => 'Se faire payer plus vite', 'desc' => 'Relances WhatsApp automatisées, suivi des impayés en temps réel, messages prêts à envoyer.', 'svg' => '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'],
+                ['title' => 'Se faire payer plus vite', 'desc' => 'Relances WhatsApp &amp; email automatisées, suivi des impayés en temps réel, messages prêts à envoyer.', 'svg' => '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'],
                 ['title' => 'Contrôler le cash', 'desc' => "Délai moyen de paiement, prévision de trésorerie à 90 jours, vision claire de l'argent à encaisser.", 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
                 ['title' => 'Travailler mieux avec son comptable', 'desc' => 'Accès cabinet, exports Sage, coffre-fort documents. Moins de WhatsApp, plus de structure.', 'svg' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
             ] as $card)
@@ -439,7 +439,7 @@
             <p class="eyebrow mb-3">Relance automatique</p>
             <h2 class="h2 mb-5">Vos clients vous paient avant même que vous ayez à insister.</h2>
             <p class="text-lg leading-relaxed mb-6" style="color: var(--color-marketing-slate);">
-                Fayeku envoie les relances WhatsApp à votre place, au bon moment, avec le bon ton. La facture PDF est jointe automatiquement. Le paiement est rapproché dès qu'il arrive.
+                Fayeku envoie les relances WhatsApp et email à votre place, au bon moment, avec le bon ton. La facture PDF est jointe automatiquement. Le paiement est rapproché dès qu'il arrive.
             </p>
             <ul class="space-y-3" style="color: var(--color-marketing-ink);">
                 <li class="flex items-start gap-3"><span class="check"></span>Scénarios prêts : J+3 amical, J+7 ferme, J+15 et J+30</li>
@@ -495,7 +495,7 @@
             @foreach ([
                 ['title' => 'Facturation professionnelle', 'desc' => 'Templates logo + NINEA + TVA, numérotation automatique.', 'bg' => 'var(--color-mint-100)', 'color' => 'var(--color-teal-fayeku)', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>'],
                 ['title' => 'Suivi des impayés', 'desc' => 'Vue en temps réel des factures en retard et de leur ancienneté.', 'bg' => 'rgb(255 241 242)', 'color' => '#f43f5e', 'svg' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
-                ['title' => 'Relances WhatsApp automatiques', 'desc' => 'Scénarios J+7, J+15 et manuels, avec PDF joint.', 'bg' => 'rgb(236 253 245)', 'color' => '#059669', 'svg' => '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'],
+                ['title' => 'Relances WhatsApp &amp; email automatiques', 'desc' => 'Scénarios J+7, J+15 et manuels, avec PDF joint.', 'bg' => 'rgb(236 253 245)', 'color' => '#059669', 'svg' => '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'],
                 ['title' => 'Relance intelligente IA', 'desc' => 'Quand relancer et quel message envoyer selon le client.', 'bg' => 'rgb(245 243 255)', 'color' => '#7c3aed', 'svg' => '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>'],
                 ['title' => 'Score fiabilité client', 'desc' => 'Priorisez les comptes les plus risqués, anticipez les retards.', 'bg' => 'rgb(255 251 235)', 'color' => '#d97706', 'svg' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'],
                 ['title' => 'Prévision trésorerie 90 jours', 'desc' => 'Encaissements attendus, alertes de creux à venir.', 'bg' => 'rgb(240 249 255)', 'color' => '#0284c7', 'svg' => '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'],
@@ -610,7 +610,7 @@
 
 @php
     $homeFaq = [
-        ['q' => 'Puis-je utiliser Fayeku sans intégrer Wave / Orange Money ?', 'a' => 'Oui. Les paiements se font hors application. Marquez une facture comme payée via Wave, Orange Money, virement ou cash, puis Fayeku gère le suivi et les relances WhatsApp.'],
+        ['q' => 'Puis-je utiliser Fayeku sans intégrer Wave / Orange Money ?', 'a' => 'Oui. Les paiements se font hors application. Marquez une facture comme payée via Wave, Orange Money, virement ou cash, puis Fayeku gère le suivi et les relances WhatsApp et email.'],
         ['q' => 'Fayeku remplace-t-il mon comptable ?', 'a' => 'Non. Fayeku structure le flux pour votre comptable et lui donne accès à un espace dédié (Fayeku Compta) gratuit.'],
         ['q' => 'Est-ce compatible avec Sage / EBP ?', 'a' => 'Oui. Fayeku Compta génère des exports Sage 100, EBP et Excel directement utilisables par votre cabinet.'],
         ['q' => "Puis-je tester Fayeku avant de m'engager ?", 'a' => "Oui, 30 jours d'essai sont inclus sur tous les plans, sans engagement et sans paiement préalable."],
