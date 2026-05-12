@@ -19,13 +19,13 @@ return [
         ],
         'social' => [
             'linkedin' => 'https://www.linkedin.com/company/fayeku',
-            'whatsapp' => 'https://wa.me/221700000000',
+            'whatsapp' => 'https://wa.me/221784335143',
             'x' => 'https://x.com/fayeku',
         ],
         'contact' => [
             'email' => 'contact@fayeku.sn',
             'sales_email' => 'sales@fayeku.sn',
-            'phone' => '+221 77 445 76 32',
+            'phone' => '+221 78 433 51 43',
             'address' => 'Villa N°71, Cité Chérif Macky Sall, Guédiawaye, Sénégal',
         ],
         'legal' => [
@@ -267,7 +267,7 @@ return [
             'sections' => [
                 ['title' => 'Éditeur du site', 'body' => 'Le site fayeku.sn est édité par CISS IBRAHIMA, agissant sous le nom commercial KHALIL SOFTWARES, dont le siège est situé Villa N°71, Cité Chérif Macky Sall, Guédiawaye, Sénégal.'],
                 ['title' => 'Identification', 'body' => 'NINEA : 007524194 — RCCM : SN DKR 2019 A 25527.'],
-                ['title' => 'Contact', 'body' => 'Email : contact@fayeku.sn — Téléphone : +221 77 445 76 32.'],
+                ['title' => 'Contact', 'body' => 'Email : contact@fayeku.sn — Téléphone : +221 78 433 51 43.'],
                 ['title' => 'Propriété intellectuelle', 'body' => 'Les contenus, marques, logos et maquettes présentés sur ce site sont protégés et ne peuvent pas être réutilisés sans autorisation.'],
                 ['title' => 'Hébergement', 'body' => 'Infrastructure cloud sécurisée à haute disponibilité. Détails disponibles sur demande à contact@fayeku.sn.'],
             ],
