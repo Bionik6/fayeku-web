@@ -9,7 +9,7 @@ dataset('marketing pages', [
     ['/entreprises', 'Facturez, suivez, encaissez'],
     ['/accountants', 'Fayeku Compta'],
     ['/accountant/join', 'Vous êtes un cabinet'],
-    ['/pricing', 'Simple, transparent'],
+    ['/pricing', 'Découvrez les offres'],
     ['/conformite', 'Préparé pour la'],
     ['/contact', 'Parlons de votre'],
     ['/mentions-legales', 'Mentions légales'],

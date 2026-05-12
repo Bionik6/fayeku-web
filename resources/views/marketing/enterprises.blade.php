@@ -210,7 +210,7 @@
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Émettez et suivez vos factures en un clic</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Tableau de bord mensuel : factures émises, impayées, montant facturé HT et factures en retard. Filtrez par statut, recherchez en un instant.</p>
             </div>
-            <div class="relative">
+            <div class="relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-3">
@@ -276,7 +276,7 @@
 
         {{-- Row 2 — Recouvrement (mockup left, text right) --}}
         <div class="grid lg:grid-cols-2 gap-10 items-center mb-24">
-            <div class="order-2 lg:order-1 relative">
+            <div class="order-2 lg:order-1 relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform -rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="text-[10px] font-bold tracking-widest uppercase" style="color: var(--color-vivid);">Recouvrement</div>
@@ -343,7 +343,7 @@
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Anticipez vos encaissements à 30 et 90 jours</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Pour chaque facture ouverte, Fayeku estime la date d'encaissement et le niveau de confiance en se basant sur l'historique de paiement du client. Vous voyez ce qui va tomber, et ce qui est à risque.</p>
             </div>
-            <div class="relative">
+            <div class="relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-3">
@@ -416,7 +416,7 @@
 
         {{-- Row 4 — Fiche client (mockup left, text right) --}}
         <div class="grid lg:grid-cols-2 gap-10 items-center">
-            <div class="order-2 lg:order-1 relative">
+            <div class="order-2 lg:order-1 relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform -rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-center gap-2 mb-3"><span class="text-[9px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold">À surveiller · 56</span></div>

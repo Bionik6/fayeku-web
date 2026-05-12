@@ -74,7 +74,7 @@
                     <span class="browser-dot bg-rose-300"></span>
                     <span class="browser-dot bg-amber-300"></span>
                     <span class="browser-dot bg-emerald-300"></span>
-                    <div class="ml-3 text-[11px] font-mono truncate" style="color: var(--color-marketing-slate);">demo.fayeku.sn — Tableau de bord</div>
+                    <div class="ml-3 text-[11px] font-mono truncate" style="color: var(--color-marketing-slate);">fayeku.sn — Tableau de bord</div>
                 </div>
 
                 <div class="p-5 lg:p-6">
@@ -366,7 +366,7 @@
                     <span class="browser-dot bg-rose-300"></span>
                     <span class="browser-dot bg-amber-300"></span>
                     <span class="browser-dot bg-emerald-300"></span>
-                    <div class="ml-3 text-[11px] font-mono truncate" style="color: var(--color-marketing-slate);">demo.fayeku.sn — Relance automatique</div>
+                    <div class="ml-3 text-[11px] font-mono truncate" style="color: var(--color-marketing-slate);">fayeku.sn — Relance automatique</div>
                 </div>
                 <div class="p-5">
                     <div class="flex items-center justify-between mb-4">

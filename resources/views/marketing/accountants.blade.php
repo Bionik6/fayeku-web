@@ -133,28 +133,56 @@
     </div>
 </section>
 
+{{-- Problèmes actuels --}}
 <section class="py-12 sm:py-16 lg:py-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
-        <div class="max-w-3xl mb-12">
-            <p class="eyebrow mb-3">Espace cabinet</p>
-            <h2 class="h2 mb-5">Tout votre portefeuille, dans un seul écran.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Vous accédez à un tableau de bord multi-clients pour suivre, structurer et exporter.</p>
+        <div class="card p-6 sm:p-8 lg:p-12">
+            <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                <div>
+                    <p class="eyebrow mb-3">Problèmes actuels</p>
+                    <h2 class="h2 mb-5">La comptabilité ne devrait pas être un puzzle.</h2>
+                    <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">
+                        Aujourd'hui, une grande partie du temps d'un cabinet est consommée par des tâches à faible valeur : demander des pièces, trier des fichiers, recoller l'historique… Fayeku réduit cette friction pour vous permettre de vous concentrer sur l'essentiel : la qualité et le conseil.
+                    </p>
+                </div>
+                <ul class="space-y-3">
+                    @foreach ([
+                        'WhatsApp, email et papier créent des trous dans la collecte',
+                        'Fin de mois chaotique et peu prédictible',
+                        'Historique client difficile à reconstituer',
+                        'Relances comptables mélangées aux relances commerciales',
+                    ] as $pain)
+                        <li class="rounded-full px-5 py-4 text-sm sm:text-base font-medium" style="background: var(--color-mint-100); color: var(--color-marketing-ink);">{{ $pain }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Ce que Fayeku change · gains avec icônes colorées --}}
+<section class="py-12 sm:py-16 lg:py-24">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-10 sm:mb-12">
+            <p class="eyebrow mb-3">Ce que Fayeku change</p>
+            <h2 class="h2 mb-3">Des gains immédiats pour vos équipes et vos clients.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Une couche opérationnelle claire entre la PME et le cabinet.</p>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach ([
-                ['title' => 'Dashboard multi-clients', 'desc' => 'Une seule vue pour toutes vos PME : statuts, retards, factures, pièces.', 'svg' => '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>'],
-                ['title' => 'Exports Sage 100 / EBP / Excel', 'desc' => 'Génération directe au format de votre logiciel, fini la ressaisie.', 'svg' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'],
-                ['title' => 'Coffre-fort de pièces', 'desc' => 'Vos clients déposent les justificatifs ; vous récupérez tout, classé.', 'svg' => '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'],
-                ['title' => 'Suivi factures temps réel', 'desc' => "Vous voyez ce qui se passe sans attendre la fin de mois.", 'svg' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
-                ['title' => 'Rapports mensuels automatiques', 'desc' => 'Récapitulatifs envoyés au client et au cabinet, prêts à commenter.', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
-                ['title' => 'Accès collaborateurs', 'desc' => 'Plusieurs comptes pour votre équipe, droits ajustables par dossier.', 'svg' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'],
+                ['title' => 'Dashboard multi-clients', 'desc' => 'Une vue consolidée de tous vos clients PME : statuts, retards et activité récente.', 'bg' => 'rgb(239 246 255)', 'color' => '#2563eb', 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
+                ['title' => 'Vue factures en temps réel', 'desc' => 'Accédez aux factures de chaque client dès leur création, sans attendre la fin du mois.', 'bg' => 'var(--color-mint-100)', 'color' => 'var(--color-vivid)', 'svg' => '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'],
+                ['title' => 'Exports Sage 100 / EBP / Excel', 'desc' => 'Exportez les écritures en un clic vers votre logiciel comptable, sans ressaisie.', 'bg' => 'rgb(245 243 255)', 'color' => '#7c3aed', 'svg' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'],
+                ['title' => 'Collecte de pièces', 'desc' => 'Vos clients déposent leurs pièces directement dans Fayeku. Fini les PDFs sur WhatsApp.', 'bg' => 'rgb(255 247 237)', 'color' => '#ea580c', 'svg' => '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'],
+                ['title' => 'Rapport mensuel automatique', 'desc' => 'Un récapitulatif mensuel par client généré automatiquement, prêt à archiver.', 'bg' => 'rgb(236 254 255)', 'color' => '#0891b2', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/>'],
+                ['title' => 'Commission récurrente partenaire', 'desc' => 'Percevez 15% récurrent à vie sur chaque client PME que vous recommandez.', 'bg' => 'rgb(254 252 232)', 'color' => '#ca8a04', 'svg' => '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'],
             ] as $card)
                 <article class="card p-6">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: var(--color-mint-100); color: var(--color-teal-fayeku);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $card['svg'] !!}</svg>
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: {{ $card['bg'] }}; color: {{ $card['color'] }};">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $card['svg'] !!}</svg>
                     </div>
-                    <h3 class="font-semibold mb-1">{{ $card['title'] }}</h3>
-                    <p class="text-sm" style="color: var(--color-marketing-slate);">{{ $card['desc'] }}</p>
+                    <h3 class="font-semibold text-lg mb-2">{{ $card['title'] }}</h3>
+                    <p class="text-sm leading-relaxed" style="color: var(--color-marketing-slate);">{{ $card['desc'] }}</p>
                 </article>
             @endforeach
         </div>
@@ -172,7 +200,7 @@
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Tous vos clients PME en un coup d'œil</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Visualisez le statut de chaque client, le nombre de factures impayées et les alertes critiques. Filtrez par état et accédez au détail en un clic.</p>
             </div>
-            <div class="relative">
+            <div class="relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-1">
@@ -258,7 +286,7 @@
 
         {{-- Row 2 — Commissions (mockup left, text right) --}}
         <div class="grid lg:grid-cols-2 gap-10 items-stretch mb-24">
-            <div class="order-2 lg:order-1 relative">
+            <div class="order-2 lg:order-1 relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform -rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-1">
@@ -365,7 +393,7 @@
                 <h3 class="text-3xl font-bold mb-5 leading-tight">Restez informé sans effort</h3>
                 <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Impayés critiques, retards anormaux, clients inactifs — Fayeku Compta vous alerte en temps réel pour que vous puissiez intervenir au bon moment.</p>
             </div>
-            <div class="relative">
+            <div class="relative hidden lg:block">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
                 <div class="relative bg-white rounded-2xl border border-gray-100 p-5" style="box-shadow: var(--shadow-card);">
                     <div class="flex items-start justify-between mb-1">
@@ -548,6 +576,81 @@
 
             <div class="pt-6 flex justify-center">
                 <a href="{{ route('marketing.accountants.join') }}" class="bg-white font-bold text-base px-10 py-4 rounded-full transition hover:bg-[color:var(--color-mint-50)]" style="color: var(--color-teal-fayeku);">Devenir partenaire</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Statuts Partenaires --}}
+<section class="py-12 sm:py-16 lg:py-24" style="background: rgba(241, 250, 244, 0.4);">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+        <div class="max-w-3xl mb-10">
+            <p class="eyebrow mb-3">Statuts partenaires</p>
+            <h2 class="h2 mb-3">Partner, Gold ou Platinum selon votre portefeuille actif.</h2>
+            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Le programme monte en puissance avec votre nombre de clients actifs Fayeku.</p>
+        </div>
+
+        @php
+            $tierRows = [
+                ['Clients actifs Fayeku',            '1 – 4', '5 – 14', '15+'],
+                ['Commission 15% récurrente',        '✓', '✓', '✓'],
+                ['Accès Compta complet',             '✓', '✓', '✓'],
+                ['Badge partenaire officiel',        '✗', '✓', '✓'],
+                ['Visibilité sur fayeku.sn',         '✗', '✓', '✓'],
+                ['Leads PME entrants de Fayeku',     '✗', '✓', '✓'],
+                ['Groupe WhatsApp Partners',         '✗', '✓', '✓'],
+                ['Account manager dédié',            '✗', '✗', '✓'],
+                ['Co-marketing & événements',        '✗', '✗', '✓'],
+                ['Bonus trimestriel top prescripteur','✗', '✗', '✓'],
+            ];
+        @endphp
+
+        <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" style="table-layout: fixed;">
+                    <colgroup>
+                        <col style="width: 40%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="text-left p-4 text-[11px] uppercase tracking-wider font-semibold" style="color: var(--color-marketing-slate);">Fonctionnalité</th>
+                            <th class="p-4 text-center font-semibold" style="color: var(--color-marketing-slate);">Partner</th>
+                            <th class="p-4 text-center font-semibold" style="color: var(--color-marketing-slate);">Gold</th>
+                            <th class="p-4 text-center font-bold rounded-t-2xl" style="background: var(--color-teal-fayeku); color: var(--color-vivid);">Platinum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach ($tierRows as $row)
+                            @php $isLastRow = $loop->last; @endphp
+                            <tr>
+                                <td class="p-4 font-semibold" style="color: var(--color-marketing-ink);">{{ $row[0] }}</td>
+                                @foreach ([$row[1], $row[2], $row[3]] as $cIdx => $val)
+                                    @php
+                                        $isHighlight = $cIdx === 2;
+                                        $isCheck = $val === '✓';
+                                        $isCross = $val === '✗';
+                                    @endphp
+                                    <td class="p-4 text-center font-medium {{ $isHighlight ? 'bg-[color:var(--color-mint-50)]/40' : '' }} {{ $isHighlight && $isLastRow ? 'rounded-b-2xl' : '' }}">
+                                        @if ($isCheck)
+                                            <span class="inline-flex w-6 h-6 rounded-full items-center justify-center" style="color: var(--color-vivid);">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            </span>
+                                        @elseif ($isCross)
+                                            <span class="inline-flex w-6 h-6 rounded-full items-center justify-center text-gray-300">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                            </span>
+                                        @else
+                                            <span style="color: var(--color-marketing-slate);">{{ $val }}</span>
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
