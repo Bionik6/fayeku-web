@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified.email', 'profile:accountant_firm'])->prefix
     Route::livewire('alertes', 'pages::compta.alerts.index')->name('alerts.index');
     Route::livewire('clients', 'pages::compta.clients.index')->name('clients.index');
     Route::livewire('clients/{company}', 'pages::compta.clients.show')->name('clients.show');
+    Route::livewire('invoices/{invoice}', 'pages::compta.invoices.show')->name('compta.invoices.show');
     Route::livewire('exports', 'pages::compta.export.index')->name('export.index');
     Route::get('exports/{exportHistory}/download', ExportDownloadController::class)->name('export.download');
     Route::livewire('commissions', 'pages::compta.commissions.index')->name('commissions.index');

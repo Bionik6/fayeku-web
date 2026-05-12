@@ -35,9 +35,6 @@ new #[Title('Clients')] class extends Component {
 
     #[Url] public string $invoiceFilter = '';
 
-    // Invoice detail modal
-    public ?string $selectedInvoiceId = null;
-
     public function mount(Company $company): void
     {
         $this->firm = auth()->user()->accountantFirm();
@@ -295,30 +292,6 @@ new #[Title('Clients')] class extends Component {
             'paid'    => $all->filter(fn ($inv) => $inv->status === InvoiceStatus::Paid)->count(),
             'pending' => $this->stats['pending_count'],
         ];
-    }
-
-    /** Facture sélectionnée pour la modale de détail. */
-    #[Computed]
-    public function selectedInvoice(): ?Invoice
-    {
-        if (! $this->selectedInvoiceId) {
-            return null;
-        }
-
-        return Invoice::query()
-            ->where('id', $this->selectedInvoiceId)
-            ->with(['client', 'lines'])
-            ->first();
-    }
-
-    public function viewInvoice(string $id): void
-    {
-        $this->selectedInvoiceId = $id;
-    }
-
-    public function closeInvoice(): void
-    {
-        $this->selectedInvoiceId = null;
     }
 
     public function filterByBilledMonth(): void
@@ -766,7 +739,7 @@ new #[Title('Clients')] class extends Component {
                             };
                         @endphp
                         <tr
-                            wire:click="viewInvoice('{{ $invoice->id }}')"
+                            onclick="Livewire.navigate('{{ route('compta.invoices.show', $invoice) }}')"
                             class="cursor-pointer transition hover:bg-slate-50/80"
                         >
                             <td class="px-6 py-4 font-mono text-sm font-semibold text-ink">
@@ -836,11 +809,6 @@ new #[Title('Clients')] class extends Component {
             </div>
         @endif
     </section>
-
-    {{-- ─── Modale détail facture ─────────────────────────────────────────── --}}
-    @if ($this->selectedInvoice)
-        <x-invoices.detail-modal :invoice="$this->selectedInvoice" close-action="closeInvoice" />
-    @endif
 
     {{-- ─── Modale Export Comptable ──────────────────────────────────────── --}}
     <flux:modal name="export-comptable" variant="bare" closable class="!bg-transparent !p-0 !shadow-none !ring-0">

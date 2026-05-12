@@ -346,42 +346,26 @@ test('changer perPage met à jour le nombre de lignes visibles', function () {
     $component->assertSee('Afficher tout');
 });
 
-// ─── Modale facture ───────────────────────────────────────────────────────────
+// ─── Détail facture ───────────────────────────────────────────────────────────
 
-test('viewInvoice() sélectionne la facture et la modale de détail est visible', function () {
+test('la route compta.invoices.show retourne 200 pour un comptable autorisé', function () {
     ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
     $invoice = makeShowInvoice($sme);
 
-    Livewire::actingAs($user)
-        ->test('pages::compta.clients.show', ['company' => $sme])
-        ->call('viewInvoice', $invoice->id)
-        ->assertSet('selectedInvoiceId', $invoice->id)
+    $this->actingAs($user)
+        ->get(route('compta.invoices.show', $invoice))
+        ->assertSuccessful()
         ->assertSee($invoice->reference);
 });
 
-test('closeInvoice() remet selectedInvoiceId à null', function () {
-    ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
-    $invoice = makeShowInvoice($sme);
+test('la route compta.invoices.show retourne 403 pour un comptable non associé', function () {
+    ['user' => $user] = setupShowPortfolio();
+    $otherSme = App\Models\Auth\Company::factory()->create(['type' => 'sme']);
+    $invoice = makeShowInvoice($otherSme);
 
-    Livewire::actingAs($user)
-        ->test('pages::compta.clients.show', ['company' => $sme])
-        ->call('viewInvoice', $invoice->id)
-        ->call('closeInvoice')
-        ->assertSet('selectedInvoiceId', null);
-});
-
-test('selectedInvoice eager-load les lignes de facture', function () {
-    ['user' => $user, 'sme' => $sme] = setupShowPortfolio();
-    $invoice = makeShowInvoice($sme);
-
-    $component = Livewire::actingAs($user)
-        ->test('pages::compta.clients.show', ['company' => $sme])
-        ->call('viewInvoice', $invoice->id);
-
-    $selected = $component->get('selectedInvoice');
-    expect($selected)->not->toBeNull();
-    expect($selected->relationLoaded('lines'))->toBeTrue();
-    expect($selected->relationLoaded('client'))->toBeTrue();
+    $this->actingAs($user)
+        ->get(route('compta.invoices.show', $invoice))
+        ->assertForbidden();
 });
 
 // ─── Archive ──────────────────────────────────────────────────────────────────
