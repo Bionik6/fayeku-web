@@ -1,13 +1,17 @@
-import Alpine from "alpinejs";
 import collapse from "@alpinejs/collapse";
 import flatpickr from "flatpickr";
 import { French } from "flatpickr/dist/l10n/fr.js";
 import intlTelInput from "intl-tel-input";
 
 window.intlTelInput = intlTelInput;
-window.Alpine = Alpine;
-Alpine.plugin(collapse);
-Alpine.start();
+
+// Livewire 4 (and Flux) bundle their own Alpine and start it themselves.
+// Importing alpinejs separately spawns a second instance whose directive
+// registry is empty — `wire:click` then silently fails to bind. Plug into
+// Livewire's Alpine instead via the alpine:init hook.
+document.addEventListener("alpine:init", () => {
+    window.Alpine.plugin(collapse);
+});
 
 flatpickr.localize(French);
 
