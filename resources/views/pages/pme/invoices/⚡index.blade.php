@@ -740,7 +740,7 @@ new #[Title('Factures')] #[Layout('layouts::pme')] class extends Component {
                                                 {{ __('Éditer la facture') }}
                                             </x-ui.dropdown-item>
                                         @endif
-                                        @if (in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']))
+                                        @if (in_array($row['status_value'], ['sent', 'overdue', 'partially_paid']) && $row['due_at'] && $row['due_at']->isPast())
                                             <x-ui.dropdown-separator />
                                             <x-ui.dropdown-item wire:click="openPreview('{{ $row['id'] }}')">
                                                 <x-slot:icon>

@@ -675,6 +675,53 @@ test('une facture en brouillon n\'affiche pas l\'action de relance dans l\'activ
         ->assertDontSee('Relance prévue');
 });
 
+test('le bouton « Relancer maintenant » est masqué tant que l\'échéance n\'est pas passée', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->addDays(5),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertSee('Activité')
+        ->assertDontSee('Relancer maintenant');
+});
+
+test('le bouton « Relancer maintenant » apparait quand l\'échéance est dépassée', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::Overdue->value,
+        'due_at' => now()->subDays(3),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('pme.invoices.show', $invoice))
+        ->assertOk()
+        ->assertSee('Relancer maintenant');
+});
+
+test('openReminderPreview refuse une facture dont l\'échéance n\'est pas encore passée', function () {
+    ['user' => $user, 'company' => $company] = createSmeForShow();
+    $client = Client::factory()->create(['company_id' => $company->id, 'phone' => '+221770000000']);
+    $invoice = makeShowPageInvoice($company, [
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->addDays(5),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.show', ['invoice' => $invoice])
+        ->call('openReminderPreview')
+        ->assertSet('previewInvoiceId', null)
+        ->assertDispatched('toast', type: 'warning');
+});
+
 test('openPaymentModal refuse sur un brouillon', function () {
     ['user' => $user, 'company' => $company] = createSmeForShow();
     $invoice = makeShowPageInvoice($company, ['status' => InvoiceStatus::Draft->value]);
@@ -1025,7 +1072,7 @@ test('Actions facture Sent : Enregistrer un paiement en principal + menu Actions
         ->assertOk()
         ->assertSeeText('Enregistrer un paiement')
         ->assertSeeText('Renvoyer')
-        ->assertSeeText('Relancer manuellement')
+        ->assertDontSeeText('Relancer maintenant')
         ->assertSeeText('Aperçu PDF')
         ->assertSeeText('Télécharger PDF');
 });

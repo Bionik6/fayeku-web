@@ -104,8 +104,10 @@ class Invoice extends Model
     }
 
     /**
-     * A reminder (manual or automatic) can only be sent for unpaid, active
-     * invoices whose client has at least one contact channel filled in.
+     * A reminder can only be sent for unpaid, active invoices whose due date
+     * has already passed and whose client has at least one contact channel
+     * filled in. Manual reminders before échéance are intentionally blocked
+     * to stay consistent with auto-reminders (which only fire from J+0).
      */
     public function canReceiveReminder(): bool
     {
@@ -114,6 +116,10 @@ class Invoice extends Model
             InvoiceStatus::Cancelled,
             InvoiceStatus::Draft,
         ], true)) {
+            return false;
+        }
+
+        if ($this->due_at === null || ! $this->due_at->isPast()) {
             return false;
         }
 

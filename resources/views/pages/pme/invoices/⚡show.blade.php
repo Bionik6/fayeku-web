@@ -1267,9 +1267,6 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
                                 <button type="button" wire:click="openSendModal" @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50" data-action="resend">
                                     <flux:icon name="paper-airplane" class="size-4 text-slate-400" /> {{ __('Renvoyer') }}
                                 </button>
-                                <button type="button" wire:click="openReminderPreview" @disabled(! $inv->canReceiveReminder()) @click="menuOpen = false" class="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50" data-action="remind">
-                                    <flux:icon name="bell-alert" class="size-4 text-slate-400" /> {{ __('Relancer manuellement') }}
-                                </button>
                             @endif
 
                             @if (! $isDraft && ! $isCancelled)

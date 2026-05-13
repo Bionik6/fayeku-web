@@ -1069,6 +1069,7 @@ test('sendReminder() dispatche un toast et ferme l\'aperçu', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
     $invoice = makeInvoice($company, [
         'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->subDays(3),
         'total' => 118_000,
         'amount_paid' => 0,
     ]);
@@ -1107,13 +1108,30 @@ test('le slideover de relance s\'affiche quand previewInvoiceId est défini', fu
         ->assertSee('Aperçu de la relance');
 });
 
-test('"Relancer le client" est visible dans le dropdown pour une facture envoyée', function () {
+test('"Relancer le client" est visible dans le dropdown pour une facture envoyée dont l\'échéance est passée', function () {
     ['user' => $user, 'company' => $company] = createSmeWithCompany();
-    $invoice = makeInvoice($company, ['status' => InvoiceStatus::Sent->value, 'amount_paid' => 0]);
+    $invoice = makeInvoice($company, [
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->subDays(3),
+        'amount_paid' => 0,
+    ]);
 
     Livewire::actingAs($user)
         ->test('pages::pme.invoices.index')
         ->assertSeeHtml("openPreview('{$invoice->id}')");
+});
+
+test('"Relancer le client" est masqué dans le dropdown tant que l\'échéance n\'est pas passée', function () {
+    ['user' => $user, 'company' => $company] = createSmeWithCompany();
+    $invoice = makeInvoice($company, [
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => now()->addDays(5),
+        'amount_paid' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.invoices.index')
+        ->assertDontSeeHtml("openPreview('{$invoice->id}')");
 });
 
 test('"Relancer le client" est visible pour une facture en retard', function () {

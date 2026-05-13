@@ -93,9 +93,12 @@ it('canReceiveReminder() renvoie false pour une facture payée, annulée ou brou
     }
 
     foreach ([InvoiceStatus::Sent, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid] as $status) {
-        $invoice = Invoice::factory()->forCompany($company)->withClient($client)->create(['status' => $status]);
+        $invoice = Invoice::factory()->forCompany($company)->withClient($client)->create([
+            'status' => $status,
+            'due_at' => now()->subDays(3),
+        ]);
 
-        expect($invoice->canReceiveReminder())->toBeTrue("Le statut {$status->value} devrait autoriser la relance");
+        expect($invoice->canReceiveReminder())->toBeTrue("Le statut {$status->value} devrait autoriser la relance après échéance");
     }
 });
 

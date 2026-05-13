@@ -229,6 +229,7 @@ test('relancer depuis la page cree une relance dans le quota disponible', functi
 
     $invoice = createTreasuryInvoice($company, [
         'client' => createTreasuryClient($company, ['phone' => '+221771111111']),
+        'due_at' => now()->subDays(3),
     ]);
 
     Livewire::actingAs($user)
@@ -259,6 +260,7 @@ test('relancer depuis la page respecte le quota basique mensuel', function () {
 
     $invoice = createTreasuryInvoice($company, [
         'client' => createTreasuryClient($company, ['phone' => '+221772222222']),
+        'due_at' => now()->subDays(3),
     ]);
 
     for ($i = 0; $i < 20; $i++) {

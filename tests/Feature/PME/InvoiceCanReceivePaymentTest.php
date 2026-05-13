@@ -90,10 +90,33 @@ test('canReceiveReminder() refuse un brouillon, une payée et une annulée', fun
     }
 });
 
-test('canReceiveReminder() accepte Sent, Overdue et PartiallyPaid', function () {
+test('canReceiveReminder() accepte Sent, Overdue et PartiallyPaid si l\'échéance est dépassée', function () {
     foreach ([InvoiceStatus::Sent, InvoiceStatus::Overdue, InvoiceStatus::PartiallyPaid] as $status) {
-        $invoice = makeInvoiceForCanReceivePayment(['status' => $status->value]);
+        $invoice = makeInvoiceForCanReceivePayment([
+            'status' => $status->value,
+            'due_at' => now()->subDays(3),
+        ]);
         expect($invoice->canReceiveReminder())
-            ->toBeTrue("Statut {$status->value} devrait autoriser la relance");
+            ->toBeTrue("Statut {$status->value} devrait autoriser la relance après échéance");
     }
+});
+
+test('canReceiveReminder() refuse une facture dont l\'échéance n\'est pas encore passée', function () {
+    foreach ([InvoiceStatus::Sent, InvoiceStatus::PartiallyPaid] as $status) {
+        $invoice = makeInvoiceForCanReceivePayment([
+            'status' => $status->value,
+            'due_at' => now()->addDays(5),
+        ]);
+        expect($invoice->canReceiveReminder())
+            ->toBeFalse("Statut {$status->value} ne doit pas autoriser la relance avant échéance");
+    }
+});
+
+test('canReceiveReminder() refuse une facture sans date d\'échéance', function () {
+    $invoice = makeInvoiceForCanReceivePayment([
+        'status' => InvoiceStatus::Sent->value,
+        'due_at' => null,
+    ]);
+
+    expect($invoice->canReceiveReminder())->toBeFalse();
 });
