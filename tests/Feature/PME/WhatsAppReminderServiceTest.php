@@ -62,7 +62,7 @@ test('WhatsAppReminderService resout le template auto a partir du dayOffset', fu
                     && $bodyParameters['invoice_number'] === 'FAC-WA-P15'
                     && str_contains($bodyParameters['invoice_amount'], '250 000')
                     && $bodyParameters['sender_signature'] === 'Ibrahima Ciss, Manager · Sow BTP'
-                    && $urlButton === $invoice->public_code.'/pdf';
+                    && $urlButton === 'f/'.$invoice->public_code.'/pdf';
             })
             ->andReturnTrue();
         $m->shouldNotReceive('send');
@@ -123,3 +123,55 @@ test('WhatsAppReminderService propage une erreur quand le provider retourne fals
     expect(fn () => $service->send($invoice, 'Corps rendu'))
         ->toThrow(RuntimeException::class);
 });
+
+// ─── Intégrité des paramètres : exactement 6, sans invoice_due_date ──────────
+
+test('WhatsAppReminderService envoie exactement 6 paramètres nommés pour un template manuel', function () {
+    ['invoice' => $invoice] = bootstrapWhatsAppInvoice('FAC-WA-6P');
+
+    $capturedParams = null;
+
+    $mock = $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) use (&$capturedParams) {
+        $m->shouldReceive('sendTemplate')
+            ->once()
+            ->withArgs(function ($phone, $template, array $bodyParameters) use (&$capturedParams) {
+                $capturedParams = $bodyParameters;
+
+                return true;
+            })
+            ->andReturnTrue();
+    });
+
+    $service = new WhatsAppReminderService($mock, app(WhatsAppTemplateCatalog::class));
+    $service->send($invoice, null, null, 'reminder_manual_cordial');
+
+    expect($capturedParams)->toHaveCount(6)
+        ->toHaveKeys(['client_name', 'company_name', 'invoice_number', 'invoice_amount', 'due_date', 'sender_signature'])
+        ->not->toHaveKey('invoice_due_date');
+});
+
+test('WhatsAppReminderService envoie exactement 6 paramètres nommés pour les 3 tons manuels', function (string $tone, string $templateKey) {
+    ['invoice' => $invoice] = bootstrapWhatsAppInvoice("FAC-WA-TON-{$tone}");
+
+    $capturedParams = null;
+
+    $mock = $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) use (&$capturedParams) {
+        $m->shouldReceive('sendTemplate')
+            ->withArgs(function ($phone, $template, array $bodyParameters) use (&$capturedParams) {
+                $capturedParams = $bodyParameters;
+
+                return true;
+            })
+            ->andReturnTrue();
+    });
+
+    $service = new WhatsAppReminderService($mock, app(WhatsAppTemplateCatalog::class));
+    $service->send($invoice, null, null, $templateKey);
+
+    expect($capturedParams)->toHaveCount(6)
+        ->not->toHaveKey('invoice_due_date');
+})->with([
+    'cordial' => ['cordial', 'reminder_manual_cordial'],
+    'ferme' => ['ferme',   'reminder_manual_firm'],
+    'urgent' => ['urgent',  'reminder_manual_urgent'],
+]);

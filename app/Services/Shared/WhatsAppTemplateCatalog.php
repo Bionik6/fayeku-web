@@ -139,9 +139,6 @@ class WhatsAppTemplateCatalog
             'company_name' => $company?->name ?? '',
             'invoice_number' => $invoice->reference ?? '',
             'invoice_amount' => CurrencyService::format((int) $invoice->total, $currency, withLabel: true),
-            'invoice_due_date' => $invoice->due_at instanceof CarbonInterface
-                ? $invoice->due_at->locale('fr')->translatedFormat('d F Y')
-                : '',
             'due_date' => $invoice->due_at instanceof CarbonInterface
                 ? $invoice->due_at->locale('fr')->translatedFormat('d F Y')
                 : '',

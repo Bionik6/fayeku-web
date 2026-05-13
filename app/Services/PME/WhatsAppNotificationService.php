@@ -37,16 +37,34 @@ class WhatsAppNotificationService
         $invoice->loadMissing(['client', 'company']);
 
         $templateKey = $this->invoiceCreatedTemplateKey($invoice);
+        $variables = $this->invoiceCreatedVariables($invoice, $company, $templateKey);
 
         return $this->dispatch(
             notifiable: $invoice,
             company: $company,
             templateKey: $templateKey,
-            variables: $this->catalog->invoiceVariables($invoice, $company),
-            urlButtonParameter: $invoice->public_code ? $invoice->public_code.'/pdf' : null,
+            variables: $variables,
+            urlButtonParameter: $this->invoiceButtonUrl($invoice),
             recipientPhone: $invoice->client?->phone,
             recipientEmail: $invoice->client?->email,
         );
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function invoiceCreatedVariables(Invoice $invoice, Company $company, string $templateKey): array
+    {
+        $variables = $this->catalog->invoiceVariables($invoice, $company);
+
+        if ($templateKey === 'notification_invoice_sent_with_due_date') {
+            $variables['invoice_due_date'] = $variables['due_date'];
+            unset($variables['due_date']);
+        } else {
+            unset($variables['due_date']);
+        }
+
+        return $variables;
     }
 
     public function sendInvoicePartiallyPaid(Invoice $invoice, Payment $payment, Company $company): ?Notification
@@ -55,20 +73,29 @@ class WhatsAppNotificationService
 
         $remaining = max(0, (int) $invoice->total - (int) $invoice->amount_paid);
 
-        $variables = array_merge($this->catalog->invoiceVariables($invoice, $company), [
-            'amount_paid' => CurrencyService::format((int) $payment->amount, $invoice->currency ?? 'XOF', withLabel: true),
-            'amount_remaining' => CurrencyService::format($remaining, $invoice->currency ?? 'XOF', withLabel: true),
-            'payment_date' => $payment->paid_at instanceof CarbonInterface
-                ? $payment->paid_at->locale('fr')->translatedFormat('d F Y')
-                : '',
-        ]);
+        // Le template notification_invoice_partially_paid attend exactement 7 paramètres :
+        // client_name, company_name, invoice_number, amount_paid, payment_date,
+        // amount_remaining, sender_signature.
+        // On isole uniquement les clés de base utiles pour éviter d'envoyer
+        // invoice_amount ou due_date qui ne font pas partie du template.
+        $base = $this->catalog->invoiceVariables($invoice, $company);
+        $variables = array_merge(
+            array_intersect_key($base, array_flip(['client_name', 'company_name', 'invoice_number', 'sender_signature'])),
+            [
+                'amount_paid' => CurrencyService::format((int) $payment->amount, $invoice->currency ?? 'XOF', withLabel: true),
+                'amount_remaining' => CurrencyService::format($remaining, $invoice->currency ?? 'XOF', withLabel: true),
+                'payment_date' => $payment->paid_at instanceof CarbonInterface
+                    ? $payment->paid_at->locale('fr')->translatedFormat('d F Y')
+                    : '',
+            ]
+        );
 
         return $this->dispatch(
             notifiable: $invoice,
             company: $company,
             templateKey: 'notification_invoice_partially_paid',
             variables: $variables,
-            urlButtonParameter: $invoice->public_code ? $invoice->public_code.'/pdf' : null,
+            urlButtonParameter: $this->invoiceButtonUrl($invoice),
             recipientPhone: $invoice->client?->phone,
             recipientEmail: $invoice->client?->email,
             meta: ['payment_id' => $payment->id],
@@ -79,19 +106,25 @@ class WhatsAppNotificationService
     {
         $invoice->loadMissing(['client', 'company']);
 
-        $variables = array_merge($this->catalog->invoiceVariables($invoice, $company), [
-            'amount_paid' => CurrencyService::format((int) $payment->amount, $invoice->currency ?? 'XOF', withLabel: true),
-            'payment_date' => $payment->paid_at instanceof CarbonInterface
-                ? $payment->paid_at->locale('fr')->translatedFormat('d F Y')
-                : '',
-        ]);
+        // Le template notification_invoice_paid_full attend exactement 6 paramètres :
+        // client_name, company_name, invoice_number, amount_paid, payment_date, sender_signature.
+        $base = $this->catalog->invoiceVariables($invoice, $company);
+        $variables = array_merge(
+            array_intersect_key($base, array_flip(['client_name', 'company_name', 'invoice_number', 'sender_signature'])),
+            [
+                'amount_paid' => CurrencyService::format((int) $payment->amount, $invoice->currency ?? 'XOF', withLabel: true),
+                'payment_date' => $payment->paid_at instanceof CarbonInterface
+                    ? $payment->paid_at->locale('fr')->translatedFormat('d F Y')
+                    : '',
+            ]
+        );
 
         return $this->dispatch(
             notifiable: $invoice,
             company: $company,
             templateKey: 'notification_invoice_paid_full',
             variables: $variables,
-            urlButtonParameter: $invoice->public_code ? $invoice->public_code.'/pdf' : null,
+            urlButtonParameter: $this->invoiceButtonUrl($invoice),
             recipientPhone: $invoice->client?->phone,
             recipientEmail: $invoice->client?->email,
             meta: ['payment_id' => $payment->id],
@@ -123,7 +156,7 @@ class WhatsAppNotificationService
             company: $company,
             templateKey: 'notification_quote_sent',
             variables: $variables,
-            urlButtonParameter: $document->public_code ? $document->public_code.'/pdf' : null,
+            urlButtonParameter: $this->proposalButtonUrl($document),
             recipientPhone: $document->client?->phone,
             recipientEmail: $document->client?->email,
         );
@@ -327,6 +360,31 @@ class WhatsAppNotificationService
         }
 
         return null;
+    }
+
+    /**
+     * Paramètre dynamique du bouton URL WhatsApp pour une facture.
+     * Le chemin public est {url}/f/{code}/pdf.
+     */
+    private function invoiceButtonUrl(Invoice $invoice): ?string
+    {
+        return $invoice->public_code ? 'f/'.$invoice->public_code.'/pdf' : null;
+    }
+
+    /**
+     * Paramètre dynamique du bouton URL WhatsApp pour un devis ou une proforma.
+     * Devis   : {url}/d/{code}/pdf
+     * Proforma: {url}/p/{code}/pdf
+     */
+    private function proposalButtonUrl(ProposalDocument $document): ?string
+    {
+        if (! $document->public_code) {
+            return null;
+        }
+
+        $prefix = $document->type === ProposalDocumentType::Proforma ? 'p' : 'd';
+
+        return "{$prefix}/{$document->public_code}/pdf";
     }
 
     private function invoiceCreatedTemplateKey(Invoice $invoice): string

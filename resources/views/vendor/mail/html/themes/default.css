@@ -28,7 +28,7 @@ blockquote {
 }
 
 a {
-    color: #024D4E;
+    color: #024D4D;
 }
 
 a img {
@@ -38,7 +38,7 @@ a img {
 /* Typography */
 
 h1 {
-    color: #024D4E;
+    color: #024D4D;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -47,7 +47,7 @@ h1 {
 }
 
 h2 {
-    color: #024D4E;
+    color: #024D4D;
     font-size: 18px;
     font-weight: 600;
     margin-top: 0;
@@ -55,7 +55,7 @@ h2 {
 }
 
 h3 {
-    color: #024D4E;
+    color: #024D4D;
     font-size: 15px;
     font-weight: 600;
     margin-top: 0;
@@ -107,14 +107,14 @@ img {
 }
 
 .header a {
-    color: #024D4E;
+    color: #024D4D;
     font-size: 19px;
     font-weight: 700;
     text-decoration: none;
 }
 
 .header-brand {
-    color: #024D4E;
+    color: #024D4D;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -160,7 +160,7 @@ img {
 }
 
 .inner-body a {
-    color: #024D4E;
+    color: #024D4D;
     word-break: break-all;
 }
 
@@ -196,12 +196,12 @@ img {
 }
 
 .footer a {
-    color: #024D4E;
+    color: #024D4D;
     text-decoration: underline;
 }
 
 .footer-brand {
-    color: #024D4E;
+    color: #024D4D;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -227,7 +227,7 @@ img {
 
 .table th {
     border-bottom: 1px solid rgba(2, 77, 77, 0.12);
-    color: #024D4E;
+    color: #024D4D;
     margin: 0;
     padding-bottom: 8px;
 }
@@ -276,11 +276,11 @@ a.button {
 
 a.button-blue,
 a.button-primary {
-    background-color: #024D4E;
-    border-bottom: 10px solid #024D4E;
-    border-left: 22px solid #024D4E;
-    border-right: 22px solid #024D4E;
-    border-top: 10px solid #024D4E;
+    background-color: #024D4D;
+    border-bottom: 10px solid #024D4D;
+    border-left: 22px solid #024D4D;
+    border-right: 22px solid #024D4D;
+    border-top: 10px solid #024D4D;
     color: #ffffff;
 }
 
@@ -335,7 +335,7 @@ a.button-error {
 code {
     background-color: #f1f7f4;
     border-radius: 4px;
-    color: #024D4E;
+    color: #024D4D;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     font-size: 13px;
     padding: 2px 6px;
@@ -343,7 +343,7 @@ code {
 
 pre code {
     background-color: #f1f7f4;
-    color: #024D4E;
+    color: #024D4D;
     display: block;
     line-height: 1.5;
     padding: 12px 16px;

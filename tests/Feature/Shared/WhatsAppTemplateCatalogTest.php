@@ -142,7 +142,7 @@ test('manualReminderKeyForTone mappe les 3 tons (cordial par défaut)', function
 
 // ─── invoiceVariables ──────────────────────────────────────────────────────
 
-test('invoiceVariables expose les 7 clés attendues depuis l\'invoice', function () {
+test('invoiceVariables expose les 6 clés attendues depuis l\'invoice', function () {
     $company = Company::factory()->create([
         'type' => 'sme',
         'name' => 'Khalil Softwares',
@@ -174,12 +174,12 @@ test('invoiceVariables expose les 7 clés attendues depuis l\'invoice', function
     $vars = $catalog->invoiceVariables($invoice);
 
     expect($vars)
-        ->toHaveKeys(['client_name', 'company_name', 'invoice_number', 'invoice_amount', 'invoice_due_date', 'due_date', 'sender_signature'])
+        ->toHaveKeys(['client_name', 'company_name', 'invoice_number', 'invoice_amount', 'due_date', 'sender_signature'])
+        ->not->toHaveKey('invoice_due_date')
         ->and($vars['client_name'])->toBe('Dakar Pharma')
         ->and($vars['company_name'])->toBe('Khalil Softwares')
         ->and($vars['invoice_number'])->toBe('FAC-VAR-01')
         ->and($vars['invoice_amount'])->toContain('250 000')
-        ->and($vars['due_date'])->toBe($vars['invoice_due_date'])
         ->and($vars['sender_signature'])->toBe('Moussa Diop, Directeur commercial · Khalil Softwares');
 });
 

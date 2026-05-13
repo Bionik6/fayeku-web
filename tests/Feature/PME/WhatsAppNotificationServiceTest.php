@@ -60,7 +60,9 @@ test('sendInvoiceCreated envoie notification_invoice_sent_with_due_date si due_a
             ->withArgs(function (string $phone, string $template, array $vars) {
                 return $template === 'fayeku_notification_invoice_sent_with_due_date'
                     && $vars['client_name'] === 'Dakar Pharma'
-                    && $vars['invoice_number'] === 'FAC-NOTIF-01';
+                    && $vars['invoice_number'] === 'FAC-NOTIF-01'
+                    && isset($vars['invoice_due_date'])
+                    && ! isset($vars['due_date']);
             })
             ->andReturnTrue();
     });
@@ -123,13 +125,15 @@ test('sendInvoicePaidFull envoie paid_full avec payment_date et amount_paid', fu
         'method' => PaymentMethod::Cash->value,
     ]));
 
-    $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) {
+    $capturedVars = null;
+
+    $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) use (&$capturedVars) {
         $m->shouldReceive('sendTemplate')
             ->once()
-            ->withArgs(function ($phone, $template, $vars) {
-                return $template === 'fayeku_notification_invoice_paid_full'
-                    && str_contains($vars['amount_paid'], '250 000')
-                    && ! empty($vars['payment_date']);
+            ->withArgs(function ($phone, $template, array $vars) use (&$capturedVars) {
+                $capturedVars = $vars;
+
+                return $template === 'fayeku_notification_invoice_paid_full';
             })
             ->andReturnTrue();
     });
@@ -137,7 +141,13 @@ test('sendInvoicePaidFull envoie paid_full avec payment_date et amount_paid', fu
     $notif = app(WhatsAppNotificationService::class)->sendInvoicePaidFull($invoice, $payment, $company);
 
     expect($notif->template_key)->toBe('notification_invoice_paid_full')
-        ->and($notif->meta)->toHaveKey('payment_id', $payment->id);
+        ->and($notif->meta)->toHaveKey('payment_id', $payment->id)
+        ->and($capturedVars)->toHaveCount(6)
+        ->toHaveKeys(['client_name', 'company_name', 'invoice_number', 'amount_paid', 'payment_date', 'sender_signature'])
+        ->not->toHaveKey('invoice_amount')
+        ->not->toHaveKey('due_date')
+        ->and($capturedVars['amount_paid'])->toContain('250 000')
+        ->and($capturedVars['payment_date'])->not->toBeEmpty();
 });
 
 test('sendInvoicePartiallyPaid envoie partially_paid avec amount_remaining', function () {
@@ -164,16 +174,27 @@ test('sendInvoicePartiallyPaid envoie partially_paid avec amount_remaining', fun
         'method' => PaymentMethod::Cash->value,
     ]));
 
-    $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) {
+    $capturedVars = null;
+
+    $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) use (&$capturedVars) {
         $m->shouldReceive('sendTemplate')
             ->once()
-            ->withArgs(fn ($phone, $template, $vars) => $template === 'fayeku_notification_invoice_partially_paid'
-                && str_contains($vars['amount_paid'], '100 000')
-                && str_contains($vars['amount_remaining'], '200 000'))
+            ->withArgs(function ($phone, $template, array $vars) use (&$capturedVars) {
+                $capturedVars = $vars;
+
+                return $template === 'fayeku_notification_invoice_partially_paid';
+            })
             ->andReturnTrue();
     });
 
     app(WhatsAppNotificationService::class)->sendInvoicePartiallyPaid($invoice, $payment, $company);
+
+    expect($capturedVars)->toHaveCount(7)
+        ->toHaveKeys(['client_name', 'company_name', 'invoice_number', 'amount_paid', 'payment_date', 'amount_remaining', 'sender_signature'])
+        ->not->toHaveKey('invoice_amount')
+        ->not->toHaveKey('due_date')
+        ->and($capturedVars['amount_paid'])->toContain('100 000')
+        ->and($capturedVars['amount_remaining'])->toContain('200 000');
 });
 
 test('sendProposalSent envoie notification_quote_sent avec expiry_date', function () {
@@ -207,6 +228,81 @@ test('sendProposalSent envoie notification_quote_sent avec expiry_date', functio
 
     expect($notif->notifiable_type)->toBe(ProposalDocument::class)
         ->and($notif->notifiable_id)->toBe($quote->id);
+});
+
+// ─── Intégrité des variables par template ────────────────────────────────────
+
+test('sendInvoiceCreated envoie invoice_due_date (pas due_date) pour notification_invoice_sent_with_due_date', function () {
+    ['company' => $company, 'client' => $client] = bootstrapNotifContext();
+
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FAC-DUE-DATE',
+        'status' => InvoiceStatus::Sent->value,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(15),
+        'subtotal' => 100_000,
+        'tax_amount' => 0,
+        'total' => 100_000,
+        'amount_paid' => 0,
+        'currency' => 'XOF',
+    ]));
+
+    $capturedVars = null;
+
+    $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) use (&$capturedVars) {
+        $m->shouldReceive('sendTemplate')
+            ->withArgs(function ($phone, $template, array $vars) use (&$capturedVars) {
+                $capturedVars = $vars;
+
+                return true;
+            })
+            ->andReturnTrue();
+    });
+
+    app(WhatsAppNotificationService::class)->sendInvoiceCreated($invoice, $company);
+
+    expect($capturedVars)
+        ->toHaveKey('invoice_due_date')
+        ->not->toHaveKey('due_date');
+});
+
+test('sendInvoiceCreated n\'inclut aucune variable de date pour notification_invoice_sent', function () {
+    ['company' => $company, 'client' => $client] = bootstrapNotifContext();
+
+    // due_at = aujourd'hui → template sans date
+    $invoice = Invoice::unguarded(fn () => Invoice::create([
+        'company_id' => $company->id,
+        'client_id' => $client->id,
+        'reference' => 'FAC-NO-DATE',
+        'status' => InvoiceStatus::Sent->value,
+        'issued_at' => now(),
+        'due_at' => now(),
+        'subtotal' => 100_000,
+        'tax_amount' => 0,
+        'total' => 100_000,
+        'amount_paid' => 0,
+        'currency' => 'XOF',
+    ]));
+
+    $capturedVars = null;
+
+    $this->mock(WhatsAppProviderInterface::class, function (MockInterface $m) use (&$capturedVars) {
+        $m->shouldReceive('sendTemplate')
+            ->withArgs(function ($phone, string $template, array $vars) use (&$capturedVars) {
+                $capturedVars = $vars;
+
+                return true;
+            })
+            ->andReturnTrue();
+    });
+
+    app(WhatsAppNotificationService::class)->sendInvoiceCreated($invoice, $company);
+
+    expect($capturedVars)
+        ->not->toHaveKey('due_date')
+        ->not->toHaveKey('invoice_due_date');
 });
 
 test('sendInvoiceCreated ignore si client sans contact', function () {

@@ -824,7 +824,11 @@ new #[Title('Facture')] #[Layout('layouts::pme')] class extends Component {
 
             $this->dispatch('toast', type: 'success', title: __('Relance envoyée avec succès.'));
         } catch (\RuntimeException $e) {
-            $this->dispatch('toast', type: 'warning', title: __('Service d\'envoi bientôt disponible. Votre relance sera envoyée prochainement.'));
+            \Illuminate\Support\Facades\Log::error('[Relance manuelle] Échec d\'envoi.', [
+                'invoice_id' => $this->invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->dispatch('toast', type: 'error', title: __('L\'envoi a échoué. Veuillez réessayer ou contacter le support.'));
         }
     }
 

@@ -59,9 +59,13 @@ class WhatsAppReminderService implements ReminderChannelInterface
         ]);
     }
 
+    /**
+     * Paramètre dynamique du bouton URL WhatsApp pour une facture.
+     * Le chemin public est {url}/f/{code}/pdf.
+     */
     private function buildUrlButtonParameter(Invoice $invoice): ?string
     {
-        return $invoice->public_code ? $invoice->public_code.'/pdf' : null;
+        return $invoice->public_code ? 'f/'.$invoice->public_code.'/pdf' : null;
     }
 
     private function defaultBody(Invoice $invoice): string
