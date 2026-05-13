@@ -30,6 +30,17 @@
             :site="$site ?? config('marketing.site')"
         />
 
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+                    });
+                }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+                document.querySelectorAll('.reveal, .reveal-scale').forEach(function (el) { io.observe(el); });
+            });
+        </script>
+
         @livewireScripts
         @fluxScripts
     </body>

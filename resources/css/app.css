@@ -76,6 +76,32 @@
     .animate-float {
         animation: float 6s ease-in-out infinite;
     }
+
+    /* Scroll-reveal */
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1), transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .reveal-scale {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+        transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .reveal-scale.is-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    .delay-1 { transition-delay: 0.08s; }
+    .delay-2 { transition-delay: 0.16s; }
+    .delay-3 { transition-delay: 0.24s; }
+    .delay-4 { transition-delay: 0.32s; }
 }
 
 @layer base {
@@ -183,6 +209,21 @@ select:focus[data-flux-control] {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .marketing-site .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -75%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+        transform: skewX(-20deg);
+        transition: left 0.55s ease;
+        pointer-events: none;
     }
 
     .marketing-site .btn-primary:hover {
@@ -190,6 +231,10 @@ select:focus[data-flux-control] {
         color: #ffffff;
         transform: translateY(-1px);
         box-shadow: 0 8px 24px -8px rgba(2, 77, 78, 0.4);
+    }
+
+    .marketing-site .btn-primary:hover::before {
+        left: 130%;
     }
 
     .marketing-site .btn-primary:focus-visible {
@@ -241,6 +286,12 @@ select:focus[data-flux-control] {
         border-radius: 1rem;
         border: 1px solid #F3F4F6;
         box-shadow: var(--shadow-card);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .marketing-site .card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-soft);
     }
 
     /* Headlines aligned with the legacy marketing site

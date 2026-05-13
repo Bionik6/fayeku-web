@@ -164,9 +164,9 @@
 <section class="py-12 sm:py-16 lg:py-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-10 sm:mb-12">
-            <p class="eyebrow mb-3">Ce que Fayeku change</p>
-            <h2 class="h2 mb-3">Des gains immédiats pour vos équipes et vos clients.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Une couche opérationnelle claire entre la PME et le cabinet.</p>
+            <p class="eyebrow mb-3 reveal">Ce que Fayeku change</p>
+            <h2 class="h2 mb-3 reveal delay-1">Des gains immédiats pour vos équipes et vos clients.</h2>
+            <p class="text-lg leading-relaxed reveal delay-2" style="color: var(--color-marketing-slate);">Une couche opérationnelle claire entre la PME et le cabinet.</p>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach ([
@@ -177,7 +177,7 @@
                 ['title' => 'Rapport mensuel automatique', 'desc' => 'Un récapitulatif mensuel par client généré automatiquement, prêt à archiver.', 'bg' => 'rgb(236 254 255)', 'color' => '#0891b2', 'svg' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/>'],
                 ['title' => 'Commission récurrente partenaire', 'desc' => 'Percevez 15% récurrent à vie sur chaque client PME que vous recommandez.', 'bg' => 'rgb(254 252 232)', 'color' => '#ca8a04', 'svg' => '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'],
             ] as $card)
-                <article class="card p-6">
+                <article class="card p-6 reveal-scale delay-{{ ($loop->index % 3) + 1 }}">
                     <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background: {{ $card['bg'] }}; color: {{ $card['color'] }};">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $card['svg'] !!}</svg>
                     </div>

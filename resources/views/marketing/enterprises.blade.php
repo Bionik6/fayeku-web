@@ -77,9 +77,9 @@
 <section class="py-12 sm:py-16 lg:py-24">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
-            <p class="eyebrow mb-3">Bénéfices concrets</p>
-            <h2 class="h2 mb-5">Ce que vous gagnez avec Fayeku.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Des résultats mesurables sur votre trésorerie, votre relation client et votre comptabilité.</p>
+            <p class="eyebrow mb-3 reveal">Bénéfices concrets</p>
+            <h2 class="h2 mb-5 reveal delay-1">Ce que vous gagnez avec Fayeku.</h2>
+            <p class="text-lg leading-relaxed reveal delay-2" style="color: var(--color-marketing-slate);">Des résultats mesurables sur votre trésorerie, votre relation client et votre comptabilité.</p>
         </div>
         <div class="grid md:grid-cols-3 gap-5">
             @foreach ([
@@ -87,7 +87,7 @@
                 ['big' => '+12', 'unit' => 'h', 'title' => 'économisées par mois', 'desc' => "Plus d'Excel, plus de WhatsApp manuel, plus de fichiers perdus."],
                 ['big' => '100', 'unit' => '%', 'title' => 'de visibilité trésorerie', 'desc' => 'Sachez à tout moment ce qui est facturé, encaissé et en retard.'],
             ] as $stat)
-                <article class="card p-7">
+                <article class="card p-7 reveal-scale delay-{{ $loop->index + 1 }}">
                     <div class="font-mono text-5xl font-bold tracking-tight mb-2" style="color: var(--color-teal-fayeku);">{{ $stat['big'] }}<span class="text-2xl ml-1 align-top">{{ $stat['unit'] }}</span></div>
                     <div class="font-semibold mb-2">{{ $stat['title'] }}</div>
                     <p class="text-sm leading-relaxed" style="color: var(--color-marketing-slate);">{{ $stat['desc'] }}</p>

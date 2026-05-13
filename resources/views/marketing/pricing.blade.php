@@ -281,7 +281,7 @@
 
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach ($plans as $plan)
-            <article class="card p-7 flex flex-col relative {{ $plan['popular'] ? 'lg:-mt-4 lg:mb-0' : '' }}" @if ($plan['popular']) style="box-shadow: 0 0 0 2px var(--color-vivid), var(--shadow-card);" @endif>
+            <article class="card p-7 flex flex-col relative reveal-scale delay-{{ $loop->index + 1 }} {{ $plan['popular'] ? 'lg:-mt-4 lg:mb-0' : '' }}" @if ($plan['popular']) style="box-shadow: 0 0 0 2px var(--color-vivid), var(--shadow-card);" @endif>
                 @if ($plan['popular'])
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-[10px] font-semibold tracking-widest uppercase px-3 py-1 rounded-full whitespace-nowrap" style="background: var(--color-vivid);">Le plus populaire</div>
                 @endif
@@ -296,9 +296,9 @@
                     @endif
                     <div class="flex items-baseline gap-1">
                         @if (! empty($plan['price_yearly']))
-                            <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);" x-text="annual ? '{{ $plan['price_yearly'] }}' : '{{ $plan['price'] }}'">{{ $plan['price'] }}</span>
+                            <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink); word-spacing: -0.3em;" x-text="annual ? '{{ $plan['price_yearly'] }}' : '{{ $plan['price'] }}'">{{ $plan['price'] }}</span>
                         @else
-                            <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink);">{{ $plan['price'] }}</span>
+                            <span class="font-mono text-4xl font-bold" style="color: var(--color-marketing-ink); word-spacing: -0.3em;">{{ $plan['price'] }}</span>
                         @endif
                     </div>
                     @if (! empty($plan['unit_yearly']))

@@ -280,9 +280,9 @@
 <section class="py-12 sm:py-16 lg:py-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
-            <p class="eyebrow mb-3">Le problème</p>
-            <h2 class="h2 mb-5">Les impayés et Excel ne devraient pas piloter votre entreprise.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">
+            <p class="eyebrow mb-3 reveal">Le problème</p>
+            <h2 class="h2 mb-5 reveal delay-1">Les impayés et Excel ne devraient pas piloter votre entreprise.</h2>
+            <p class="text-lg leading-relaxed reveal delay-2" style="color: var(--color-marketing-slate);">
                 Aujourd'hui, beaucoup de PME facturent encore sur Word ou Excel, relancent à la main sur WhatsApp, et envoient leurs pièces comptables en vrac en fin de mois. Résultat : paiements en retard, trésorerie floue, stress fiscal, perte de temps.
             </p>
         </div>
@@ -294,7 +294,7 @@
                 ['title' => 'Pièces comptables envoyées en vrac en fin de mois', 'desc' => "Le cabinet court après les justificatifs. La saisie devient un puzzle. La clôture déborde."],
                 ['title' => 'Trésorerie floue et retards de paiement difficiles à anticiper', 'desc' => "On découvre les trous trop tard. Les décisions se prennent dans le doute, pas dans les chiffres."],
             ] as $pain)
-                <div class="card p-6 flex items-start gap-4">
+                <div class="card p-6 flex items-start gap-4 reveal-scale delay-{{ ($loop->index % 4) + 1 }}">
                     <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     </div>
@@ -311,9 +311,9 @@
 <section class="pb-12 sm:pb-16 lg:pb-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12 text-center mx-auto">
-            <p class="eyebrow mb-3">Pourquoi Fayeku</p>
-            <h2 class="h2 mb-5">Une plateforme pensée pour les réalités du Sénégal.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">
+            <p class="eyebrow mb-3 reveal">Pourquoi Fayeku</p>
+            <h2 class="h2 mb-5 reveal delay-1">Une plateforme pensée pour les réalités du Sénégal.</h2>
+            <p class="text-lg leading-relaxed reveal delay-2" style="color: var(--color-marketing-slate);">
                 Conçu à Dakar pour les PME sénégalaises : facturation claire, relances utiles, collaboration comptable plus fluide.
             </p>
         </div>
@@ -324,7 +324,7 @@
                 ['title' => 'Contrôler le cash', 'desc' => "Délai moyen de paiement, prévision de trésorerie à 90 jours, vision claire de l'argent à encaisser.", 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
                 ['title' => 'Travailler mieux avec son comptable', 'desc' => 'Accès cabinet, exports Sage, coffre-fort documents. Moins de WhatsApp, plus de structure.', 'svg' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'],
             ] as $card)
-                <article class="card p-7">
+                <article class="card p-7 reveal-scale delay-{{ $loop->index + 1 }}">
                     <div class="relative w-[76px] h-[76px] mb-5">
                         <span class="absolute bottom-0 right-0 w-[62px] h-[62px] rounded-full" style="background: var(--color-vivid);"></span>
                         <svg class="absolute top-0 left-0" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-teal-fayeku);">{!! $card['svg'] !!}</svg>
@@ -453,9 +453,9 @@
 <section class="py-12 sm:py-16 lg:py-28 bg-white">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="text-center max-w-3xl mx-auto mb-16">
-            <p class="text-xs font-semibold tracking-widest uppercase mb-3" style="color: var(--color-vivid);">Comment ça marche</p>
-            <h2 class="h2 mb-4">Simple. En 4 étapes.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Un parcours pensé pour le quotidien d'une PME et lisible pour le cabinet.</p>
+            <p class="text-xs font-semibold tracking-widest uppercase mb-3 reveal" style="color: var(--color-vivid);">Comment ça marche</p>
+            <h2 class="h2 mb-4 reveal delay-1">Simple. En 4 étapes.</h2>
+            <p class="text-lg leading-relaxed reveal delay-2" style="color: var(--color-marketing-slate);">Un parcours pensé pour le quotidien d'une PME et lisible pour le cabinet.</p>
         </div>
 
         <ol class="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-12 lg:gap-y-0 lg:gap-x-2">
@@ -465,7 +465,7 @@
                 ['n' => 3, 'title' => 'Suivez vos encaissements', 'desc' => 'Visualisez votre cash en temps réel et anticipez sur 90 jours.', 'svg' => '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'],
                 ['n' => 4, 'title' => 'Collaborez avec votre comptable', 'desc' => 'Partagez documents, exports et accédez à votre cabinet.', 'svg' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/><path d="M19 8l3 3-3 3"/>'],
             ] as $step)
-                <li class="relative flex flex-col items-center text-center px-4">
+                <li class="relative flex flex-col items-center text-center px-4 reveal-scale delay-{{ $loop->index + 1 }}">
                     <div class="relative mb-6">
                         <div class="w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center bg-white" style="border-color: var(--color-mint-200);">
                             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#024D4E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $step['svg'] !!}</svg>
@@ -486,9 +486,9 @@
 <section class="py-12 sm:py-16 lg:py-28">
     <div class="max-w-7xl mx-auto px-5 lg:px-8">
         <div class="max-w-3xl mb-12">
-            <p class="eyebrow mb-3">Fonctionnalités</p>
-            <h2 class="h2 mb-5">Tout ce qu'il faut pour facturer, relancer, et piloter.</h2>
-            <p class="text-lg leading-relaxed" style="color: var(--color-marketing-slate);">Tout est là dès le premier jour. Activez ce dont vous avez besoin.</p>
+            <p class="eyebrow mb-3 reveal">Fonctionnalités</p>
+            <h2 class="h2 mb-5 reveal delay-1">Tout ce qu'il faut pour facturer, relancer, et piloter.</h2>
+            <p class="text-lg leading-relaxed reveal delay-2" style="color: var(--color-marketing-slate);">Tout est là dès le premier jour. Activez ce dont vous avez besoin.</p>
         </div>
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -501,7 +501,7 @@
                 ['title' => 'Prévision trésorerie 90 jours', 'desc' => 'Encaissements attendus, alertes de creux à venir.', 'bg' => 'rgb(240 249 255)', 'color' => '#0284c7', 'svg' => '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'],
                 ['title' => 'Factures récurrentes &amp; devis', 'desc' => 'Signature devis et conversion en facture en un clic.', 'bg' => 'rgb(238 242 255)', 'color' => '#4f46e5', 'svg' => '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'],
             ] as $feature)
-                <article class="card p-6">
+                <article class="card p-6 reveal-scale delay-{{ ($loop->index % 3) + 1 }}">
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style="background: {{ $feature['bg'] }}; color: {{ $feature['color'] }};">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $feature['svg'] !!}</svg>
                     </div>
