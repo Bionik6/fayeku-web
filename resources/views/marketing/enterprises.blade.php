@@ -21,7 +21,7 @@
             <div class="absolute -bottom-10 -left-8 w-56 h-56 rounded-full blur-3xl -z-0" style="background: rgba(15, 184, 92, 0.15);"></div>
             <div class="relative max-w-[480px] mx-auto">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
-                <div class="relative bg-white rounded-2xl border border-gray-100 p-6" style="box-shadow: var(--shadow-float);">
+                <div class="relative bg-white rounded-2xl border border-gray-100 p-6 animate-float" style="box-shadow: var(--shadow-float);">
                     <div class="flex items-start justify-between mb-5">
                         <div>
                             <div class="w-10 h-10 rounded-lg text-white font-bold text-sm flex items-center justify-center mb-2" style="background: var(--color-teal-fayeku);">AN</div>
@@ -50,7 +50,7 @@
                     </div>
                 </div>
             </div>
-            <div class="hidden sm:flex absolute -top-5 -left-2 lg:-left-6 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[230px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -top-5 -left-2 lg:-left-6 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[230px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -2s;">
                 <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                 </div>
@@ -60,7 +60,7 @@
                     <div class="text-[10px] font-semibold" style="color: var(--color-vivid);">WhatsApp · à l'instant</div>
                 </div>
             </div>
-            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -4s;">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>

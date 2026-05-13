@@ -69,7 +69,7 @@
             {{-- Mockup Entreprise --}}
             <div x-show="persona === 'entreprise'" class="relative">
             <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
-            <div class="relative browser">
+            <div class="relative browser animate-float">
                 <div class="browser-bar">
                     <span class="browser-dot bg-rose-300"></span>
                     <span class="browser-dot bg-amber-300"></span>
@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex absolute -top-4 -left-4 lg:-left-8 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[220px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -top-4 -left-4 lg:-left-8 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[220px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -2s;">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
@@ -157,7 +157,7 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-6 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-6 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -4s;">
                 <div class="w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0" style="background: var(--color-teal-fayeku);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </div>
@@ -173,7 +173,7 @@
             {{-- Mockup Expert-comptable --}}
             <div x-show="persona === 'expert'" x-cloak class="relative">
                 <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
-                <div class="relative bg-white rounded-2xl border border-gray-100 overflow-hidden" style="box-shadow: var(--shadow-float);">
+                <div class="relative bg-white rounded-2xl border border-gray-100 overflow-hidden animate-float" style="box-shadow: var(--shadow-float);">
                     <div class="p-5 lg:p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div>
@@ -352,7 +352,7 @@
             </ul>
         </div>
         <div class="order-1 lg:order-2 relative">
-            <img src="/mockup-invoice.png" alt="Exemple de facture Sayar Distribution éditée dans Fayeku, montant 1 475 000 FCFA, envoyée via WhatsApp" class="w-full max-w-[620px] mx-auto" />
+            <img src="/mockup-invoice.png" alt="Exemple de facture Sayar Distribution éditée dans Fayeku, montant 1 475 000 FCFA, envoyée via WhatsApp" class="w-full max-w-[620px] mx-auto animate-float" />
         </div>
     </div>
 </section>
@@ -361,7 +361,7 @@
     <div class="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
         <div class="relative">
             <div class="absolute -top-6 -left-6 w-48 h-48 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
-            <div class="browser relative max-w-[520px] mx-auto">
+            <div class="browser relative max-w-[520px] mx-auto animate-float">
                 <div class="browser-bar">
                     <span class="browser-dot bg-rose-300"></span>
                     <span class="browser-dot bg-amber-300"></span>
@@ -424,7 +424,7 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex absolute -bottom-4 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[230px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -bottom-4 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[230px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -3s;">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>

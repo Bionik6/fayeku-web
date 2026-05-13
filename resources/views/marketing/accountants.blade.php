@@ -20,7 +20,7 @@
             <div class="absolute -top-10 -right-8 w-72 h-72 rounded-full blur-3xl opacity-60 -z-0" style="background: var(--color-mint-200);"></div>
             <div class="absolute -bottom-10 -left-8 w-56 h-56 rounded-full blur-3xl -z-0" style="background: rgba(15, 184, 92, 0.15);"></div>
             <div class="absolute inset-0 rounded-3xl -z-0 transform rotate-1" style="background: var(--color-mint-100);"></div>
-            <div class="relative border border-gray-100 rounded-2xl overflow-hidden" style="background: var(--color-offwhite); box-shadow: var(--shadow-float);">
+            <div class="relative border border-gray-100 rounded-2xl overflow-hidden animate-float" style="background: var(--color-offwhite); box-shadow: var(--shadow-float);">
                 <div class="flex items-center justify-between px-5 py-3 bg-white border-b border-gray-100">
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-md border flex items-center justify-center" style="background: var(--color-mint-100); border-color: var(--color-mint-200);">
@@ -108,7 +108,7 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex absolute -top-4 -left-4 lg:-left-8 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -top-4 -left-4 lg:-left-8 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -2s;">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-mint-100); color: var(--color-vivid);">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
                 </div>
@@ -119,7 +119,7 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px]" style="box-shadow: var(--shadow-float);">
+            <div class="hidden sm:flex absolute -bottom-6 -right-2 lg:-right-4 bg-white rounded-2xl border border-gray-100 p-3 items-center gap-3 max-w-[240px] animate-float" style="box-shadow: var(--shadow-float); animation-delay: -4s;">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: var(--color-teal-deep); color: var(--color-vivid);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9 17 14 19 22 12 18 5 22 7 14 2 9 9 9"/></svg>
                 </div>
