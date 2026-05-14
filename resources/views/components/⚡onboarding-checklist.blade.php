@@ -39,7 +39,7 @@ new class extends Component {
             [
                 'key' => 'identity',
                 'label' => __('onboarding.checklist.items.identity'),
-                'done' => filled($company->legal_form),
+                'done' => filled($company->address) || filled($company->ninea) || filled($company->legal_form),
                 'href' => route('pme.settings.index'),
             ],
             [

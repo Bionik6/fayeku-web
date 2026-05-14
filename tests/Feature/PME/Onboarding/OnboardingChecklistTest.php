@@ -43,6 +43,26 @@ test('compléter l\'identité (legal_form) coche le 2e item', function () {
     expect(collect($items)->firstWhere('key', 'identity')['done'])->toBeTrue();
 });
 
+test('renseigner l\'adresse depuis les paramètres coche le 2e item (legal_form non exposé en réglages)', function () {
+    [$user, $company] = smeForChecklist(['address' => '15 Avenue Bourguiba']);
+
+    $component = Livewire::actingAs($user)
+        ->test('onboarding-checklist', ['company' => $company]);
+
+    $items = $component->get('items');
+    expect(collect($items)->firstWhere('key', 'identity')['done'])->toBeTrue();
+});
+
+test('renseigner le NINEA depuis les paramètres coche le 2e item', function () {
+    [$user, $company] = smeForChecklist(['ninea' => 'SN20240001']);
+
+    $component = Livewire::actingAs($user)
+        ->test('onboarding-checklist', ['company' => $company]);
+
+    $items = $component->get('items');
+    expect(collect($items)->firstWhere('key', 'identity')['done'])->toBeTrue();
+});
+
 test('compléter la signature (sender_name) coche le 3e item', function () {
     [$user, $company] = smeForChecklist(['sender_name' => 'Awa']);
 
