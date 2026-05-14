@@ -42,11 +42,10 @@
                 <p class="eyebrow mb-4">Cockpit multi-clients pour cabinets</p>
                 <h1 class="h1 mb-6">
                     Suivez vos clients PME.<br/>
-                    Anticipez les retards.<br/>
-                    <span style="color: var(--color-teal-fayeku);">Gagnez du temps sur la compta.</span>
+                    <span style="color: var(--color-teal-fayeku);">Anticipez les retards.</span>
                 </h1>
                 <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
-                    Centralisez les factures de vos clients, repérez les impayés critiques, récupérez les pièces plus facilement et préparez vos exports comptables sans courir après les documents.
+                    Centralisez les factures de vos PME clientes, repérez les impayés critiques et exportez vers votre logiciel comptable sans courir après les pièces.
                 </p>
 
                 <div class="flex flex-wrap gap-3 mb-8">
