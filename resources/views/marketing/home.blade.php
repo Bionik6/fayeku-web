@@ -41,11 +41,12 @@
                 </div>
                 <p class="eyebrow mb-4">Cockpit multi-clients pour cabinets</p>
                 <h1 class="h1 mb-6">
-                    Facturez proprement.<br/>
-                    <span style="color: var(--color-teal-fayeku);">Contrôlez votre trésorerie.</span>
+                    Suivez vos clients PME.<br/>
+                    Anticipez les retards.<br/>
+                    <span style="color: var(--color-teal-fayeku);">Gagnez du temps sur la compta.</span>
                 </h1>
                 <p class="text-lg max-w-xl mb-8 leading-relaxed" style="color: var(--color-marketing-slate);">
-                    Centralisez les factures de vos PME clientes, collectez les pièces, exportez vers vos outils comptables et activez un programme partenaire récurrent.
+                    Centralisez les factures de vos clients, repérez les impayés critiques, récupérez les pièces plus facilement et préparez vos exports comptables sans courir après les documents.
                 </p>
 
                 <div class="flex flex-wrap gap-3 mb-8">
@@ -56,8 +57,9 @@
                 </div>
 
                 <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm" style="color: var(--color-marketing-slate);">
-                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>0 FCFA · à vie</span>
-                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>15% commission récurrente</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Gratuit pour le cabinet</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Suivi multi-clients</span>
+                    <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0FB85C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Commission récurrente</span>
                 </div>
             </div>
         </div>
