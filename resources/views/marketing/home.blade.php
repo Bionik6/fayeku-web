@@ -1,11 +1,17 @@
 <x-layouts.marketing :meta-title="$metaTitle" :meta-description="$metaDescription" :canonical-url="$canonicalUrl">
 
 <section class="hero-bg relative overflow-hidden" x-data="{ persona: 'entreprise' }">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-28 grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16 lg:pt-20 lg:pb-28 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
         <div class="lg:col-span-6">
             <div class="pill-toggle mb-7" role="tablist" aria-label="Type d'audience">
-                <button type="button" @click="persona = 'entreprise'" :class="persona === 'entreprise' && 'active'">Je suis une entreprise</button>
-                <button type="button" @click="persona = 'expert'" :class="persona === 'expert' && 'active'">Je suis expert-comptable</button>
+                <button type="button" @click="persona = 'entreprise'" :class="persona === 'entreprise' && 'active'" class="whitespace-nowrap">
+                    <span class="sm:hidden">Entreprise</span>
+                    <span class="hidden sm:inline">Je suis une entreprise</span>
+                </button>
+                <button type="button" @click="persona = 'expert'" :class="persona === 'expert' && 'active'" class="whitespace-nowrap">
+                    <span class="sm:hidden">Expert-comptable</span>
+                    <span class="hidden sm:inline">Je suis expert-comptable</span>
+                </button>
             </div>
 
             {{-- Variante Entreprise --}}
