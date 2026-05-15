@@ -26,7 +26,9 @@ use Illuminate\Support\Str;
  *
  * ┌── Login principal ──────────────────────────────────────────────────────┐
  * │ Email          fayeku-demo@kof-experts.sn                                │
- * │ Mot de passe   password                                                  │
+ * │ Mot de passe   KofDemo2026!                                              │
+ * │                                                                          │
+ * │ Owners PME du portefeuille : owner@<key>.demo  /  DemoPME2026!           │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * Profil seedé : cabinet « KOF Experts » + 2 collaborateurs, 12 PME en
@@ -39,6 +41,10 @@ class KofExpertsDemoSeeder extends Seeder
     use GeneratesDemoTaxIds;
 
     private const OWNER_EMAIL = 'fayeku-demo@kof-experts.sn';
+
+    private const CABINET_PASSWORD = 'KofDemo2026!';
+
+    private const SME_PASSWORD = 'DemoPME2026!';
 
     public function run(): void
     {
@@ -195,7 +201,7 @@ class KofExpertsDemoSeeder extends Seeder
             'last_name' => SenegalFaker::lastName(),
             'phone' => $phone,
             'email' => "owner@{$key}.demo",
-            'password' => 'password',
+            'password' => self::SME_PASSWORD,
             'profile_type' => 'sme',
             'country_code' => 'SN',
             'is_active' => true,
@@ -582,7 +588,7 @@ class KofExpertsDemoSeeder extends Seeder
             'last_name' => $lastName,
             'phone' => $phone,
             'email' => $email,
-            'password' => 'password',
+            'password' => self::CABINET_PASSWORD,
             'profile_type' => $profileType,
             'country_code' => 'SN',
             'is_active' => true,
