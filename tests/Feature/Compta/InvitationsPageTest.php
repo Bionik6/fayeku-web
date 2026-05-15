@@ -337,7 +337,9 @@ test('composeWhatsAppMessage en plan essentiel utilise le label et le prix essen
         ->toContain('plan Essentiel')
         ->toContain('20 000 FCFA')
         ->toContain('✓ Factures pro')
-        ->toContain('Activez votre compte ici 👉');
+        ->toContain('*facturation électronique* DGID')
+        ->toContain('Activez votre compte ici :')
+        ->not->toContain('👉');
 });
 
 test('composeWhatsAppMessage en plan basique utilise le label et le prix basique', function () {
@@ -431,6 +433,8 @@ test('composeEmail retourne un sujet et un corps avec le lien et la signature', 
         ->toContain('Bonjour Ibrahima,')
         ->toContain('Notre cabinet utilise désormais Fayeku')
         ->toContain('• Émettre vos factures')
+        ->toContain('Anticiper la facturation électronique')
+        ->toContain('conformité DGID')
         ->toContain('plan Essentiel')
         ->toContain('20 000 FCFA')
         ->toContain('/join/'.$firm->invite_code)
@@ -471,6 +475,7 @@ test('composePartnerShareMessage produit le message générique avec le lien et 
         ->toContain('✓ Factures pro')
         ->toContain('✓ Relances WhatsApp/Email automatiques')
         ->toContain('✓ Vision claire de votre trésorerie à 30 et 90 jours')
+        ->toContain('*facturation électronique* DGID')
         ->toContain('/join/'.$firm->invite_code)
         ->toContain('Aliou')
         ->toContain($firm->name);
@@ -596,7 +601,7 @@ test('markReminded incrémente reminder_count et met à jour last_reminder_at', 
 
 // ─── Modale : invite-pme-modal ────────────────────────────────────────────────
 
-test('confirmSent crée une PartnerInvitation pour le canal whatsapp', function () {
+test('sendInvitation crée une PartnerInvitation pour le canal whatsapp', function () {
     ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
 
     Livewire::actingAs($user)
@@ -607,7 +612,7 @@ test('confirmSent crée une PartnerInvitation pour le canal whatsapp', function 
         ->set('invitePhone', '770000123')
         ->set('invitePlan', 'essentiel')
         ->set('inviteChannel', 'whatsapp')
-        ->call('confirmSent', 'whatsapp')
+        ->call('sendInvitation', 'whatsapp')
         ->assertDispatched('invitation-sent')
         ->assertDispatched('toast');
 
@@ -621,7 +626,7 @@ test('confirmSent crée une PartnerInvitation pour le canal whatsapp', function 
     expect($invitation->created_by_user_id)->toBe($user->id);
 });
 
-test('confirmSent crée une PartnerInvitation pour le canal email', function () {
+test('sendInvitation crée une PartnerInvitation pour le canal email', function () {
     ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
 
     Livewire::actingAs($user)
@@ -631,7 +636,7 @@ test('confirmSent crée une PartnerInvitation pour le canal email', function () 
         ->set('inviteEmail', 'modou@example.com')
         ->set('invitePlan', 'basique')
         ->set('inviteChannel', 'email')
-        ->call('confirmSent', 'email')
+        ->call('sendInvitation', 'email')
         ->assertDispatched('invitation-sent');
 
     $invitation = PartnerInvitation::where('accountant_firm_id', $firm->id)->first();
@@ -639,18 +644,18 @@ test('confirmSent crée une PartnerInvitation pour le canal email', function () 
     expect($invitation->channel)->toBe('email');
 });
 
-test('confirmSent exige un téléphone pour le canal whatsapp', function () {
+test('sendInvitation exige un téléphone pour le canal whatsapp', function () {
     ['user' => $user] = invTestCreateFirm();
 
     Livewire::actingAs($user)
         ->test('invite-pme-modal')
         ->set('inviteCompanyName', 'Sans Tel')
         ->set('inviteContactName', 'Fatou')
-        ->call('confirmSent', 'whatsapp')
+        ->call('sendInvitation', 'whatsapp')
         ->assertHasErrors(['invitePhone' => 'required']);
 });
 
-test('confirmSent exige un email pour le canal email', function () {
+test('sendInvitation exige un email pour le canal email', function () {
     ['user' => $user] = invTestCreateFirm();
 
     Livewire::actingAs($user)
@@ -658,11 +663,11 @@ test('confirmSent exige un email pour le canal email', function () {
         ->set('inviteCompanyName', 'Sans Email')
         ->set('inviteContactName', 'Modou')
         ->set('inviteChannel', 'email')
-        ->call('confirmSent', 'email')
+        ->call('sendInvitation', 'email')
         ->assertHasErrors(['inviteEmail' => 'required']);
 });
 
-test('confirmSent refuse les doublons par téléphone sur la même firme', function () {
+test('sendInvitation refuse les doublons par téléphone sur la même firme', function () {
     ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
 
     PartnerInvitation::create([
@@ -680,7 +685,7 @@ test('confirmSent refuse les doublons par téléphone sur la même firme', funct
         ->set('inviteCompanyName', 'Doublon')
         ->set('inviteContactName', 'Fatou')
         ->set('invitePhone', '770000123')
-        ->call('confirmSent', 'whatsapp')
+        ->call('sendInvitation', 'whatsapp')
         ->assertHasErrors('invitePhone');
 
     expect(PartnerInvitation::where('accountant_firm_id', $firm->id)->count())->toBe(1);
@@ -729,7 +734,7 @@ test('le mode followup en relance incrémente reminder_count', function () {
     Livewire::actingAs($user)
         ->test('invite-pme-modal')
         ->call('openFollowup', $invitation->id, 'reminder')
-        ->call('confirmSent', 'whatsapp')
+        ->call('sendInvitation', 'whatsapp')
         ->assertDispatched('invitation-sent');
 
     $invitation->refresh();
@@ -755,7 +760,7 @@ test('le mode followup en renvoi remet status à pending et reset reminder_count
     Livewire::actingAs($user)
         ->test('invite-pme-modal')
         ->call('openFollowup', $invitation->id, 'resend')
-        ->call('confirmSent', 'whatsapp');
+        ->call('sendInvitation', 'whatsapp');
 
     $invitation->refresh();
     expect($invitation->status)->toBe('pending');
@@ -791,4 +796,117 @@ test('les boutons relancer/renvoyer dispatchent open-invite-pme-followup', funct
         ->test('pages::compta.invitations.index')
         ->assertSee('Relancer')
         ->assertSee('Renvoyer');
+});
+
+// ─── Bug fix : envoi avec coordonnées modifiées (resend) ──────────────────────
+
+test('sendInvitation persiste le nouveau téléphone quand on renvoie une invitation', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'resend-phone-fix',
+        'invitee_company_name' => 'Renvoi Co',
+        'invitee_name' => 'Ousmane Traoré',
+        'invitee_phone' => '+221770000111', // ancien numéro
+        'recommended_plan' => 'essentiel',
+        'status' => 'expired',
+        'channel' => 'whatsapp',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('invite-pme-modal')
+        ->call('openFollowup', $invitation->id, 'resend')
+        // L'utilisateur saisit un NOUVEAU numéro dans le drawer.
+        ->set('invitePhone', '770000222')
+        ->call('sendInvitation', 'whatsapp')
+        ->assertDispatched('invitation-sent');
+
+    $invitation->refresh();
+    expect($invitation->invitee_phone)->toBe('+221770000222');
+    expect($invitation->status)->toBe('pending');
+});
+
+test('sendInvitation persiste le nouvel email quand on renvoie une invitation', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'resend-email-fix',
+        'invitee_company_name' => 'Renvoi Email Co',
+        'invitee_name' => 'Awa Sow',
+        'invitee_email' => 'old@example.com', // ancienne adresse
+        'recommended_plan' => 'essentiel',
+        'status' => 'expired',
+        'channel' => 'email',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('invite-pme-modal')
+        ->call('openFollowup', $invitation->id, 'resend')
+        ->set('inviteChannel', 'email')
+        // L'utilisateur saisit une NOUVELLE adresse dans le drawer.
+        ->set('inviteEmail', 'new@example.com')
+        ->call('sendInvitation', 'email')
+        ->assertDispatched('invitation-sent');
+
+    $invitation->refresh();
+    expect($invitation->invitee_email)->toBe('new@example.com');
+    expect($invitation->status)->toBe('pending');
+});
+
+test('le bouton « Envoyer maintenant » expose le message WhatsApp courant en data-attribute', function () {
+    // Le bouton ouvre wa.me/mailto: côté client à partir des inputs du DOM
+    // (pour rester dans le user-gesture et ne pas être bloqué par le
+    // popup-blocker). On vérifie que les valeurs côté serveur — qui seraient
+    // utilisées si on cliquait sans avoir modifié les inputs — reflètent
+    // bien l'état Livewire courant.
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'data-attr-1',
+        'invitee_company_name' => 'Aperçu Co',
+        'invitee_name' => 'Khady',
+        'invitee_phone' => '+221770000111',
+        'recommended_plan' => 'essentiel',
+        'status' => 'pending',
+        'channel' => 'whatsapp',
+    ]);
+
+    $html = Livewire::actingAs($user)
+        ->test('invite-pme-modal')
+        ->call('openFollowup', $invitation->id, 'resend')
+        ->html();
+
+    // L'aperçu du message intègre bien le nom du contact courant + le lien
+    // d'invitation du cabinet.
+    expect($html)->toContain('data-send-channel="whatsapp"')
+        ->and($html)->toContain(rawurlencode('Bonjour Khady,'))
+        ->and($html)->toContain(rawurlencode('/join/'.$firm->invite_code));
+});
+
+test('le bouton « Envoyer maintenant » expose le sujet et le corps email en data-attribute', function () {
+    ['user' => $user, 'firm' => $firm] = invTestCreateFirm();
+
+    $invitation = PartnerInvitation::create([
+        'accountant_firm_id' => $firm->id,
+        'token' => 'data-attr-2',
+        'invitee_company_name' => 'Aperçu Email Co',
+        'invitee_name' => 'Ibrahima',
+        'invitee_email' => 'ibrahima@example.com',
+        'recommended_plan' => 'essentiel',
+        'status' => 'pending',
+        'channel' => 'email',
+    ]);
+
+    $html = Livewire::actingAs($user)
+        ->test('invite-pme-modal')
+        ->call('openFollowup', $invitation->id, 'resend')
+        ->set('inviteChannel', 'email')
+        ->html();
+
+    expect($html)->toContain('data-send-channel="email"')
+        ->and($html)->toContain('data-send-subject="'.rawurlencode($firm->name))
+        ->and($html)->toContain(rawurlencode('Bonjour Ibrahima,'));
 });

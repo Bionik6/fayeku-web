@@ -36,7 +36,7 @@ Petit rappel de la part de {$firmName} : votre invitation à rejoindre *Fayeku* 
 
 Pour rappel, vous bénéficiez de *30 jours offerts* sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite).
 
-Activez votre compte ici 👉 {$link}
+Activez votre compte ici : {$link}
 
 Le lien est valable 30 jours. Je reste disponible si vous avez la moindre question.
 
@@ -56,9 +56,10 @@ Ce que Fayeku vous apporte concrètement :
 ✓ Factures pro en quelques clics
 ✓ Relances Email/WhatsApp automatiques sur vos impayés
 ✓ Vision claire de votre trésorerie à 30 et 90 jours
+✓ Prêt pour la *facturation électronique* DGID dès publication officielle
 ✓ Collaboration directe avec notre cabinet
 
-Activez votre compte ici 👉 {$link}
+Activez votre compte ici : {$link}
 
 Le lien est valable 30 jours. Je reste disponible si vous avez la moindre question.
 
@@ -116,6 +117,7 @@ Fayeku vous permet concrètement de :
   • Émettre vos factures clients en quelques clics, avec un rendu professionnel
   • Automatiser vos relances Email/WhatsApp sur les factures impayées
   • Suivre votre trésorerie prévisionnelle à 30 et 90 jours
+  • Anticiper la facturation électronique : architecture prête pour la conformité DGID dès publication officielle, sans reparamétrage côté PME
   • Collaborer plus simplement avec notre cabinet (transmission de pièces, exports comptables)
 
 En passant par le lien ci-dessous, vous bénéficiez de 30 jours offerts sur le plan {$planLabel} ({$planPrice} FCFA/mois ensuite, sans engagement).
@@ -215,6 +217,7 @@ Ce que Fayeku change concrètement :
 ✓ Factures pro en quelques clics, conformes au contexte sénégalais
 ✓ Relances WhatsApp/Email automatiques sur vos impayés
 ✓ Vision claire de votre trésorerie à 30 et 90 jours
+✓ Prêt pour la *facturation électronique* DGID dès publication officielle
 ✓ Collaboration directe avec notre cabinet sur vos pièces
 
 Lien d'inscription: {$link}

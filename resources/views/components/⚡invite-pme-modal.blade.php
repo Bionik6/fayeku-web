@@ -193,7 +193,16 @@ new class extends Component
             : trim($this->invitePhone) !== '';
     }
 
-    public function confirmSent(string $channel): void
+    /**
+     * Persist the invitation and transition its state. The external channel
+     * (wa.me / mailto:) is opened CLIENT-SIDE from the user-gesture click
+     * handler (see the button in the view) so popup-blockers don't swallow
+     * the window.open call. This method just stores the latest form state.
+     * The click handler rebuilds the URL from the live DOM input values to
+     * avoid stale wire:model debounce when the user clicks « Envoyer » fast
+     * after editing the phone or email.
+     */
+    public function sendInvitation(string $channel): void
     {
         if (! $this->firm || ! in_array($channel, ['whatsapp', 'email'], true)) {
             return;
@@ -336,9 +345,6 @@ new class extends Component
         $previewHtml = preg_replace('/\*([^\*\n]+)\*/', '<strong>$1</strong>', $previewHtml);
         $previewHtml = preg_replace('/_([^_\n]+)_/', '<em>$1</em>', $previewHtml);
         $previewHtml = nl2br($previewHtml);
-
-        $sendLink = $inviteChannel === 'email' ? $this->mailtoLink : $this->whatsAppLink;
-        $sendTarget = $inviteChannel === 'email' ? null : '_blank';
     @endphp
 
     <div
@@ -502,6 +508,7 @@ new class extends Component
                                                 phone-name="invitePhone"
                                                 :phone-value="$invitePhone"
                                                 phone-model="invitePhone"
+                                                :phone-model-live="true"
                                                 :required="true"
                                                 container-class="flex items-stretch rounded-xl border border-slate-200 bg-slate-50/80 transition has-[:focus]:border-primary has-[:focus]:bg-white has-[:focus]:ring-1 has-[:focus]:ring-primary"
                                                 padding-class="px-3 py-2"
@@ -537,16 +544,46 @@ new class extends Component
                                     >
                                         {{ __('Fermer') }}
                                     </button>
-                                    @if ($this->canSend && $sendLink)
-                                        <a
-                                            href="{{ $sendLink }}"
-                                            @if ($sendTarget) target="{{ $sendTarget }}" rel="noopener noreferrer" @endif
-                                            wire:click="confirmSent('{{ $inviteChannel }}')"
-                                            class="inline-flex flex-1 cursor-pointer items-center justify-center gap-x-2 rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                                    {{-- The wa.me / mailto: URL is opened SYNCHRONOUSLY from this click
+                                         handler (still inside the user gesture, so popup-blockers don't
+                                         drop the window.open). The destination phone/email is read from
+                                         the live DOM inputs — not the server-rendered href — so a fast
+                                         click before the wire:model debounce flushes still dials the
+                                         CURRENT contact, not the previously rendered one. Once the
+                                         channel is opened, $wire.sendInvitation persists the invitation
+                                         and transitions its state. --}}
+                                    @if ($this->canSend)
+                                        <button
+                                            type="button"
+                                            data-send-channel="{{ $inviteChannel }}"
+                                            data-send-message="{{ rawurlencode($inviteChannel === 'email' ? $this->emailPreview['body'] : $this->whatsAppMessage) }}"
+                                            data-send-subject="{{ rawurlencode($inviteChannel === 'email' ? $this->emailPreview['subject'] : '') }}"
+                                            wire:loading.attr="disabled"
+                                            x-on:click="
+                                                const channel = $el.dataset.sendChannel;
+                                                const message = $el.dataset.sendMessage;
+                                                if (channel === 'whatsapp') {
+                                                    const phoneInput = $root.querySelector('input[type=&quot;tel&quot;][name=&quot;invitePhone&quot;]');
+                                                    const countryInput = $root.querySelector('input[type=&quot;hidden&quot;][name=&quot;inviteCountryCode&quot;]');
+                                                    const prefix = countryInput?.dataset.prefix || '+221';
+                                                    const digits = (prefix + (phoneInput?.value || '')).replace(/\D+/g, '');
+                                                    window.open('https://wa.me/' + digits + '?text=' + message, '_blank', 'noopener,noreferrer');
+                                                } else {
+                                                    const emailInput = document.getElementById('invite-email');
+                                                    const recipient = encodeURIComponent((emailInput?.value || $wire.inviteEmail || '').trim());
+                                                    // mailto: must hit the OS protocol handler — window.open(mailto, _blank)
+                                                    // spawns a ghost tab in Chrome that closes immediately. Assigning to
+                                                    // window.location.href lets the browser intercept the scheme without
+                                                    // navigating away from the current page.
+                                                    window.location.href = 'mailto:' + recipient + '?subject=' + $el.dataset.sendSubject + '&body=' + message;
+                                                }
+                                                $wire.sendInvitation(channel);
+                                            "
+                                            class="inline-flex flex-1 cursor-pointer items-center justify-center gap-x-2 rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             <flux:icon name="paper-airplane" class="-ml-0.5 size-5" />
                                             {{ __('Envoyer maintenant') }}
-                                        </a>
+                                        </button>
                                     @else
                                         <button
                                             type="button"
