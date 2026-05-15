@@ -666,3 +666,107 @@ it('rejects signature fields exceeding 100 characters', function () {
 it('generates settings URL with pme prefix', function () {
     expect(route('pme.settings.index'))->toContain('/pme/settings');
 });
+
+// ─── Demo mode (FAYEKU_DEMO_MODE) ────────────────────────────────────────
+
+it('bloque la modification du profil entreprise en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $originalName = $company->name;
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('firmName', 'Mutation interdite')
+        ->call('saveCompanyProfile');
+
+    expect($company->fresh()->name)->toBe($originalName);
+});
+
+it('bloque la modification du profil utilisateur en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    ['user' => $user] = createSmeSettingsUser();
+    $originalFirstName = $user->first_name;
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'profile')
+        ->set('firstName', 'Mutation')
+        ->set('lastName', 'Interdite')
+        ->call('saveAccount');
+
+    expect($user->fresh()->first_name)->toBe($originalFirstName);
+});
+
+it('bloque la mise à jour de la signature en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+    $company->update(['sender_name' => 'Signature initiale', 'sender_role' => 'Rôle initial']);
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->set('senderName', 'Nouveau nom')
+        ->set('senderRole', 'Nouveau rôle')
+        ->call('saveSignature');
+
+    $company->refresh();
+    expect($company->sender_name)->toBe('Signature initiale')
+        ->and($company->sender_role)->toBe('Rôle initial');
+});
+
+it('bloque la modification du mot de passe en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    ['user' => $user] = createSmeSettingsUser();
+    $originalHash = $user->password;
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'password')
+        ->set('currentPassword', 'password')
+        ->set('newPassword', 'New-Secure-Pass-123!')
+        ->set('newPasswordConfirmation', 'New-Secure-Pass-123!')
+        ->call('updatePassword')
+        ->assertSet('currentPassword', '')
+        ->assertSet('newPassword', '')
+        ->assertSet('newPasswordConfirmation', '');
+
+    expect($user->fresh()->password)->toBe($originalHash);
+});
+
+it('bloque la suppression du compte en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    ['user' => $user, 'company' => $company] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->call('setSection', 'danger')
+        ->set('showDeleteAccountModal', true)
+        ->set('deletePassword', 'password')
+        ->call('deleteUser')
+        ->assertSet('showDeleteAccountModal', false)
+        ->assertSet('deletePassword', '')
+        ->assertNoRedirect();
+
+    expect(User::find($user->id))->not->toBeNull();
+    expect(Company::find($company->id))->not->toBeNull();
+});
+
+it('affiche le bandeau lecture seule dans chacune des 5 sections éditables en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    ['user' => $user] = createSmeSettingsUser();
+
+    foreach (['company', 'profile', 'signature', 'password', 'danger'] as $section) {
+        Livewire::actingAs($user)
+            ->test('pages::pme.settings.index')
+            ->call('setSection', $section)
+            ->assertSee('Édition désactivée en mode démonstration');
+    }
+});
+
+it('n\'affiche pas le bandeau lecture seule hors mode démo', function () {
+    config()->set('fayeku.demo', false);
+    ['user' => $user] = createSmeSettingsUser();
+
+    Livewire::actingAs($user)
+        ->test('pages::pme.settings.index')
+        ->assertDontSee('Édition désactivée en mode démonstration');
+});

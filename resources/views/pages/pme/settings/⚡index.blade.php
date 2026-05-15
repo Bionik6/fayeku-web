@@ -90,6 +90,12 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
     }
 
     #[Computed]
+    public function isDemoMode(): bool
+    {
+        return (bool) config('fayeku.demo');
+    }
+
+    #[Computed]
     public function subscription(): ?Subscription
     {
         return $this->company?->subscription;
@@ -151,6 +157,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function saveCompanyProfile(): void
     {
+        if ($this->isDemoMode) {
+            return;
+        }
+
         // Pays verrouillé sur SN — pas exposé dans l'UI ni validé côté serveur.
         $this->firmCountry = 'SN';
 
@@ -185,6 +195,12 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function updatedLogoUpload(): void
     {
+        if ($this->isDemoMode) {
+            $this->logoUpload = null;
+
+            return;
+        }
+
         try {
             $this->validate([
                 'logoUpload' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:1024'],
@@ -204,6 +220,12 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function saveLogo(): void
     {
+        if ($this->isDemoMode) {
+            $this->logoUpload = null;
+
+            return;
+        }
+
         $company = $this->company;
 
         if (! $company || ! $this->logoUpload) {
@@ -229,6 +251,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function removeLogo(): void
     {
+        if ($this->isDemoMode) {
+            return;
+        }
+
         $company = $this->company;
 
         if (! $company || ! $company->logo_path) {
@@ -263,6 +289,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function saveSignature(): void
     {
+        if ($this->isDemoMode) {
+            return;
+        }
+
         $validated = $this->validate([
             'senderName' => ['nullable', 'string', 'max:100'],
             'senderRole' => ['nullable', 'string', 'max:100'],
@@ -283,6 +313,10 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function saveAccount(): void
     {
+        if ($this->isDemoMode) {
+            return;
+        }
+
         $validated = $this->validate([
             'firstName' => ['required', 'string', 'max:255'],
             'lastName' => ['required', 'string', 'max:255'],
@@ -302,6 +336,12 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function updatePassword(): void
     {
+        if ($this->isDemoMode) {
+            $this->reset('currentPassword', 'newPassword', 'newPasswordConfirmation');
+
+            return;
+        }
+
         try {
             $validated = $this->validate([
                 'currentPassword' => ['required', 'string', 'current_password'],
@@ -336,6 +376,13 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
 
     public function deleteUser(Logout $logout): void
     {
+        if ($this->isDemoMode) {
+            $this->showDeleteAccountModal = false;
+            $this->reset('deletePassword');
+
+            return;
+        }
+
         $this->validate([
             'deletePassword' => ['required', 'string', 'current_password'],
         ], [
@@ -498,6 +545,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         <h2 class="text-base font-bold text-ink">{{ __('Mon Entreprise') }}</h2>
                         <p class="mt-1 text-sm text-slate-500">{{ __('Ces informations sont utilisées dans votre espace Fayeku et sur vos documents générés.') }}</p>
 
+                        <x-shared.demo-readonly-notice />
+
                         @if (session('firm-saved'))
                             <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                                 {{ __('Profil de l\'entreprise enregistré avec succès.') }}
@@ -520,15 +569,23 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                     <h3 class="text-sm font-semibold text-ink">{{ __('Logo de l\'entreprise') }}</h3>
                                     <p class="mt-1 text-sm text-slate-500">{{ __('Affiché en haut à droite de vos devis, proformas et factures. PNG, JPG ou WebP, jusqu\'à 1 Mo.') }}</p>
                                     <div class="mt-3 flex flex-wrap items-center gap-3">
-                                        <label class="inline-flex cursor-pointer items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:border-primary/30 hover:text-primary">
+                                        <label @class([
+                                            'inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition',
+                                            'cursor-pointer hover:border-primary/30 hover:text-primary' => ! $this->isDemoMode,
+                                            'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                        ])>
                                             <svg class="mr-2 size-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 7.5m0 0L7.5 12M12 7.5v9" />
                                             </svg>
                                             <span>{{ $this->company?->logo_path ? __('Remplacer') : __('Téléverser un logo') }}</span>
-                                            <input type="file" wire:model="logoUpload" accept="image/png,image/jpeg,image/webp" class="hidden" />
+                                            <input type="file" wire:model="logoUpload" accept="image/png,image/jpeg,image/webp" class="hidden" @disabled($this->isDemoMode) />
                                         </label>
                                         @if ($this->company?->logo_path)
-                                            <button type="button" wire:click="removeLogo" class="inline-flex items-center rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
+                                            <button type="button" wire:click="removeLogo" @disabled($this->isDemoMode) @class([
+                                                'inline-flex items-center rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition',
+                                                'hover:bg-rose-50' => ! $this->isDemoMode,
+                                                'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                            ])>
                                                 {{ __('Supprimer') }}
                                             </button>
                                         @endif
@@ -542,10 +599,11 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         </div>
 
                         <form wire:submit="saveCompanyProfile" class="mt-6 space-y-8">
+                            <fieldset @disabled($this->isDemoMode) class="space-y-8 disabled:opacity-70">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <label class="auth-label sm:col-span-2">
                                     <span>{{ __('Nom de l\'entreprise') }}</span>
-                                    <input wire:model="firmName" type="text" required class="auth-input" />
+                                    <input wire:model="firmName" type="text" required class="auth-input" @readonly($this->isDemoMode) />
                                     @error('firmName') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <x-phone-input
@@ -557,21 +615,22 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                     :phone-value="$firmPhone"
                                     phone-model="firmPhone"
                                     phone-placeholder="77 000 00 00"
+                                    :readonly="$this->isDemoMode"
                                 />
                                 @error('firmPhone') <p class="auth-error">{{ $message }}</p> @enderror
                                 <label class="auth-label">
                                     <span>{{ __('Adresse e-mail professionnelle') }}</span>
-                                    <input wire:model="firmEmail" type="email" class="auth-input" />
+                                    <input wire:model="firmEmail" type="email" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('firmEmail') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <label class="auth-label sm:col-span-2">
                                     <span>{{ __('Adresse') }}</span>
-                                    <input wire:model="firmAddress" type="text" class="auth-input" />
+                                    <input wire:model="firmAddress" type="text" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('firmAddress') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <label class="auth-label sm:col-span-2">
                                     <span>{{ __('Ville') }}</span>
-                                    <input wire:model="firmCity" type="text" class="auth-input" />
+                                    <input wire:model="firmCity" type="text" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('firmCity') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                             </div>
@@ -583,22 +642,27 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                 <div class="mt-4 grid gap-6 sm:grid-cols-2">
                                     <label class="auth-label">
                                         <span>{{ __('NINEA') }}</span>
-                                        <input wire:model="firmNinea" type="text" placeholder="Ex. SN123456789" class="auth-input" />
+                                        <input wire:model="firmNinea" type="text" placeholder="Ex. SN123456789" class="auth-input" @readonly($this->isDemoMode) />
                                         @error('firmNinea') <p class="auth-error">{{ $message }}</p> @enderror
                                     </label>
                                     <label class="auth-label">
                                         <span>{{ __('RCCM') }}</span>
-                                        <input wire:model="firmRccm" type="text" placeholder="Ex. SN-DKR-2024-B-12345" class="auth-input" />
+                                        <input wire:model="firmRccm" type="text" placeholder="Ex. SN-DKR-2024-B-12345" class="auth-input" @readonly($this->isDemoMode) />
                                         @error('firmRccm') <p class="auth-error">{{ $message }}</p> @enderror
                                     </label>
                                 </div>
                             </div>
 
                             <div class="flex items-center gap-4 border-t border-slate-100 pt-6">
-                                <button type="submit" class="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                                <button type="submit" @disabled($this->isDemoMode) @class([
+                                    'inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition',
+                                    'hover:bg-primary/90' => ! $this->isDemoMode,
+                                    'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                ])>
                                     {{ __('Enregistrer les modifications') }}
                                 </button>
                             </div>
+                            </fieldset>
                         </form>
                     </section>
 
@@ -608,6 +672,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         <h2 class="text-base font-bold text-ink">{{ __('Mon Profil') }}</h2>
                         <p class="mt-1 text-sm text-slate-500">{{ __('Gérez les informations associées à votre compte utilisateur.') }}</p>
 
+                        <x-shared.demo-readonly-notice />
+
                         @if (session('account-saved'))
                             <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                                 {{ __('Compte mis à jour avec succès.') }}
@@ -615,20 +681,21 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         @endif
 
                         <form wire:submit="saveAccount" class="mt-6 space-y-6">
+                            <fieldset @disabled($this->isDemoMode) class="space-y-6 disabled:opacity-70">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <label class="auth-label">
                                     <span>{{ __('Prénom') }}</span>
-                                    <input wire:model="firstName" type="text" required autocomplete="given-name" class="auth-input" />
+                                    <input wire:model="firstName" type="text" required autocomplete="given-name" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('firstName') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <label class="auth-label">
                                     <span>{{ __('Nom') }}</span>
-                                    <input wire:model="lastName" type="text" required autocomplete="family-name" class="auth-input" />
+                                    <input wire:model="lastName" type="text" required autocomplete="family-name" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('lastName') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <label class="auth-label">
                                     <span>{{ __('Adresse e-mail') }}</span>
-                                    <input wire:model="userEmail" type="email" autocomplete="email" class="auth-input" />
+                                    <input wire:model="userEmail" type="email" autocomplete="email" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('userEmail') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <x-phone-input
@@ -643,10 +710,15 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                             </div>
 
                             <div class="flex items-center gap-4 border-t border-slate-100 pt-6">
-                                <button type="submit" class="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                                <button type="submit" @disabled($this->isDemoMode) @class([
+                                    'inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition',
+                                    'hover:bg-primary/90' => ! $this->isDemoMode,
+                                    'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                ])>
                                     {{ __('Mettre à jour le compte') }}
                                 </button>
                             </div>
+                            </fieldset>
                         </form>
                     </section>
 
@@ -658,6 +730,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                             {{ __('Par défaut, vos relances sont signées au nom de votre entreprise. Vous pouvez personnaliser la signature pour renforcer la relation avec vos clients.') }}
                         </p>
 
+                        <x-shared.demo-readonly-notice />
+
                         @if (session('signature-saved'))
                             <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                                 {{ __('Signature enregistrée avec succès.') }}
@@ -665,6 +739,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         @endif
 
                         <form wire:submit="saveSignature" class="mt-6 space-y-6">
+                            <fieldset @disabled($this->isDemoMode) class="space-y-6 disabled:opacity-70">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <label class="auth-label">
                                     <span>{{ __('Votre nom (optionnel)') }}</span>
@@ -674,6 +749,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                         maxlength="100"
                                         placeholder="Ex. Moussa Diop"
                                         class="auth-input"
+                                        @readonly($this->isDemoMode)
                                     />
                                     @error('senderName') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
@@ -685,6 +761,7 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                                         maxlength="100"
                                         placeholder="Ex. Directeur commercial"
                                         class="auth-input"
+                                        @readonly($this->isDemoMode)
                                     />
                                     @error('senderRole') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
@@ -704,10 +781,15 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                             </div>
 
                             <div class="flex items-center gap-4 border-t border-slate-100 pt-6">
-                                <button type="submit" class="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                                <button type="submit" @disabled($this->isDemoMode) @class([
+                                    'inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition',
+                                    'hover:bg-primary/90' => ! $this->isDemoMode,
+                                    'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                ])>
                                     {{ __('Enregistrer la signature') }}
                                 </button>
                             </div>
+                            </fieldset>
                         </form>
                     </section>
 
@@ -717,6 +799,8 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         <h2 class="text-base font-bold text-ink">{{ __('Mot de passe') }}</h2>
                         <p class="mt-1 text-sm text-slate-500">{{ __('Protégez l\'accès à votre compte Fayeku.') }}</p>
 
+                        <x-shared.demo-readonly-notice />
+
                         @if (session('password-saved'))
                             <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                                 {{ __('Mot de passe modifié avec succès.') }}
@@ -724,29 +808,35 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                         @endif
 
                         <form wire:submit="updatePassword" class="mt-6 space-y-6">
+                            <fieldset @disabled($this->isDemoMode) class="space-y-6 disabled:opacity-70">
                             <div class="max-w-md space-y-6">
                                 <label class="auth-label">
                                     <span>{{ __('Mot de passe actuel') }}</span>
-                                    <input wire:model="currentPassword" type="password" required autocomplete="current-password" class="auth-input" />
+                                    <input wire:model="currentPassword" type="password" required autocomplete="current-password" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('currentPassword') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <label class="auth-label">
                                     <span>{{ __('Nouveau mot de passe') }}</span>
-                                    <input wire:model="newPassword" type="password" required autocomplete="new-password" class="auth-input" />
+                                    <input wire:model="newPassword" type="password" required autocomplete="new-password" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('newPassword') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                                 <label class="auth-label">
                                     <span>{{ __('Confirmer le mot de passe') }}</span>
-                                    <input wire:model="newPasswordConfirmation" type="password" required autocomplete="new-password" class="auth-input" />
+                                    <input wire:model="newPasswordConfirmation" type="password" required autocomplete="new-password" class="auth-input" @readonly($this->isDemoMode) />
                                     @error('newPasswordConfirmation') <p class="auth-error">{{ $message }}</p> @enderror
                                 </label>
                             </div>
 
                             <div class="flex items-center gap-4 border-t border-slate-100 pt-6">
-                                <button type="submit" class="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                                <button type="submit" @disabled($this->isDemoMode) @class([
+                                    'inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition',
+                                    'hover:bg-primary/90' => ! $this->isDemoMode,
+                                    'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                ])>
                                     {{ __('Modifier le mot de passe') }}
                                 </button>
                             </div>
+                            </fieldset>
                         </form>
                     </section>
 
@@ -1171,11 +1261,18 @@ new #[Title('Paramètres')] #[Layout('layouts::pme')] class extends Component {
                             {{ __('Supprimez définitivement votre compte et toutes ses données. Cette action est irréversible.') }}
                         </p>
 
+                        <x-shared.demo-readonly-notice />
+
                         <div class="mt-6">
                             <button
                                 type="button"
                                 wire:click="$set('showDeleteAccountModal', true)"
-                                class="inline-flex items-center rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-500"
+                                @disabled($this->isDemoMode)
+                                @class([
+                                    'inline-flex items-center rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition',
+                                    'hover:bg-rose-500' => ! $this->isDemoMode,
+                                    'cursor-not-allowed opacity-60' => $this->isDemoMode,
+                                ])
                             >
                                 {{ __('Supprimer mon compte') }}
                             </button>
