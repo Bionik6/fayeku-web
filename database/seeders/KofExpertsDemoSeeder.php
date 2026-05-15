@@ -115,45 +115,239 @@ class KofExpertsDemoSeeder extends Seeder
         $smes = [];
 
         // ─── 2 Critiques (overdue > 60 jours) ──────────────────────────────
-        $smes['kof_atlantique'] = $this->createSme($cabinet, 'kof_atlantique', 'Atlantique Distribution SARL', 'essentiel', '+221338500201', monthsAgo: 7);
+        $smes['kof_atlantique'] = $this->createSme($cabinet, 'kof_atlantique', monthsAgo: 7);
         $this->seedHeavyOverdue($smes['kof_atlantique'], paidCount: 9, paidAmount: 1_040_000, overdueCount: 6, overdueAmount: 620_000, overdueAgo: 65);
         $this->seedCurrentMonthActivity($smes['kof_atlantique'], averageAmount: 720_000, count: 3, paidCount: 0);
 
-        $smes['kof_senebat'] = $this->createSme($cabinet, 'kof_senebat', 'SénéBâti Construction SA', 'essentiel', '+221338500202', monthsAgo: 6);
+        $smes['kof_senebat'] = $this->createSme($cabinet, 'kof_senebat', monthsAgo: 6);
         $this->seedHeavyOverdue($smes['kof_senebat'], paidCount: 7, paidAmount: 1_320_000, overdueCount: 5, overdueAmount: 780_000, overdueAgo: 71);
         $this->seedCurrentMonthActivity($smes['kof_senebat'], averageAmount: 950_000, count: 3, paidCount: 1);
 
         // ─── 3 À surveiller (overdue récent ou inactif) ────────────────────
-        $smes['kof_textile_kaolack'] = $this->createSme($cabinet, 'kof_textile_kaolack', 'Textile Kaolack SARL', 'basique', '+221338500203', monthsAgo: 5);
+        $smes['kof_textile_kaolack'] = $this->createSme($cabinet, 'kof_textile_kaolack', monthsAgo: 5);
         $this->seedWatchOverdue($smes['kof_textile_kaolack'], overdueAgoDays: 32);
         $this->seedCurrentMonthActivity($smes['kof_textile_kaolack'], averageAmount: 380_000, count: 3, paidCount: 1);
 
-        $smes['kof_transport_thies'] = $this->createSme($cabinet, 'kof_transport_thies', 'Transport Thiès SARL', 'essentiel', '+221338500204', monthsAgo: 4);
+        $smes['kof_transport_thies'] = $this->createSme($cabinet, 'kof_transport_thies', monthsAgo: 4);
         $this->seedWatchOverdue($smes['kof_transport_thies'], overdueAgoDays: 22);
         $this->seedCurrentMonthActivity($smes['kof_transport_thies'], averageAmount: 460_000, count: 3, paidCount: 2);
 
-        $smes['kof_agro_casamance'] = $this->createSme($cabinet, 'kof_agro_casamance', 'Casamance Agro SA', 'essentiel', '+221338500205', monthsAgo: 5);
+        $smes['kof_agro_casamance'] = $this->createSme($cabinet, 'kof_agro_casamance', monthsAgo: 5);
         $this->seedInactive($smes['kof_agro_casamance'], lastInvoiceAgoDays: 38);
         $this->seedCurrentMonthActivity($smes['kof_agro_casamance'], averageAmount: 340_000, count: 2, paidCount: 1);
 
         // ─── 7 À jour ───────────────────────────────────────────────────────
         $healthy = [
-            ['kof_pharmacie_liberte', 'Pharmacie Liberté SARL', 'essentiel', '+221338500206', 5, 540_000, 8],
-            ['kof_digital_ndakaaru', 'Digital Ndakaaru Agency', 'essentiel', '+221338500207', 4, 460_000, 4],
-            ['kof_btp_almadies', 'Almadies BTP SA', 'essentiel', '+221338500208', 6, 1_180_000, 6],
-            ['kof_resto_terrasses', 'Restaurant Les Terrasses', 'basique', '+221338500209', 3, 230_000, 5],
-            ['kof_immo_yoff', 'Yoff Immobilier SARL', 'essentiel', '+221338500210', 5, 920_000, 7],
-            ['kof_clinique_mermoz', 'Clinique Mermoz SA', 'essentiel', '+221338500211', 4, 680_000, 3],
-            ['kof_boulangerie_sicap', 'Boulangerie Sicap', 'basique', '+221338500212', 3, 165_000, 4],
+            ['kof_pharmacie_liberte', 5, 540_000, 8],
+            ['kof_digital_ndakaaru', 4, 460_000, 4],
+            ['kof_btp_almadies', 6, 1_180_000, 6],
+            ['kof_resto_terrasses', 3, 230_000, 5],
+            ['kof_immo_yoff', 5, 920_000, 7],
+            ['kof_clinique_mermoz', 4, 680_000, 3],
+            ['kof_boulangerie_sicap', 3, 165_000, 4],
         ];
 
-        foreach ($healthy as [$key, $name, $plan, $phone, $invoiceCount, $invoiceAmount, $monthsAgo]) {
-            $smes[$key] = $this->createSme($cabinet, $key, $name, $plan, $phone, $monthsAgo);
+        foreach ($healthy as [$key, $invoiceCount, $invoiceAmount, $monthsAgo]) {
+            $smes[$key] = $this->createSme($cabinet, $key, $monthsAgo);
             $this->seedHealthy($smes[$key], count: $invoiceCount, totalPerInvoice: $invoiceAmount);
             $this->seedCurrentMonthActivity($smes[$key], averageAmount: $invoiceAmount, count: 3, paidCount: 2);
         }
 
         return $smes;
+    }
+
+    /**
+     * Profils détaillés des 12 PME du portefeuille KOF Experts. Chaque entrée
+     * décrit la société (raison sociale, plan, secteur, NINEA/RCCM, adresse)
+     * et l'owner qui s'y connecte. Centraliser ici garde createSme() simple
+     * et facilite l'ajustement de la donnée démo si on veut polir un profil.
+     *
+     * @return array<string, array<string, string>>
+     */
+    private function smeProfiles(): array
+    {
+        return [
+            'kof_atlantique' => [
+                'name' => 'Atlantique Distribution SARL',
+                'plan' => 'essentiel',
+                'phone' => '+221338500201',
+                'email' => 'contact@atlantique-distribution.sn',
+                'sector' => 'Import-Export',
+                'legal_form' => 'SARL',
+                'address' => '45 Avenue Lamine Guèye, Plateau',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240501',
+                'rccm' => 'SN-DKR-2024-B-50201',
+                'owner_first_name' => 'Modou',
+                'owner_last_name' => 'Diop',
+                'sender_role' => 'Directeur général',
+            ],
+            'kof_senebat' => [
+                'name' => 'SénéBâti Construction SA',
+                'plan' => 'essentiel',
+                'phone' => '+221338500202',
+                'email' => 'contact@senebati.sn',
+                'sector' => 'BTP & Génie civil',
+                'legal_form' => 'SA',
+                'address' => 'Zone Industrielle, Km 5 Route de Rufisque',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240502',
+                'rccm' => 'SN-DKR-2024-B-50202',
+                'owner_first_name' => 'Mamadou',
+                'owner_last_name' => 'Fall',
+                'sender_role' => 'Président directeur général',
+            ],
+            'kof_textile_kaolack' => [
+                'name' => 'Textile Kaolack SARL',
+                'plan' => 'basique',
+                'phone' => '+221338500203',
+                'email' => 'contact@textile-kaolack.sn',
+                'sector' => 'Textile & Confection',
+                'legal_form' => 'SARL',
+                'address' => '12 Avenue Pinet-Laprade',
+                'city' => 'Kaolack',
+                'ninea' => 'SN20240503',
+                'rccm' => 'SN-KAO-2024-B-50203',
+                'owner_first_name' => 'Aïssatou',
+                'owner_last_name' => 'Ba',
+                'sender_role' => 'Gérante',
+            ],
+            'kof_transport_thies' => [
+                'name' => 'Transport Thiès SARL',
+                'plan' => 'essentiel',
+                'phone' => '+221338500204',
+                'email' => 'contact@transport-thies.sn',
+                'sector' => 'Transport & Logistique',
+                'legal_form' => 'SARL',
+                'address' => 'Route de Mbour, Km 3',
+                'city' => 'Thiès',
+                'ninea' => 'SN20240504',
+                'rccm' => 'SN-THI-2024-B-50204',
+                'owner_first_name' => 'Cheikh',
+                'owner_last_name' => 'Sarr',
+                'sender_role' => 'Gérant',
+            ],
+            'kof_agro_casamance' => [
+                'name' => 'Casamance Agro SA',
+                'plan' => 'essentiel',
+                'phone' => '+221338500205',
+                'email' => 'contact@casamance-agro.sn',
+                'sector' => 'Agro-industrie',
+                'legal_form' => 'SA',
+                'address' => 'Quartier Néma, Route de Boucotte',
+                'city' => 'Ziguinchor',
+                'ninea' => 'SN20240505',
+                'rccm' => 'SN-ZIG-2024-B-50205',
+                'owner_first_name' => 'Ousmane',
+                'owner_last_name' => 'Diatta',
+                'sender_role' => 'Directeur général',
+            ],
+            'kof_pharmacie_liberte' => [
+                'name' => 'Pharmacie Liberté SARL',
+                'plan' => 'essentiel',
+                'phone' => '+221338500206',
+                'email' => 'contact@pharmacie-liberte.sn',
+                'sector' => 'Santé & Pharmacie',
+                'legal_form' => 'SARL',
+                'address' => 'Rond-point Liberté 6',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240506',
+                'rccm' => 'SN-DKR-2024-B-50206',
+                'owner_first_name' => 'Awa',
+                'owner_last_name' => 'Diallo',
+                'sender_role' => 'Pharmacienne titulaire',
+            ],
+            'kof_digital_ndakaaru' => [
+                'name' => 'Digital Ndakaaru Agency',
+                'plan' => 'essentiel',
+                'phone' => '+221338500207',
+                'email' => 'hello@digital-ndakaaru.sn',
+                'sector' => 'Marketing digital',
+                'legal_form' => 'SARL',
+                'address' => '23 Rue Carnot, Plateau',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240507',
+                'rccm' => 'SN-DKR-2024-B-50207',
+                'owner_first_name' => 'Aliou',
+                'owner_last_name' => 'Touré',
+                'sender_role' => 'Fondateur',
+            ],
+            'kof_btp_almadies' => [
+                'name' => 'Almadies BTP SA',
+                'plan' => 'essentiel',
+                'phone' => '+221338500208',
+                'email' => 'contact@almadies-btp.sn',
+                'sector' => 'BTP & Génie civil',
+                'legal_form' => 'SA',
+                'address' => 'Route des Almadies, près du phare',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240508',
+                'rccm' => 'SN-DKR-2024-B-50208',
+                'owner_first_name' => 'Ibrahima',
+                'owner_last_name' => 'Sow',
+                'sender_role' => 'Directeur général',
+            ],
+            'kof_resto_terrasses' => [
+                'name' => 'Restaurant Les Terrasses',
+                'plan' => 'basique',
+                'phone' => '+221338500209',
+                'email' => 'contact@les-terrasses.sn',
+                'sector' => 'Restauration',
+                'legal_form' => 'SUARL',
+                'address' => 'Corniche Ouest, Fann',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240509',
+                'rccm' => 'SN-DKR-2024-B-50209',
+                'owner_first_name' => 'Fatou',
+                'owner_last_name' => 'Niang',
+                'sender_role' => 'Gérante',
+            ],
+            'kof_immo_yoff' => [
+                'name' => 'Yoff Immobilier SARL',
+                'plan' => 'essentiel',
+                'phone' => '+221338500210',
+                'email' => 'contact@yoff-immobilier.sn',
+                'sector' => 'Immobilier',
+                'legal_form' => 'SARL',
+                'address' => '8 Rue de Yoff, Ngor',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240510',
+                'rccm' => 'SN-DKR-2024-B-50210',
+                'owner_first_name' => 'Pape',
+                'owner_last_name' => 'Ndiaye',
+                'sender_role' => 'Directeur',
+            ],
+            'kof_clinique_mermoz' => [
+                'name' => 'Clinique Mermoz SA',
+                'plan' => 'essentiel',
+                'phone' => '+221338500211',
+                'email' => 'contact@clinique-mermoz.sn',
+                'sector' => 'Santé',
+                'legal_form' => 'SA',
+                'address' => 'Avenue Cheikh Anta Diop, Mermoz',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240511',
+                'rccm' => 'SN-DKR-2024-B-50211',
+                'owner_first_name' => 'Mariama',
+                'owner_last_name' => 'Faye',
+                'sender_role' => 'Directrice médicale',
+            ],
+            'kof_boulangerie_sicap' => [
+                'name' => 'Boulangerie Sicap',
+                'plan' => 'basique',
+                'phone' => '+221338500212',
+                'email' => 'contact@boulangerie-sicap.sn',
+                'sector' => 'Restauration & Boulangerie',
+                'legal_form' => 'SARL',
+                'address' => 'Avenue Bourguiba, Sicap Baobab',
+                'city' => 'Dakar',
+                'ninea' => 'SN20240512',
+                'rccm' => 'SN-DKR-2024-B-50212',
+                'owner_first_name' => 'Boubacar',
+                'owner_last_name' => 'Cissé',
+                'sender_role' => 'Gérant',
+            ],
+        ];
     }
 
     /**
@@ -194,12 +388,14 @@ class KofExpertsDemoSeeder extends Seeder
         }
     }
 
-    private function createSme(Company $cabinet, string $key, string $name, string $plan, string $phone, int $monthsAgo): Company
+    private function createSme(Company $cabinet, string $key, int $monthsAgo): Company
     {
+        $profile = $this->smeProfiles()[$key] ?? throw new \RuntimeException("Profil PME manquant pour la clé « {$key} ».");
+
         $owner = User::create([
-            'first_name' => SenegalFaker::firstNameMale(),
-            'last_name' => SenegalFaker::lastName(),
-            'phone' => $phone,
+            'first_name' => $profile['owner_first_name'],
+            'last_name' => $profile['owner_last_name'],
+            'phone' => $profile['phone'],
             'email' => "owner@{$key}.demo",
             'password' => self::SME_PASSWORD,
             'profile_type' => 'sme',
@@ -213,11 +409,20 @@ class KofExpertsDemoSeeder extends Seeder
         ])->save();
 
         $sme = Company::create([
-            'name' => $name,
+            'name' => $profile['name'],
             'type' => 'sme',
-            'plan' => $plan,
+            'plan' => $profile['plan'],
             'country_code' => 'SN',
-            'phone' => $phone,
+            'phone' => $profile['phone'],
+            'email' => $profile['email'],
+            'sender_name' => $profile['owner_first_name'].' '.$profile['owner_last_name'],
+            'sender_role' => $profile['sender_role'],
+            'address' => $profile['address'],
+            'city' => $profile['city'],
+            'sector' => $profile['sector'],
+            'legal_form' => $profile['legal_form'],
+            'ninea' => $profile['ninea'],
+            'rccm' => $profile['rccm'],
             'setup_completed_at' => now()->subMonths($monthsAgo)->addDays(2),
         ]);
 
@@ -225,8 +430,8 @@ class KofExpertsDemoSeeder extends Seeder
 
         Subscription::create([
             'company_id' => $sme->id,
-            'plan_slug' => $plan,
-            'price_paid' => $plan === 'essentiel' ? 20_000 : 10_000,
+            'plan_slug' => $profile['plan'],
+            'price_paid' => $profile['plan'] === 'essentiel' ? 20_000 : 10_000,
             'billing_cycle' => 'monthly',
             'status' => 'active',
             'trial_ends_at' => null,
@@ -412,11 +617,11 @@ class KofExpertsDemoSeeder extends Seeder
         $cabinetUserId = $cabinet->users()->orderBy('users.created_at')->first()?->id;
 
         $recentAccepted = [
-            ['Pharmacie Liberté SARL', 'Aliou Camara', '+221771500101', 'kof_pharmacie_liberte', 'essentiel', 8],
-            ['Digital Ndakaaru Agency', 'Ndèye Fatou Diop', '+221771500102', 'kof_digital_ndakaaru', 'essentiel', 14],
-            ['Almadies BTP SA', 'Pape Moussa Fall', '+221771500103', 'kof_btp_almadies', 'essentiel', 21],
-            ['Yoff Immobilier SARL', 'Abdou Rahmane Sow', '+221771500104', 'kof_immo_yoff', 'essentiel', 28],
-            ['Clinique Mermoz SA', 'Dr. Rokhaya Ndiaye', '+221771500105', 'kof_clinique_mermoz', 'essentiel', 36],
+            ['Pharmacie Liberté SARL', 'Awa Diallo', '+221771500101', 'kof_pharmacie_liberte', 'essentiel', 8],
+            ['Digital Ndakaaru Agency', 'Aliou Touré', '+221771500102', 'kof_digital_ndakaaru', 'essentiel', 14],
+            ['Almadies BTP SA', 'Ibrahima Sow', '+221771500103', 'kof_btp_almadies', 'essentiel', 21],
+            ['Yoff Immobilier SARL', 'Pape Ndiaye', '+221771500104', 'kof_immo_yoff', 'essentiel', 28],
+            ['Clinique Mermoz SA', 'Mariama Faye', '+221771500105', 'kof_clinique_mermoz', 'essentiel', 36],
         ];
 
         foreach ($recentAccepted as [$company, $contact, $phone, $key, $plan, $daysAgo]) {
@@ -446,8 +651,8 @@ class KofExpertsDemoSeeder extends Seeder
         }
 
         $olderAccepted = [
-            ['Restaurant Les Terrasses', 'Binta Ly', '+221771500106', 'kof_resto_terrasses', 'basique'],
-            ['Boulangerie Sicap', 'Souleymane Diouf', '+221771500107', 'kof_boulangerie_sicap', 'basique'],
+            ['Restaurant Les Terrasses', 'Fatou Niang', '+221771500106', 'kof_resto_terrasses', 'basique'],
+            ['Boulangerie Sicap', 'Boubacar Cissé', '+221771500107', 'kof_boulangerie_sicap', 'basique'],
         ];
 
         foreach ($olderAccepted as [$company, $contact, $phone, $key, $plan]) {
