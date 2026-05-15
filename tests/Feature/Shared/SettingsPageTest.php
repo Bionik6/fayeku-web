@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use App\Models\Auth\Company;
 use App\Models\Shared\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -122,4 +122,69 @@ it('returns 404 for old settings/profile URL', function () {
     $this->actingAs($this->user)
         ->get('/compta/settings/profile')
         ->assertNotFound();
+});
+
+// ─── Demo mode (FAYEKU_DEMO_MODE) ────────────────────────────────────────
+
+it('bloque la modification du profil du cabinet en mode démo', function () {
+    config()->set('fayeku.demo', true);
+    $originalName = $this->firm->name;
+
+    Livewire::actingAs($this->user)
+        ->test('pages::compta.settings.index')
+        ->set('firmName', 'Mutation interdite')
+        ->call('saveFirmProfile');
+
+    expect($this->firm->fresh()->name)->toBe($originalName);
+});
+
+it('bloque la modification du compte utilisateur en mode démo (compta)', function () {
+    config()->set('fayeku.demo', true);
+    $originalFirstName = $this->user->first_name;
+
+    Livewire::actingAs($this->user)
+        ->test('pages::compta.settings.index')
+        ->call('setSection', 'account')
+        ->set('firstName', 'Mutation')
+        ->set('lastName', 'Interdite')
+        ->call('saveAccount');
+
+    expect($this->user->fresh()->first_name)->toBe($originalFirstName);
+});
+
+it('bloque la modification du mot de passe en mode démo (compta)', function () {
+    config()->set('fayeku.demo', true);
+    $originalHash = $this->user->password;
+
+    Livewire::actingAs($this->user)
+        ->test('pages::compta.settings.index')
+        ->call('setSection', 'account')
+        ->set('currentPassword', 'password')
+        ->set('newPassword', 'New-Secure-Pass-123!')
+        ->set('newPasswordConfirmation', 'New-Secure-Pass-123!')
+        ->call('updatePassword')
+        ->assertSet('currentPassword', '')
+        ->assertSet('newPassword', '')
+        ->assertSet('newPasswordConfirmation', '');
+
+    expect($this->user->fresh()->password)->toBe($originalHash);
+});
+
+it('affiche le bandeau lecture seule dans les deux sections compta en mode démo', function () {
+    config()->set('fayeku.demo', true);
+
+    foreach (['profile', 'account'] as $section) {
+        Livewire::actingAs($this->user)
+            ->test('pages::compta.settings.index')
+            ->call('setSection', $section)
+            ->assertSee('Édition désactivée en mode démonstration');
+    }
+});
+
+it('n\'affiche pas le bandeau lecture seule hors mode démo (compta)', function () {
+    config()->set('fayeku.demo', false);
+
+    Livewire::actingAs($this->user)
+        ->test('pages::compta.settings.index')
+        ->assertDontSee('Édition désactivée en mode démonstration');
 });
