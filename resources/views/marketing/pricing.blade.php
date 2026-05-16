@@ -18,12 +18,11 @@
             'popular' => false,
             'limits' => [
                 ['label' => 'Documents', 'sublabel' => 'Devis · Proformas · Factures', 'value' => '30 / mois'],
-                ['label' => 'Clients', 'value' => '50'],
+                ['label' => 'Clients', 'value' => 'Illimités'],
                 ['label' => 'Utilisateurs', 'value' => '1'],
             ],
             'features' => [
                 'Devis, proformas et factures',
-                'Factures récurrentes',
                 'Suivi des impayés en temps réel',
                 'Relances <strong>manuelles</strong> (WhatsApp, email)',
                 'Templates personnalisables (logo, NINEA)',
@@ -101,7 +100,7 @@
             'title' => "Limites mensuelles",
             'rows' => [
                 ['Documents (devis, proformas, factures) / mois', '30',          'Illimités',   'Illimités'],
-                ['Clients',                                       '50',          'Illimités',   'Illimités'],
+                ['Clients',                                       'Illimités',   'Illimités',   'Illimités'],
                 ['Utilisateurs',                                  '1',           '3 (+3k/util.)', '25 inclus (+2k/util.)'],
                 ['Historique clients',                            '✓',           '✓',           '✓'],
             ],
