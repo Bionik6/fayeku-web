@@ -3,30 +3,6 @@
 @php
     $plans = [
         [
-            'slug' => 'gratuit',
-            'name' => 'Gratuit',
-            'eyebrow' => 'Démarrez en douceur',
-            'tagline' => 'Pour tester Fayeku sans engagement.',
-            'price' => '0',
-            'unit' => 'FCFA · à vie',
-            'note' => 'Aucun engagement, aucun paiement',
-            'cta_label' => 'Démarrer gratuitement',
-            'cta_href' => route('register'),
-            'cta_variant' => 'secondary',
-            'popular' => false,
-            'limits' => [
-                ['label' => 'Documents', 'sublabel' => 'Devis · Proformas · Factures', 'value' => '10 / mois'],
-                ['label' => 'Clients', 'value' => '10'],
-                ['label' => 'Utilisateurs', 'value' => '1'],
-            ],
-            'features' => [
-                'Watermark Fayeku discret sur les documents',
-                'Templates de base',
-                'Suivi des paiements manuels',
-                'Sans engagement, sans paiement préalable',
-            ],
-        ],
-        [
             'slug' => 'basique',
             'name' => 'Basique',
             'eyebrow' => 'Facturez proprement',
@@ -118,85 +94,82 @@
         ],
     ];
 
-    $comparePlans = ['Gratuit', 'Basique', 'Essentiel', 'Entreprise'];
+    $comparePlans = ['Basique', 'Essentiel', 'Entreprise'];
 
     $compareSections = [
         [
             'title' => "Limites mensuelles",
             'rows' => [
-                ['Documents (devis, proformas, factures) / mois', '10',  '150',         'Illimités',   'Illimités'],
-                ['Clients',                                       '10',  '50',          'Illimités',   'Illimités'],
-                ['Utilisateurs',                                  '1',   '1',           '3 (+3k/util.)', '25 inclus (+2k/util.)'],
-                ['Historique clients',                    '—',         '✓',           '✓',           '✓'],
-                ['Branding Fayeku obligatoire',           '✓',         '—',           '—',           '—'],
-                ['Watermark PDF',                         '✓',         '—',           '—',           '—'],
-                ["Durée de l'essai gratuit",              'À vie',     '30 jours',    '30 jours',    '30 jours'],
+                ['Documents (devis, proformas, factures) / mois', '150',         'Illimités',   'Illimités'],
+                ['Clients',                                       '50',          'Illimités',   'Illimités'],
+                ['Utilisateurs',                                  '1',           '3 (+3k/util.)', '25 inclus (+2k/util.)'],
+                ['Historique clients',                            '✓',           '✓',           '✓'],
             ],
         ],
         [
             'title' => 'Facturation & devis',
             'rows' => [
-                ['Création de factures',                    '✓', '✓', '✓', '✓'],
-                ['Templates personnalisables (logo, NINEA)','—', '✓', '✓', '✓'],
-                ['Devis & proformas basiques',              '—', '✓', '✓', '✓'],
-                ['Conversion devis → facture automatique',  '—', '—', '✓', '✓'],
-                ['Facturation récurrente automatique',      '—', '—', '✓', '✓'],
-                ['Multi-devises (FCFA, EUR, USD)',          '—', '—', '✓', '✓'],
-                ['Bons de commande',                        '—', '—', '✓', '✓'],
-                ['Conformité DGID (dès disponibilité)',     '—', '—', '✓', '✓'],
+                ['Création de factures',                    '✓', '✓', '✓'],
+                ['Templates personnalisables (logo, NINEA)','✓', '✓', '✓'],
+                ['Devis & proformas basiques',              '✓', '✓', '✓'],
+                ['Conversion devis → facture automatique',  '—', '✓', '✓'],
+                ['Facturation récurrente automatique',      '—', '✓', '✓'],
+                ['Multi-devises (FCFA, EUR, USD)',          '—', '✓', '✓'],
+                ['Bons de commande',                        '—', '✓', '✓'],
+                ['Conformité DGID (dès disponibilité)',     '—', '✓', '✓'],
             ],
         ],
         [
             'title' => 'Recouvrement & paiement',
             'rows' => [
-                ['Marquer facture payée (Wave / OM / Cash)',          '✓', '✓', '✓', '✓'],
-                ['Dashboard impayés temps réel',                      '—', '✓', '✓', '✓'],
-                ['Relances manuelles (WhatsApp, email)',              '—', '✓', '✓', '✓'],
-                ['Relances WhatsApp automatiques · J-3 à J+60',       '—', '—', '✓', '✓'],
-                ['Calendrier complet J-3 → J+60 configurable',        '—', '—', '✓', '✓'],
-                ['Scoring de fiabilité client',                       '—', '—', '✓', '✓'],
+                ['Marquer facture payée (Wave / OM / Cash)',          '✓', '✓', '✓'],
+                ['Dashboard impayés temps réel',                      '✓', '✓', '✓'],
+                ['Relances manuelles (WhatsApp, email)',              '✓', '✓', '✓'],
+                ['Relances WhatsApp automatiques · J-3 à J+60',       '—', '✓', '✓'],
+                ['Calendrier complet J-3 → J+60 configurable',        '—', '✓', '✓'],
+                ['Scoring de fiabilité client',                       '—', '✓', '✓'],
             ],
         ],
         [
             'title' => 'Pilotage & analytics',
             'rows' => [
-                ['Historique paiements clients',          '—', '✓', '✓', '✓'],
-                ['Délai moyen de paiement',               '—', '✓', '✓', '✓'],
-                ['Rapports avancés (CA, top clients)',    '—', '—', '✓', '✓'],
-                ['Trésorerie prévisionnelle 90 jours',    '—', '—', '✓', '✓'],
-                ['Niveau de confiance par facture',       '—', '—', '✓', '✓'],
-                ['Exposition au risque par client',       '—', '—', '✓', '✓'],
+                ['Historique paiements clients',          '✓', '✓', '✓'],
+                ['Délai moyen de paiement',               '✓', '✓', '✓'],
+                ['Rapports avancés (CA, top clients)',    '—', '✓', '✓'],
+                ['Trésorerie prévisionnelle 90 jours',    '—', '✓', '✓'],
+                ['Niveau de confiance par facture',       '—', '✓', '✓'],
+                ['Exposition au risque par client',       '—', '✓', '✓'],
             ],
         ],
         [
             'title' => 'Collaboration comptable',
             'rows' => [
-                ['Accès Fayeku Compta',                       'Inclus', 'Inclus', 'Inclus', 'Inclus'],
-                ['Lecture factures temps réel',               '—', '✓', '✓', '✓'],
-                ['Collecte automatique des pièces',           '—', '—', '✓', '✓'],
-                ['Export Sage 100 / EBP / Excel',             '—', '✓', '✓', '✓'],
-                ['Exports comptables programmés',             '—', '—', '—', '✓'],
-                ['Gestion de plusieurs comptables',           '—', '—', '—', '✓'],
+                ['Accès Fayeku Compta',                       'Inclus', 'Inclus', 'Inclus'],
+                ['Lecture factures temps réel',               '✓', '✓', '✓'],
+                ['Collecte automatique des pièces',           '—', '✓', '✓'],
+                ['Export Sage 100 / EBP / Excel',             '✓', '✓', '✓'],
+                ['Exports comptables programmés',             '—', '—', '✓'],
+                ['Gestion de plusieurs comptables',           '—', '—', '✓'],
             ],
         ],
         [
             'title' => 'Gouvernance & intégrations',
             'rows' => [
-                ['Multi-entités (plusieurs sociétés)',           '—', '—', '—', '✓'],
-                ['Workflows de validation par seuil et rôle',    '—', '—', '—', '✓'],
-                ['Rôles & permissions avancés',                  '—', '—', '—', '✓'],
-                ['API + Webhooks',                               '—', '—', '—', '✓'],
-                ['SSO (Azure AD, Google Workspace)',             '—', '—', '—', '✓'],
+                ['Multi-entités (plusieurs sociétés)',           '—', '—', '✓'],
+                ['Workflows de validation par seuil et rôle',    '—', '—', '✓'],
+                ['Rôles & permissions avancés',                  '—', '—', '✓'],
+                ['API + Webhooks',                               '—', '—', '✓'],
+                ['SSO (Azure AD, Google Workspace)',             '—', '—', '✓'],
             ],
         ],
         [
             'title' => 'Support & accompagnement',
             'rows' => [
-                ['Support',                          '—', 'Email 24h ouvrées', 'WhatsApp prioritaire · 4h ouvrées', 'Account manager dédié'],
-                ['Onboarding',                       '—', 'Guides',    'Guidé en ligne (1h visio)', 'Accompagnement dédié'],
-                ['Migration depuis ancien système',  '—', '—',         '—',             '✓'],
-                ['SLA garanti (uptime 99,5 %)',      '—', '—',         '—',             '✓'],
-                ['Support téléphonique direct',      '—', '—',         '—',             '✓'],
+                ['Support',                          'Email 24h ouvrées', 'WhatsApp prioritaire · 4h ouvrées', 'Account manager dédié'],
+                ['Onboarding',                       'Guides',    'Guidé en ligne (1h visio)', 'Accompagnement dédié'],
+                ['Migration depuis ancien système',  '—',         '—',             '✓'],
+                ['SLA garanti (uptime 99,5 %)',      '—',         '—',             '✓'],
+                ['Support téléphonique direct',      '—',         '—',             '✓'],
             ],
         ],
     ];
@@ -231,7 +204,7 @@
         ['q' => "Y a-t-il vraiment des limites cachées sur Essentiel et Entreprise ?", 'a' => "Non. Documents et clients sont sans limite. Un fair use s'applique pour prévenir les abus (mention en CGU), mais aucune PME en usage normal n'est concernée."],
         ['q' => "Y a-t-il un engagement ?", 'a' => "Non. Vous pouvez résilier à tout moment depuis votre tableau de bord. Aucun engagement contractuel multi-mois."],
         ['q' => "Quelle est la différence entre Basique et Essentiel ?", 'a' => "Basique gère vos factures avec des relances <strong>manuelles</strong> (WhatsApp, email). Essentiel ajoute les relances WhatsApp <strong>automatiques</strong> (J-3 à J+60), le scoring de fiabilité client, la prévision de trésorerie 90 jours et le support prioritaire."],
-        ['q' => "Combien d'utilisateurs sont inclus ?", 'a' => "Gratuit et Basique : 1 utilisateur. Essentiel : 3 utilisateurs (supplémentaire 3 000 FCFA/mois). Entreprise : jusqu'à 25 utilisateurs inclus (supplémentaire 2 000 FCFA/mois)."],
+        ['q' => "Combien d'utilisateurs sont inclus ?", 'a' => "Basique : 1 utilisateur. Essentiel : 3 utilisateurs (supplémentaire 3 000 FCFA/mois). Entreprise : jusqu'à 25 utilisateurs inclus (supplémentaire 2 000 FCFA/mois)."],
         ['q' => "Comment payer ?", 'a' => "Wave, Orange Money, virement bancaire. Paiement mensuel ou annuel (2 mois offerts à l'année). Pas de frais de setup."],
         ['q' => "Et la conformité DGID ?", 'a' => "Fayeku intégrera nativement la conformité DGID dans les plans Essentiel et Entreprise dès publication officielle, sans surcoût."],
     ];
@@ -279,7 +252,7 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach ($plans as $plan)
             <article class="card p-7 flex flex-col relative reveal-scale delay-{{ $loop->index + 1 }} {{ $plan['popular'] ? 'lg:-mt-4 lg:mb-0' : '' }}" @if ($plan['popular']) style="box-shadow: 0 0 0 2px var(--color-vivid), var(--shadow-card);" @endif>
                 @if ($plan['popular'])
@@ -408,8 +381,8 @@
                                     @foreach ($section['rows'] as $row)
                                         <tr>
                                             <td class="p-4" style="color: var(--color-marketing-slate);">{{ $row[0] }}</td>
-                                            @for ($c = 1; $c <= 4; $c++)
-                                                <td class="p-4 text-center font-medium {{ $c === 3 ? 'bg-[color:var(--color-mint-50)]/40' : '' }}">{{ $row[$c] }}</td>
+                                            @for ($c = 1; $c <= 3; $c++)
+                                                <td class="p-4 text-center font-medium {{ $c === 2 ? 'bg-[color:var(--color-mint-50)]/40' : '' }}">{{ $row[$c] }}</td>
                                             @endfor
                                         </tr>
                                     @endforeach
