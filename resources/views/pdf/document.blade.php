@@ -154,28 +154,30 @@
     <tr>
         <td class="logo-cell">
             @if ($logoBase64)
-                <img class="logo-img" src="{{ $logoBase64 }}" alt="{{ $company->name }}">
+                <img class="logo-img" src="{{ $logoBase64 }}" alt="{{ $company?->name }}">
             @endif
-            <div class="company-name">{{ $company->name }}</div>
-            @php
-                $cityLine = trim(($company->address ?? '').($company->address && $company->city ? ', ' : '').($company->city ?? ''));
-            @endphp
-            @if ($cityLine !== '')
-                <div class="company-line">{{ $cityLine }}</div>
-            @endif
-            @if ($company->phone || $company->email)
-                <div class="company-line">
-                    @if ($company->phone){{ format_phone($company->phone) }}@endif
-                    @if ($company->phone && $company->email) · @endif
-                    @if ($company->email){{ $company->email }}@endif
-                </div>
-            @endif
-            @if ($company->ninea || $company->rccm)
-                <div class="company-line">
-                    @if ($company->ninea)NINEA: {{ $company->ninea }}@endif
-                    @if ($company->ninea && $company->rccm) · @endif
-                    @if ($company->rccm)RCCM: {{ $company->rccm }}@endif
-                </div>
+            @if ($company)
+                <div class="company-name">{{ $company->name }}</div>
+                @php
+                    $cityLine = trim(($company->address ?? '').($company->address && $company->city ? ', ' : '').($company->city ?? ''));
+                @endphp
+                @if ($cityLine !== '')
+                    <div class="company-line">{{ $cityLine }}</div>
+                @endif
+                @if ($company->phone || $company->email)
+                    <div class="company-line">
+                        @if ($company->phone){{ format_phone($company->phone) }}@endif
+                        @if ($company->phone && $company->email) · @endif
+                        @if ($company->email){{ $company->email }}@endif
+                    </div>
+                @endif
+                @if ($company->ninea || $company->rccm)
+                    <div class="company-line">
+                        @if ($company->ninea)NINEA: {{ $company->ninea }}@endif
+                        @if ($company->ninea && $company->rccm) · @endif
+                        @if ($company->rccm)RCCM: {{ $company->rccm }}@endif
+                    </div>
+                @endif
             @endif
         </td>
         <td class="doc-cell">
@@ -351,7 +353,7 @@
     <table class="footer-table">
         <tr>
             <td>Par <a href="https://fayeku.sn" class="footer-fayeku">Fayeku</a></td>
-            <td class="footer-right">{{ $company->name }}</td>
+            <td class="footer-right">{{ $company?->name }}</td>
         </tr>
     </table>
 </div>
